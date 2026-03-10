@@ -1,5 +1,7 @@
 # langchain-OpenClaw
-
+![Architecture Diagram](d8c11e85b04d1fdc87c376cf8e36f0dc.jpg)
+![Architecture Diagram](0b253ee89f527f37e5e02d7f12471436.jpg)
+![Architecture Diagram](ecfd6a88a857621fcc269b4fa5948977.jpg)
 一个本地运行、文件优先、可审计的 AI Agent 工作台。
 
 
@@ -159,7 +161,7 @@ npm run dev
 
 如果你第一次打开项目，建议按这个顺序体验：
 
-1. 发一条普通聊天消息，感受流式输出
+1. 发一条普通聊天消息，感受流式输出（1.黄金现在多少钱。2.帮我在知识库中查询......3.帮我查询北京天气）
 2. 打开右侧 Inspector，查看 `memory/MEMORY.md`
 3. 新建或编辑一个 skill，观察系统如何即时生效
 4. 打开 RAG 模式，再问一个和长期记忆相关的问题
