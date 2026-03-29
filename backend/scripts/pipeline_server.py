@@ -257,7 +257,7 @@ def _run_extraction_job(
             state["books_completed"] = book_index - 1
             with _run_lock:
                 _current_job.update(state)
-            _log("info", f"开始处理 [{book_index}/{len(selected_books)}] {book_path.stem}，{len(tasks)} chunks")
+            _log("info", f"开始处理 [{book_index}/{len(selected_books)}] {book_path.stem}，{len(tasks)} chunks | parallel={pipeline.config.parallel_workers} workers={pipeline.config.parallel_workers} dry_run={dry_run}")
 
             if not tasks:
                 state["books_completed"] = book_index
@@ -365,6 +365,7 @@ def _run_extraction_job(
                         executor.submit(pipeline.extract_chunk_payload, task, False): task
                         for task in tasks
                     }
+                    _log("info", f"  [并行] 已提交 {len(tasks)} 个 chunk 到线程池，parallel_workers={pipeline.config.parallel_workers}")
                     for future in as_completed(future_map):
                         if _job_cancelled.is_set():
                             executor.shutdown(wait=False, cancel_futures=True)
@@ -374,7 +375,8 @@ def _run_extraction_job(
                         try:
                             payload = future.result()
                             error = None
-                            _log("ok", f"  chunk {task.chunk_index} ✓ {task.chapter_name[:30]}")
+                            if task.chunk_index == 1:
+                                _log("info", f"  chunk1结果 payload_keys={list(payload.keys()) if isinstance(payload, dict) else type(payload)} triples={len(payload.get('triples',[])) if isinstance(payload,dict) else 'N/A'}")
                         except Exception as exc:
                             payload = {"triples": []}
                             error = str(exc)
@@ -390,6 +392,7 @@ def _run_extraction_job(
                             results[task.sequence]["_written"] = True
                         else:
                             results[task.sequence]["_written"] = False
+                            _log("warn", f"  chunk {task.chunk_index} 无三元组 | error={error} | is_dict={isinstance(payload,dict)}")
                         total_triples += len(rows)
                         state["total_triples"] = total_triples
                         if error is None:
