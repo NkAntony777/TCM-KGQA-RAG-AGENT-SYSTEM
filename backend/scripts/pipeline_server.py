@@ -275,6 +275,13 @@ def _run_extraction_job(
                         state["chunk_errors"] = chunk_errors
                         _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
                     results[task.sequence] = {"task": task, "payload": payload, "error": error, "_retried": 0}
+                    # Real-time triple counting per chunk
+                    rows = pipeline.normalize_triples(payload=payload, book_name=task.book_name, chapter_name=task.chapter_name)
+                    for row in rows:
+                        pipeline.append_jsonl(triples_jsonl, asdict(row))
+                    total_triples += len(rows)
+                    state["total_triples"] = total_triples
+                    pipeline.append_jsonl(raw_jsonl, {"book": task.book_name, "chapter": task.chapter_name, "chunk_index": task.chunk_index, "payload": payload})
                     total_chunks_done += 1
                     state["chunks_completed"] = total_chunks_done
                     elapsed = time.time() - start_ts
@@ -312,6 +319,13 @@ def _run_extraction_job(
                         result["payload"] = {"triples": []}
                         result["error"] = str(exc)
                         _log("error", f"  chunk {task.chunk_index} 重试仍失败: {str(exc)[:80]}")
+                    # Real-time triple counting per chunk (retry success)
+                    rows = pipeline.normalize_triples(payload=payload, book_name=task.book_name, chapter_name=task.chapter_name)
+                    for row in rows:
+                        pipeline.append_jsonl(triples_jsonl, asdict(row))
+                    total_triples += len(rows)
+                    state["total_triples"] = total_triples
+                    pipeline.append_jsonl(raw_jsonl, {"book": task.book_name, "chapter": task.chapter_name, "chunk_index": task.chunk_index, "payload": payload})
                     total_chunks_done += 1
                     state["chunks_completed"] = total_chunks_done
                     elapsed = time.time() - start_ts
@@ -346,6 +360,13 @@ def _run_extraction_job(
                             state["chunk_errors"] = chunk_errors
                             _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
                         results[task.sequence] = {"task": task, "payload": payload, "error": error, "_retried": 0}
+                        # Real-time triple counting per chunk
+                        rows = pipeline.normalize_triples(payload=payload, book_name=task.book_name, chapter_name=task.chapter_name)
+                        for row in rows:
+                            pipeline.append_jsonl(triples_jsonl, asdict(row))
+                        total_triples += len(rows)
+                        state["total_triples"] = total_triples
+                        pipeline.append_jsonl(raw_jsonl, {"book": task.book_name, "chapter": task.chapter_name, "chunk_index": task.chunk_index, "payload": payload})
                         total_chunks_done += 1
                         state["chunks_completed"] = total_chunks_done
                         elapsed = time.time() - start_ts
@@ -383,6 +404,13 @@ def _run_extraction_job(
                             result["payload"] = {"triples": []}
                             result["error"] = str(exc)
                             _log("error", f"  chunk {task.chunk_index} 重试仍失败: {str(exc)[:80]}")
+                        # Real-time triple counting per chunk (parallel retry success)
+                        rows = pipeline.normalize_triples(payload=payload, book_name=task.book_name, chapter_name=task.chapter_name)
+                        for row in rows:
+                            pipeline.append_jsonl(triples_jsonl, asdict(row))
+                        total_triples += len(rows)
+                        state["total_triples"] = total_triples
+                        pipeline.append_jsonl(raw_jsonl, {"book": task.book_name, "chapter": task.chapter_name, "chunk_index": task.chunk_index, "payload": payload})
                         total_chunks_done += 1
                         state["chunks_completed"] = total_chunks_done
                         elapsed = time.time() - start_ts
@@ -395,30 +423,18 @@ def _run_extraction_job(
                         with _run_lock:
                             _current_job.update(state)
 
-            # 按序写入
+            # 按序写入（triples 和 raw_jsonl 已在 per-chunk 循环中实时写入）
             for task in tasks:
                 result = results.get(task.sequence, {"task": task, "payload": {"triples": []}, "error": "missing"})
                 payload = result["payload"]
-                error = result["error"]
-                raw_row = {
-                    "book": task.book_name, "chapter": task.chapter_name,
-                    "chunk_index": task.chunk_index, "payload": payload,
-                }
-                if error:
-                    raw_row["error"] = error
-                pipeline.append_jsonl(raw_jsonl, raw_row)
                 rows = pipeline.normalize_triples(
                     payload=payload, book_name=task.book_name, chapter_name=task.chapter_name
                 )
-                for row in rows:
-                    pipeline.append_jsonl(triples_jsonl, asdict(row))
                 all_rows.extend(rows)
-                total_triples += len(rows)
-                state["total_triples"] = total_triples
             state["books_completed"] = book_index
             with _run_lock:
                 _current_job.update(state)
-            _log("info", f"  完成 {book_path.stem}，本书三元组: {total_triples}")
+            _log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
 
         # ── 写出 CSV + graph_import ─────────────────────────────────────
         pipeline.write_csv(run_dir / "triples.normalized.csv", all_rows)
