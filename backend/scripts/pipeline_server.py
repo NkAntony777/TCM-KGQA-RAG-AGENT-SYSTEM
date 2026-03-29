@@ -275,6 +275,8 @@ def _run_extraction_job(
                     state["current_chapter"] = task.chapter_name
                     with _run_lock:
                         _current_job.update(state)
+                    if task.chunk_index % 10 == 1:
+                        _log("info", f"  -> 处理 chunk {task.chunk_index}/{len(tasks)} {task.chapter_name[:20]}")
                     try:
                         payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
                         error = None
@@ -294,7 +296,7 @@ def _run_extraction_job(
                         result["_written"] = True
                     else:
                         result["_written"] = result.get("_written", False)
-                        _log("debug", f"  chunk {task.chunk_index} 无可抽取三元组（原文可能不包含知识关系）")
+                        _log("warn", f"  chunk {task.chunk_index} 无三元组 | triple_count={len(rows)} | error={error} | payload_keys={list(payload.keys()) if isinstance(payload, dict) else 'not_dict'}")
                     total_triples += len(rows)
                     state["total_triples"] = total_triples
                     if error is None:
