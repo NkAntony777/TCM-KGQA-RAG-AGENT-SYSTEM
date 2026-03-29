@@ -59,6 +59,8 @@ app.add_middleware(
 _run_lock = threading.Lock()
 _current_job: dict[str, Any] = {}          # 当前运行元数据
 _job_log: list[dict[str, Any]] = []        # 实时日志队列（线程安全追加）
+_job_log_file: Path | None = None          # 实时日志磁盘文件，任务结束时清理
+_job_log_file_path: Path | None = None     # 日志文件路径（用于任务结束后删除）
 _job_thread: threading.Thread | None = None
 _job_cancelled = threading.Event()         # 用于取消信号
 
@@ -67,6 +69,11 @@ def _log(level: str, msg: str, **extra: Any) -> None:
     entry = {"ts": datetime.now().isoformat(timespec="seconds"), "level": level, "msg": msg, **extra}
     with _run_lock:
         _job_log.append(entry)
+        if _job_log_file is not None:
+            _job_log_file.write_text(
+                json.dumps(entry, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -472,6 +479,12 @@ def _run_extraction_job(
         state["phase"] = "finished"
         with _run_lock:
             _current_job.update(state)
+            _job_log_file = None
+            try:
+                if _job_log_file_path and _job_log_file_path.exists():
+                    _job_log_file_path.unlink()
+            except Exception:
+                pass
 
     except Exception as exc:
         state["status"] = "error"
@@ -479,6 +492,12 @@ def _run_extraction_job(
         state["finished_at"] = datetime.now().isoformat(timespec="seconds")
         with _run_lock:
             _current_job.update(state)
+            _job_log_file = None
+            try:
+                if _job_log_file_path and _job_log_file_path.exists():
+                    _job_log_file_path.unlink()
+            except Exception:
+                pass
         _log("error", f"任务异常: {exc}")
 
 
@@ -607,6 +626,11 @@ def start_job(req: StartJobRequest):
         _current_job = {}
         _job_log.clear()
         _job_cancelled.clear()
+        log_file_path = DEFAULT_OUTPUT_DIR / f"current_job_{job_id}.log"
+        log_file_path.write_text("", encoding="utf-8")
+        global _job_log_file, _job_log_file_path
+        _job_log_file = log_file_path
+        _job_log_file_path = log_file_path
 
     _job_thread = threading.Thread(
         target=_run_extraction_job,
@@ -657,9 +681,21 @@ async def job_stream():
     """SSE 实时推送状态 + 日志"""
     async def generator():
         sent_log_idx = 0
+        replayed_from_disk = False
         while True:
             with _run_lock:
                 state = dict(_current_job)
+                # Replay from disk log file on first fetch (handles page refresh reconnect)
+                if not replayed_from_disk and _job_log_file is not None and _job_log_file.exists():
+                    try:
+                        disk_lines = _job_log_file.read_text(encoding="utf-8").splitlines()
+                        existing_logs = [json.loads(line) for line in disk_lines if line.strip()]
+                        if existing_logs and len(existing_logs) > sent_log_idx:
+                            new_logs = existing_logs[sent_log_idx:]
+                            sent_log_idx = len(existing_logs)
+                    except Exception:
+                        pass
+                    replayed_from_disk = True
                 new_logs = _job_log[sent_log_idx:]
                 sent_log_idx += len(new_logs)
             payload = json.dumps({
