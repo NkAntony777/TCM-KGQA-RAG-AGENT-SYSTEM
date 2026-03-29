@@ -82,8 +82,12 @@ def _log(level: str, msg: str, **extra: Any) -> None:
 
 def _build_pipeline(cfg_override: dict[str, Any] | None = None) -> TCMTriplePipeline:
     cfg = cfg_override or {}
+    # 前端显式传入的值优先；只有为空时才 fallback 到环境变量
     model = cfg.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="deepseek-ai/DeepSeek-V3.2")
-    api_key = cfg.get("api_key") or _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
+    api_key_raw = cfg.get("api_key")
+    if not api_key_raw:
+        api_key_raw = _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
+    api_key = api_key_raw
     base_url = cfg.get("base_url") or _first_env(
         "TRIPLE_LLM_BASE_URL", "LLM_BASE_URL", "OPENAI_BASE_URL",
         default="https://api.siliconflow.cn/v1"
@@ -925,6 +929,82 @@ def get_env_config():
         "api_key_set": bool(api_key),
         "api_key_hint": (api_key[:4] + "..." + api_key[-4:]) if len(api_key) > 8 else ("已设置" if api_key else "未设置"),
     }
+
+
+@app.post("/api/job/test-call")
+def test_api_call(req: StartJobRequest):
+    """诊断接口：拿第一本书的第一个 chunk 测试 API，返回原始 LLM 响应和解析结果"""
+    try:
+        pipeline = _build_pipeline(req.api_config.model_dump())
+        books = pipeline.discover_books()
+        if not books:
+            raise HTTPException(status_code=400, detail="没有可用的书籍")
+        tasks = pipeline.schedule_book_chunks(
+            book_path=books[0],
+            chapter_excludes=req.chapter_excludes or None,
+            max_chunks_per_book=1,
+            skip_initial_chunks_per_book=0,
+            chunk_strategy=req.chunk_strategy or "body_first",
+        )
+        if not tasks:
+            raise HTTPException(status_code=400, detail="该书没有可处理的 chunk")
+        task = tasks[0]
+
+        # 调用 LLM
+        import httpx
+        url = f"{pipeline.config.base_url.rstrip('/')}/chat/completions"
+        prompt = pipeline.build_prompt(
+            book_name=task.book_name,
+            chapter_name=task.chapter_name,
+            text_chunk=task.text_chunk,
+        )
+        payload = {
+            "model": pipeline.config.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0,
+            "stream": False,
+        }
+        headers = {
+            "Authorization": f"Bearer {pipeline.config.api_key}",
+            "Content-Type": "application/json",
+        }
+        with httpx.Client(timeout=60.0) as client:
+            resp = client.post(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            raw_body = resp.json()
+
+        # 解析响应
+        from scripts.tcm_triple_console import _extract_json_block
+        choices = raw_body.get("choices", [])
+        raw_content = choices[0].get("message", {}).get("content", "") if choices else ""
+        try:
+            parsed = _extract_json_block(str(raw_content))
+        except Exception as parse_exc:
+            parsed = {"_parse_error": str(parse_exc), "_raw": str(raw_content)[:500]}
+
+        triples_normalized = pipeline.normalize_triples(
+            payload=parsed if isinstance(parsed, dict) else {"triples": parsed if isinstance(parsed, list) else []},
+            book_name=task.book_name,
+            chapter_name=task.chapter_name,
+        )
+
+        return {
+            "book": task.book_name,
+            "chapter": task.chapter_name,
+            "chunk_chars": len(task.text_chunk),
+            "model": pipeline.config.model,
+            "base_url": pipeline.config.base_url,
+            "api_key_prefix": (pipeline.config.api_key[:4] + "...") if len(pipeline.config.api_key) > 4 else pipeline.config.api_key,
+            "raw_response_length": len(str(raw_content)),
+            "raw_response_preview": str(raw_content)[:300],
+            "parsed_triples_count": len(triples_normalized),
+            "parsed_sample": [{"subject": r.subject, "predicate": r.predicate, "object": r.object} for r in triples_normalized[:3]],
+            "status_code": resp.status_code,
+        }
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail=f"API 返回错误 {exc.response.status_code}: {exc.response.text[:300]}")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
