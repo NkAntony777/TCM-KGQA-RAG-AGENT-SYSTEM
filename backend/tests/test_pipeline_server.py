@@ -171,6 +171,8 @@ class PipelineServerTests(unittest.TestCase):
         with pipeline_server._run_lock:
             pipeline_server._current_job.clear()
             pipeline_server._job_log.clear()
+            pipeline_server._job_log_file = None
+            pipeline_server._job_log_file_path = None
         pipeline_server._job_cancelled.clear()
 
     def tearDown(self) -> None:
@@ -178,6 +180,8 @@ class PipelineServerTests(unittest.TestCase):
         with pipeline_server._run_lock:
             pipeline_server._current_job.clear()
             pipeline_server._job_log.clear()
+            pipeline_server._job_log_file = None
+            pipeline_server._job_log_file_path = None
         self.temp_dir.cleanup()
 
     def test_resolve_start_selected_books_returns_all_books_when_empty(self) -> None:
@@ -315,6 +319,8 @@ class PipelineServerTests(unittest.TestCase):
     def test_run_auto_extraction_batches_chains_next_batch(self) -> None:
         batch_one = [self.books_dir / "001-a.txt", self.books_dir / "002-b.txt"]
         batch_two = [self.books_dir / "003-c.txt"]
+        resume_run_dir = self.output_dir / "resume-source"
+        resume_run_dir.mkdir(parents=True, exist_ok=True)
 
         def fake_run_extraction_job(**kwargs):
             with pipeline_server._run_lock:
@@ -339,6 +345,7 @@ class PipelineServerTests(unittest.TestCase):
                         pipeline_server._run_auto_extraction_batches(
                             job_id="autobatch01",
                             initial_selected_books=batch_one,
+                            initial_resume_run_dir=resume_run_dir,
                             label="auto-batch",
                             dry_run=False,
                             cfg_override={},
@@ -355,9 +362,61 @@ class PipelineServerTests(unittest.TestCase):
         self.assertEqual(len(run_calls), 2)
         self.assertEqual(run_calls[0]["selected_books"], batch_one)
         self.assertEqual(run_calls[1]["selected_books"], batch_two)
+        self.assertEqual(run_calls[0]["resume_run_dir"], resume_run_dir)
+        self.assertIsNone(run_calls[1]["resume_run_dir"])
         self.assertFalse(run_calls[0]["cleanup_job_log_file"])
         self.assertFalse(run_calls[1]["cleanup_job_log_file"])
         cleanup_mock.assert_called_once()
+
+    def test_resume_run_uses_auto_batch_wrapper_by_default(self) -> None:
+        run_dir = self.output_dir / "resume-default-auto"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "books": [str(self.book)],
+                    "model": "resume-model",
+                    "base_url": "https://example.invalid/v1",
+                    "dry_run": False,
+                    "config": {
+                        "chapter_excludes": [],
+                        "skip_initial_chunks_per_book": 0,
+                        "chunk_strategy": "body_first",
+                        "parallel_workers": 4,
+                        "max_chunk_retries": 2,
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        thread_args: dict[str, object] = {}
+
+        class FakeThread:
+            def __init__(self, *, target=None, kwargs=None, daemon=None):
+                thread_args["target"] = target
+                thread_args["kwargs"] = kwargs or {}
+                thread_args["daemon"] = daemon
+
+            def start(self):
+                thread_args["started"] = True
+
+        with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+            with patch("scripts.pipeline_server.threading.Thread", FakeThread):
+                payload = pipeline_server.resume_run(
+                    "resume-default-auto",
+                    pipeline_server.ResumeRunRequest(),
+                )
+
+        self.assertEqual(payload["message"], "resume_started")
+        self.assertTrue(payload["auto_chain_mode"])
+        self.assertEqual(payload["auto_batch_size"], 7)
+        self.assertIs(thread_args["target"], pipeline_server._run_auto_extraction_batches)
+        self.assertEqual(thread_args["kwargs"]["initial_selected_books"], [self.book])
+        self.assertEqual(thread_args["kwargs"]["initial_resume_run_dir"], run_dir)
+        self.assertTrue(thread_args["started"])
 
     def test_resolve_run_publish_source_prefers_cleaned_graph_file(self) -> None:
         run_dir = self.output_dir / "publish-run"

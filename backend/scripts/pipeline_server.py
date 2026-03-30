@@ -1339,6 +1339,7 @@ def _run_auto_extraction_batches(
     *,
     job_id: str,
     initial_selected_books: list[Path],
+    initial_resume_run_dir: Path | None = None,
     label: str,
     dry_run: bool,
     cfg_override: dict[str, Any],
@@ -1357,6 +1358,7 @@ def _run_auto_extraction_batches(
     try:
         while selected_books:
             batch_job_id = job_id if batch_index == 1 else f"{job_id}-b{batch_index}"
+            resume_run_dir = initial_resume_run_dir if batch_index == 1 else None
             if batch_index > 1:
                 _log("info", f"自动续批启动 [{batch_index}]，共 {len(selected_books)} 本书")
             _run_extraction_job(
@@ -1372,6 +1374,7 @@ def _run_auto_extraction_batches(
                 auto_clean=auto_clean,
                 auto_publish=auto_publish,
                 max_chunk_retries=max_chunk_retries,
+                resume_run_dir=resume_run_dir,
                 cleanup_job_log_file=False,
             )
             if _job_cancelled.is_set():
@@ -1438,6 +1441,7 @@ class StartJobRequest(BaseModel):
 class ResumeRunRequest(BaseModel):
     auto_clean: bool = Field(default=False)
     auto_publish: bool = Field(default=False)
+    continue_next_batches: bool = Field(default=True)
     api_config: APIConfig = Field(default_factory=APIConfig)
 
 
@@ -1615,27 +1619,43 @@ def resume_run(run_name: str, req: ResumeRunRequest):
         _job_log_file = log_file_path
         _job_log_file_path = log_file_path
 
+    auto_chain_mode = bool(req.continue_next_batches)
+    target = _run_auto_extraction_batches if auto_chain_mode else _run_extraction_job
+    thread_kwargs = dict(
+        job_id=job_id,
+        label=run_name,
+        dry_run=dry_run,
+        cfg_override=cfg_override,
+        chapter_excludes=list(manifest_cfg.get("chapter_excludes", [])),
+        max_chunks_per_book=manifest_cfg.get("max_chunks_per_book"),
+        skip_initial_chunks=int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0),
+        chunk_strategy=str(manifest_cfg.get("chunk_strategy", "body_first")),
+        auto_clean=req.auto_clean,
+        auto_publish=req.auto_publish,
+        max_chunk_retries=int(cfg_override.get("max_chunk_retries", req.api_config.max_chunk_retries)),
+    )
+    if auto_chain_mode:
+        thread_kwargs["initial_selected_books"] = selected
+        thread_kwargs["initial_resume_run_dir"] = run_dir
+        thread_kwargs["batch_size"] = DEFAULT_AUTO_BOOK_BATCH_SIZE
+    else:
+        thread_kwargs["selected_books"] = selected
+        thread_kwargs["resume_run_dir"] = run_dir
+
     _job_thread = threading.Thread(
-        target=_run_extraction_job,
-        kwargs=dict(
-            job_id=job_id,
-            selected_books=selected,
-            label=run_name,
-            dry_run=dry_run,
-            cfg_override=cfg_override,
-            chapter_excludes=list(manifest_cfg.get("chapter_excludes", [])),
-            max_chunks_per_book=manifest_cfg.get("max_chunks_per_book"),
-            skip_initial_chunks=int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0),
-            chunk_strategy=str(manifest_cfg.get("chunk_strategy", "body_first")),
-            auto_clean=req.auto_clean,
-            auto_publish=req.auto_publish,
-            max_chunk_retries=int(cfg_override.get("max_chunk_retries", req.api_config.max_chunk_retries)),
-            resume_run_dir=run_dir,
-        ),
+        target=target,
+        kwargs=thread_kwargs,
         daemon=True,
     )
     _job_thread.start()
-    return {"job_id": job_id, "run_dir": run_name, "selected_books": [b.stem for b in selected], "message": "resume_started"}
+    return {
+        "job_id": job_id,
+        "run_dir": run_name,
+        "selected_books": [b.stem for b in selected],
+        "auto_chain_mode": auto_chain_mode,
+        "auto_batch_size": DEFAULT_AUTO_BOOK_BATCH_SIZE if auto_chain_mode else 0,
+        "message": "resume_started",
+    }
 
 
 @app.post("/api/job/cancel")

@@ -9,8 +9,8 @@
 - Empty book selection on `start` means automatic batch mode.
 - Automatic batch mode now prioritizes recommended books, excludes historically completed books, and starts with 7 books per batch.
 - Each automatic batch creates its own independent run directory. It does not append later batches into the same run directory.
-- Automatic next-batch chaining currently applies only to a new `start` request with no manual book selection.
-- `resume` only continues the specified existing run. After that run finishes, it does not automatically open the next batch.
+- Automatic next-batch chaining applies to empty-selection `start` requests and also to `resume` requests by default.
+- `resume` first continues the specified existing run, then continues with new batch runs if unprocessed books remain.
 - Retry worker count is `max(1, parallel_workers // 2)`. With the current default `parallel_workers=11`, retry workers are `5`.
 
 ## Current Default Extraction Parameters
