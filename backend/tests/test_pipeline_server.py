@@ -278,6 +278,87 @@ class PipelineServerTests(unittest.TestCase):
         self.assertEqual([path.stem for path in kept], [book_two.stem])
         self.assertEqual(skipped, [self.book.stem])
 
+    def test_select_auto_start_books_prefers_recommended_unprocessed_and_limits_to_seven(self) -> None:
+        books = [self.books_dir / f"{i:03d}-book.txt" for i in range(1, 11)]
+        pipeline = Mock()
+        pipeline.discover_books.return_value = books
+        pipeline.recommend_books.return_value = [
+            books[6],
+            books[1],
+            books[0],
+            books[7],
+            books[2],
+            books[8],
+            books[3],
+            books[9],
+            books[4],
+            books[5],
+        ]
+
+        with patch.object(pipeline_server, "_get_processed_book_stems", return_value={books[0].stem, books[8].stem}):
+            selected, skipped = pipeline_server._select_auto_start_books(pipeline, batch_size=7)
+
+        self.assertEqual(
+            [path.stem for path in selected],
+            [
+                books[6].stem,
+                books[1].stem,
+                books[7].stem,
+                books[2].stem,
+                books[3].stem,
+                books[9].stem,
+                books[4].stem,
+            ],
+        )
+        self.assertEqual(skipped, [books[0].stem, books[8].stem])
+
+    def test_run_auto_extraction_batches_chains_next_batch(self) -> None:
+        batch_one = [self.books_dir / "001-a.txt", self.books_dir / "002-b.txt"]
+        batch_two = [self.books_dir / "003-c.txt"]
+
+        def fake_run_extraction_job(**kwargs):
+            with pipeline_server._run_lock:
+                pipeline_server._current_job.clear()
+                pipeline_server._current_job.update(
+                    {
+                        "status": "completed",
+                        "phase": "finished",
+                        "run_dir": f"run_{len(run_calls) + 1}",
+                    }
+                )
+            run_calls.append(kwargs)
+
+        run_calls: list[dict[str, object]] = []
+        with patch("scripts.pipeline_server._run_extraction_job", side_effect=fake_run_extraction_job):
+            with patch("scripts.pipeline_server._build_pipeline", return_value=Mock()):
+                with patch(
+                    "scripts.pipeline_server._select_auto_start_books",
+                    side_effect=[(batch_two, []), ([], [])],
+                ):
+                    with patch("scripts.pipeline_server._cleanup_job_log_file") as cleanup_mock:
+                        pipeline_server._run_auto_extraction_batches(
+                            job_id="autobatch01",
+                            initial_selected_books=batch_one,
+                            label="auto-batch",
+                            dry_run=False,
+                            cfg_override={},
+                            chapter_excludes=[],
+                            max_chunks_per_book=None,
+                            skip_initial_chunks=0,
+                            chunk_strategy="body_first",
+                            auto_clean=False,
+                            auto_publish=False,
+                            max_chunk_retries=1,
+                            batch_size=7,
+                        )
+
+        self.assertEqual(len(run_calls), 2)
+        self.assertEqual(run_calls[0]["selected_books"], batch_one)
+        self.assertEqual(run_calls[1]["selected_books"], batch_two)
+        self.assertFalse(run_calls[0]["cleanup_job_log_file"])
+        self.assertFalse(run_calls[1]["cleanup_job_log_file"])
+        cleanup_mock.assert_called_once()
+
     def test_resolve_run_publish_source_prefers_cleaned_graph_file(self) -> None:
         run_dir = self.output_dir / "publish-run"
         run_dir.mkdir(parents=True, exist_ok=True)

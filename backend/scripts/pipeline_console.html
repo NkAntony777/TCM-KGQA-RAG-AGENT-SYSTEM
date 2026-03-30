@@ -372,7 +372,7 @@
           </div>
           <div class="form-group">
             <label>请求超时 (秒)</label>
-            <input id="cfgTimeout" type="number" value="90" min="10" max="300" />
+            <input id="cfgTimeout" type="number" value="314" min="10" max="1200" />
           </div>
         </div>
         <div class="form-row">
@@ -387,11 +387,11 @@
           </div>
           <div class="form-group">
             <label>请求间隔 (秒)</label>
-            <input id="cfgDelay" type="number" value="0.8" min="0" max="10" step="0.1" />
+            <input id="cfgDelay" type="number" value="1.1" min="0" max="10" step="0.1" />
           </div>
           <div class="form-group">
             <label>并行 Workers</label>
-            <input id="cfgWorkers" type="number" value="4" min="1" max="16" />
+            <input id="cfgWorkers" type="number" value="11" min="1" max="16" />
             <div class="hint">chunk 重试队列会自动使用该值的一半并发，至少为 1。</div>
           </div>
         </div>
@@ -512,7 +512,7 @@
             </div>
             <div class="form-group">
               <label>请求超时 (秒)</label>
-              <input id="resumeCfgTimeout" type="number" min="10" max="300" />
+              <input id="resumeCfgTimeout" type="number" min="10" max="1200" />
             </div>
           </div>
           <div class="form-row">
@@ -700,7 +700,7 @@ function toggleBook(name) {
 function renderSelectedChips() {
   const el = document.getElementById('selectedBooksDisplay');
   if (selectedBooks.size === 0) {
-    el.innerHTML = '<span style="color:var(--text3);font-size:12px">未选择书籍，将自动处理全部未处理书目</span>';
+    el.innerHTML = '<span style="color:var(--text3);font-size:12px">未手动选书时，将按推荐优先自动抽取未处理书籍，每批 7 本并自动续批</span>';
     return;
   }
   el.innerHTML = [...selectedBooks].map(n => `
@@ -717,7 +717,10 @@ async function loadRecommended() {
   try {
     const r = await fetch(`${API}/api/books`);
     const d = await r.json();
-    d.books.filter(b => b.recommended).forEach(b => selectedBooks.add(b.name));
+    d.books
+      .filter(b => b.recommended && !b.processed)
+      .slice(0, 7)
+      .forEach(b => selectedBooks.add(b.name));
     filterBooks(); renderSelectedChips();
   } catch (e) { alert('加载推荐书目失败'); }
 }
@@ -741,11 +744,11 @@ async function startJob() {
       model: document.getElementById('cfgModel').value.trim(),
       api_key: document.getElementById('cfgApiKey').value.trim(),
       base_url: document.getElementById('cfgBaseUrl').value.trim(),
-      request_timeout: parseFloat(document.getElementById('cfgTimeout').value) || 90,
+      request_timeout: parseFloat(document.getElementById('cfgTimeout').value) || 314,
       max_retries: parseInt(document.getElementById('cfgMaxRetries').value) || 2,
-      request_delay: parseFloat(document.getElementById('cfgDelay').value) || 0.8,
+      request_delay: parseFloat(document.getElementById('cfgDelay').value) || 1.1,
       retry_backoff_base: parseFloat(document.getElementById('cfgBackoff').value) || 2.0,
-      parallel_workers: parseInt(document.getElementById('cfgWorkers').value) || 4,
+      parallel_workers: parseInt(document.getElementById('cfgWorkers').value) || 11,
       max_chunk_chars: parseInt(document.getElementById('cfgChunkChars').value) || 800,
       chunk_overlap: parseInt(document.getElementById('cfgChunkOverlap').value) || 200,
       chunk_strategy: document.getElementById('cfgChunkStrategy').value,
@@ -760,6 +763,9 @@ async function startJob() {
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || '启动失败');
     appendLog('info', `✅ 任务已启动 ${d.job_id}，共 ${d.selected_books.length} 本书`);
+    if (d.auto_chain_mode) {
+      appendLog('info', `自动模式已开启：推荐优先，排除历史已处理书籍，每批 ${d.auto_batch_size} 本，完成后自动续批`);
+    }
     if (Array.isArray(d.auto_skipped_processed_books) && d.auto_skipped_processed_books.length) {
       appendLog('warn', `已自动跳过历史已处理书籍 ${d.auto_skipped_processed_books.length} 本`);
     }
@@ -1045,11 +1051,11 @@ async function openResumePanel(runName) {
   document.getElementById('resumeCfgModel').value = d.api_config.model || '';
   document.getElementById('resumeCfgBaseUrl').value = d.api_config.base_url || '';
   document.getElementById('resumeCfgApiKey').value = '';
-  document.getElementById('resumeCfgTimeout').value = d.api_config.request_timeout ?? 90;
+  document.getElementById('resumeCfgTimeout').value = d.api_config.request_timeout ?? 314;
   document.getElementById('resumeCfgMaxRetries').value = d.api_config.max_retries ?? 2;
   document.getElementById('resumeCfgBackoff').value = d.api_config.retry_backoff_base ?? 2.0;
-  document.getElementById('resumeCfgDelay').value = d.api_config.request_delay ?? 0.8;
-  document.getElementById('resumeCfgWorkers').value = d.api_config.parallel_workers ?? 4;
+  document.getElementById('resumeCfgDelay').value = d.api_config.request_delay ?? 1.1;
+  document.getElementById('resumeCfgWorkers').value = d.api_config.parallel_workers ?? 11;
   document.getElementById('resumeCfgChunkRetries').value = d.api_config.max_chunk_retries ?? 2;
   document.getElementById('resumeAutoClean').checked = false;
   document.getElementById('resumeAutoPublish').checked = false;

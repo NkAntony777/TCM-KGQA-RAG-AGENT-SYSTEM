@@ -69,6 +69,7 @@ _job_cancelled = threading.Event()         # 用于取消信号
 _publish_lock = threading.Lock()
 _nebula_publish_threads: dict[str, threading.Thread] = {}
 
+DEFAULT_AUTO_BOOK_BATCH_SIZE = 7
 LOW_YIELD_RETRY_TRIPLE_THRESHOLD = 1
 
 
@@ -79,6 +80,22 @@ def _log(level: str, msg: str, **extra: Any) -> None:
         if _job_log_file is not None:
             with _job_log_file.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def _cleanup_job_log_file() -> None:
+    global _job_log_file, _job_log_file_path
+    with _run_lock:
+        _job_log_file = None
+        try:
+            if _job_log_file_path and _job_log_file_path.exists():
+                _job_log_file_path.unlink()
+        except Exception:
+            pass
+
+
+def _is_job_thread_alive() -> bool:
+    thread = _job_thread
+    return bool(thread and thread.is_alive())
 
 
 def _write_state(state_path: Path, state: dict[str, Any]) -> None:
@@ -353,12 +370,12 @@ def _build_pipeline(cfg_override: dict[str, Any] | None = None) -> TCMTriplePipe
         model=model,
         api_key=api_key or "dummy_for_dry_run",
         base_url=base_url,
-        request_timeout=float(cfg.get("request_timeout", 90.0)),
+        request_timeout=float(cfg.get("request_timeout", 314.0)),
         max_chunk_chars=int(cfg.get("max_chunk_chars", 800)),
         chunk_overlap=int(cfg.get("chunk_overlap", 200)),
         max_retries=int(cfg.get("max_retries", 2)),
-        request_delay=float(cfg.get("request_delay", 0.8)),
-        parallel_workers=max(1, int(cfg.get("parallel_workers", 4))),
+        request_delay=float(cfg.get("request_delay", 1.1)),
+        parallel_workers=max(1, int(cfg.get("parallel_workers", 11))),
         retry_backoff_base=float(cfg.get("retry_backoff_base", 2.0)),
         chunk_strategy=str(cfg.get("chunk_strategy", "body_first")),
     )
@@ -433,6 +450,51 @@ def _exclude_processed_books_for_new_run(selected_books: list[Path]) -> tuple[li
     skipped = [path.stem for path in selected_books if path.stem in processed_stems]
     kept = [path for path in selected_books if path.stem not in processed_stems]
     return kept, skipped
+
+
+def _sanitize_auto_batch_size(batch_size: int | None) -> int:
+    try:
+        value = int(batch_size or DEFAULT_AUTO_BOOK_BATCH_SIZE)
+    except (TypeError, ValueError):
+        value = DEFAULT_AUTO_BOOK_BATCH_SIZE
+    return max(1, value)
+
+
+def _ordered_unprocessed_books_for_new_run(
+    pipeline: TCMTriplePipeline,
+    *,
+    batch_size: int | None = None,
+) -> tuple[list[Path], list[str]]:
+    books = pipeline.discover_books()
+    processed_stems = _get_processed_book_stems()
+    skipped = [path.stem for path in books if path.stem in processed_stems]
+    remaining = [path for path in books if path.stem not in processed_stems]
+    if not remaining:
+        return [], skipped
+
+    ordered: list[Path] = []
+    seen: set[Path] = set()
+    recommended = pipeline.recommend_books(limit=max(len(books), _sanitize_auto_batch_size(batch_size)))
+    for path in recommended:
+        if path.stem in processed_stems or path in seen:
+            continue
+        ordered.append(path)
+        seen.add(path)
+    for path in remaining:
+        if path in seen:
+            continue
+        ordered.append(path)
+        seen.add(path)
+    return ordered, skipped
+
+
+def _select_auto_start_books(
+    pipeline: TCMTriplePipeline,
+    *,
+    batch_size: int = DEFAULT_AUTO_BOOK_BATCH_SIZE,
+) -> tuple[list[Path], list[str]]:
+    ordered, skipped = _ordered_unprocessed_books_for_new_run(pipeline, batch_size=batch_size)
+    return ordered[:_sanitize_auto_batch_size(batch_size)], skipped
 
 
 def _resolve_run_publish_source(run_dir: Path) -> tuple[Path, Path | None]:
@@ -665,6 +727,7 @@ def _run_extraction_job(
     auto_publish: bool,
     max_chunk_retries: int = 2,
     resume_run_dir: Path | None = None,
+    cleanup_job_log_file: bool = True,
 ) -> None:
     """在独立线程中运行完整的提取→清洗→发布流程，实时更新 _current_job。"""
     global _current_job
@@ -1253,13 +1316,9 @@ def _run_extraction_job(
         state["phase"] = "finished"
         with _run_lock:
             _current_job.update(state)
-            _job_log_file = None
-            try:
-                if _job_log_file_path and _job_log_file_path.exists():
-                    _job_log_file_path.unlink()
-            except Exception:
-                pass
         _write_state(state_path, state)
+        if cleanup_job_log_file:
+            _cleanup_job_log_file()
 
     except Exception as exc:
         state["status"] = "error"
@@ -1267,28 +1326,96 @@ def _run_extraction_job(
         state["finished_at"] = datetime.now().isoformat(timespec="seconds")
         with _run_lock:
             _current_job.update(state)
-            _job_log_file = None
-            try:
-                if _job_log_file_path and _job_log_file_path.exists():
-                    _job_log_file_path.unlink()
-            except Exception:
-                pass
         _log("error", f"任务异常: {exc}")
+        if cleanup_job_log_file:
+            _cleanup_job_log_file()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # API 模型
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _run_auto_extraction_batches(
+    *,
+    job_id: str,
+    initial_selected_books: list[Path],
+    label: str,
+    dry_run: bool,
+    cfg_override: dict[str, Any],
+    chapter_excludes: list[str],
+    max_chunks_per_book: int | None,
+    skip_initial_chunks: int,
+    chunk_strategy: str,
+    auto_clean: bool,
+    auto_publish: bool,
+    max_chunk_retries: int,
+    batch_size: int = DEFAULT_AUTO_BOOK_BATCH_SIZE,
+) -> None:
+    selected_books = list(initial_selected_books)
+    batch_index = 1
+    batch_size = _sanitize_auto_batch_size(batch_size)
+    try:
+        while selected_books:
+            batch_job_id = job_id if batch_index == 1 else f"{job_id}-b{batch_index}"
+            if batch_index > 1:
+                _log("info", f"自动续批启动 [{batch_index}]，共 {len(selected_books)} 本书")
+            _run_extraction_job(
+                job_id=batch_job_id,
+                selected_books=selected_books,
+                label=label,
+                dry_run=dry_run,
+                cfg_override=cfg_override,
+                chapter_excludes=chapter_excludes,
+                max_chunks_per_book=max_chunks_per_book,
+                skip_initial_chunks=skip_initial_chunks,
+                chunk_strategy=chunk_strategy,
+                auto_clean=auto_clean,
+                auto_publish=auto_publish,
+                max_chunk_retries=max_chunk_retries,
+                cleanup_job_log_file=False,
+            )
+            if _job_cancelled.is_set():
+                return
+            with _run_lock:
+                last_status = _current_job.get("status")
+            if last_status != "completed":
+                return
+
+            pipeline = _build_pipeline(cfg_override)
+            next_books, _ = _select_auto_start_books(pipeline, batch_size=batch_size)
+            if not next_books:
+                _log("info", "自动批处理完成，已无剩余未处理书籍")
+                return
+
+            batch_index += 1
+            with _run_lock:
+                _current_job.update(
+                    {
+                        "status": "running",
+                        "phase": "preparing_next_batch",
+                        "current_book": "",
+                        "current_chapter": "",
+                        "auto_chain_mode": True,
+                        "auto_batch_index": batch_index,
+                        "auto_batch_size": batch_size,
+                        "next_batch_books": [path.stem for path in next_books],
+                    }
+                )
+            _log("info", f"当前批次完成，准备自动开启下一批，共 {len(next_books)} 本书")
+            selected_books = next_books
+    finally:
+        _cleanup_job_log_file()
+
+
 class APIConfig(BaseModel):
     model: str = Field(default="", description="LLM 模型名")
     api_key: str = Field(default="", description="API Key")
     base_url: str = Field(default="", description="API Base URL")
-    request_timeout: float = Field(default=90.0)
+    request_timeout: float = Field(default=314.0)
     max_retries: int = Field(default=2)
-    request_delay: float = Field(default=0.8)
+    request_delay: float = Field(default=1.1)
     retry_backoff_base: float = Field(default=2.0)
-    parallel_workers: int = Field(default=4)
+    parallel_workers: int = Field(default=11)
     max_chunk_chars: int = Field(default=800)
     chunk_overlap: int = Field(default=200)
     chunk_strategy: str = Field(default="body_first")
@@ -1324,6 +1451,7 @@ def list_books():
     try:
         pipeline = _build_pipeline()
         books = pipeline.discover_books()
+        processed_stems = _get_processed_book_stems()
         recommended = {str(p) for p in pipeline.recommend_books(limit=12)}
         result = []
         for i, b in enumerate(books, start=1):
@@ -1334,6 +1462,7 @@ def list_books():
                 "path": str(b),
                 "size_kb": size_kb,
                 "recommended": str(b) in recommended,
+                "processed": b.stem in processed_stems,
             })
         return {"books": result, "total": len(result)}
     except Exception as exc:
@@ -1372,10 +1501,15 @@ def start_job(req: StartJobRequest):
 
     # 解析书目
     pipeline = _build_pipeline(req.api_config.model_dump())
+    auto_chain_mode = not req.selected_books
+    auto_batch_size = DEFAULT_AUTO_BOOK_BATCH_SIZE
     selected = _resolve_start_selected_books(pipeline, req.selected_books)
     auto_skipped_processed_books: list[str] = []
-    if not req.selected_books:
-        selected, auto_skipped_processed_books = _exclude_processed_books_for_new_run(selected)
+    if auto_chain_mode:
+        selected, auto_skipped_processed_books = _select_auto_start_books(
+            pipeline,
+            batch_size=auto_batch_size,
+        )
 
     if not selected:
         detail = "没有剩余未处理书籍；如需重跑历史书籍，请手动选择具体书目"
@@ -1397,22 +1531,29 @@ def start_job(req: StartJobRequest):
         _job_log_file = log_file_path
         _job_log_file_path = log_file_path
 
+    target = _run_auto_extraction_batches if auto_chain_mode else _run_extraction_job
+    thread_kwargs = dict(
+        job_id=job_id,
+        label=req.label or "extraction",
+        dry_run=req.dry_run,
+        cfg_override=req.api_config.model_dump(),
+        chapter_excludes=req.chapter_excludes,
+        max_chunks_per_book=req.max_chunks_per_book,
+        skip_initial_chunks=req.skip_initial_chunks,
+        chunk_strategy=req.chunk_strategy,
+        auto_clean=req.auto_clean,
+        auto_publish=req.auto_publish,
+        max_chunk_retries=req.api_config.max_chunk_retries,
+    )
+    if auto_chain_mode:
+        thread_kwargs["initial_selected_books"] = selected
+        thread_kwargs["batch_size"] = auto_batch_size
+    else:
+        thread_kwargs["selected_books"] = selected
+
     _job_thread = threading.Thread(
-        target=_run_extraction_job,
-        kwargs=dict(
-            job_id=job_id,
-            selected_books=selected,
-            label=req.label or "extraction",
-            dry_run=req.dry_run,
-            cfg_override=req.api_config.model_dump(),
-            chapter_excludes=req.chapter_excludes,
-            max_chunks_per_book=req.max_chunks_per_book,
-            skip_initial_chunks=req.skip_initial_chunks,
-            chunk_strategy=req.chunk_strategy,
-            auto_clean=req.auto_clean,
-            auto_publish=req.auto_publish,
-            max_chunk_retries=req.api_config.max_chunk_retries,
-        ),
+        target=target,
+        kwargs=thread_kwargs,
         daemon=True,
     )
     _job_thread.start()
@@ -1420,6 +1561,8 @@ def start_job(req: StartJobRequest):
         "job_id": job_id,
         "selected_books": [b.stem for b in selected],
         "auto_skipped_processed_books": auto_skipped_processed_books,
+        "auto_chain_mode": auto_chain_mode,
+        "auto_batch_size": auto_batch_size if auto_chain_mode else 0,
         "message": "任务已启动",
     }
 
@@ -1548,7 +1691,11 @@ async def job_stream():
                 "logs": new_logs,
             }, ensure_ascii=False)
             yield f"data: {payload}\n\n"
-            if state.get("status") in ("completed", "error", "cancelled") and state.get("phase") == "finished":
+            if (
+                state.get("status") in ("completed", "error", "cancelled")
+                and state.get("phase") == "finished"
+                and not _is_job_thread_alive()
+            ):
                 break
             await asyncio.sleep(1.0)
     return StreamingResponse(generator(), media_type="text/event-stream")
@@ -1609,11 +1756,11 @@ def run_resume_config(run_name: str):
         "api_config": {
             "model": str(manifest.get("model", "") or ""),
             "base_url": str(manifest.get("base_url", "") or ""),
-            "request_timeout": float(manifest_cfg.get("request_timeout", 90.0) or 90.0),
+            "request_timeout": float(manifest_cfg.get("request_timeout", 314.0) or 314.0),
             "max_retries": int(manifest_cfg.get("max_retries", 2) or 2),
-            "request_delay": float(manifest_cfg.get("request_delay", 0.8) or 0.8),
+            "request_delay": float(manifest_cfg.get("request_delay", 1.1) or 1.1),
             "retry_backoff_base": float(manifest_cfg.get("retry_backoff_base", 2.0) or 2.0),
-            "parallel_workers": int(manifest_cfg.get("parallel_workers", 4) or 4),
+            "parallel_workers": int(manifest_cfg.get("parallel_workers", 11) or 11),
             "max_chunk_retries": int(manifest_cfg.get("max_chunk_retries", 2) or 2),
         },
         "notes": {
