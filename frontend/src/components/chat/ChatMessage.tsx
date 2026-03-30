@@ -3,20 +3,27 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { EvidenceCard } from "@/components/chat/EvidenceCard";
+import { GraphPathCard } from "@/components/chat/GraphPathCard";
 import { RetrievalCard } from "@/components/chat/RetrievalCard";
+import { RouteCard } from "@/components/chat/RouteCard";
 import { ThoughtChain } from "@/components/chat/ThoughtChain";
-import type { RetrievalResult, ToolCall } from "@/lib/api";
+import type { EvidenceItem, RetrievalResult, RouteEvent, ToolCall } from "@/lib/api";
 
 export function ChatMessage({
   role,
   content,
   toolCalls,
-  retrievals
+  retrievals,
+  route,
+  evidence
 }: {
   role: "user" | "assistant";
   content: string;
   toolCalls: ToolCall[];
   retrievals: RetrievalResult[];
+  route?: RouteEvent;
+  evidence: EvidenceItem[];
 }) {
   const isUser = role === "user";
 
@@ -29,6 +36,9 @@ export function ChatMessage({
       }`}
     >
       {!isUser && <RetrievalCard results={retrievals} />}
+      {!isUser && <RouteCard route={route} />}
+      {!isUser && <GraphPathCard items={evidence} />}
+      {!isUser && <EvidenceCard items={evidence} />}
       {!isUser && <ThoughtChain toolCalls={toolCalls} />}
       <div className={isUser ? "whitespace-pre-wrap leading-7" : "markdown"}>
         {isUser ? (

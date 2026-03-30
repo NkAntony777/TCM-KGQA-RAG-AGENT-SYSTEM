@@ -1,0 +1,76 @@
+services:
+  metad0:
+    image: vesoft/nebula-metad:v3
+    container_name: nebula-metad0
+    restart: unless-stopped
+    command:
+      - --meta_server_addrs=metad0:9559
+      - --local_ip=metad0
+      - --ws_ip=metad0
+      - --port=9559
+      - --ws_http_port=19559
+      - --data_path=/data/meta
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    ports:
+      - "9559:9559"
+      - "19559:19559"
+    volumes:
+      - ./data/nebula/metad:/data/meta
+      - ./logs/nebula/metad:/logs
+    networks:
+      - nebula
+
+  storaged0:
+    image: vesoft/nebula-storaged:v3
+    container_name: nebula-storaged0
+    restart: unless-stopped
+    command:
+      - --meta_server_addrs=metad0:9559
+      - --local_ip=storaged0
+      - --ws_ip=storaged0
+      - --port=9779
+      - --ws_http_port=19779
+      - --data_path=/data/storage
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - metad0
+    ports:
+      - "9779:9779"
+      - "19779:19779"
+    volumes:
+      - ./data/nebula/storage:/data/storage
+      - ./logs/nebula/storage:/logs
+    networks:
+      - nebula
+
+  graphd0:
+    image: vesoft/nebula-graphd:v3
+    container_name: nebula-graphd0
+    restart: unless-stopped
+    command:
+      - --meta_server_addrs=metad0:9559
+      - --local_ip=graphd0
+      - --ws_ip=graphd0
+      - --port=9669
+      - --ws_http_port=19669
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - metad0
+      - storaged0
+    ports:
+      - "9669:9669"
+      - "19669:19669"
+    volumes:
+      - ./logs/nebula/graph:/logs
+    networks:
+      - nebula
+
+networks:
+  nebula:
+    name: nebula-local

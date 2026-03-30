@@ -125,11 +125,19 @@ class SessionManager:
         role: str,
         content: str,
         tool_calls: list[dict[str, Any]] | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         record = self._read_session_file(session_id)
         message: dict[str, Any] = {"role": role, "content": content}
         if tool_calls:
             message["tool_calls"] = tool_calls
+        if meta:
+            for key, value in meta.items():
+                if value is None:
+                    continue
+                if isinstance(value, (list, dict)) and not value:
+                    continue
+                message[key] = value
         record["messages"].append(message)
         self._write_session(record)
         return message

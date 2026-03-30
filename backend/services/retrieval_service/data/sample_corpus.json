@@ -1,0 +1,110 @@
+﻿[
+  {
+    "filename": "医方集解.txt",
+    "file_type": "TXT",
+    "file_path": "sample://医方集解.txt",
+    "page_number": 12,
+    "chunk_idx": 0,
+    "chunk_id": "xiaoyaosan::p12::l1::0",
+    "parent_chunk_id": "",
+    "root_chunk_id": "xiaoyaosan::p12::l1::0",
+    "chunk_level": 1,
+    "text": "逍遥散用于肝郁血虚、脾失健运之证，治法以疏肝解郁、养血健脾为主。"
+  },
+  {
+    "filename": "医方集解.txt",
+    "file_type": "TXT",
+    "file_path": "sample://医方集解.txt",
+    "page_number": 12,
+    "chunk_idx": 1,
+    "chunk_id": "xiaoyaosan::p12::l2::0",
+    "parent_chunk_id": "xiaoyaosan::p12::l1::0",
+    "root_chunk_id": "xiaoyaosan::p12::l1::0",
+    "chunk_level": 2,
+    "text": "逍遥散主治肝郁脾虚，常见胁肋作痛、神疲食少、月经不调等表现。"
+  },
+  {
+    "filename": "医方集解.txt",
+    "file_type": "TXT",
+    "file_path": "sample://医方集解.txt",
+    "page_number": 12,
+    "chunk_idx": 2,
+    "chunk_id": "xiaoyaosan::p12::l3::0",
+    "parent_chunk_id": "xiaoyaosan::p12::l2::0",
+    "root_chunk_id": "xiaoyaosan::p12::l1::0",
+    "chunk_level": 3,
+    "text": "逍遥散用于肝郁血虚、脾失健运之证，可见胁肋作痛、神疲食少。"
+  },
+  {
+    "filename": "本草纲目.txt",
+    "file_type": "TXT",
+    "file_path": "sample://本草纲目.txt",
+    "page_number": 87,
+    "chunk_idx": 3,
+    "chunk_id": "chaihu::p87::l1::0",
+    "parent_chunk_id": "",
+    "root_chunk_id": "chaihu::p87::l1::0",
+    "chunk_level": 1,
+    "text": "柴胡苦辛微寒，归肝胆经，长于疏肝解郁、和解少阳。"
+  },
+  {
+    "filename": "本草纲目.txt",
+    "file_type": "TXT",
+    "file_path": "sample://本草纲目.txt",
+    "page_number": 87,
+    "chunk_idx": 4,
+    "chunk_id": "chaihu::p87::l2::0",
+    "parent_chunk_id": "chaihu::p87::l1::0",
+    "root_chunk_id": "chaihu::p87::l1::0",
+    "chunk_level": 2,
+    "text": "柴胡归肝经、胆经，可疏肝解郁，常用于肝郁证与少阳证。"
+  },
+  {
+    "filename": "本草纲目.txt",
+    "file_type": "TXT",
+    "file_path": "sample://本草纲目.txt",
+    "page_number": 87,
+    "chunk_idx": 5,
+    "chunk_id": "chaihu::p87::l3::0",
+    "parent_chunk_id": "chaihu::p87::l2::0",
+    "root_chunk_id": "chaihu::p87::l1::0",
+    "chunk_level": 3,
+    "text": "柴胡苦辛微寒，归肝胆经，功效为疏肝解郁并和解少阳。"
+  },
+  {
+    "filename": "中医内科学.txt",
+    "file_type": "TXT",
+    "file_path": "sample://中医内科学.txt",
+    "page_number": 33,
+    "chunk_idx": 6,
+    "chunk_id": "ganyupixu::p33::l1::0",
+    "parent_chunk_id": "",
+    "root_chunk_id": "ganyupixu::p33::l1::0",
+    "chunk_level": 1,
+    "text": "肝郁脾虚多见胁肋胀痛、纳差乏力，治宜疏肝理气、健脾和中。"
+  },
+  {
+    "filename": "中医内科学.txt",
+    "file_type": "TXT",
+    "file_path": "sample://中医内科学.txt",
+    "page_number": 33,
+    "chunk_idx": 7,
+    "chunk_id": "ganyupixu::p33::l2::0",
+    "parent_chunk_id": "ganyupixu::p33::l1::0",
+    "root_chunk_id": "ganyupixu::p33::l1::0",
+    "chunk_level": 2,
+    "text": "肝郁脾虚的治法为疏肝健脾，可配合逍遥散加减。"
+  },
+  {
+    "filename": "中医内科学.txt",
+    "file_type": "TXT",
+    "file_path": "sample://中医内科学.txt",
+    "page_number": 33,
+    "chunk_idx": 8,
+    "chunk_id": "ganyupixu::p33::l3::0",
+    "parent_chunk_id": "ganyupixu::p33::l2::0",
+    "root_chunk_id": "ganyupixu::p33::l1::0",
+    "chunk_level": 3,
+    "text": "肝郁脾虚调治宜疏肝理气、健脾和中，可配合逍遥散加减。"
+  }
+]

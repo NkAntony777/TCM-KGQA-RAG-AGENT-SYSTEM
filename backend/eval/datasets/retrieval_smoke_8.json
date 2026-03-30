@@ -1,0 +1,50 @@
+[
+  {
+    "id": "retrieval_001",
+    "query": "逍遥散有什么功效",
+    "expected_any_chunk_ids": ["xiaoyaosan::p12::l3::0", "ganyupixu::p33::l3::0"],
+    "expected_any_source_files": ["医方集解.txt", "中医内科学.txt"]
+  },
+  {
+    "id": "retrieval_002",
+    "query": "逍遥散治疗什么证候",
+    "expected_any_chunk_ids": ["xiaoyaosan::p12::l3::0", "ganyupixu::p33::l3::0"],
+    "expected_any_source_files": ["医方集解.txt", "中医内科学.txt"]
+  },
+  {
+    "id": "retrieval_003",
+    "query": "柴胡归什么经",
+    "expected_any_chunk_ids": ["chaihu::p87::l3::0"],
+    "expected_any_source_files": ["本草纲目.txt"]
+  },
+  {
+    "id": "retrieval_004",
+    "query": "柴胡的功效是什么",
+    "expected_any_chunk_ids": ["chaihu::p87::l3::0"],
+    "expected_any_source_files": ["本草纲目.txt"]
+  },
+  {
+    "id": "retrieval_005",
+    "query": "肝郁脾虚如何调治",
+    "expected_any_chunk_ids": ["ganyupixu::p33::l3::0"],
+    "expected_any_source_files": ["中医内科学.txt"]
+  },
+  {
+    "id": "retrieval_006",
+    "query": "肝郁脾虚适合什么方剂",
+    "expected_any_chunk_ids": ["ganyupixu::p33::l3::0", "xiaoyaosan::p12::l3::0"],
+    "expected_any_source_files": ["中医内科学.txt", "医方集解.txt"]
+  },
+  {
+    "id": "retrieval_007",
+    "query": "疏肝解郁的药物有哪些",
+    "expected_any_chunk_ids": ["chaihu::p87::l3::0"],
+    "expected_any_source_files": ["本草纲目.txt"]
+  },
+  {
+    "id": "retrieval_008",
+    "query": "逍遥散和肝郁脾虚有什么关系",
+    "expected_any_chunk_ids": ["xiaoyaosan::p12::l3::0", "ganyupixu::p33::l3::0"],
+    "expected_any_source_files": ["医方集解.txt", "中医内科学.txt"]
+  }
+]

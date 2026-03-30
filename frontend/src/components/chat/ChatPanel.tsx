@@ -48,9 +48,11 @@ export function ChatPanel() {
           {messages.map((message) => (
             <ChatMessage
               content={message.content}
+              evidence={message.evidence}
               key={message.id}
               retrievals={message.retrievals}
               role={message.role}
+              route={message.route}
               toolCalls={message.toolCalls}
             />
           ))}

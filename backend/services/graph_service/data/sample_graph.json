@@ -1,0 +1,182 @@
+[
+  {
+    "subject": "逍遥散",
+    "predicate": "使用药材",
+    "object": "柴胡",
+    "subject_type": "formula",
+    "object_type": "herb",
+    "source_book": "医方集解",
+    "source_chapter": "卷一"
+  },
+  {
+    "subject": "逍遥散",
+    "predicate": "使用药材",
+    "object": "当归",
+    "subject_type": "formula",
+    "object_type": "herb",
+    "source_book": "医方集解",
+    "source_chapter": "卷一"
+  },
+  {
+    "subject": "逍遥散",
+    "predicate": "使用药材",
+    "object": "白芍",
+    "subject_type": "formula",
+    "object_type": "herb",
+    "source_book": "医方集解",
+    "source_chapter": "卷一"
+  },
+  {
+    "subject": "逍遥散",
+    "predicate": "治疗证候",
+    "object": "肝郁脾虚",
+    "subject_type": "formula",
+    "object_type": "syndrome",
+    "source_book": "和剂局方",
+    "source_chapter": "方剂门"
+  },
+  {
+    "subject": "逍遥散",
+    "predicate": "功效",
+    "object": "疏肝解郁",
+    "subject_type": "formula",
+    "object_type": "therapy",
+    "source_book": "医方集解",
+    "source_chapter": "卷一"
+  },
+  {
+    "subject": "逍遥散",
+    "predicate": "功效",
+    "object": "健脾养血",
+    "subject_type": "formula",
+    "object_type": "therapy",
+    "source_book": "医方集解",
+    "source_chapter": "卷一"
+  },
+  {
+    "subject": "肝郁脾虚",
+    "predicate": "常见症状",
+    "object": "胁肋胀痛",
+    "subject_type": "syndrome",
+    "object_type": "symptom",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  },
+  {
+    "subject": "肝郁脾虚",
+    "predicate": "常见症状",
+    "object": "神疲食少",
+    "subject_type": "syndrome",
+    "object_type": "symptom",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  },
+  {
+    "subject": "肝郁脾虚",
+    "predicate": "常见症状",
+    "object": "月经不调",
+    "subject_type": "syndrome",
+    "object_type": "symptom",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  },
+  {
+    "subject": "肝郁脾虚",
+    "predicate": "治法",
+    "object": "疏肝健脾",
+    "subject_type": "syndrome",
+    "object_type": "therapy",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  },
+  {
+    "subject": "肝郁脾虚",
+    "predicate": "推荐方剂",
+    "object": "逍遥散",
+    "subject_type": "syndrome",
+    "object_type": "formula",
+    "source_book": "医宗金鉴",
+    "source_chapter": "杂病心法"
+  },
+  {
+    "subject": "柴胡",
+    "predicate": "功效",
+    "object": "疏肝解郁",
+    "subject_type": "herb",
+    "object_type": "therapy",
+    "source_book": "本草纲目",
+    "source_chapter": "草部"
+  },
+  {
+    "subject": "柴胡",
+    "predicate": "归经",
+    "object": "肝经",
+    "subject_type": "herb",
+    "object_type": "channel",
+    "source_book": "本草纲目",
+    "source_chapter": "草部"
+  },
+  {
+    "subject": "当归",
+    "predicate": "功效",
+    "object": "养血活血",
+    "subject_type": "herb",
+    "object_type": "therapy",
+    "source_book": "本草纲目",
+    "source_chapter": "草部"
+  },
+  {
+    "subject": "天麻钩藤饮",
+    "predicate": "治疗证候",
+    "object": "肝阳上亢",
+    "subject_type": "formula",
+    "object_type": "syndrome",
+    "source_book": "杂病证治新义",
+    "source_chapter": "眩晕门"
+  },
+  {
+    "subject": "肝阳上亢",
+    "predicate": "常见症状",
+    "object": "头痛",
+    "subject_type": "syndrome",
+    "object_type": "symptom",
+    "source_book": "中医内科学",
+    "source_chapter": "眩晕篇"
+  },
+  {
+    "subject": "肝阳上亢",
+    "predicate": "推荐方剂",
+    "object": "天麻钩藤饮",
+    "subject_type": "syndrome",
+    "object_type": "formula",
+    "source_book": "中医内科学",
+    "source_chapter": "眩晕篇"
+  },
+  {
+    "subject": "丹栀逍遥散",
+    "predicate": "治疗证候",
+    "object": "肝郁化火",
+    "subject_type": "formula",
+    "object_type": "syndrome",
+    "source_book": "内科摘要",
+    "source_chapter": "郁证门"
+  },
+  {
+    "subject": "肝郁化火",
+    "predicate": "常见症状",
+    "object": "烦躁",
+    "subject_type": "syndrome",
+    "object_type": "symptom",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  },
+  {
+    "subject": "肝郁化火",
+    "predicate": "推荐方剂",
+    "object": "丹栀逍遥散",
+    "subject_type": "syndrome",
+    "object_type": "formula",
+    "source_book": "中医内科学",
+    "source_chapter": "郁证篇"
+  }
+]

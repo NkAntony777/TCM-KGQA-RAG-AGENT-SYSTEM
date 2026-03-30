@@ -5,9 +5,24 @@ import json
 from pathlib import Path
 from typing import Any
 
-from llama_index.core import Document, Settings as LlamaSettings, StorageContext, VectorStoreIndex, load_index_from_storage
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.embeddings.openai import OpenAIEmbedding
+try:
+    from llama_index.core import (
+        Document,
+        Settings as LlamaSettings,
+        StorageContext,
+        VectorStoreIndex,
+        load_index_from_storage,
+    )
+    from llama_index.core.node_parser import SentenceSplitter
+    from llama_index.embeddings.openai import OpenAIEmbedding
+except ImportError:  # pragma: no cover - runtime optional dependency
+    Document = None
+    LlamaSettings = None
+    StorageContext = None
+    VectorStoreIndex = None
+    load_index_from_storage = None
+    SentenceSplitter = None
+    OpenAIEmbedding = None
 
 from config import get_settings
 
@@ -39,10 +54,12 @@ class MemoryIndexer:
         return self._storage_dir / "meta.json"
 
     def _supports_embeddings(self) -> bool:
-        return bool(get_settings().embedding_api_key)
+        return bool(get_settings().embedding_api_key) and OpenAIEmbedding is not None and VectorStoreIndex is not None
 
     def _build_embed_model(self) -> OpenAIEmbedding:
         settings = get_settings()
+        if OpenAIEmbedding is None:
+            raise RuntimeError("llama-index embedding dependencies are not installed")
         return OpenAIEmbedding(
             api_key=settings.embedding_api_key,
             api_base=settings.embedding_base_url,
@@ -83,6 +100,9 @@ class MemoryIndexer:
             return
 
         try:
+            if LlamaSettings is None or SentenceSplitter is None or Document is None or VectorStoreIndex is None:
+                self._index = None
+                return
             LlamaSettings.embed_model = self._build_embed_model()
             content = self._memory_path.read_text(encoding="utf-8").strip()
             splitter = SentenceSplitter(chunk_size=256, chunk_overlap=32)
@@ -104,6 +124,9 @@ class MemoryIndexer:
             self.rebuild_index()
             return
         try:
+            if LlamaSettings is None or StorageContext is None or load_index_from_storage is None:
+                self._index = None
+                return
             LlamaSettings.embed_model = self._build_embed_model()
             storage_context = StorageContext.from_defaults(persist_dir=str(self._storage_dir))
             self._index = load_index_from_storage(storage_context)

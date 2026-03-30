@@ -2,12 +2,62 @@ export type ToolCall = {
   tool: string;
   input: string;
   output: string;
+  meta?: {
+    code?: number;
+    message?: string;
+    trace_id?: string;
+    backend?: string;
+    warning?: string;
+    status?: string;
+    final_route?: string;
+    service_trace_ids?: Record<string, string | null>;
+    service_backends?: Record<string, string | null>;
+  };
 };
 
 export type RetrievalResult = {
   text: string;
   score: number;
   source: string;
+};
+
+export type EvidenceItem = {
+  source_type: string;
+  source: string;
+  snippet: string;
+  score: number | null;
+  fact_id?: string;
+  source_book?: string;
+  source_chapter?: string;
+  source_text?: string;
+  confidence?: number | null;
+  predicate?: string;
+  target?: string;
+  path_nodes?: string[];
+  path_edges?: string[];
+  path_sources?: Array<{
+    source_book?: string;
+    source_chapter?: string;
+    fact_id?: string;
+    source_text?: string;
+    confidence?: number | null;
+  }>;
+};
+
+export type RouteEvent = {
+  route: string;
+  reason: string;
+  status: string;
+  final_route?: string;
+  executed_routes?: string[];
+  degradation?: Array<{
+    from: string;
+    to: string;
+    reason: string;
+  }>;
+  service_health?: Record<string, unknown>;
+  service_trace_ids?: Record<string, string | null>;
+  service_backends?: Record<string, string | null>;
 };
 
 export type SessionSummary = {
@@ -28,6 +78,8 @@ export type SessionHistory = {
     role: "user" | "assistant";
     content: string;
     tool_calls?: ToolCall[];
+    route?: RouteEvent;
+    evidence?: EvidenceItem[];
   }>;
 };
 

@@ -3,11 +3,15 @@ from __future__ import annotations
 import json
 from typing import Type
 
-import html2text
 import httpx
 from langchain_core.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
+
+try:
+    import html2text
+except ImportError:  # pragma: no cover - optional at runtime
+    html2text = None
 
 
 class FetchURLInput(BaseModel):
@@ -24,6 +28,8 @@ class FetchURLTool(BaseTool):
         if "json" in content_type:
             return json.dumps(response.json(), ensure_ascii=False, indent=2)[:5000]
         if "html" in content_type:
+            if html2text is None:
+                return response.text[:5000]
             parser = html2text.HTML2Text()
             parser.ignore_links = False
             parser.ignore_images = True

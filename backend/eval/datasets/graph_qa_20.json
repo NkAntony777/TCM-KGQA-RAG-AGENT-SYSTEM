@@ -1,0 +1,142 @@
+[
+  {
+    "id": "graph_001",
+    "query": "六味地黄丸有哪些药材组成",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "方剂组成查询"
+  },
+  {
+    "id": "graph_002",
+    "query": "六味地黄丸治疗什么证候",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "方剂-证候关系"
+  },
+  {
+    "id": "graph_003",
+    "query": "熟地黄到真阴亏损的图谱路径是什么",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "路径查询"
+  },
+  {
+    "id": "graph_004",
+    "query": "四君子汤的配伍药材",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "配伍关系"
+  },
+  {
+    "id": "graph_005",
+    "query": "六味地黄丸的归经",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "归经查询"
+  },
+  {
+    "id": "graph_006",
+    "query": "脉微对应什么证候，推荐什么方剂",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "症状-证候-方剂链路"
+  },
+  {
+    "id": "graph_007",
+    "query": "肝肾不足用什么方剂治疗",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "证候推荐方剂"
+  },
+  {
+    "id": "graph_008",
+    "query": "六君子汤有什么功效",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "方剂功效"
+  },
+  {
+    "id": "graph_009",
+    "query": "升阳益胃汤使用哪些药材",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "方剂-药材"
+  },
+  {
+    "id": "graph_010",
+    "query": "四君子汤和六君子汤有什么关系，共用哪些药材",
+    "expected_route": "graph",
+    "category": "graph",
+    "note": "方剂间关系查询"
+  },
+  {
+    "id": "retrieval_001",
+    "query": "医方集解中对六味地黄丸有什么记载",
+    "expected_route": "retrieval",
+    "category": "retrieval",
+    "note": "原文出处查询"
+  },
+  {
+    "id": "retrieval_002",
+    "query": "汤头歌诀原文中六君子汤怎么说",
+    "expected_route": "retrieval",
+    "category": "retrieval",
+    "note": "古籍原句查询"
+  },
+  {
+    "id": "retrieval_003",
+    "query": "伤寒恒论对中风的定义和解释",
+    "expected_route": "retrieval",
+    "category": "retrieval",
+    "note": "概念定义查询"
+  },
+  {
+    "id": "retrieval_004",
+    "query": "补养之剂的来源出自哪部古籍",
+    "expected_route": "retrieval",
+    "category": "retrieval",
+    "note": "出处查询"
+  },
+  {
+    "id": "retrieval_005",
+    "query": "下法是什么意思，古籍有哪些记载",
+    "expected_route": "retrieval",
+    "category": "retrieval",
+    "note": "定义+文献"
+  },
+  {
+    "id": "hybrid_001",
+    "query": "六味地黄丸的药材组成，并说明其在古籍中的记载",
+    "expected_route": "hybrid",
+    "category": "hybrid",
+    "note": "组成(graph)+文献(retrieval)"
+  },
+  {
+    "id": "hybrid_002",
+    "query": "真阴亏损的证候特征以及古籍的原文描述",
+    "expected_route": "hybrid",
+    "category": "hybrid",
+    "note": "图谱证候+文献原文"
+  },
+  {
+    "id": "hybrid_003",
+    "query": "六君子汤治疗证候以及汤头歌诀的相关记载",
+    "expected_route": "hybrid",
+    "category": "hybrid",
+    "note": "方剂图谱+古籍文献"
+  },
+  {
+    "id": "hybrid_004",
+    "query": "脾弱阳虚对应什么方剂，结合文献说明",
+    "expected_route": "hybrid",
+    "category": "hybrid",
+    "note": "证候-方剂+文献"
+  },
+  {
+    "id": "hybrid_005",
+    "query": "升阳益胃汤的功效及其出处文献",
+    "expected_route": "hybrid",
+    "category": "hybrid",
+    "note": "功效图谱+文献出处"
+  }
+]

@@ -6,6 +6,7 @@ import {
   compressSession,
   createSession,
   deleteSession,
+  type EvidenceItem,
   getRagMode,
   getSessionHistory,
   getSessionTokens,
@@ -16,6 +17,7 @@ import {
   saveFile,
   setRagMode,
   streamChat,
+  type RouteEvent,
   type RetrievalResult,
   type SessionSummary,
   type ToolCall
@@ -27,6 +29,8 @@ type Message = {
   content: string;
   toolCalls: ToolCall[];
   retrievals: RetrievalResult[];
+  route?: RouteEvent;
+  evidence: EvidenceItem[];
 };
 
 type TokenStats = {
@@ -84,7 +88,9 @@ function toUiMessages(history: Awaited<ReturnType<typeof getSessionHistory>>["me
     role: message.role,
     content: message.content ?? "",
     toolCalls: message.tool_calls ?? [],
-    retrievals: []
+    retrievals: [],
+    route: message.route,
+    evidence: message.evidence ?? []
   }));
 }
 
@@ -159,14 +165,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       role: "user",
       content: value.trim(),
       toolCalls: [],
-      retrievals: []
+      retrievals: [],
+      evidence: []
     };
     const assistantMessage: Message = {
       id: makeId(),
       role: "assistant",
       content: "",
       toolCalls: [],
-      retrievals: []
+      retrievals: [],
+      evidence: []
     };
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
@@ -209,7 +217,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   {
                     tool: String(data.tool ?? "tool"),
                     input: String(data.input ?? ""),
-                    output: ""
+                    output: "",
+                    meta: undefined
                   }
                 ]
               }));
@@ -221,9 +230,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 ...message,
                 toolCalls: message.toolCalls.map((toolCall, index, list) =>
                   index === list.length - 1
-                    ? { ...toolCall, output: String(data.output ?? "") }
+                    ? {
+                        ...toolCall,
+                        output: String(data.output ?? ""),
+                        meta:
+                          data.meta && typeof data.meta === "object"
+                            ? (data.meta as ToolCall["meta"])
+                            : toolCall.meta
+                      }
                     : toolCall
                 )
+              }));
+              return;
+            }
+
+            if (event === "route") {
+              patchAssistant((message) => ({
+                ...message,
+                route: data as unknown as RouteEvent
+              }));
+              return;
+            }
+
+            if (event === "evidence") {
+              patchAssistant((message) => ({
+                ...message,
+                evidence: Array.isArray(data.items)
+                  ? [...message.evidence, ...(data.items as EvidenceItem[])]
+                  : message.evidence
               }));
               return;
             }
@@ -234,7 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 role: "assistant",
                 content: "",
                 toolCalls: [],
-                retrievals: []
+                retrievals: [],
+                evidence: []
               };
               activeAssistantId = nextAssistant.id;
               setMessages((prev) => [...prev, nextAssistant]);
