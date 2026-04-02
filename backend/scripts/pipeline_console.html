@@ -107,12 +107,24 @@
   .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
   .stat-value { font-size: 22px; font-weight: 700; color: var(--text); }
   .stat-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .provider-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .provider-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .provider-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .provider-weight { font-size: 11px; color: var(--text3); }
+  .provider-model { font-size: 11px; color: var(--text2); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .provider-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .provider-metric { background: rgba(255,255,255,.02); border-radius: 6px; padding: 8px; }
+  .provider-metric-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .provider-metric-value { font-size: 14px; font-weight: 700; color: var(--text); }
+  .provider-empty { color: var(--text3); font-size: 12px; padding: 12px 0; }
 
   /* ── 状态标签 ── */
   .status-badge { display: inline-flex; align-items: center; gap: 4px;
     font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
   .status-running { background: rgba(91,124,250,.2); color: var(--accent); }
   .status-completed { background: rgba(34,197,94,.15); color: var(--green); }
+  .status-partial { background: rgba(245,158,11,.15); color: var(--yellow); }
   .status-error { background: rgba(239,68,68,.15); color: var(--red); }
   .status-cancelled { background: rgba(245,158,11,.15); color: var(--yellow); }
   .status-idle { background: var(--surface2); color: var(--text3); }
@@ -275,6 +287,7 @@
     <div class="spacer"></div>
     <nav class="nav">
       <button class="active" onclick="showPage('extract')">🚀 提取</button>
+      <button onclick="showPage('benchmark')">🧪 实验台</button>
       <button onclick="showPage('runs')">📁 历史</button>
       <button onclick="showPage('graph')">🕸️ 图谱</button>
     </nav>
@@ -344,6 +357,16 @@
           <span id="progressPct">0%</span>
         </div>
 
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span class="section-label">负载均衡监控</span>
+            <span id="providerMonitorMeta" style="font-size:11px;color:var(--text3)">等待 provider 数据</span>
+          </div>
+          <div id="providerMonitorGrid" class="provider-grid">
+            <div class="provider-empty">等待任务开始后展示 provider 指标</div>
+          </div>
+        </div>
+
         <!-- 日志 -->
         <div style="margin-top:14px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -360,7 +383,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>模型名称</label>
-            <input id="cfgModel" placeholder="deepseek-ai/DeepSeek-V3.2" />
+            <input id="cfgModel" value="mimo-v2-pro" placeholder="mimo-v2-pro" />
           </div>
           <div class="form-group">
             <label>Base URL</label>
@@ -391,7 +414,7 @@
           </div>
           <div class="form-group">
             <label>并行 Workers</label>
-            <input id="cfgWorkers" type="number" value="11" min="1" max="16" />
+            <input id="cfgWorkers" type="number" value="11" min="1" max="128" />
             <div class="hint">chunk 重试队列会自动使用该值的一半并发，至少为 1。</div>
           </div>
         </div>
@@ -466,6 +489,311 @@
       </div>
     </div>
 
+    <!-- ─── 实验台页 ─── -->
+    <div class="page" id="page-benchmark">
+      <div class="card">
+        <div class="card-title"><span class="icon">🧪</span> 模型实验台
+          <span id="benchmarkStatusBadge" class="status-badge status-idle" style="margin-left:8px">空闲</span>
+          <button class="btn btn-danger btn-sm" id="benchmarkCancelBtn" style="margin-left:auto;display:none" onclick="cancelBenchmark()">⏹ 停止实验</button>
+        </div>
+        <div class="hint" style="margin-bottom:12px">
+          该实验台是独立模块，不走主提取任务状态。默认使用 `072-医方考 / chunk 20,30,50,100` 金标集做横评，价格不纳入综合分。
+        </div>
+        <div class="stat-grid" style="margin-bottom:14px">
+          <div class="stat-card">
+            <div class="stat-label">总体进度</div>
+            <div class="stat-value" id="benchmarkChunks">—</div>
+            <div class="stat-sub">model-chunk 完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">模型进度</div>
+            <div class="stat-value" id="benchmarkModels">—</div>
+            <div class="stat-sub">models 完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">当前模型</div>
+            <div class="stat-value" id="benchmarkCurrentModel" style="font-size:18px">—</div>
+            <div class="stat-sub" id="benchmarkCurrentChunk">等待启动</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">速度</div>
+            <div class="stat-value" id="benchmarkSpeed">—</div>
+            <div class="stat-sub">chunks / 分钟</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">预计剩余</div>
+            <div class="stat-value" id="benchmarkEta">—</div>
+            <div class="stat-sub" id="benchmarkElapsed"></div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="benchmarkProgressFill" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;display:flex;justify-content:space-between">
+          <span id="benchmarkProgressLabel">等待启动</span>
+          <span id="benchmarkProgressPct">0%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">⚙️</span> 实验配置</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>实验标签</label>
+            <input id="benchLabel" value="model_benchmark" />
+          </div>
+          <div class="form-group">
+            <label>基准书目</label>
+            <input id="benchBookName" readonly />
+          </div>
+          <div class="form-group">
+            <label>基准 Chunk</label>
+            <input id="benchChunkIds" readonly />
+          </div>
+          <div class="form-group">
+            <label>请求超时 (秒)</label>
+            <input id="benchTimeout" type="number" value="314" min="10" max="1200" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>最大重试次数</label>
+            <input id="benchMaxRetries" type="number" value="2" min="0" max="10" />
+          </div>
+          <div class="form-group">
+            <label>退避基数 (秒)</label>
+            <input id="benchBackoff" type="number" value="2.0" min="0.5" max="30" step="0.5" />
+          </div>
+          <div class="form-group">
+            <label>请求间隔 (秒)</label>
+            <input id="benchDelay" type="number" value="1.1" min="0" max="10" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>并行 Workers</label>
+            <input id="benchWorkers" type="number" value="11" min="1" max="128" />
+            <div class="hint">保留正式配置，实验执行仍按逐模型顺序对比，避免并发串扰。</div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>参评模型</label>
+          <div class="chips" id="benchmarkModelChips"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="benchmarkStartBtn" onclick="startBenchmark()">▶ 启动实验</button>
+          <button class="btn btn-ghost" onclick="reloadBenchmarkConfig()">重载默认配置</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">📈</span> 实时结果</div>
+        <div class="table-wrap" style="margin-bottom:14px">
+          <table>
+            <thead>
+              <tr>
+                <th>模型</th><th>状态</th><th>进度</th><th>三元组</th><th>F1</th><th>Recall</th><th>平均延迟(s)</th><th>低产出</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarkResultsBody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="section-label">实验日志</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearBenchmarkLog()">清除</button>
+        </div>
+        <div class="log-box" id="benchmarkLogBox"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">🗂️</span> 实验历史
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadBenchmarkHistory()">刷新</button>
+        </div>
+        <div class="hint" style="margin-bottom:12px">历史结果来自 `backend/storage/triple_benchmark_lab`，后端重启后仍可浏览。</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>运行目录</th><th>状态</th><th>书目</th><th>模型数</th><th>最佳模型</th><th>完成时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarkHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">📦</span> Chunk 大小扫描
+          <span id="chunkSweepStatusBadge" class="status-badge status-idle" style="margin-left:8px">空闲</span>
+          <button class="btn btn-danger btn-sm" id="chunkSweepCancelBtn" style="margin-left:auto;display:none" onclick="cancelChunkSweep()">⏹ 停止实验</button>
+        </div>
+        <div class="hint" style="margin-bottom:12px">
+          该实验聚焦 chunk 大小对速度、JSON 可解析性、低产出率和异常类型的影响，不做金标准确率评测。默认档位：800 / 1200 / 1800 / 2400 / 3000 / 4000 / 6000 / 8000 / 10000。
+        </div>
+        <div class="stat-grid" style="margin-bottom:14px">
+          <div class="stat-card">
+            <div class="stat-label">总体进度</div>
+            <div class="stat-value" id="chunkSweepCalls">—</div>
+            <div class="stat-sub">API 调用完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">档位进度</div>
+            <div class="stat-value" id="chunkSweepSizesDone">—</div>
+            <div class="stat-sub">sizes 完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">当前档位</div>
+            <div class="stat-value" id="chunkSweepCurrentSize" style="font-size:18px">—</div>
+            <div class="stat-sub" id="chunkSweepCurrentSample">等待启动</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">速度</div>
+            <div class="stat-value" id="chunkSweepSpeed">—</div>
+            <div class="stat-sub">calls / 分钟</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">预计剩余</div>
+            <div class="stat-value" id="chunkSweepEta">—</div>
+            <div class="stat-sub" id="chunkSweepElapsed"></div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="chunkSweepProgressFill" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;display:flex;justify-content:space-between">
+          <span id="chunkSweepProgressLabel">等待启动</span>
+          <span id="chunkSweepProgressPct">0%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">⚙️</span> Chunk 扫描配置</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>实验标签</label>
+            <input id="chunkSweepLabel" value="chunk_size_benchmark" />
+          </div>
+          <div class="form-group">
+            <label>书目</label>
+            <input id="chunkSweepBookName" value="072-医方考" />
+          </div>
+          <div class="form-group">
+            <label>模型</label>
+            <input id="chunkSweepModel" value="mimo-v2-pro" />
+          </div>
+          <div class="form-group">
+            <label>样本数</label>
+            <input id="chunkSweepSampleCount" type="number" value="5" min="2" max="8" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>基准 Chunk 大小</label>
+            <input id="chunkSweepBaselineChars" type="number" value="800" min="200" max="20000" step="100" />
+          </div>
+          <div class="form-group">
+            <label>基准 Overlap</label>
+            <input id="chunkSweepBaselineOverlap" type="number" value="200" min="0" max="5000" step="50" />
+          </div>
+          <div class="form-group">
+            <label>Overlap 比例</label>
+            <input id="chunkSweepOverlapRatio" type="number" value="0.125" min="0" max="0.5" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>请求超时 (秒)</label>
+            <input id="chunkSweepTimeout" type="number" value="314" min="10" max="1200" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>最大重试次数</label>
+            <input id="chunkSweepMaxRetries" type="number" value="2" min="0" max="10" />
+          </div>
+          <div class="form-group">
+            <label>请求间隔 (秒)</label>
+            <input id="chunkSweepDelay" type="number" value="1.1" min="0" max="10" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>退避基数 (秒)</label>
+            <input id="chunkSweepBackoff" type="number" value="2.0" min="0.5" max="30" step="0.5" />
+          </div>
+          <div class="form-group">
+            <label>并行 Workers</label>
+            <input id="chunkSweepWorkers" type="number" value="1" min="1" max="128" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Chunk 档位</label>
+          <textarea id="chunkSweepSizes" rows="3">800, 1200, 1800, 2400, 3000, 4000, 6000, 8000, 10000</textarea>
+          <div class="hint">用逗号分隔。实验会自动按 overlap 比例推导各档 overlap。</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="chunkSweepStartBtn" onclick="startChunkSweep()">▶ 启动 Chunk 扫描</button>
+          <button class="btn btn-ghost" onclick="reloadChunkSweepConfig()">重载默认配置</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> Chunk 扫描结果</div>
+        <div class="table-wrap" style="margin-bottom:14px">
+          <table>
+            <thead>
+              <tr>
+                <th>Chunk</th><th>Overlap</th><th>状态</th><th>调用</th><th>解析成功率</th><th>三元组</th><th>平均延迟(s)</th><th>每三元组耗时(s)</th><th>低产出</th><th>JSON/超时/其他</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="chunkSweepResultsBody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="section-label">实验日志</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearChunkSweepLog()">清除</button>
+        </div>
+        <div class="log-box" id="chunkSweepLogBox"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">🗂️</span> Chunk 扫描历史
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadChunkSweepHistory()">刷新</button>
+        </div>
+        <div class="hint" style="margin-bottom:12px">历史结果来自 `backend/storage/chunk_size_benchmark_lab`，后端重启后仍可浏览。</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>运行目录</th><th>状态</th><th>书目</th><th>模型</th><th>档位数</th><th>最佳档位</th><th>完成时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="chunkSweepHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="benchmarkDetailModal" onclick="handleModalBackdrop(event, 'benchmarkDetailModal', closeBenchmarkDetail)">
+        <div class="card modal-card" onclick="event.stopPropagation()">
+          <div class="card-title"><span class="icon">🔬</span> <span id="benchmarkDetailTitle">模型结果详情</span>
+            <span id="benchmarkDetailMeta" style="color:var(--text3);font-size:12px"></span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeBenchmarkDetail()">关闭</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>chunk</th><th>头结点</th><th>关系</th><th>尾结点</th><th>置信度</th><th>原文</th></tr></thead>
+              <tbody id="benchmarkDetailBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="chunkSweepDetailModal" onclick="handleModalBackdrop(event, 'chunkSweepDetailModal', closeChunkSweepDetail)">
+        <div class="card modal-card" onclick="event.stopPropagation()">
+          <div class="card-title"><span class="icon">🔎</span> <span id="chunkSweepDetailTitle">Chunk 结果详情</span>
+            <span id="chunkSweepDetailMeta" style="color:var(--text3);font-size:12px"></span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeChunkSweepDetail()">关闭</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>样本</th><th>章节</th><th>头结点</th><th>关系</th><th>尾结点</th><th>耗时(s)</th><th>错误/原始输出</th></tr></thead>
+              <tbody id="chunkSweepDetailBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── 历史记录页 ─── -->
     <div class="page" id="page-runs">
       <div class="card">
@@ -530,7 +858,7 @@
             </div>
             <div class="form-group">
               <label>并行 Workers</label>
-              <input id="resumeCfgWorkers" type="number" min="1" max="32" />
+              <input id="resumeCfgWorkers" type="number" min="1" max="128" />
               <div class="hint">chunk 重试队列会自动使用该值的一半并发，至少为 1。</div>
             </div>
           </div>
@@ -571,6 +899,20 @@
           </div>
         </div>
       </div>
+      <div class="modal-overlay" id="graphBookModal" onclick="handleModalBackdrop(event, 'graphBookModal', closeGraphBookDetail)">
+        <div class="card modal-card" onclick="event.stopPropagation()">
+          <div class="card-title"><span class="icon">📚</span> <span id="graphBookTitle">按书查看</span>
+            <span id="graphBookMeta" style="color:var(--text3);font-size:12px"></span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeGraphBookDetail()">关闭</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>头结点</th><th>关系</th><th>尾结点</th><th>来源章节</th><th>来源原文</th></tr></thead>
+              <tbody id="graphBookBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ─── 图谱统计页 ─── -->
@@ -589,6 +931,23 @@
             <div class="section-label">书目分布</div>
             <div id="bookBars"></div>
           </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📘</span> 按书管理
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadGraphBooks()">刷新书目</button>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group">
+            <label>书名筛选</label>
+            <input id="graphBookSearch" placeholder="输入书名关键词" oninput="filterGraphBooks()" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>书目</th><th>图谱三元组</th><th>处理状态</th><th>操作</th></tr></thead>
+            <tbody id="graphBooksBody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -610,6 +969,19 @@ let latestJobState = null;
 let seenStreamLogs = new Set();
 let currentResumeRun = '';
 let runsRefreshTimer = null;
+let graphBooksCache = [];
+let envProviders = [];
+let benchmarkConfig = null;
+let benchmarkSelectedModels = new Set();
+let benchmarkSource = null;
+let benchmarkSeenLogs = new Set();
+let benchmarkHistoryRuns = [];
+let benchmarkSelectedRunName = '';
+let chunkSweepConfig = null;
+let chunkSweepSource = null;
+let chunkSweepSeenLogs = new Set();
+let chunkSweepHistoryRuns = [];
+let chunkSweepSelectedRunName = '';
 
 // ─────────────────────────────────────────────────────────────
 // 初始化
@@ -617,7 +989,11 @@ let runsRefreshTimer = null;
 window.addEventListener('DOMContentLoaded', () => {
   loadEnvConfig();
   loadBooks();
+  loadBenchmarkConfig();
+  loadChunkSweepConfig();
   syncCurrentJob(true);
+  syncBenchmark(true);
+  syncChunkSweep(true);
   pollStatus();
 });
 
@@ -625,11 +1001,12 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
   document.querySelectorAll('.nav button').forEach((b, i) => {
-    b.classList.toggle('active', ['extract','runs','graph'][i] === name);
+    b.classList.toggle('active', ['extract','benchmark','runs','graph'][i] === name);
   });
   currentPage = name;
+  if (name === 'benchmark') { loadBenchmarkConfig(); syncBenchmark(true); loadBenchmarkHistory(); loadChunkSweepConfig(); syncChunkSweep(true); loadChunkSweepHistory(); }
   if (name === 'runs') loadRuns();
-  if (name === 'graph') loadGraphStats();
+  if (name === 'graph') { loadGraphStats(); loadGraphBooks(); }
 }
 
 function handleModalBackdrop(event, modalId, onClose) {
@@ -644,12 +1021,14 @@ async function loadEnvConfig() {
   try {
     const r = await fetch(`${API}/api/config/env`);
     const d = await r.json();
+    envProviders = Array.isArray(d.providers) ? d.providers : [];
     document.getElementById('envBadge').textContent =
-      `${d.model} · Key: ${d.api_key_hint}`;
+      `${d.model} · ${envProviders.length || 1} provider · Key: ${d.api_key_hint}`;
     if (d.model && !document.getElementById('cfgModel').value)
       document.getElementById('cfgModel').placeholder = d.model;
     if (d.base_url && !document.getElementById('cfgBaseUrl').value)
       document.getElementById('cfgBaseUrl').placeholder = d.base_url;
+    renderProviderMetrics([]);
   } catch (e) {
     document.getElementById('envBadge').textContent = '配置加载失败';
   }
@@ -818,6 +1197,22 @@ function pollStatus() {
         startSSE();
       }
     } catch (_) {}
+    try {
+      const r2 = await fetch(`${API}/api/benchmark/status`);
+      const d2 = await r2.json();
+      updateBenchmarkStatus(d2);
+      if (!benchmarkSource && d2 && d2.status === 'running') {
+        startBenchmarkSSE();
+      }
+    } catch (_) {}
+    try {
+      const r3 = await fetch(`${API}/api/chunk-benchmark/status`);
+      const d3 = await r3.json();
+      updateChunkSweepStatus(d3);
+      if (!chunkSweepSource && d3 && d3.status === 'running') {
+        startChunkSweepSSE();
+      }
+    } catch (_) {}
   }, 3000);
 }
 
@@ -834,6 +1229,7 @@ function updateStatus(state) {
     running: ['status-running', '运行中', true],
     cancelling: ['status-cancelled', '取消中', true],
     completed: ['status-completed', '已完成', false],
+    partial: ['status-partial', '未完成', false],
     error: ['status-error', '错误', false],
     cancelled: ['status-cancelled', '已取消', false],
     idle: ['status-idle', '空闲', false],
@@ -850,7 +1246,7 @@ function updateStatus(state) {
   // 数值
   const done = state.chunks_completed || 0;
   const total = state.chunks_total || 0;
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const pct = total > 0 ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : 0;
   document.getElementById('statChunks').textContent = `${done}/${total}`;
   document.getElementById('statTriples').textContent = state.total_triples ?? '—';
   document.getElementById('statSpeed').textContent = state.speed_chunks_per_min ?? '—';
@@ -869,9 +1265,11 @@ function updateStatus(state) {
   document.getElementById('progressLabel').textContent =
     state.current_chapter ? `当前: ${state.current_chapter}` :
     s === 'completed' ? '提取完成' :
+    s === 'partial' ? '提取未完成' :
     s === 'cancelling' ? '正在取消…' :
     s === 'running' ? '提取中…' : '等待启动';
   document.getElementById('progressPct').textContent = pct + '%';
+  renderProviderMetrics(state.provider_metrics || []);
 }
 
 function fmtSecs(s) {
@@ -906,6 +1304,78 @@ function appendStreamLog(entry) {
 function clearLog() {
   seenStreamLogs = new Set();
   document.getElementById('logBox').innerHTML = '';
+}
+
+function renderProviderMetrics(metrics) {
+  const grid = document.getElementById('providerMonitorGrid');
+  const meta = document.getElementById('providerMonitorMeta');
+  const activeMetrics = Array.isArray(metrics) && metrics.length
+    ? metrics
+    : (Array.isArray(envProviders) ? envProviders.map(p => ({
+        name: p.name,
+        model: p.model,
+        base_url: p.base_url,
+        weight: p.weight || 1,
+        success_count: 0,
+        failure_count: 0,
+        success_rate: 0,
+        failure_rate: 0,
+        avg_latency_ms: 0,
+        last_latency_ms: 0,
+        consecutive_failures: 0,
+      })) : []);
+  if (!activeMetrics.length) {
+    grid.innerHTML = '<div class="provider-empty">未检测到 provider 配置</div>';
+    meta.textContent = '未配置';
+    return;
+  }
+  const totalAttempts = activeMetrics.reduce((sum, item) => {
+    if (typeof item.attempt_count === 'number' && item.attempt_count > 0) {
+      return sum + item.attempt_count;
+    }
+    return sum + (item.success_count || 0) + (item.failure_count || 0);
+  }, 0);
+  meta.textContent = totalAttempts > 0 ? `累计尝试 ${totalAttempts} 次` : '等待任务开始';
+  grid.innerHTML = activeMetrics.map(item => {
+    const successRate = ((item.success_rate || 0) * 100).toFixed(1);
+    const failureRate = ((item.failure_rate || 0) * 100).toFixed(1);
+    const title = item.last_error ? ` title="${escapeHtml(item.last_error)}"` : '';
+    return `
+      <div class="provider-card"${title}>
+        <div class="provider-head">
+          <div class="provider-name">${escapeHtml(item.name || 'provider')}</div>
+          <div class="provider-weight">weight ${escapeHtml(item.weight ?? 1)}</div>
+        </div>
+        <div class="provider-model" title="${escapeHtml(item.model || '')}">${escapeHtml(item.model || '未设置模型')}</div>
+        <div class="provider-metrics">
+          <div class="provider-metric">
+            <div class="provider-metric-label">成功率</div>
+            <div class="provider-metric-value">${successRate}%</div>
+          </div>
+          <div class="provider-metric">
+            <div class="provider-metric-label">失败率</div>
+            <div class="provider-metric-value">${failureRate}%</div>
+          </div>
+          <div class="provider-metric">
+            <div class="provider-metric-label">平均延迟</div>
+            <div class="provider-metric-value">${Math.round(item.avg_latency_ms || 0)} ms</div>
+          </div>
+          <div class="provider-metric">
+            <div class="provider-metric-label">最近延迟</div>
+            <div class="provider-metric-value">${Math.round(item.last_latency_ms || 0)} ms</div>
+          </div>
+          <div class="provider-metric">
+            <div class="provider-metric-label">成功 / 失败</div>
+            <div class="provider-metric-value">${item.success_count || 0} / ${item.failure_count || 0}</div>
+          </div>
+          <div class="provider-metric">
+            <div class="provider-metric-label">连续失败</div>
+            <div class="provider-metric-value">${item.consecutive_failures || 0}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function escapeHtml(value) {
@@ -986,6 +1456,634 @@ function scheduleRunsRefresh(hasRunningNebula) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 模型实验台
+// ─────────────────────────────────────────────────────────────
+async function loadBenchmarkConfig() {
+  try {
+    const r = await fetch(`${API}/api/benchmark/config`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '加载实验配置失败');
+    benchmarkConfig = d;
+    if (!benchmarkSelectedModels.size) {
+      (d.default_models || []).forEach(model => benchmarkSelectedModels.add(model));
+    }
+    document.getElementById('benchBookName').value = d.default_book_name || '';
+    document.getElementById('benchChunkIds').value = (d.default_chunk_ids || []).join(', ');
+    document.getElementById('benchTimeout').value = d.default_api_config?.request_timeout ?? 314;
+    document.getElementById('benchMaxRetries').value = d.default_api_config?.max_retries ?? 2;
+    document.getElementById('benchBackoff').value = d.default_api_config?.retry_backoff_base ?? 2.0;
+    document.getElementById('benchDelay').value = d.default_api_config?.request_delay ?? 1.1;
+    document.getElementById('benchWorkers').value = d.default_api_config?.parallel_workers ?? 11;
+    renderBenchmarkModelChips();
+  } catch (e) {
+    appendBenchmarkLog('error', `实验配置加载失败: ${e.message || e}`);
+  }
+}
+
+function reloadBenchmarkConfig() {
+  benchmarkSelectedModels = new Set();
+  loadBenchmarkConfig();
+}
+
+function renderBenchmarkModelChips() {
+  const el = document.getElementById('benchmarkModelChips');
+  const models = benchmarkConfig?.default_models || [];
+  el.innerHTML = models.map(model => `
+    <span class="chip ${benchmarkSelectedModels.has(model) ? 'on' : ''}" onclick="toggleBenchmarkModel('${model}')">${model}</span>
+  `).join('');
+}
+
+function toggleBenchmarkModel(model) {
+  if (benchmarkSelectedModels.has(model)) benchmarkSelectedModels.delete(model);
+  else benchmarkSelectedModels.add(model);
+  renderBenchmarkModelChips();
+}
+
+function appendBenchmarkLog(level, msg) {
+  const box = document.getElementById('benchmarkLogBox');
+  const line = document.createElement('div');
+  line.className = `log-line log-${level}`;
+  line.textContent = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 400) box.removeChild(box.firstChild);
+}
+
+function clearBenchmarkLog() {
+  benchmarkSeenLogs = new Set();
+  document.getElementById('benchmarkLogBox').innerHTML = '';
+}
+
+function appendBenchmarkStreamLog(entry) {
+  if (!entry) return;
+  const key = `${entry.ts || ''}|${entry.level || ''}|${entry.msg || ''}`;
+  if (benchmarkSeenLogs.has(key)) return;
+  benchmarkSeenLogs.add(key);
+  appendBenchmarkLog(entry.level || 'info', `[${entry.ts}] ${entry.msg}`);
+}
+
+async function startBenchmark() {
+  if (!benchmarkSelectedModels.size) {
+    alert('请至少选择一个模型');
+    return;
+  }
+  if (latestJobState && ['running', 'cancelling'].includes(latestJobState.status || '')) {
+    if (!confirm('当前三元组提取任务仍在运行。并行做模型实验会干扰速度与稳定性对比，仍要继续吗？')) {
+      return;
+    }
+  }
+  const body = {
+    label: document.getElementById('benchLabel').value.trim() || 'model_benchmark',
+    book_name: benchmarkConfig?.default_book_name || '072-医方考',
+    chunk_ids: benchmarkConfig?.default_chunk_ids || [20, 30, 50, 100],
+    models: [...benchmarkSelectedModels],
+    api_config: {
+      request_timeout: parseFloat(document.getElementById('benchTimeout').value) || 314,
+      max_retries: parseInt(document.getElementById('benchMaxRetries').value) || 2,
+      retry_backoff_base: parseFloat(document.getElementById('benchBackoff').value) || 2.0,
+      request_delay: parseFloat(document.getElementById('benchDelay').value) || 1.1,
+      parallel_workers: parseInt(document.getElementById('benchWorkers').value) || 11,
+    }
+  };
+  const r = await fetch(`${API}/api/benchmark/start`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`启动实验失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  benchmarkSelectedRunName = '';
+  clearBenchmarkLog();
+  appendBenchmarkLog('info', `🧪 模型实验已启动 ${d.job_id}，共 ${d.models.length} 个模型`);
+  startBenchmarkSSE();
+}
+
+async function cancelBenchmark() {
+  if (!confirm('确认停止当前模型实验？')) return;
+  await fetch(`${API}/api/benchmark/cancel`, {method:'POST'});
+}
+
+async function syncBenchmark(connectStream = false) {
+  try {
+    const r = await fetch(`${API}/api/benchmark/status`);
+    const d = await r.json();
+    updateBenchmarkStatus(d);
+    if (connectStream && d && d.status === 'running' && !benchmarkSource) {
+      startBenchmarkSSE();
+    }
+  } catch (_) {}
+}
+
+function startBenchmarkSSE() {
+  if (benchmarkSource) {
+    benchmarkSource.close();
+    benchmarkSource = null;
+  }
+  benchmarkSource = new EventSource(`${API}/api/benchmark/stream`);
+  benchmarkSource.onmessage = e => {
+    const data = JSON.parse(e.data);
+    updateBenchmarkStatus(data.state || {});
+    (data.logs || []).forEach(appendBenchmarkStreamLog);
+  };
+  benchmarkSource.onerror = () => {
+    benchmarkSource.close();
+    benchmarkSource = null;
+  };
+}
+
+function updateBenchmarkStatus(state) {
+  if (!state || !state.status) return;
+  const statusMap = {
+    running: ['status-running', '运行中'],
+    starting: ['status-running', '启动中'],
+    completed: ['status-completed', '已完成'],
+    cancelled: ['status-cancelled', '已取消'],
+    error: ['status-error', '错误'],
+    idle: ['status-idle', '空闲'],
+  };
+  const [cls, label] = statusMap[state.status] || ['status-idle', state.status];
+  const badge = document.getElementById('benchmarkStatusBadge');
+  badge.className = `status-badge ${cls}`;
+  badge.textContent = label;
+  document.getElementById('benchmarkCancelBtn').style.display = ['running', 'starting'].includes(state.status) ? 'inline-flex' : 'none';
+  document.getElementById('benchmarkStartBtn').disabled = state.status === 'running' || state.status === 'starting';
+
+  const done = state.chunks_completed || 0;
+  const total = state.chunks_total || 0;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('benchmarkChunks').textContent = `${done}/${total}`;
+  document.getElementById('benchmarkModels').textContent = `${state.models_completed || 0}/${state.models_total || 0}`;
+  document.getElementById('benchmarkCurrentModel').textContent = state.current_model || '—';
+  document.getElementById('benchmarkCurrentChunk').textContent = state.current_chunk ? `chunk ${state.current_chunk}` : '等待启动';
+  document.getElementById('benchmarkSpeed').textContent = state.speed_chunks_per_min ?? '—';
+  document.getElementById('benchmarkEta').textContent = state.eta || '—';
+  document.getElementById('benchmarkElapsed').textContent = state.elapsed_secs ? `已用 ${fmtSecs(state.elapsed_secs)}` : '';
+  document.getElementById('benchmarkProgressFill').style.width = `${pct}%`;
+  document.getElementById('benchmarkProgressPct').textContent = `${pct}%`;
+  document.getElementById('benchmarkProgressLabel').textContent =
+    state.status === 'completed' ? '实验完成' :
+    state.status === 'cancelled' ? '实验已取消' :
+    state.current_model ? `当前 ${state.current_model}` : '等待启动';
+  renderBenchmarkResultsTable((state.ranking && state.ranking.length ? state.ranking : state.results) || []);
+  if (benchmarkSource && ['completed', 'cancelled', 'error'].includes(state.status)) {
+    benchmarkSource.close();
+    benchmarkSource = null;
+    if (currentPage === 'benchmark') {
+      loadBenchmarkHistory();
+    }
+  }
+}
+
+function renderBenchmarkResultsTable(rows) {
+  const body = document.getElementById('benchmarkResultsBody');
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="9" style="color:var(--text3)">暂无实验结果</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(row => `
+    <tr>
+      <td title="${escapeHtml(row.model)}">${escapeHtml(row.model)}</td>
+      <td>${escapeHtml(row.status || (row.rank ? `rank ${row.rank}` : 'pending'))}</td>
+      <td>${row.completed_chunks != null ? `${row.completed_chunks}/${row.total_chunks || 0}` : '—'}</td>
+      <td>${row.total_triples || 0}</td>
+      <td>${typeof row.f1 === 'number' ? row.f1.toFixed(3) : '—'}</td>
+      <td>${typeof row.recall === 'number' ? row.recall.toFixed(3) : '—'}</td>
+      <td>${typeof (row.mean_latency_sec ?? row.latency_mean_sec) === 'number' ? (row.mean_latency_sec ?? row.latency_mean_sec).toFixed(2) : '—'}</td>
+      <td>${row.low_yield_chunks || 0}</td>
+      <td class="actions-cell">
+        <div class="action-buttons">
+          <button class="btn btn-ghost btn-sm" onclick="viewBenchmarkModel('${row.model}')">查看结果</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function viewBenchmarkModel(modelName) {
+  const runQuery = benchmarkSelectedRunName ? `&run_name=${encodeURIComponent(benchmarkSelectedRunName)}` : '';
+  const r = await fetch(`${API}/api/benchmark/model?name=${encodeURIComponent(modelName)}${runQuery}`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`加载模型结果失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  document.getElementById('benchmarkDetailTitle').textContent = `${modelName} 结果详情`;
+  document.getElementById('benchmarkDetailMeta').textContent =
+    `总三元组 ${d.total_triples || 0} · F1 ${typeof d.f1 === 'number' ? d.f1.toFixed(3) : '—'} · Recall ${typeof d.recall === 'number' ? d.recall.toFixed(3) : '—'}`;
+  const rows = [];
+  (d.outputs || []).forEach(output => {
+    const predictedRows = output.predicted_rows || [];
+    if (!predictedRows.length) {
+      rows.push(`<tr><td>${output.chunk_index}</td><td colspan="5" style="color:var(--text3)">无三元组${output.error ? ` | ${escapeHtml(output.error)}` : ''}</td></tr>`);
+      return;
+    }
+    predictedRows.forEach(item => {
+      rows.push(`
+        <tr>
+          <td>${output.chunk_index}</td>
+          <td title="${escapeHtml(item.subject || '')}">${escapeHtml(item.subject || '')}</td>
+          <td title="${escapeHtml(item.predicate || '')}">${escapeHtml(item.predicate || '')}</td>
+          <td title="${escapeHtml(item.object || '')}">${escapeHtml(item.object || '')}</td>
+          <td>${typeof item.confidence === 'number' ? item.confidence.toFixed(2) : '—'}</td>
+          <td title="${escapeHtml(item.source_text || '')}">${escapeHtml((item.source_text || '').slice(0, 80))}</td>
+        </tr>
+      `);
+    });
+  });
+  document.getElementById('benchmarkDetailBody').innerHTML = rows.join('');
+  document.getElementById('benchmarkDetailModal').classList.add('show');
+}
+
+function closeBenchmarkDetail() {
+  document.getElementById('benchmarkDetailModal').classList.remove('show');
+}
+
+async function loadBenchmarkHistory() {
+  try {
+    const r = await fetch(`${API}/api/benchmark/history?limit=50`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '加载实验历史失败');
+    benchmarkHistoryRuns = d.runs || [];
+    renderBenchmarkHistory();
+    if (!benchmarkSelectedRunName && benchmarkHistoryRuns.length && !benchmarkSource) {
+      const status = document.getElementById('benchmarkStatusBadge')?.textContent || '';
+      if (status.includes('空闲') || status.includes('已完成') || status.includes('已取消') || status.includes('错误')) {
+        loadBenchmarkHistoryRun(benchmarkHistoryRuns[0].run_dir);
+      }
+    }
+  } catch (e) {
+    appendBenchmarkLog('error', `实验历史加载失败: ${e.message || e}`);
+  }
+}
+
+function renderBenchmarkHistory() {
+  const body = document.getElementById('benchmarkHistoryBody');
+  if (!benchmarkHistoryRuns.length) {
+    body.innerHTML = '<tr><td colspan="7" style="color:var(--text3)">暂无历史实验</td></tr>';
+    return;
+  }
+  body.innerHTML = benchmarkHistoryRuns.map(run => `
+    <tr>
+      <td title="${escapeHtml(run.run_dir)}">${escapeHtml(run.run_dir)}</td>
+      <td>${escapeHtml(run.status || 'unknown')}</td>
+      <td title="${escapeHtml(run.book_name || '')}">${escapeHtml(run.book_name || '')}</td>
+      <td>${Array.isArray(run.models) ? run.models.length : 0}</td>
+      <td>${escapeHtml(run.best_model || '—')}${run.best_f1 ? ` (${run.best_f1.toFixed(3)})` : ''}</td>
+      <td>${escapeHtml((run.finished_at || run.started_at || '').slice(0, 16) || '—')}</td>
+      <td class="actions-cell">
+        <div class="action-buttons">
+          <button class="btn btn-ghost btn-sm" onclick="loadBenchmarkHistoryRun('${run.run_dir}')">载入榜单</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadBenchmarkHistoryRun(runName) {
+  const r = await fetch(`${API}/api/benchmark/history/${encodeURIComponent(runName)}`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`加载历史实验失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  benchmarkSelectedRunName = runName;
+  updateBenchmarkStatus({
+    status: d.state?.status || 'completed',
+    models_completed: (d.manifest?.models || []).length,
+    models_total: (d.manifest?.models || []).length,
+    chunks_completed: 0,
+    chunks_total: 0,
+    current_model: '',
+    current_chunk: null,
+    elapsed_secs: d.state?.elapsed_secs || 0,
+    eta: '',
+    speed_chunks_per_min: 0,
+    ranking: d.ranking || [],
+    results: d.ranking || [],
+  });
+  appendBenchmarkLog('info', `已载入历史实验 ${runName}`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Chunk 大小扫描实验台
+// ─────────────────────────────────────────────────────────────
+function parseChunkSweepSizes() {
+  const raw = document.getElementById('chunkSweepSizes').value || '';
+  const values = raw
+    .split(/[,\n，]/)
+    .map(x => parseInt((x || '').trim(), 10))
+    .filter(x => Number.isFinite(x) && x >= 200);
+  return [...new Set(values)].sort((a, b) => a - b);
+}
+
+async function loadChunkSweepConfig() {
+  try {
+    const r = await fetch(`${API}/api/chunk-benchmark/config`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '加载 chunk 扫描配置失败');
+    chunkSweepConfig = d;
+    document.getElementById('chunkSweepBookName').value = d.default_book_name || '072-医方考';
+    document.getElementById('chunkSweepModel').value = d.default_model || 'mimo-v2-pro';
+    document.getElementById('chunkSweepSizes').value = (d.default_chunk_sizes || []).join(', ');
+    document.getElementById('chunkSweepSampleCount').value = d.default_sample_count ?? 5;
+    document.getElementById('chunkSweepBaselineChars').value = d.default_baseline_chunk_chars ?? 800;
+    document.getElementById('chunkSweepBaselineOverlap').value = d.default_baseline_overlap ?? 200;
+    document.getElementById('chunkSweepOverlapRatio').value = d.default_overlap_ratio ?? 0.125;
+    document.getElementById('chunkSweepTimeout').value = d.default_api_config?.request_timeout ?? 314;
+    document.getElementById('chunkSweepMaxRetries').value = d.default_api_config?.max_retries ?? 2;
+    document.getElementById('chunkSweepDelay').value = d.default_api_config?.request_delay ?? 1.1;
+    document.getElementById('chunkSweepBackoff').value = d.default_api_config?.retry_backoff_base ?? 2.0;
+    document.getElementById('chunkSweepWorkers').value = d.default_api_config?.parallel_workers ?? 1;
+  } catch (e) {
+    appendChunkSweepLog('error', `chunk 扫描配置加载失败: ${e.message || e}`);
+  }
+}
+
+function reloadChunkSweepConfig() {
+  loadChunkSweepConfig();
+}
+
+function appendChunkSweepLog(level, msg) {
+  const box = document.getElementById('chunkSweepLogBox');
+  const line = document.createElement('div');
+  line.className = `log-line log-${level}`;
+  line.textContent = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 400) box.removeChild(box.firstChild);
+}
+
+function clearChunkSweepLog() {
+  chunkSweepSeenLogs = new Set();
+  document.getElementById('chunkSweepLogBox').innerHTML = '';
+}
+
+function appendChunkSweepStreamLog(entry) {
+  if (!entry) return;
+  const key = `${entry.ts || ''}|${entry.level || ''}|${entry.msg || ''}`;
+  if (chunkSweepSeenLogs.has(key)) return;
+  chunkSweepSeenLogs.add(key);
+  appendChunkSweepLog(entry.level || 'info', `[${entry.ts}] ${entry.msg}`);
+}
+
+async function startChunkSweep() {
+  const sizes = parseChunkSweepSizes();
+  if (!sizes.length) {
+    alert('请至少填写一个合法的 chunk 大小');
+    return;
+  }
+  const body = {
+    label: document.getElementById('chunkSweepLabel').value.trim() || 'chunk_size_benchmark',
+    book_name: document.getElementById('chunkSweepBookName').value.trim() || (chunkSweepConfig?.default_book_name || '072-医方考'),
+    model: document.getElementById('chunkSweepModel').value.trim() || (chunkSweepConfig?.default_model || 'mimo-v2-pro'),
+    chunk_sizes: sizes,
+    sample_count: parseInt(document.getElementById('chunkSweepSampleCount').value, 10) || 5,
+    baseline_chunk_chars: parseInt(document.getElementById('chunkSweepBaselineChars').value, 10) || 800,
+    baseline_overlap: parseInt(document.getElementById('chunkSweepBaselineOverlap').value, 10) || 200,
+    overlap_ratio: parseFloat(document.getElementById('chunkSweepOverlapRatio').value) || 0.125,
+    api_config: {
+      request_timeout: parseFloat(document.getElementById('chunkSweepTimeout').value) || 314,
+      max_retries: parseInt(document.getElementById('chunkSweepMaxRetries').value, 10) || 2,
+      request_delay: parseFloat(document.getElementById('chunkSweepDelay').value) || 1.1,
+      retry_backoff_base: parseFloat(document.getElementById('chunkSweepBackoff').value) || 2.0,
+      parallel_workers: parseInt(document.getElementById('chunkSweepWorkers').value, 10) || 1,
+    }
+  };
+  const r = await fetch(`${API}/api/chunk-benchmark/start`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`启动 chunk 扫描失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  chunkSweepSelectedRunName = '';
+  clearChunkSweepLog();
+  appendChunkSweepLog('info', `📦 Chunk 扫描已启动 ${d.job_id}，共 ${d.chunk_sizes.length} 档`);
+  startChunkSweepSSE();
+}
+
+async function cancelChunkSweep() {
+  if (!confirm('确认停止当前 chunk 扫描实验？')) return;
+  await fetch(`${API}/api/chunk-benchmark/cancel`, {method:'POST'});
+}
+
+async function syncChunkSweep(connectStream = false) {
+  try {
+    const r = await fetch(`${API}/api/chunk-benchmark/status`);
+    const d = await r.json();
+    updateChunkSweepStatus(d);
+    if (connectStream && d && d.status === 'running' && !chunkSweepSource) {
+      startChunkSweepSSE();
+    }
+  } catch (_) {}
+}
+
+function startChunkSweepSSE() {
+  if (chunkSweepSource) {
+    chunkSweepSource.close();
+    chunkSweepSource = null;
+  }
+  chunkSweepSource = new EventSource(`${API}/api/chunk-benchmark/stream`);
+  chunkSweepSource.onmessage = e => {
+    const data = JSON.parse(e.data);
+    updateChunkSweepStatus(data.state || {});
+    (data.logs || []).forEach(appendChunkSweepStreamLog);
+  };
+  chunkSweepSource.onerror = () => {
+    chunkSweepSource.close();
+    chunkSweepSource = null;
+  };
+}
+
+function updateChunkSweepStatus(state) {
+  if (!state || !state.status) return;
+  const statusMap = {
+    running: ['status-running', '运行中'],
+    starting: ['status-running', '启动中'],
+    completed: ['status-completed', '已完成'],
+    cancelled: ['status-cancelled', '已取消'],
+    error: ['status-error', '错误'],
+    idle: ['status-idle', '空闲'],
+  };
+  const [cls, label] = statusMap[state.status] || ['status-idle', state.status];
+  const badge = document.getElementById('chunkSweepStatusBadge');
+  badge.className = `status-badge ${cls}`;
+  badge.textContent = label;
+  document.getElementById('chunkSweepCancelBtn').style.display = ['running', 'starting'].includes(state.status) ? 'inline-flex' : 'none';
+  document.getElementById('chunkSweepStartBtn').disabled = state.status === 'running' || state.status === 'starting';
+
+  const done = state.calls_completed || 0;
+  const total = state.calls_total || 0;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const rows = (state.ranking && state.ranking.length ? state.ranking : state.results) || [];
+  const completedSizes = rows.filter(row => row.status === 'completed' || row.rank).length;
+  document.getElementById('chunkSweepCalls').textContent = `${done}/${total}`;
+  document.getElementById('chunkSweepSizesDone').textContent = `${completedSizes}/${(state.chunk_sizes || []).length || 0}`;
+  document.getElementById('chunkSweepCurrentSize').textContent = state.current_chunk_size ? `${state.current_chunk_size}` : '—';
+  document.getElementById('chunkSweepCurrentSample').textContent = state.current_sample ? `样本 ${state.current_sample}` : '等待启动';
+  document.getElementById('chunkSweepSpeed').textContent = state.speed_calls_per_min ?? '—';
+  document.getElementById('chunkSweepEta').textContent = state.eta || '—';
+  document.getElementById('chunkSweepElapsed').textContent = state.elapsed_secs ? `已用 ${fmtSecs(state.elapsed_secs)}` : '';
+  document.getElementById('chunkSweepProgressFill').style.width = `${pct}%`;
+  document.getElementById('chunkSweepProgressPct').textContent = `${pct}%`;
+  document.getElementById('chunkSweepProgressLabel').textContent =
+    state.status === 'completed' ? '实验完成' :
+    state.status === 'cancelled' ? '实验已取消' :
+    state.current_chunk_size ? `当前 chunk=${state.current_chunk_size}` : '等待启动';
+  renderChunkSweepResultsTable(rows);
+  if (chunkSweepSource && ['completed', 'cancelled', 'error'].includes(state.status)) {
+    chunkSweepSource.close();
+    chunkSweepSource = null;
+    if (currentPage === 'benchmark') {
+      loadChunkSweepHistory();
+    }
+  }
+}
+
+function renderChunkSweepResultsTable(rows) {
+  const body = document.getElementById('chunkSweepResultsBody');
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="11" style="color:var(--text3)">暂无 chunk 扫描结果</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(row => `
+    <tr>
+      <td>${row.chunk_size || '—'}</td>
+      <td>${row.overlap || 0}</td>
+      <td>${escapeHtml(row.status || (row.rank ? `rank ${row.rank}` : 'pending'))}</td>
+      <td>${row.completed_calls != null ? `${row.completed_calls}/${row.api_calls || 0}` : `${row.api_calls || 0}`}</td>
+      <td>${typeof row.parse_success_rate === 'number' ? `${(row.parse_success_rate * 100).toFixed(1)}%` : '—'}</td>
+      <td>${row.total_triples || 0}</td>
+      <td>${typeof row.latency_mean_sec === 'number' ? row.latency_mean_sec.toFixed(2) : '—'}</td>
+      <td>${typeof row.sec_per_triple === 'number' ? row.sec_per_triple.toFixed(3) : '∞'}</td>
+      <td>${row.low_yield_calls || 0}</td>
+      <td>${row.json_error_calls || 0}/${row.timeout_error_calls || 0}/${row.other_error_calls || 0}</td>
+      <td class="actions-cell">
+        <div class="action-buttons">
+          <button class="btn btn-ghost btn-sm" onclick="viewChunkSweepSize(${row.chunk_size})">查看结果</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function viewChunkSweepSize(chunkSize) {
+  const runQuery = chunkSweepSelectedRunName ? `&run_name=${encodeURIComponent(chunkSweepSelectedRunName)}` : '';
+  const r = await fetch(`${API}/api/chunk-benchmark/size?chunk_size=${encodeURIComponent(chunkSize)}${runQuery}`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`加载 chunk 结果失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  document.getElementById('chunkSweepDetailTitle').textContent = `chunk_size=${chunkSize} 结果详情`;
+  document.getElementById('chunkSweepDetailMeta').textContent =
+    `overlap ${d.overlap || 0} · 调用 ${d.api_calls || 0} · 解析成功率 ${typeof d.parse_success_rate === 'number' ? `${(d.parse_success_rate * 100).toFixed(1)}%` : '—'} · 每三元组耗时 ${typeof d.sec_per_triple === 'number' ? `${d.sec_per_triple.toFixed(3)}s` : '∞'}`;
+  const rows = [];
+  (d.outputs || []).forEach(output => {
+    const predictedRows = output.predicted_rows || [];
+    const sampleText = escapeHtml((output.sample_labels || []).join(', ') || '-');
+    const chapterText = escapeHtml(output.chapter_name || '');
+    const latencyText = typeof output.elapsed_sec === 'number' ? output.elapsed_sec.toFixed(2) : '—';
+    const rawPreview = escapeHtml((output.raw_response_text || output.error || '').slice(0, 120));
+    if (!predictedRows.length) {
+      rows.push(`<tr><td>${sampleText}</td><td>${chapterText}</td><td colspan="3" style="color:var(--text3)">无三元组</td><td>${latencyText}</td><td title="${escapeHtml(output.raw_response_text || output.error || '')}">${rawPreview || '—'}</td></tr>`);
+      return;
+    }
+    predictedRows.forEach(item => {
+      rows.push(`
+        <tr>
+          <td>${sampleText}</td>
+          <td>${chapterText}</td>
+          <td title="${escapeHtml(item.subject || '')}">${escapeHtml(item.subject || '')}</td>
+          <td title="${escapeHtml(item.predicate || '')}">${escapeHtml(item.predicate || '')}</td>
+          <td title="${escapeHtml(item.object || '')}">${escapeHtml(item.object || '')}</td>
+          <td>${latencyText}</td>
+          <td title="${escapeHtml(output.raw_response_text || output.error || '')}">${rawPreview || '—'}</td>
+        </tr>
+      `);
+    });
+  });
+  document.getElementById('chunkSweepDetailBody').innerHTML = rows.join('');
+  document.getElementById('chunkSweepDetailModal').classList.add('show');
+}
+
+function closeChunkSweepDetail() {
+  document.getElementById('chunkSweepDetailModal').classList.remove('show');
+}
+
+async function loadChunkSweepHistory() {
+  try {
+    const r = await fetch(`${API}/api/chunk-benchmark/history?limit=50`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '加载 chunk 扫描历史失败');
+    chunkSweepHistoryRuns = d.runs || [];
+    renderChunkSweepHistory();
+    if (!chunkSweepSelectedRunName && chunkSweepHistoryRuns.length && !chunkSweepSource) {
+      const status = document.getElementById('chunkSweepStatusBadge')?.textContent || '';
+      if (status.includes('空闲') || status.includes('已完成') || status.includes('已取消') || status.includes('错误')) {
+        loadChunkSweepHistoryRun(chunkSweepHistoryRuns[0].run_dir);
+      }
+    }
+  } catch (e) {
+    appendChunkSweepLog('error', `chunk 扫描历史加载失败: ${e.message || e}`);
+  }
+}
+
+function renderChunkSweepHistory() {
+  const body = document.getElementById('chunkSweepHistoryBody');
+  if (!chunkSweepHistoryRuns.length) {
+    body.innerHTML = '<tr><td colspan="8" style="color:var(--text3)">暂无 chunk 扫描历史</td></tr>';
+    return;
+  }
+  body.innerHTML = chunkSweepHistoryRuns.map(run => `
+    <tr>
+      <td title="${escapeHtml(run.run_dir)}">${escapeHtml(run.run_dir)}</td>
+      <td>${escapeHtml(run.status || 'unknown')}</td>
+      <td title="${escapeHtml(run.book_name || '')}">${escapeHtml(run.book_name || '')}</td>
+      <td title="${escapeHtml(run.model || '')}">${escapeHtml(run.model || '')}</td>
+      <td>${Array.isArray(run.chunk_sizes) ? run.chunk_sizes.length : 0}</td>
+      <td>${run.best_chunk_size || '—'}${run.best_parse_success_rate ? ` (${(run.best_parse_success_rate * 100).toFixed(1)}%)` : ''}</td>
+      <td>${escapeHtml((run.finished_at || run.started_at || '').slice(0, 16) || '—')}</td>
+      <td class="actions-cell">
+        <div class="action-buttons">
+          <button class="btn btn-ghost btn-sm" onclick="loadChunkSweepHistoryRun('${run.run_dir}')">载入榜单</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadChunkSweepHistoryRun(runName) {
+  const r = await fetch(`${API}/api/chunk-benchmark/history/${encodeURIComponent(runName)}`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`加载 chunk 扫描历史失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  chunkSweepSelectedRunName = runName;
+  updateChunkSweepStatus({
+    status: d.state?.status || 'completed',
+    chunk_sizes: d.manifest?.chunk_sizes || [],
+    calls_completed: 0,
+    calls_total: 0,
+    current_chunk_size: null,
+    current_sample: '',
+    elapsed_secs: d.state?.elapsed_secs || 0,
+    eta: '',
+    speed_calls_per_min: 0,
+    ranking: d.ranking || [],
+    results: d.ranking || [],
+  });
+  appendChunkSweepLog('info', `已载入 chunk 扫描历史 ${runName}`);
+}
+
+// ─────────────────────────────────────────────────────────────
 // 历史记录
 // ─────────────────────────────────────────────────────────────
 async function loadRuns() {
@@ -996,7 +2094,7 @@ async function loadRuns() {
   tbody.innerHTML = d.runs.map(run => {
     const statusColors = {
       completed: 'var(--green)', error: 'var(--red)',
-      running: 'var(--accent)', cancelled: 'var(--yellow)',
+      running: 'var(--accent)', cancelled: 'var(--yellow)', partial: 'var(--yellow)',
     };
     const color = statusColors[run.status] || 'var(--text3)';
     return `<tr>
@@ -1036,6 +2134,10 @@ async function viewTriples(runName) {
 
 function closeDetail() {
   document.getElementById('runDetailModal').classList.remove('show');
+}
+
+function closeGraphBookDetail() {
+  document.getElementById('graphBookModal').classList.remove('show');
 }
 
 async function openResumePanel(runName) {
@@ -1186,6 +2288,87 @@ async function publishRun(runName, btn) {
 // ─────────────────────────────────────────────────────────────
 // 图谱统计
 // ─────────────────────────────────────────────────────────────
+async function loadGraphBooks() {
+  const keyword = document.getElementById('graphBookSearch')?.value?.trim() || '';
+  const r = await fetch(`${API}/api/graph/books?limit=500&q=${encodeURIComponent(keyword)}`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`加载图谱书目失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  graphBooksCache = d.books || [];
+  renderGraphBooks(graphBooksCache);
+}
+
+function renderGraphBooks(books) {
+  const body = document.getElementById('graphBooksBody');
+  if (!body) return;
+  if (!books.length) {
+    body.innerHTML = '<tr><td colspan="4" style="color:var(--text3)">当前没有可查看的图谱书目</td></tr>';
+    return;
+  }
+  body.innerHTML = books.map(book => `
+    <tr>
+      <td title="${book.name}">${book.name}</td>
+      <td>${book.triple_count}</td>
+      <td>${book.processed ? '已处理' : '未处理'}</td>
+      <td class="actions-cell">
+        <div class="action-buttons">
+          <button class="btn btn-ghost btn-sm" onclick="viewGraphBook('${book.name.replace(/'/g,"\\'")}')">查看</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGraphBook('${book.name.replace(/'/g,"\\'")}')">删除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterGraphBooks() {
+  loadGraphBooks();
+}
+
+async function viewGraphBook(bookName) {
+  const r = await fetch(`${API}/api/graph/books/${encodeURIComponent(bookName)}/triples?limit=200`);
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`按书查看失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  document.getElementById('graphBookTitle').textContent = d.book || bookName;
+  document.getElementById('graphBookMeta').textContent = `共 ${d.total || 0} 条，当前展示前 ${Math.min((d.rows || []).length, 200)} 条`;
+  document.getElementById('graphBookBody').innerHTML = (d.rows || []).map(row => `
+    <tr>
+      <td title="${row.subject || ''}">${row.subject || ''}</td>
+      <td title="${row.predicate || ''}">${row.predicate || ''}</td>
+      <td title="${row.object || ''}">${row.object || ''}</td>
+      <td title="${row.source_chapter || ''}">${row.source_chapter || ''}</td>
+      <td title="${row.source_text || ''}">${row.source_text || ''}</td>
+    </tr>
+  `).join('');
+  document.getElementById('graphBookModal').classList.add('show');
+}
+
+async function deleteGraphBook(bookName) {
+  if (!confirm(`确认按书删除 ${bookName} 吗？\n这会同时更新 graph_runtime、evidence、Nebula，并将该书标记为未处理。`)) return;
+  const r = await fetch(`${API}/api/graph/books/delete`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      books: [bookName],
+      sync_nebula: true,
+      mark_unprocessed: true,
+    }),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    alert(`按书删除失败: ${d.detail || 'unknown_error'}`);
+    return;
+  }
+  alert(`删除完成：${bookName}\n移除三元组 ${d.removed_triples}\n剩余三元组 ${d.remaining_triples}\nNebula 同步: ${d.nebula ? '已完成' : '未执行'}`);
+  await loadGraphStats();
+  await loadGraphBooks();
+  await loadBooks();
+}
+
 async function loadGraphStats() {
   const r = await fetch(`${API}/api/graph/stats`);
   const d = await r.json();

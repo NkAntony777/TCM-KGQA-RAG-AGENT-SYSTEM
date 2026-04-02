@@ -36,7 +36,7 @@ def _load_run_manifest(run_name: str) -> tuple[Path, dict[str, Any]]:
 
 def _build_pipeline_from_manifest(manifest: dict[str, Any]) -> TCMTriplePipeline:
     config = manifest.get("config", {}) if isinstance(manifest.get("config"), dict) else {}
-    model = manifest.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="deepseek-ai/DeepSeek-V3.2")
+    model = manifest.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="mimo-v2-pro")
     base_url = manifest.get("base_url") or _first_env(
         "TRIPLE_LLM_BASE_URL",
         "LLM_BASE_URL",

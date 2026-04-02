@@ -9,9 +9,10 @@ import re
 import textwrap
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import httpx
@@ -40,6 +41,12 @@ PREFERRED_PREDICATES = {
     "治法",
     "别名",
     "属于范畴",
+    "食忌",
+    "配伍禁忌",
+    "用法",
+    "药性",
+    "五味",
+    "升降浮沉",
 }
 NOISE_TEXT_PATTERNS = [
     "出版社",
@@ -93,6 +100,159 @@ def _safe_read_text(path: Path) -> str:
 def _slugify(text: str) -> str:
     cleaned = re.sub(r"[^\w\u4e00-\u9fff-]+", "_", text.strip())
     return cleaned.strip("_") or "run"
+
+
+def _sanitize_provider_name(name: str, index: int) -> str:
+    cleaned = re.sub(r"[^\w\u4e00-\u9fff-]+", "_", str(name or "").strip())
+    return cleaned.strip("_") or f"provider_{index}"
+
+
+def _provider_to_dict(provider: "LLMProviderConfig") -> dict[str, Any]:
+    return {
+        "name": provider.name,
+        "model": provider.model,
+        "base_url": provider.base_url,
+        "weight": int(provider.weight),
+        "enabled": bool(provider.enabled),
+        "api_key_set": bool(provider.api_key),
+    }
+
+
+def _env_flag(*names: str, default: bool | None = None) -> bool | None:
+    raw = _first_env(*names)
+    if not raw:
+        return default
+    lowered = raw.strip().lower()
+    if lowered in {"1", "true", "yes", "on"}:
+        return True
+    if lowered in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _build_env_provider(
+    *,
+    index: int,
+    name_envs: tuple[str, ...],
+    default_name: str,
+    model_envs: tuple[str, ...],
+    api_key_envs: tuple[str, ...],
+    base_url_envs: tuple[str, ...],
+    weight_envs: tuple[str, ...] = (),
+    enabled_envs: tuple[str, ...] = (),
+) -> "LLMProviderConfig" | None:
+    enabled = _env_flag(*enabled_envs, default=True) if enabled_envs else True
+    if enabled is False:
+        return None
+    model = _first_env(*model_envs)
+    api_key = _first_env(*api_key_envs)
+    base_url = _first_env(*base_url_envs)
+    if not model or not api_key or not base_url:
+        return None
+    return LLMProviderConfig(
+        name=_sanitize_provider_name(_first_env(*name_envs, default=default_name), index),
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        weight=max(1, int(_first_env(*weight_envs, default="1") or 1)),
+        enabled=True,
+    )
+
+
+def _normalize_provider_configs(
+    raw_providers: Any,
+    *,
+    fallback_model: str,
+    fallback_api_key: str,
+    fallback_base_url: str,
+) -> tuple["LLMProviderConfig", ...]:
+    providers: list[LLMProviderConfig] = []
+    raw_env_providers = _first_env("TRIPLE_LLM_PROVIDERS")
+
+    if not raw_providers and raw_env_providers:
+        try:
+            decoded = json.loads(raw_env_providers)
+        except json.JSONDecodeError:
+            decoded = []
+        if isinstance(decoded, list):
+            raw_providers = decoded
+
+    if isinstance(raw_providers, list):
+        for index, item in enumerate(raw_providers, start=1):
+            if isinstance(item, LLMProviderConfig):
+                if item.enabled and item.api_key and item.base_url and item.model:
+                    providers.append(item)
+                continue
+            if not isinstance(item, dict):
+                continue
+            enabled = bool(item.get("enabled", True))
+            model = str(item.get("model") or fallback_model).strip()
+            api_key = str(item.get("api_key") or "").strip()
+            base_url = str(item.get("base_url") or "").strip()
+            if not enabled or not model or not api_key or not base_url:
+                continue
+            providers.append(
+                LLMProviderConfig(
+                    name=_sanitize_provider_name(str(item.get("name") or ""), index),
+                    model=model,
+                    api_key=api_key,
+                    base_url=base_url,
+                    weight=max(1, int(item.get("weight", 1) or 1)),
+                    enabled=True,
+                )
+            )
+
+    if providers:
+        return tuple(providers)
+
+    primary = LLMProviderConfig(
+        name="primary",
+        model=fallback_model,
+        api_key=fallback_api_key,
+        base_url=fallback_base_url,
+        weight=1,
+        enabled=True,
+    )
+    providers = [primary]
+
+    extra_providers = [
+        _build_env_provider(
+            index=2,
+            name_envs=("TRIPLE_LLM_PROVIDER2_NAME",),
+            default_name="secondary",
+            model_envs=("TRIPLE_LLM_PROVIDER2_MODEL", "TRIPLE_LLM_MODEL_2", "TRIPLE_LLM_MODEL"),
+            api_key_envs=("TRIPLE_LLM_PROVIDER2_API_KEY", "TRIPLE_LLM_API_KEY_2"),
+            base_url_envs=("TRIPLE_LLM_PROVIDER2_BASE_URL", "TRIPLE_LLM_BASE_URL_2"),
+            weight_envs=("TRIPLE_LLM_PROVIDER2_WEIGHT",),
+            enabled_envs=("TRIPLE_LLM_PROVIDER2_ENABLED",),
+        ),
+        _build_env_provider(
+            index=3,
+            name_envs=("TRIPLE_LLM_JMRAI_NAME",),
+            default_name="jmrai",
+            model_envs=("TRIPLE_LLM_JMRAI_MODEL", "LLM_MODEL"),
+            api_key_envs=("TRIPLE_LLM_JMRAI_API_KEY", "LLM_API_KEY"),
+            base_url_envs=("TRIPLE_LLM_JMRAI_BASE_URL", "LLM_BASE_URL"),
+            weight_envs=("TRIPLE_LLM_JMRAI_WEIGHT",),
+            enabled_envs=("TRIPLE_LLM_JMRAI_ENABLED",),
+        ),
+    ]
+
+    existing_names = {provider.name for provider in providers}
+    existing_signatures = {
+        (provider.model, provider.base_url, provider.api_key)
+        for provider in providers
+    }
+    for provider in extra_providers:
+        if provider is None:
+            continue
+        signature = (provider.model, provider.base_url, provider.api_key)
+        if provider.name in existing_names or signature in existing_signatures:
+            continue
+        providers.append(provider)
+        existing_names.add(provider.name)
+        existing_signatures.add(signature)
+    return tuple(providers)
 
 
 def _extract_balanced_json_candidate(text: str) -> str | None:
@@ -350,7 +510,10 @@ def _recover_triples_payload_from_text(text: str) -> dict[str, Any] | None:
 def _load_json_file(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def _extract_payload_triples(payload: Any) -> list[dict[str, Any]]:
@@ -465,7 +628,7 @@ def _load_jsonl_rows(path: Path) -> list[dict[str, Any]]:
             line = line.strip()
             if not line:
                 continue
-            payload = json.loads(line)
+            payload = json.loads(line.lstrip("\ufeff"))
             if isinstance(payload, dict):
                 rows.append(payload)
     return rows
@@ -564,6 +727,21 @@ RELATION_NORMALIZATION = {
     "表现": "常见症状",
     "证候表现": "常见症状",
     "功用": "功效",
+    "忌食": "食忌",
+    "饮食禁忌": "食忌",
+    "配伍禁忌": "配伍禁忌",
+    "相反": "配伍禁忌",
+    "相恶": "配伍禁忌",
+    "相畏": "配伍禁忌",
+    "服法": "用法",
+    "服用方法": "用法",
+    "用法用量": "用法",
+    "炮制方法": "用法",
+    "药性": "药性",
+    "四气": "药性",
+    "五味": "五味",
+    "升降浮沉": "升降浮沉",
+    "浮沉": "升降浮沉",
 }
 
 ALLOWED_RELATIONS = {
@@ -579,6 +757,30 @@ ALLOWED_RELATIONS = {
     "出处",
     "别名",
     "属于范畴",
+    "食忌",
+    "配伍禁忌",
+    "用法",
+    "药性",
+    "五味",
+    "升降浮沉",
+}
+
+ALLOWED_ENTITY_TYPES = {
+    "formula",
+    "herb",
+    "syndrome",
+    "symptom",
+    "disease",
+    "therapy",
+    "channel",
+    "category",
+    "book",
+    "chapter",
+    "food",
+    "medicine",
+    "processing_method",
+    "property",
+    "other",
 }
 
 ENTITY_TYPE_HINTS = {
@@ -592,6 +794,66 @@ ENTITY_TYPE_HINTS = {
     "经": "channel",
 }
 
+PROCESSING_METHOD_KEYWORDS = (
+    "炮制",
+    "煎服",
+    "丸服",
+    "散服",
+    "汤服",
+    "酒服",
+    "水煎",
+    "酒浸",
+    "醋浸",
+    "蜜炙",
+    "炒",
+    "炙",
+    "煅",
+    "煨",
+    "蒸",
+    "煮",
+    "焙",
+    "晒",
+    "曝",
+    "浸",
+    "外敷",
+    "含化",
+)
+
+PROPERTY_TERMS = {
+    "寒",
+    "热",
+    "温",
+    "凉",
+    "平",
+    "微寒",
+    "微温",
+    "大寒",
+    "大热",
+    "甘",
+    "辛",
+    "酸",
+    "苦",
+    "咸",
+    "淡",
+    "涩",
+    "甘寒",
+    "甘温",
+    "辛温",
+    "辛凉",
+    "苦寒",
+    "酸温",
+    "咸寒",
+    "升",
+    "降",
+    "浮",
+    "沉",
+    "升浮",
+    "沉降",
+    "有毒",
+    "无毒",
+    "小毒",
+}
+
 
 @dataclass
 class PipelineConfig:
@@ -600,6 +862,7 @@ class PipelineConfig:
     model: str
     api_key: str
     base_url: str
+    providers: tuple["LLMProviderConfig", ...] = field(default_factory=tuple)
     request_timeout: float = 90.0
     max_chunk_chars: int = 800
     chunk_overlap: int = 200
@@ -608,6 +871,16 @@ class PipelineConfig:
     parallel_workers: int = 8
     retry_backoff_base: float = 2.0
     chunk_strategy: str = "body_first"
+
+
+@dataclass(frozen=True)
+class LLMProviderConfig:
+    name: str
+    model: str
+    api_key: str
+    base_url: str
+    weight: int = 1
+    enabled: bool = True
 
 
 @dataclass
@@ -646,6 +919,33 @@ class TCMTriplePipeline:
     def __init__(self, config: PipelineConfig):
         self.config = config
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
+        self.config.providers = _normalize_provider_configs(
+            list(self.config.providers),
+            fallback_model=self.config.model,
+            fallback_api_key=self.config.api_key,
+            fallback_base_url=self.config.base_url,
+        )
+        self._providers_by_name = {provider.name: provider for provider in self.config.providers}
+        self._provider_rotation = [
+            provider.name
+            for provider in self.config.providers
+            for _ in range(max(1, int(provider.weight)))
+            if provider.enabled
+        ] or [provider.name for provider in self.config.providers if provider.enabled]
+        self._provider_lock = Lock()
+        self._provider_cursor = 0
+        self._provider_stats: dict[str, dict[str, Any]] = {
+            provider.name: {
+                "success_count": 0,
+                "failure_count": 0,
+                "consecutive_failures": 0,
+                "last_error": "",
+                "last_latency_ms": 0.0,
+                "total_latency_ms": 0.0,
+                "latency_sample_count": 0,
+            }
+            for provider in self.config.providers
+        }
 
     def discover_books(self) -> list[Path]:
         if not self.config.books_dir.exists():
@@ -849,8 +1149,8 @@ class TCMTriplePipeline:
                     "subject": "实体名称",
                     "predicate": "关系词",
                     "object": "实体名称或概念",
-                    "subject_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|other",
-                    "object_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|other",
+                    "subject_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|food|medicine|processing_method|property|other",
+                    "object_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|food|medicine|processing_method|property|other",
                     "source_text": "对应原文短句",
                     "confidence": 0.0,
                 }
@@ -889,8 +1189,17 @@ class TCMTriplePipeline:
                   "object": "桂枝",
                   "subject_type": "formula",
                   "object_type": "herb",
-                  "source_text": "桂枝三两",
+                  "source_text": "桂枝汤用桂枝三两",
                   "confidence": 0.93
+                },
+                {
+                  "subject": "附子",
+                  "predicate": "药性",
+                  "object": "大热",
+                  "subject_type": "medicine",
+                  "object_type": "property",
+                  "source_text": "附子大热，纯阳有毒",
+                  "confidence": 0.91
                 }
               ]
             }
@@ -899,6 +1208,32 @@ class TCMTriplePipeline:
             {"subject":"桂枝汤","predicate":"治疗证候","object":"太阳中风证"}
             {"triples":[...]}
             {"triples":[...]}
+
+            另一个错误示例：
+            {
+              "triples": [
+                {
+                  "subject": "本方",
+                  "predicate": "使用药材",
+                  "object": "甘草",
+                  "source_text": "甘草"
+                }
+              ]
+            }
+            上例中的“本方”属于泛指主语。若上下文能确定具体方名，必须改写为具体方名；若无法唯一确定，则不要输出该条。
+
+            source_text 错误示例：
+            {
+              "triples": [
+                {
+                  "subject": "桂枝汤",
+                  "predicate": "使用药材",
+                  "object": "桂枝",
+                  "source_text": "桂枝"
+                }
+              ]
+            }
+            上例中的 source_text 只保留了孤立词语，证据过短。应至少保留能体现主语或关系成立的原文片段，例如“桂枝汤用桂枝三两”。
             """
         ).strip()
         return textwrap.dedent(
@@ -939,6 +1274,16 @@ class TCMTriplePipeline:
             13. 只要原文中出现了明确药物名，不要省略“使用药材”关系；这类关系是优先级最高的抽取目标之一。
             14. 优先输出高信息量的领域事实，少输出低价值的“出处”；如果一个方名块里已经能抽到药材、功效、证候，就不要只给出处。
             15. 输出前自检：确认是否已经覆盖 chunk 内每个可识别的方名块；若没有，继续补充后再输出。
+            16. 若文本是本草、药性、食疗、炮制或禁忌类内容，不要强行套用“方剂-证候”模板；应优先抽取“食忌 / 配伍禁忌 / 用法 / 药性 / 五味 / 升降浮沉”等关系。
+            17. 当对象是寒热温凉、甘辛酸苦咸、升降浮沉、有毒无毒等性质词时，object_type 优先标为 property。
+            18. 当对象是炒、炙、煅、煨、蒸、煮、焙、酒浸、水煎、丸服、散服、外敷等加工或服用方式时，object_type 优先标为 processing_method。
+            19. 当主语或宾语是食物禁忌对象时可使用 food；当是一般药物名但不必细分时可使用 medicine。
+            20. subject 和 object 必须尽量使用具体实体名，如具体方名、药名、食物名、证候名、症状名；不要偷懒写成“本方 / 此方 / 治方 / 其方 / 该方 / 本药 / 此药 / 其药 / 药 / 诸药”等泛指词。
+            21. 如果原文出现“本方 / 此方 / 其方 / 其药 / 该药”等指代，必须结合上下文回指到唯一的具体方名或药名后再输出；若不能唯一回指，则宁可不抽，也不要输出泛主语三元组。
+            22. 对“使用药材 / 用法 / 药性 / 五味 / 升降浮沉 / 配伍禁忌 / 食忌”这类关系，若原文能定位到具体药物或具体方剂，subject 不得写成“药 / 本方 / 治方”等笼统名称。
+            23. source_text 不能只截取一个孤立词语；至少保留能支撑该关系成立的最短原文片段。若只写“甘草”“人参”这类单词，通常说明证据片段过短。
+            24. 若一个 chunk 中包含多个具体方名或药名，不要把它们合并概括为一个笼统主语；应分别挂到各自的具体实体上。
+            25. 对“使用药材 / 药性 / 五味 / 用法 / 食忌 / 配伍禁忌”这类关系，source_text 优先包含主语名 + 关系触发词或性质词，不要只截对象本身。
 
             原文：
             {text_chunk}
@@ -952,8 +1297,8 @@ class TCMTriplePipeline:
                     "subject": "实体名",
                     "predicate": "关系词",
                     "object": "实体名或概念",
-                    "subject_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|other",
-                    "object_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|other",
+                    "subject_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|food|medicine|processing_method|property|other",
+                    "object_type": "formula|herb|syndrome|symptom|disease|therapy|channel|category|book|chapter|food|medicine|processing_method|property|other",
                     "source_text": "原文短句",
                     "confidence": 0.0,
                 }
@@ -968,6 +1313,11 @@ class TCMTriplePipeline:
             输出时只允许返回一个 JSON 对象，格式固定为 {"triples":[...]}。
             不要输出多个 JSON 对象，不要追加解释，不要使用 Markdown 代码块。
             如果有多条三元组，必须全部放在同一个 triples 数组里。
+
+            source_text 正确示例：
+            "source_text": "桂枝汤用桂枝三两"
+            source_text 错误示例：
+            "source_text": "桂枝"
             """
         ).strip()
         return textwrap.dedent(
@@ -981,6 +1331,10 @@ class TCMTriplePipeline:
             关系优先使用：{sorted(ALLOWED_RELATIONS)}
             重点：如果一个 chunk 内出现多个方剂标题或多个条目，必须覆盖所有可识别条目，不要只返回第一条。
             如果原文出现明确药物名，优先抽取“使用药材”。
+            如果文本更像本草/禁忌/药性/炮制说明，优先抽取“食忌 / 配伍禁忌 / 用法 / 药性 / 五味 / 升降浮沉”。
+            主语和宾语优先写具体方名、药名、食物名，不要写“本方 / 此方 / 治方 / 药 / 其药”等泛指词；能回指就回指，不能唯一回指就不要输出。
+            source_text 不要只保留单个词，至少保留能支撑关系判断的原文短片段。
+            对“使用药材 / 药性 / 五味 / 用法 / 食忌 / 配伍禁忌”，source_text 最好同时带上主语名或关系判断依据，不要只写对象词。
             如果没有可抽取事实，返回 {{"triples":[]}}。
 
             输出格式：
@@ -997,21 +1351,121 @@ class TCMTriplePipeline:
             return self.build_compact_prompt(book_name=book_name, chapter_name=chapter_name, text_chunk=text_chunk)
         return self.build_prompt(book_name=book_name, chapter_name=chapter_name, text_chunk=text_chunk)
 
-    def call_llm_raw(
+    def _select_provider_sequence(self) -> list[LLMProviderConfig]:
+        enabled_names = [provider.name for provider in self.config.providers if provider.enabled]
+        if not enabled_names:
+            return []
+        with self._provider_lock:
+            if not self._provider_rotation:
+                ordered_names = enabled_names
+            else:
+                start = self._provider_cursor % len(self._provider_rotation)
+                self._provider_cursor = (self._provider_cursor + 1) % max(len(self._provider_rotation), 1)
+                rotated = self._provider_rotation[start:] + self._provider_rotation[:start]
+                ordered_names = []
+                seen: set[str] = set()
+                for name in rotated:
+                    if name in seen:
+                        continue
+                    seen.add(name)
+                    ordered_names.append(name)
+                for name in enabled_names:
+                    if name not in seen:
+                        ordered_names.append(name)
+        return [self._providers_by_name[name] for name in ordered_names if name in self._providers_by_name]
+
+    def _record_provider_result(
         self,
+        provider_name: str,
+        *,
+        success: bool,
+        latency_ms: float,
+        error: str = "",
+    ) -> None:
+        with self._provider_lock:
+            stats = self._provider_stats.setdefault(
+                provider_name,
+                {
+                    "success_count": 0,
+                    "failure_count": 0,
+                    "consecutive_failures": 0,
+                    "last_error": "",
+                    "last_latency_ms": 0.0,
+                    "total_latency_ms": 0.0,
+                    "latency_sample_count": 0,
+                },
+            )
+            stats["last_latency_ms"] = round(float(latency_ms), 2)
+            stats["total_latency_ms"] = round(float(stats.get("total_latency_ms", 0.0)) + float(latency_ms), 2)
+            stats["latency_sample_count"] = int(stats.get("latency_sample_count", 0)) + 1
+            if success:
+                stats["success_count"] = int(stats.get("success_count", 0)) + 1
+                stats["consecutive_failures"] = 0
+                stats["last_error"] = ""
+            else:
+                stats["failure_count"] = int(stats.get("failure_count", 0)) + 1
+                stats["consecutive_failures"] = int(stats.get("consecutive_failures", 0)) + 1
+                stats["last_error"] = error[:300]
+
+    def get_provider_metrics(self) -> list[dict[str, Any]]:
+        metrics: list[dict[str, Any]] = []
+        with self._provider_lock:
+            for provider in self.config.providers:
+                stats = self._provider_stats.get(provider.name, {})
+                success_count = int(stats.get("success_count", 0) or 0)
+                failure_count = int(stats.get("failure_count", 0) or 0)
+                attempt_count = success_count + failure_count
+                latency_sample_count = int(stats.get("latency_sample_count", 0) or 0)
+                total_latency_ms = float(stats.get("total_latency_ms", 0.0) or 0.0)
+                metrics.append(
+                    {
+                        "name": provider.name,
+                        "model": provider.model,
+                        "base_url": provider.base_url,
+                        "weight": int(provider.weight),
+                        "enabled": bool(provider.enabled),
+                        "attempt_count": attempt_count,
+                        "success_count": success_count,
+                        "failure_count": failure_count,
+                        "success_rate": round(success_count / attempt_count, 4) if attempt_count else 0.0,
+                        "failure_rate": round(failure_count / attempt_count, 4) if attempt_count else 0.0,
+                        "avg_latency_ms": round(total_latency_ms / latency_sample_count, 2) if latency_sample_count else 0.0,
+                        "last_latency_ms": round(float(stats.get("last_latency_ms", 0.0) or 0.0), 2),
+                        "consecutive_failures": int(stats.get("consecutive_failures", 0) or 0),
+                        "last_error": str(stats.get("last_error", "") or ""),
+                    }
+                )
+        return metrics
+
+    def format_provider_metrics_summary(self) -> str:
+        metrics = self.get_provider_metrics()
+        if not metrics:
+            return "provider-monitor: no providers configured"
+        parts = []
+        for item in metrics:
+            parts.append(
+                f"{item['name']} ok={item['success_count']} fail={item['failure_count']} "
+                f"succ={item['success_rate']:.1%} failr={item['failure_rate']:.1%} "
+                f"avg={item['avg_latency_ms']:.0f}ms last={item['last_latency_ms']:.0f}ms"
+            )
+        return " | ".join(parts)
+
+    def _call_llm_raw_once(
+        self,
+        provider: LLMProviderConfig,
         prompt: str,
         *,
         response_format_mode: str = "json_object",
     ) -> dict[str, Any]:
-        url = f"{self.config.base_url.rstrip('/')}/chat/completions"
+        url = f"{provider.base_url.rstrip('/')}/chat/completions"
         payload = {
-            "model": self.config.model,
+            "model": provider.model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
             "stream": False,
         }
         headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
+            "Authorization": f"Bearer {provider.api_key}",
             "Content-Type": "application/json",
             "Connection": "close",
         }
@@ -1020,44 +1474,95 @@ class TCMTriplePipeline:
         if normalized_mode not in {"json_object", "text"}:
             raise ValueError(f"unsupported_response_format_mode: {response_format_mode}")
 
+        request_payload = dict(payload)
+        if normalized_mode == "json_object":
+            request_payload["response_format"] = {"type": "json_object"}
+
+        started_at = time.perf_counter()
+        with httpx.Client(timeout=self.config.request_timeout, http2=False) as client:
+            response = client.post(url, headers=headers, json=request_payload)
+            response.raise_for_status()
+            body = response.json()
+        latency_ms = (time.perf_counter() - started_at) * 1000
+        choices = body.get("choices", [])
+        if not choices:
+            raise ValueError("llm_empty_choices")
+        content = choices[0].get("message", {}).get("content", "")
+        return {
+            "raw_text": str(content),
+            "usage": body.get("usage", {}) if isinstance(body.get("usage"), dict) else {},
+            "finish_reason": choices[0].get("finish_reason"),
+            "response_format_mode": normalized_mode,
+            "raw_body": body,
+            "provider_name": provider.name,
+            "provider_model": provider.model,
+            "provider_base_url": provider.base_url,
+            "provider_latency_ms": round(latency_ms, 2),
+        }
+
+    def call_llm_raw(
+        self,
+        prompt: str,
+        *,
+        response_format_mode: str = "json_object",
+        provider_sequence: list[LLMProviderConfig] | None = None,
+    ) -> dict[str, Any]:
+        providers = provider_sequence or self._select_provider_sequence()
+        if not providers:
+            raise RuntimeError("llm_provider_not_configured")
         last_error: Exception | None = None
-        for attempt in range(self.config.max_retries + 1):
+        total_attempts = max(self.config.max_retries + 1, len(providers))
+        for attempt in range(total_attempts):
+            provider = providers[attempt % len(providers)]
+            attempt_started_at = time.perf_counter()
             try:
-                request_payload = dict(payload)
-                if normalized_mode == "json_object":
-                    request_payload["response_format"] = {"type": "json_object"}
-                with httpx.Client(timeout=self.config.request_timeout, http2=False) as client:
-                    response = client.post(url, headers=headers, json=request_payload)
-                    response.raise_for_status()
-                    body = response.json()
-                choices = body.get("choices", [])
-                if not choices:
-                    raise ValueError("llm_empty_choices")
-                content = choices[0].get("message", {}).get("content", "")
-                return {
-                    "raw_text": str(content),
-                    "usage": body.get("usage", {}) if isinstance(body.get("usage"), dict) else {},
-                    "finish_reason": choices[0].get("finish_reason"),
-                    "response_format_mode": normalized_mode,
-                    "raw_body": body,
-                }
+                meta = self._call_llm_raw_once(
+                    provider,
+                    prompt,
+                    response_format_mode=response_format_mode,
+                )
+                self._record_provider_result(
+                    provider.name,
+                    success=True,
+                    latency_ms=float(meta.get("provider_latency_ms", 0.0) or 0.0),
+                )
+                return meta
             except httpx.HTTPStatusError as exc:
                 last_error = exc
-                if attempt < self.config.max_retries:
+                latency_ms = (time.perf_counter() - attempt_started_at) * 1000
+                self._record_provider_result(
+                    provider.name,
+                    success=False,
+                    latency_ms=latency_ms,
+                    error=f"http_{exc.response.status_code if exc.response is not None else 'unknown'}: {str(exc)}",
+                )
+                if attempt < total_attempts - 1:
                     backoff = self.config.retry_backoff_base * (2 ** attempt)
                     time.sleep(min(backoff, 20.0))
             except Exception as exc:
                 last_error = exc
-                if attempt < self.config.max_retries:
+                latency_ms = (time.perf_counter() - attempt_started_at) * 1000
+                self._record_provider_result(
+                    provider.name,
+                    success=False,
+                    latency_ms=latency_ms,
+                    error=str(exc),
+                )
+                if attempt < total_attempts - 1:
                     backoff = self.config.retry_backoff_base * (2 ** attempt)
                     time.sleep(min(backoff, 20.0))
         raise RuntimeError(f"llm_request_failed: {last_error}")
 
     def call_llm(self, prompt: str) -> dict[str, Any]:
+        provider_sequence = self._select_provider_sequence()
         last_error: Exception | None = None
         for response_format_mode in ("json_object", "text"):
             try:
-                meta = self.call_llm_raw(prompt, response_format_mode=response_format_mode)
+                meta = self.call_llm_raw(
+                    prompt,
+                    response_format_mode=response_format_mode,
+                    provider_sequence=provider_sequence,
+                )
                 parsed = _extract_json_block(str(meta.get("raw_text", "")))
                 if isinstance(parsed, list):
                     return {"triples": parsed, "__meta__": meta}
@@ -1093,12 +1598,16 @@ class TCMTriplePipeline:
 
     def infer_entity_type(self, value: str, raw_type: str) -> str:
         cleaned = (raw_type or "").strip().lower()
-        if cleaned in {"formula", "herb", "syndrome", "symptom", "disease", "therapy", "channel", "category", "book", "chapter"}:
+        if cleaned in ALLOWED_ENTITY_TYPES:
             return cleaned
 
         text = value.strip()
         if text in {"医方集解", "本草纲目", "和剂局方", "金匮要略", "伤寒论"}:
             return "book"
+        if text in PROPERTY_TERMS:
+            return "property"
+        if any(keyword in text for keyword in PROCESSING_METHOD_KEYWORDS):
+            return "processing_method"
         for suffix, inferred in ENTITY_TYPE_HINTS.items():
             if text.endswith(suffix):
                 return inferred
@@ -1218,7 +1727,7 @@ class TCMTriplePipeline:
                     line = line.strip()
                     if not line:
                         continue
-                    rows.append(json.loads(line))
+                    rows.append(json.loads(line.lstrip("\ufeff")))
                     if len(rows) >= limit:
                         break
 
@@ -1281,7 +1790,7 @@ class TCMTriplePipeline:
                 line = line.strip()
                 if not line:
                     continue
-                row = json.loads(line)
+                row = json.loads(line.lstrip("\ufeff"))
                 decision = self._clean_decision_for_row(row)
                 reason_counts[decision.reason] = reason_counts.get(decision.reason, 0) + 1
                 if not decision.keep:
@@ -1515,6 +2024,7 @@ class TCMTriplePipeline:
                 "base_url": self.config.base_url,
                 "dry_run": dry_run,
                 "config": {
+                    "providers": [_provider_to_dict(provider) for provider in self.config.providers],
                     "max_chunk_chars": self.config.max_chunk_chars,
                     "chunk_overlap": self.config.chunk_overlap,
                     "chapter_contains": chapter_contains or [],
@@ -1636,11 +2146,17 @@ class TCMTriplePipeline:
 
 
 def build_config(args: argparse.Namespace) -> PipelineConfig:
-    model = args.model or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="deepseek-ai/DeepSeek-V3.2")
+    model = args.model or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="mimo-v2-pro")
     api_key = _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
     base_url = _first_env("TRIPLE_LLM_BASE_URL", "LLM_BASE_URL", "OPENAI_BASE_URL", default="https://api.siliconflow.cn/v1")
     if not api_key and not args.dry_run:
         raise RuntimeError("missing_llm_api_key")
+    providers = _normalize_provider_configs(
+        [],
+        fallback_model=model,
+        fallback_api_key=api_key,
+        fallback_base_url=base_url,
+    )
 
     return PipelineConfig(
         books_dir=Path(args.books_dir) if args.books_dir else DEFAULT_BOOKS_DIR,
@@ -1648,6 +2164,7 @@ def build_config(args: argparse.Namespace) -> PipelineConfig:
         model=model,
         api_key=api_key,
         base_url=base_url,
+        providers=providers,
         request_timeout=float(args.timeout),
         max_chunk_chars=int(args.max_chunk_chars),
         chunk_overlap=int(args.chunk_overlap),

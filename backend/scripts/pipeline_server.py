@@ -9,6 +9,7 @@ import asyncio
 import hashlib
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -41,10 +42,17 @@ from scripts.tcm_triple_console import (
     PipelineConfig,
     TCMTriplePipeline,
     TripleRecord,
+    _dedupe_evidence_rows,
     _extract_payload_triples,
+    _extract_fact_ids,
     _load_json_file,
+    _load_jsonl_rows,
+    _normalize_provider_configs,
+    _provider_to_dict,
     _first_env,
 )
+from scripts.chunk_size_benchmark_lab import router as chunk_benchmark_router
+from scripts.triple_benchmark_lab import router as benchmark_router
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 全局状态
@@ -57,6 +65,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(benchmark_router)
+app.include_router(chunk_benchmark_router)
 
 # 当前运行状态（单例任务模型）
 _run_lock = threading.Lock()
@@ -71,6 +81,7 @@ _nebula_publish_threads: dict[str, threading.Thread] = {}
 
 DEFAULT_AUTO_BOOK_BATCH_SIZE = 7
 LOW_YIELD_RETRY_TRIPLE_THRESHOLD = 1
+PROVIDER_MONITOR_LOG_INTERVAL = 10
 
 
 def _log(level: str, msg: str, **extra: Any) -> None:
@@ -96,6 +107,15 @@ def _cleanup_job_log_file() -> None:
 def _is_job_thread_alive() -> bool:
     thread = _job_thread
     return bool(thread and thread.is_alive())
+
+
+def _book_status_override_path() -> Path:
+    return DEFAULT_OUTPUT_DIR / "book_status_overrides.json"
+
+
+def _graph_evidence_path(target: Path | None = None) -> Path:
+    graph_path = target or DEFAULT_GRAPH_TARGET
+    return graph_path.parent / f"{graph_path.stem}.evidence.jsonl"
 
 
 def _write_state(state_path: Path, state: dict[str, Any]) -> None:
@@ -206,6 +226,7 @@ def _append_checkpoint(
     attempt: int,
     resumed: bool,
     triples_count: int | None = None,
+    success_override: bool | None = None,
 ) -> None:
     row = {
         "ts": datetime.now().isoformat(timespec="seconds"),
@@ -213,7 +234,7 @@ def _append_checkpoint(
         "chapter": task.chapter_name,
         "chunk_index": task.chunk_index,
         "sequence": task.sequence,
-        "success": error is None,
+        "success": (error is None) if success_override is None else bool(success_override),
         "error": error,
         "triples_count": triples_count if triples_count is not None else len(_extract_payload_triples(payload)),
         "attempt": attempt,
@@ -230,6 +251,152 @@ def _count_jsonl_rows(path: Path) -> int:
         return sum(1 for line in f if line.strip())
 
 
+def _load_book_status_overrides() -> dict[str, list[str]]:
+    payload = _load_json_file(_book_status_override_path(), {})
+    if not isinstance(payload, dict):
+        payload = {}
+    force_unprocessed: list[str] = []
+    for item in payload.get("force_unprocessed", []) if isinstance(payload.get("force_unprocessed"), list) else []:
+        value = str(item).strip()
+        if value and value not in force_unprocessed:
+            force_unprocessed.append(value)
+    return {"force_unprocessed": sorted(force_unprocessed)}
+
+
+def _write_book_status_overrides(payload: dict[str, list[str]]) -> dict[str, list[str]]:
+    normalized = _load_book_status_overrides()
+    normalized["force_unprocessed"] = sorted(
+        {
+            str(item).strip()
+            for item in payload.get("force_unprocessed", [])
+            if str(item).strip()
+        }
+    )
+    path = _book_status_override_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8")
+    return normalized
+
+
+def _mark_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
+    payload = _load_book_status_overrides()
+    merged = sorted(
+        set(payload.get("force_unprocessed", []))
+        | {str(name).strip() for name in book_names if str(name).strip()}
+    )
+    return _write_book_status_overrides({"force_unprocessed": merged})
+
+
+def _clear_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
+    to_remove = {str(name).strip() for name in book_names if str(name).strip()}
+    payload = _load_book_status_overrides()
+    kept = [name for name in payload.get("force_unprocessed", []) if name not in to_remove]
+    return _write_book_status_overrides({"force_unprocessed": kept})
+
+
+def _load_graph_runtime_rows(target: Path | None = None) -> list[dict[str, Any]]:
+    path = target or DEFAULT_GRAPH_TARGET
+    payload = _load_json_file(path, [])
+    return [row for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
+
+
+def _write_graph_runtime_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
+    path = target or DEFAULT_GRAPH_TARGET
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def _load_graph_runtime_evidence_rows(target: Path | None = None) -> list[dict[str, Any]]:
+    evidence_path = _graph_evidence_path(target)
+    return _load_jsonl_rows(evidence_path) if evidence_path.exists() else []
+
+
+def _write_graph_runtime_evidence_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
+    evidence_path = _graph_evidence_path(target)
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    deduped = _dedupe_evidence_rows(rows)
+    evidence_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in deduped),
+        encoding="utf-8",
+    )
+    return evidence_path
+
+
+def _collect_fact_ids(rows: list[dict[str, Any]]) -> set[str]:
+    fact_ids: set[str] = set()
+    for row in rows:
+        for fact_id in _extract_fact_ids(row):
+            if fact_id:
+                fact_ids.add(fact_id)
+    return fact_ids
+
+
+def _delete_books_from_runtime_graph(
+    book_names: list[str],
+    *,
+    sync_nebula: bool = True,
+    mark_unprocessed: bool = True,
+) -> dict[str, Any]:
+    books = sorted({str(name).strip() for name in book_names if str(name).strip()})
+    if not books:
+        raise ValueError("book_names_required")
+
+    rows = _load_graph_runtime_rows()
+    removed_rows = [row for row in rows if str(row.get("source_book", "")).strip() in books]
+    kept_rows = [row for row in rows if str(row.get("source_book", "")).strip() not in books]
+    removed_triples = len(removed_rows)
+    remaining_entities = {
+        str(row.get(key, "")).strip()
+        for row in kept_rows
+        for key in ("subject", "object")
+        if str(row.get(key, "")).strip()
+    }
+    removed_entities = {
+        str(row.get(key, "")).strip()
+        for row in removed_rows
+        for key in ("subject", "object")
+        if str(row.get(key, "")).strip()
+    }
+    orphan_entities = sorted(removed_entities - remaining_entities)
+
+    remaining_fact_ids = _collect_fact_ids(kept_rows)
+    evidence_rows = _load_graph_runtime_evidence_rows()
+    kept_evidence_rows = [
+        row
+        for row in evidence_rows
+        if str(row.get("fact_id", "")).strip() in remaining_fact_ids
+    ]
+
+    _write_graph_runtime_rows(kept_rows)
+    _write_graph_runtime_evidence_rows(kept_evidence_rows)
+
+    override_payload: dict[str, list[str]] | None = None
+    if mark_unprocessed:
+        override_payload = _mark_books_force_unprocessed(books)
+
+    nebula_result: dict[str, Any] | None = None
+    if sync_nebula:
+        if removed_rows:
+            from services.graph_service.nebulagraph_store import NebulaGraphStore
+
+            store = NebulaGraphStore()
+            nebula_result = store.delete_rows(removed_rows, orphan_entity_names=orphan_entities)
+        else:
+            nebula_result = {"mode": "delete_rows", "deleted_edges": 0, "deleted_vertices": 0, "skipped": "no_matching_runtime_rows"}
+
+    return {
+        "books": books,
+        "removed_triples": removed_triples,
+        "remaining_triples": len(kept_rows),
+        "removed_evidence": max(0, len(evidence_rows) - len(kept_evidence_rows)),
+        "remaining_evidence": len(kept_evidence_rows),
+        "orphan_entities": orphan_entities,
+        "force_unprocessed": (override_payload or _load_book_status_overrides()).get("force_unprocessed", []),
+        "nebula": nebula_result,
+    }
+
+
 def _load_existing_triple_records(path: Path) -> list[TripleRecord]:
     rows: list[TripleRecord] = []
     if not path.exists():
@@ -239,7 +406,7 @@ def _load_existing_triple_records(path: Path) -> list[TripleRecord]:
             line = line.strip()
             if not line:
                 continue
-            payload = json.loads(line)
+            payload = json.loads(line.lstrip("\ufeff"))
             rows.append(
                 TripleRecord(
                     subject=str(payload.get("subject", "")),
@@ -269,7 +436,7 @@ def _load_completed_chunk_keys(run_dir: Path) -> set[tuple[str, int]]:
                 line = line.strip()
                 if not line:
                     continue
-                row = json.loads(line)
+                row = json.loads(line.lstrip("\ufeff"))
                 key = (str(row.get("book", "")), int(row.get("chunk_index", 0)))
                 latest_status[key] = row.get("success") is True
         for key, is_success in latest_status.items():
@@ -286,7 +453,7 @@ def _load_completed_chunk_keys(run_dir: Path) -> set[tuple[str, int]]:
             line = line.strip()
             if not line:
                 continue
-            row = json.loads(line)
+            row = json.loads(line.lstrip("\ufeff"))
             error = row.get("error")
             if "error" in row and error not in (None, ""):
                 continue
@@ -296,6 +463,10 @@ def _load_completed_chunk_keys(run_dir: Path) -> set[tuple[str, int]]:
 
 def _low_yield_retry_error(triples_count: int) -> str:
     return f"low_yield_retry: triples_count={triples_count}"
+
+
+def _is_low_yield_retry_error(error: str | None) -> bool:
+    return isinstance(error, str) and error.startswith("low_yield_retry:")
 
 
 def _extract_payload_meta(payload: Any) -> dict[str, Any]:
@@ -325,10 +496,51 @@ def _build_raw_chunk_record(
         "llm_usage": usage,
         "llm_finish_reason": meta.get("finish_reason"),
         "llm_response_format_mode": meta.get("response_format_mode"),
+        "llm_provider_name": meta.get("provider_name"),
+        "llm_provider_model": meta.get("provider_model"),
+        "llm_provider_base_url": meta.get("provider_base_url"),
+        "llm_provider_latency_ms": meta.get("provider_latency_ms"),
     }
     if completion_tokens >= 1000 and rows_count <= 1:
         record["diagnostic"] = "high_completion_low_yield"
     return record
+
+
+EMPTY_ACCEPT_PATTERNS = (
+    "電子版序",
+    "电子版序",
+    "前言",
+    "凡例",
+    "原序",
+    "校補",
+    "校补",
+    "題簽",
+    "题签",
+    "民間中醫網",
+    "民间中医网",
+    "中醫經典古籍電子叢書",
+    "中医经典古籍电子丛书",
+    "【闡釋】",
+    "【阐释】",
+    "鄭論：",
+    "郑论：",
+    "論曰：",
+    "论曰：",
+)
+
+
+def _should_accept_empty_chunk(task: Any, rows: list[TripleRecord], error: str | None) -> bool:
+    if error is not None or rows:
+        return False
+    text = str(getattr(task, "text_chunk", "") or "")
+    if not text.strip():
+        return True
+    has_formula_like_title = re.search(r"[一-龥]{2,16}[汤丸散饮丹膏煎方]", text) is not None
+    if has_formula_like_title:
+        return False
+    chapter_name = str(getattr(task, "chapter_name", "") or "")
+    combined = f"{chapter_name}\n{text[:1200]}"
+    return any(pattern in combined for pattern in EMPTY_ACCEPT_PATTERNS)
 
 
 def _evaluate_chunk_attempt(
@@ -343,6 +555,8 @@ def _evaluate_chunk_attempt(
         book_name=task.book_name,
         chapter_name=task.chapter_name,
     )
+    if _should_accept_empty_chunk(task, rows, error):
+        return rows, None
     if error is None and len(rows) <= LOW_YIELD_RETRY_TRIPLE_THRESHOLD:
         return rows, _low_yield_retry_error(len(rows))
     return rows, error
@@ -355,7 +569,7 @@ def _evaluate_chunk_attempt(
 def _build_pipeline(cfg_override: dict[str, Any] | None = None) -> TCMTriplePipeline:
     cfg = cfg_override or {}
     # 前端显式传入的值优先；只有为空时才 fallback 到环境变量
-    model = cfg.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="deepseek-ai/DeepSeek-V3.2")
+    model = cfg.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="mimo-v2-pro")
     api_key_raw = cfg.get("api_key")
     if not api_key_raw:
         api_key_raw = _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
@@ -364,12 +578,19 @@ def _build_pipeline(cfg_override: dict[str, Any] | None = None) -> TCMTriplePipe
         "TRIPLE_LLM_BASE_URL", "LLM_BASE_URL", "OPENAI_BASE_URL",
         default="https://api.siliconflow.cn/v1"
     )
+    providers = _normalize_provider_configs(
+        cfg.get("providers", []),
+        fallback_model=model,
+        fallback_api_key=api_key or "",
+        fallback_base_url=base_url,
+    )
     config = PipelineConfig(
         books_dir=Path(cfg.get("books_dir") or DEFAULT_BOOKS_DIR),
         output_dir=Path(cfg.get("output_dir") or DEFAULT_OUTPUT_DIR),
         model=model,
         api_key=api_key or "dummy_for_dry_run",
         base_url=base_url,
+        providers=providers,
         request_timeout=float(cfg.get("request_timeout", 314.0)),
         max_chunk_chars=int(cfg.get("max_chunk_chars", 800)),
         chunk_overlap=int(cfg.get("chunk_overlap", 200)),
@@ -420,6 +641,7 @@ def _get_processed_book_stems() -> set[str]:
                 processed.add(Path(book_str).stem)
         except Exception:
             continue
+    processed -= set(_load_book_status_overrides().get("force_unprocessed", []))
     return processed
 
 
@@ -708,6 +930,16 @@ def _derive_retry_parallel_workers(parallel_workers: Any) -> int:
     return max(1, workers // 2)
 
 
+RESUME_FIXED_FIELDS = {
+    "chapter_excludes",
+    "skip_initial_chunks_per_book",
+    "chunk_strategy",
+    "max_chunk_chars",
+    "chunk_overlap",
+    "max_chunks_per_book",
+}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 核心后台任务
 # ─────────────────────────────────────────────────────────────────────────────
@@ -749,6 +981,10 @@ def _run_extraction_job(
     total_triples = _count_jsonl_rows(triples_jsonl)
     chunk_errors = 0
     retry_parallel_workers = _derive_retry_parallel_workers(pipeline.config.parallel_workers)
+    completed_books_count = 0
+    incomplete_books: list[str] = []
+    last_provider_monitor_attempts = 0
+    last_provider_monitor_failures = 0
 
     state: dict[str, Any] = {
         "job_id": job_id,
@@ -775,37 +1011,49 @@ def _run_extraction_job(
         "resumed_run_dir": run_dir.name if resume_mode else "",
         "resume_skipped_chunks": len(completed_chunk_keys),
         "retry_parallel_workers": retry_parallel_workers,
+        "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
+        "provider_metrics": pipeline.get_provider_metrics(),
     }
+
+    def refresh_provider_monitor(*, force_log: bool = False) -> None:
+        metrics = pipeline.get_provider_metrics()
+        state["provider_metrics"] = metrics
+        if force_log:
+            return
+
     with _run_lock:
         _current_job.update(state)
     _write_state(state_path, state)
+    refresh_provider_monitor(force_log=True)
 
     _log("info", f"任务启动 job_id={job_id}，共 {len(selected_books)} 本书")
 
-    # 保存 manifest
-    pipeline.save_manifest(run_dir, {
-        "job_id": job_id,
-        "created_at": datetime.now().isoformat(),
-        "books": [str(p) for p in selected_books],
-        "model": pipeline.config.model,
-        "base_url": pipeline.config.base_url,
-        "dry_run": dry_run,
-        "resume_run_dir": str(resume_run_dir) if resume_run_dir else "",
-        "config": {
-            "max_chunk_chars": pipeline.config.max_chunk_chars,
-            "chunk_overlap": pipeline.config.chunk_overlap,
-            "chapter_excludes": chapter_excludes,
-            "skip_initial_chunks_per_book": skip_initial_chunks,
-            "chunk_strategy": chunk_strategy,
-            "parallel_workers": pipeline.config.parallel_workers,
-            "request_timeout": pipeline.config.request_timeout,
-            "max_retries": pipeline.config.max_retries,
-            "request_delay": pipeline.config.request_delay,
-            "retry_backoff_base": pipeline.config.retry_backoff_base,
-            "max_chunks_per_book": max_chunks_per_book,
-            "max_chunk_retries": max_chunk_retries,
-        },
-    })
+    # 新任务写 manifest；续跑必须保留原 run 的 manifest，避免固定配置被污染
+    if not resume_mode:
+        pipeline.save_manifest(run_dir, {
+            "job_id": job_id,
+            "created_at": datetime.now().isoformat(),
+            "books": [str(p) for p in selected_books],
+            "model": pipeline.config.model,
+            "base_url": pipeline.config.base_url,
+            "dry_run": dry_run,
+            "resume_run_dir": str(resume_run_dir) if resume_run_dir else "",
+            "config": {
+                "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
+                "max_chunk_chars": pipeline.config.max_chunk_chars,
+                "chunk_overlap": pipeline.config.chunk_overlap,
+                "chapter_excludes": chapter_excludes,
+                "skip_initial_chunks_per_book": skip_initial_chunks,
+                "chunk_strategy": chunk_strategy,
+                "parallel_workers": pipeline.config.parallel_workers,
+                "request_timeout": pipeline.config.request_timeout,
+                "max_retries": pipeline.config.max_retries,
+                "request_delay": pipeline.config.request_delay,
+                "retry_backoff_base": pipeline.config.retry_backoff_base,
+                "max_chunks_per_book": max_chunks_per_book,
+                "max_chunk_retries": max_chunk_retries,
+            },
+        })
     all_rows = _load_existing_triple_records(triples_jsonl) if resume_mode else []
     cancel_logged = False
 
@@ -887,6 +1135,7 @@ def _run_extraction_job(
                     total_chunks_done=total_chunks_done,
                     total_chunks_all=total_chunks_all,
                 )
+                refresh_provider_monitor()
                 with _run_lock:
                     _current_job.update(state)
                 _write_state(state_path, state)
@@ -967,9 +1216,90 @@ def _run_extraction_job(
                     f"  [retry] progress {session_chunks_done} session_done | chunk={task.chunk_index} | "
                     f"triples={len(rows)} | total_triples={total_triples} | error={result['error'] or '-'}",
                 )
+                refresh_provider_monitor()
                 with _run_lock:
                     _current_job.update(state)
                 _write_state(state_path, state)
+
+    def finalize_exhausted_low_yield_chunks(results: dict[int, dict[str, Any]]) -> int:
+        nonlocal total_triples
+
+        finalized = 0
+        for result in results.values():
+            error = result.get("error")
+            if not _is_low_yield_retry_error(error):
+                continue
+            if int(result.get("_retried", 0) or 0) < max_chunk_retries:
+                continue
+
+            task = result["task"]
+            rows = result.get("rows") or []
+            if len(rows) != 0:
+                continue
+            if not result.get("_written"):
+                for row in rows:
+                    pipeline.append_jsonl(triples_jsonl, asdict(row))
+                result["_written"] = True
+                total_triples += len(rows)
+                state["total_triples"] = total_triples
+
+            result["error"] = None
+            completed_chunk_keys.add((task.book_name, task.chunk_index))
+            _append_checkpoint(
+                checkpoint_path,
+                task=task,
+                error=None,
+                payload=result.get("payload") or {"triples": []},
+                attempt=int(result.get("_retried", 0) or 0),
+                resumed=resume_mode,
+                triples_count=len(rows),
+            )
+            _log("info", f"  chunk {task.chunk_index} 低产出重试耗尽，按空结果完成 | triples={len(rows)}")
+            finalized += 1
+
+        if finalized > 0:
+            with _run_lock:
+                _current_job.update(state)
+            _write_state(state_path, state)
+        return finalized
+
+    def finalize_exhausted_failed_chunks(results: dict[int, dict[str, Any]]) -> int:
+        finalized = 0
+        for result in results.values():
+            error = str(result.get("error") or "").strip()
+            if not error:
+                continue
+            if _is_low_yield_retry_error(error):
+                continue
+            if int(result.get("_retried", 0) or 0) < max_chunk_retries:
+                continue
+
+            task = result["task"]
+            payload = result.get("payload") or {"triples": []}
+            rows = result.get("rows") or []
+            drop_error = f"dropped_after_retries: {error}"
+            result["error"] = None
+            result["rows"] = []
+            result["_written"] = True
+            completed_chunk_keys.add((task.book_name, task.chunk_index))
+            _append_checkpoint(
+                checkpoint_path,
+                task=task,
+                error=drop_error,
+                payload=payload,
+                attempt=int(result.get("_retried", 0) or 0),
+                resumed=resume_mode,
+                triples_count=len(rows),
+                success_override=True,
+            )
+            _log("warn", f"  chunk {task.chunk_index} 重试耗尽，已丢弃并按完成处理 | error={error[:80]}")
+            finalized += 1
+
+        if finalized > 0:
+            with _run_lock:
+                _current_job.update(state)
+            _write_state(state_path, state)
+        return finalized
 
     try:
         # ── 第一阶段：分块调度 ──────────────────────────────────────────
@@ -984,6 +1314,18 @@ def _run_extraction_job(
             )
             all_tasks_per_book.append((book_path, tasks))
             total_chunks_all += len(tasks)
+        if resume_mode:
+            scheduled_chunk_keys = {
+                (task.book_name, task.chunk_index)
+                for _, tasks in all_tasks_per_book
+                for task in tasks
+            }
+            completed_chunk_keys = {
+                key for key in completed_chunk_keys
+                if key in scheduled_chunk_keys
+            }
+            total_chunks_done = len(completed_chunk_keys)
+            state["resume_skipped_chunks"] = total_chunks_done
         state["chunks_total"] = total_chunks_all
         state["chunks_completed"] = total_chunks_done
         state["total_triples"] = total_triples
@@ -995,6 +1337,7 @@ def _run_extraction_job(
             total_chunks_done=total_chunks_done,
             total_chunks_all=total_chunks_all,
         )
+        refresh_provider_monitor()
         with _run_lock:
             _current_job.update(state)
         _write_state(state_path, state)
@@ -1017,19 +1360,25 @@ def _run_extraction_job(
                 tasks = pending_tasks
 
             state["current_book"] = book_path.stem
-            state["books_completed"] = book_index - 1
+            state["books_completed"] = completed_books_count
             with _run_lock:
                 _current_job.update(state)
             _write_state(state_path, state)
             _log("info", f"开始处理 [{book_index}/{len(selected_books)}] {book_path.stem}，{len(tasks)} chunks | parallel={pipeline.config.parallel_workers} retry_parallel={retry_parallel_workers} dry_run={dry_run}")
 
             if not tasks:
-                if scheduled_tasks:
-                    state["books_completed"] = book_index
+                completed_books_count += 1
+                state["books_completed"] = completed_books_count
                 with _run_lock:
                     _current_job.update(state)
                 _write_state(state_path, state)
-                _log("warn", f"{book_path.stem} 无可处理 chunk（全部被过滤）")
+                if resume_mode and skipped_completed == len(scheduled_tasks):
+                    _log(
+                        "info",
+                        f"{book_path.stem} 本次续跑无需处理：{skipped_completed} 个 chunk 已在当前 run 完成，已自动跳过",
+                    )
+                else:
+                    _log("warn", f"{book_path.stem} 无可处理 chunk（全部被过滤）")
                 continue
 
             results: dict[int, dict[str, Any]] = {}
@@ -1107,6 +1456,7 @@ def _run_extraction_job(
                         total_chunks_done=total_chunks_done,
                         total_chunks_all=total_chunks_all,
                     )
+                    refresh_provider_monitor()
                     with _run_lock:
                         _current_job.update(state)
                     _write_state(state_path, state)
@@ -1128,6 +1478,7 @@ def _run_extraction_job(
                 run_retry_batch(failed_tasks, retry_count)
                 if _job_cancelled.is_set():
                     break
+            finalize_exhausted_low_yield_chunks(results)
             if not (dry_run or pipeline.config.parallel_workers <= 1 or len(tasks) == 1):
                 with ThreadPoolExecutor(max_workers=pipeline.config.parallel_workers) as executor:
                     future_map = {
@@ -1214,6 +1565,7 @@ def _run_extraction_job(
                             f"  [parallel] progress {book_chunks_done}/{len(tasks)} | chunk={task.chunk_index} | "
                             f"triples={len(rows)} | total_triples={total_triples} | error={effective_error or '-'}",
                         )
+                        refresh_provider_monitor()
                         with _run_lock:
                             _current_job.update(state)
                         _write_state(state_path, state)
@@ -1238,6 +1590,11 @@ def _run_extraction_job(
 
             # 按序收集 all_rows（triples_jsonl 已在 per-chunk 循环中实时写入，不再重复 normalize_triples）
             book_triples = 0
+            finalize_exhausted_low_yield_chunks(results)
+            finalize_exhausted_failed_chunks(results)
+
+            # Collect book rows in task order. triples_jsonl is already written in per-chunk loops.
+            book_triples = 0
             for task in tasks:
                 result = results.get(task.sequence, {"task": task, "payload": {"triples": []}, "error": "missing", "rows": []})
                 rows = result.get("rows") or []
@@ -1251,7 +1608,18 @@ def _run_extraction_job(
                 for task in scheduled_tasks
             )
             if book_all_completed:
-                state["books_completed"] = book_index
+                completed_books_count += 1
+                state["books_completed"] = completed_books_count
+                _clear_books_force_unprocessed([book_path.stem])
+            else:
+                pending_for_book = sum(
+                    1
+                    for task in scheduled_tasks
+                    if (task.book_name, task.chunk_index) not in completed_chunk_keys
+                )
+                incomplete_books.append(book_path.stem)
+                state["books_completed"] = completed_books_count
+                _log("warn", f"  {book_path.stem} 仍有 {pending_for_book} 个 chunk 未完成，当前 run 保留为未完成状态")
             with _run_lock:
                 _current_job.update(state)
             _log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
@@ -1264,20 +1632,35 @@ def _run_extraction_job(
         pipeline.write_graph_import(run_dir / "graph_import.json", all_rows)
 
         was_cancelled = _job_cancelled.is_set() or state.get("status") == "cancelling"
+        pending_chunk_count = sum(
+            1
+            for book_path, tasks in all_tasks_per_book
+            for task in tasks
+            if (task.book_name, task.chunk_index) not in completed_chunk_keys
+        )
         state["phase"] = "done"
         if was_cancelled:
             state["status"] = "cancelled"
+        elif pending_chunk_count > 0:
+            state["status"] = "partial"
         else:
             state["status"] = "completed"
         state["finished_at"] = datetime.now().isoformat(timespec="seconds")
         state["elapsed_secs"] = int(time.time() - start_ts)
-        state["eta"] = "已取消" if was_cancelled else "完成"
+        state["eta"] = "已取消" if was_cancelled else ("未完成" if pending_chunk_count > 0 else "完成")
         state["total_triples"] = total_triples
+        state["books_completed"] = completed_books_count
+        state["pending_chunks"] = pending_chunk_count
+        state["books_incomplete"] = len(incomplete_books)
+        state["incomplete_books"] = incomplete_books
+        refresh_provider_monitor(force_log=True)
         with _run_lock:
             _current_job.update(state)
         _write_state(state_path, state)
         if was_cancelled:
             _log("warn", f"任务已取消，已保留当前进度：{total_triples} 条三元组，错误 {chunk_errors} 个")
+        elif pending_chunk_count > 0:
+            _log("warn", f"提取结束，但仍有 {pending_chunk_count} 个 chunk 未完成，run 标记为 partial")
         else:
             _log("info", f"提取完成，共 {total_triples} 条三元组，错误 {chunk_errors} 个")
 
@@ -1314,6 +1697,7 @@ def _run_extraction_job(
             _log("info", f"发布完成: {target}")
 
         state["phase"] = "finished"
+        refresh_provider_monitor(force_log=True)
         with _run_lock:
             _current_job.update(state)
         _write_state(state_path, state)
@@ -1324,6 +1708,7 @@ def _run_extraction_job(
         state["status"] = "error"
         state["error"] = str(exc)
         state["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        refresh_provider_monitor(force_log=True)
         with _run_lock:
             _current_job.update(state)
         _log("error", f"任务异常: {exc}")
@@ -1414,6 +1799,7 @@ class APIConfig(BaseModel):
     model: str = Field(default="", description="LLM 模型名")
     api_key: str = Field(default="", description="API Key")
     base_url: str = Field(default="", description="API Base URL")
+    providers: list[dict[str, Any]] = Field(default_factory=list, description="多 API 源配置列表")
     request_timeout: float = Field(default=314.0)
     max_retries: int = Field(default=2)
     request_delay: float = Field(default=1.1)
@@ -1443,6 +1829,12 @@ class ResumeRunRequest(BaseModel):
     auto_publish: bool = Field(default=False)
     continue_next_batches: bool = Field(default=True)
     api_config: APIConfig = Field(default_factory=APIConfig)
+
+
+class GraphBookDeleteRequest(BaseModel):
+    books: list[str] = Field(default=[], description="要删除的 source_book 列表")
+    sync_nebula: bool = Field(default=True)
+    mark_unprocessed: bool = Field(default=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1520,8 +1912,7 @@ def start_job(req: StartJobRequest):
         raise HTTPException(status_code=400, detail=detail)
 
     if not req.dry_run:
-        api_key = req.api_config.api_key or _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
-        if not api_key:
+        if not any(provider.api_key for provider in pipeline.config.providers if provider.enabled):
             raise HTTPException(status_code=400, detail="未配置 API Key，请在 API 配置中填写或在 .env 中设置 TRIPLE_LLM_API_KEY")
 
     job_id = str(uuid4())[:8]
@@ -1595,6 +1986,8 @@ def resume_run(run_name: str, req: ResumeRunRequest):
     if manifest.get("base_url"):
         cfg_override["base_url"] = manifest.get("base_url")
     for key, value in req.api_config.model_dump(exclude_unset=True).items():
+        if key in RESUME_FIXED_FIELDS:
+            continue
         if isinstance(value, str):
             if value.strip():
                 cfg_override[key] = value
@@ -1603,8 +1996,8 @@ def resume_run(run_name: str, req: ResumeRunRequest):
 
     dry_run = bool(manifest.get("dry_run", False))
     if not dry_run:
-        api_key = cfg_override.get("api_key") or _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
-        if not api_key:
+        resumed_pipeline = _build_pipeline(cfg_override)
+        if not any(provider.api_key for provider in resumed_pipeline.config.providers if provider.enabled):
             raise HTTPException(status_code=400, detail="missing_llm_api_key")
 
     manifest_cfg = manifest.get("config", {})
@@ -1697,7 +2090,7 @@ async def job_stream():
                 if not replayed_from_disk and _job_log_file is not None and _job_log_file.exists():
                     try:
                         disk_lines = _job_log_file.read_text(encoding="utf-8").splitlines()
-                        existing_logs = [json.loads(line) for line in disk_lines if line.strip()]
+                        existing_logs = [json.loads(line.lstrip("\ufeff")) for line in disk_lines if line.strip()]
                         if existing_logs and len(existing_logs) > sent_log_idx:
                             new_logs = existing_logs[sent_log_idx:]
                             sent_log_idx = len(existing_logs)
@@ -1732,8 +2125,8 @@ def list_runs():
     for run_dir in runs[:20]:
         state_path = run_dir / "state.json"
         manifest_path = run_dir / "manifest.json"
-        state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+        state = _load_json_file(state_path, {})
+        manifest = _load_json_file(manifest_path, {})
         publish_status = _load_publish_status(run_dir)
         result.append({
             "run_dir": run_dir.name,
@@ -1799,14 +2192,7 @@ def run_resume_config(run_name: str):
                 "auto_clean",
                 "auto_publish",
             ],
-            "resume_fixed_fields": [
-                "chapter_excludes",
-                "skip_initial_chunks_per_book",
-                "chunk_strategy",
-                "max_chunk_chars",
-                "chunk_overlap",
-                "max_chunks_per_book",
-            ],
+            "resume_fixed_fields": sorted(RESUME_FIXED_FIELDS),
         },
     }
 
@@ -1829,7 +2215,7 @@ def run_triples(run_name: str, limit: int = 50):
             for line in f:
                 line = line.strip()
                 if line:
-                    rows.append(json.loads(line))
+                    rows.append(json.loads(line.lstrip("\ufeff")))
                 if len(rows) >= limit:
                     break
     return {"run_dir": run_name, "rows": rows, "count": len(rows), "source_kind": source_kind, "source_path": str(jsonl)}
@@ -1971,17 +2357,86 @@ def graph_stats():
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@app.get("/api/graph/books")
+def graph_books(limit: int = 200, q: str = ""):
+    try:
+        rows = _load_graph_runtime_rows()
+        processed_stems = _get_processed_book_stems()
+        counts: dict[str, int] = {}
+        keyword = q.strip().lower()
+        for row in rows:
+            book = str(row.get("source_book", "")).strip()
+            if not book:
+                continue
+            if keyword and keyword not in book.lower():
+                continue
+            counts[book] = counts.get(book, 0) + 1
+        ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        return {
+            "exists": DEFAULT_GRAPH_TARGET.exists(),
+            "books": [
+                {
+                    "name": name,
+                    "triple_count": count,
+                    "processed": name in processed_stems,
+                }
+                for name, count in ordered[: max(1, limit)]
+            ],
+            "total": len(ordered),
+            "force_unprocessed": _load_book_status_overrides().get("force_unprocessed", []),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/api/graph/books/{book_name}/triples")
+def graph_book_triples(book_name: str, limit: int = 200):
+    try:
+        rows = _load_graph_runtime_rows()
+        exact = [row for row in rows if str(row.get("source_book", "")).strip() == book_name]
+        matched = exact or [row for row in rows if book_name in str(row.get("source_book", "")).strip()]
+        return {
+            "book": book_name,
+            "total": len(matched),
+            "rows": matched[: max(1, limit)],
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/graph/books/delete")
+def graph_delete_books(req: GraphBookDeleteRequest):
+    try:
+        result = _delete_books_from_runtime_graph(
+            req.books,
+            sync_nebula=req.sync_nebula,
+            mark_unprocessed=req.mark_unprocessed,
+        )
+        return result
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @app.get("/api/config/env")
 def get_env_config():
     """返回当前从环境变量读取的配置（隐藏 key）"""
-    model = _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="deepseek-ai/DeepSeek-V3.2")
+    model = _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="mimo-v2-pro")
     base_url = _first_env("TRIPLE_LLM_BASE_URL", "LLM_BASE_URL", "OPENAI_BASE_URL", default="https://api.siliconflow.cn/v1")
     api_key = _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
+    providers = _normalize_provider_configs(
+        [],
+        fallback_model=model,
+        fallback_api_key=api_key,
+        fallback_base_url=base_url,
+    )
     return {
         "model": model,
         "base_url": base_url,
         "api_key_set": bool(api_key),
         "api_key_hint": (api_key[:4] + "..." + api_key[-4:]) if len(api_key) > 8 else ("已设置" if api_key else "未设置"),
+        "providers": [_provider_to_dict(provider) for provider in providers],
     }
 
 
@@ -2004,37 +2459,15 @@ def test_api_call(req: StartJobRequest):
             raise HTTPException(status_code=400, detail="该书没有可处理的 chunk")
         task = tasks[0]
 
-        # 调用 LLM
-        import httpx
-        url = f"{pipeline.config.base_url.rstrip('/')}/chat/completions"
         prompt = pipeline.build_prompt(
             book_name=task.book_name,
             chapter_name=task.chapter_name,
             text_chunk=task.text_chunk,
         )
-        payload = {
-            "model": pipeline.config.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0,
-            "stream": False,
-        }
-        headers = {
-            "Authorization": f"Bearer {pipeline.config.api_key}",
-            "Content-Type": "application/json",
-        }
-        with httpx.Client(timeout=60.0) as client:
-            resp = client.post(url, headers=headers, json=payload)
-            resp.raise_for_status()
-            raw_body = resp.json()
-
-        # 解析响应
-        from scripts.tcm_triple_console import _extract_json_block
-        choices = raw_body.get("choices", [])
-        raw_content = choices[0].get("message", {}).get("content", "") if choices else ""
-        try:
-            parsed = _extract_json_block(str(raw_content))
-        except Exception as parse_exc:
-            parsed = {"_parse_error": str(parse_exc), "_raw": str(raw_content)[:500]}
+        llm_payload = pipeline.call_llm(prompt)
+        meta = llm_payload.get("__meta__", {}) if isinstance(llm_payload, dict) else {}
+        raw_content = str(meta.get("raw_text", ""))
+        parsed = llm_payload
 
         triples_normalized = pipeline.normalize_triples(
             payload=parsed if isinstance(parsed, dict) else {"triples": parsed if isinstance(parsed, list) else []},
@@ -2049,14 +2482,16 @@ def test_api_call(req: StartJobRequest):
             "model": pipeline.config.model,
             "base_url": pipeline.config.base_url,
             "api_key_prefix": (pipeline.config.api_key[:4] + "...") if len(pipeline.config.api_key) > 4 else pipeline.config.api_key,
+            "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
+            "llm_provider_name": meta.get("provider_name"),
+            "llm_provider_model": meta.get("provider_model"),
+            "llm_provider_base_url": meta.get("provider_base_url"),
             "raw_response_length": len(str(raw_content)),
             "raw_response_preview": str(raw_content)[:300],
             "parsed_triples_count": len(triples_normalized),
             "parsed_sample": [{"subject": r.subject, "predicate": r.predicate, "object": r.object} for r in triples_normalized[:3]],
-            "status_code": resp.status_code,
+            "status_code": 200,
         }
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=502, detail=f"API 返回错误 {exc.response.status_code}: {exc.response.text[:300]}")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}")
 

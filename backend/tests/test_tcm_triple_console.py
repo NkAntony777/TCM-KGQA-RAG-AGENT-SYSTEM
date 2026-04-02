@@ -1,15 +1,19 @@
 ﻿from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts.tcm_triple_console import PipelineConfig
+from scripts.tcm_triple_console import LLMProviderConfig
 from scripts.tcm_triple_console import TCMTriplePipeline
 from scripts.tcm_triple_console import _extract_all_json_blocks
 from scripts.tcm_triple_console import _detect_formula_titles
 from scripts.tcm_triple_console import _extract_json_block
+from scripts.tcm_triple_console import _normalize_provider_configs
 from scripts.tcm_triple_console import resolve_chapter_excludes
 
 
@@ -101,6 +105,56 @@ class TCMTripleConsoleTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].subject, "五苓散")
         self.assertEqual(rows[0].predicate, "治疗证候")
+
+    def test_normalize_triples_supports_new_relations_and_entity_types(self) -> None:
+        rows = self.pipeline.normalize_triples(
+            payload={
+                "triples": [
+                    {
+                        "subject": "附子",
+                        "predicate": "四气",
+                        "object": "大热",
+                        "subject_type": "medicine",
+                        "object_type": "property",
+                        "source_text": "附子大热。",
+                        "confidence": 0.93,
+                    },
+                    {
+                        "subject": "鳖甲",
+                        "predicate": "服法",
+                        "object": "醋浸",
+                        "subject_type": "medicine",
+                        "object_type": "",
+                        "source_text": "鳖甲宜醋浸。",
+                        "confidence": 0.86,
+                    },
+                ]
+            },
+            book_name="本草纲目",
+            chapter_name="卷一",
+        )
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0].predicate, "药性")
+        self.assertEqual(rows[0].subject_type, "medicine")
+        self.assertEqual(rows[0].object_type, "property")
+        self.assertEqual(rows[1].predicate, "用法")
+        self.assertEqual(rows[1].object_type, "processing_method")
+
+    def test_clean_decision_keeps_new_relation(self) -> None:
+        decision = self.pipeline._clean_decision_for_row(
+            {
+                "subject": "猪肉",
+                "predicate": "食忌",
+                "object": "甘草",
+                "subject_type": "food",
+                "object_type": "medicine",
+                "source_text": "猪肉不可与甘草同食。",
+            }
+        )
+
+        self.assertTrue(decision.keep)
+        self.assertEqual(decision.reason, "keep_domain_fact")
 
     def test_extract_json_block_handles_think_and_single_quotes(self) -> None:
         payload = _extract_json_block(
@@ -244,6 +298,204 @@ class TCMTripleConsoleTests(unittest.TestCase):
         self.assertIn("__meta__", payload)
         self.assertEqual(payload["__meta__"]["usage"]["completion_tokens"], 1234)
         self.assertEqual(payload["__meta__"]["response_format_mode"], "json_object")
+
+    def test_call_llm_raw_round_robins_across_configured_providers(self) -> None:
+        class ProviderPipeline(TCMTriplePipeline):
+            def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
+                return {
+                    "raw_text": '{"triples":[]}',
+                    "usage": {},
+                    "finish_reason": "stop",
+                    "response_format_mode": response_format_mode,
+                    "raw_body": {},
+                    "provider_name": provider.name,
+                    "provider_model": provider.model,
+                    "provider_base_url": provider.base_url,
+                    "provider_latency_ms": 1.0,
+                }
+
+        pipeline = ProviderPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="mimo-v2-pro",
+                api_key="primary-key",
+                base_url="https://primary.invalid/v1",
+                providers=(
+                    LLMProviderConfig(name="primary", model="mimo-v2-pro", api_key="k1", base_url="https://primary.invalid/v1"),
+                    LLMProviderConfig(name="secondary", model="mimo-v2-pro", api_key="k2", base_url="https://secondary.invalid/v1"),
+                ),
+                request_delay=0.0,
+                max_retries=0,
+            )
+        )
+
+        first = pipeline.call_llm_raw("prompt-1", response_format_mode="text")
+        second = pipeline.call_llm_raw("prompt-2", response_format_mode="text")
+
+        self.assertEqual(first["provider_name"], "primary")
+        self.assertEqual(second["provider_name"], "secondary")
+
+    def test_call_llm_raw_fails_over_to_secondary_provider(self) -> None:
+        class FailoverPipeline(TCMTriplePipeline):
+            def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
+                if provider.name == "primary":
+                    raise RuntimeError("primary_unavailable")
+                return {
+                    "raw_text": '{"triples":[]}',
+                    "usage": {},
+                    "finish_reason": "stop",
+                    "response_format_mode": response_format_mode,
+                    "raw_body": {},
+                    "provider_name": provider.name,
+                    "provider_model": provider.model,
+                    "provider_base_url": provider.base_url,
+                    "provider_latency_ms": 2.0,
+                }
+
+        pipeline = FailoverPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="mimo-v2-pro",
+                api_key="primary-key",
+                base_url="https://primary.invalid/v1",
+                providers=(
+                    LLMProviderConfig(name="primary", model="mimo-v2-pro", api_key="k1", base_url="https://primary.invalid/v1"),
+                    LLMProviderConfig(name="secondary", model="mimo-v2-pro", api_key="k2", base_url="https://secondary.invalid/v1"),
+                ),
+                request_delay=0.0,
+                max_retries=0,
+            )
+        )
+
+        meta = pipeline.call_llm_raw("prompt", response_format_mode="text")
+
+        self.assertEqual(meta["provider_name"], "secondary")
+        self.assertEqual(pipeline._provider_stats["primary"]["failure_count"], 1)
+        self.assertEqual(pipeline._provider_stats["secondary"]["success_count"], 1)
+
+    def test_normalize_provider_configs_adds_jmrai_from_env_fallbacks(self) -> None:
+        env_patch = {
+            "TRIPLE_LLM_JMRAI_ENABLED": "true",
+            "TRIPLE_LLM_JMRAI_NAME": "jmrai",
+            "LLM_MODEL": "mimo-v2-pro",
+            "LLM_API_KEY": "jmrai-key",
+            "LLM_BASE_URL": "https://jmrai.invalid/v1",
+        }
+        with mock.patch.dict(os.environ, env_patch, clear=True):
+            providers = _normalize_provider_configs(
+                [],
+                fallback_model="mimo-v2-pro",
+                fallback_api_key="primary-key",
+                fallback_base_url="https://primary.invalid/v1",
+            )
+
+        self.assertEqual([provider.name for provider in providers], ["primary", "jmrai"])
+        self.assertEqual(providers[1].model, env_patch["LLM_MODEL"])
+        self.assertEqual(providers[1].api_key, "jmrai-key")
+        self.assertEqual(providers[1].base_url, "https://jmrai.invalid/v1")
+
+    def test_normalize_provider_configs_prefers_explicit_env_provider_list(self) -> None:
+        env_patch = {
+            "TRIPLE_LLM_PROVIDERS": json.dumps(
+                [
+                    {
+                        "name": "primary",
+                        "model": "mimo-v2-pro",
+                        "api_key": "primary-key",
+                        "base_url": "https://primary.invalid/v1",
+                        "weight": 1,
+                        "enabled": True,
+                    },
+                    {
+                        "name": "jmrai-2",
+                        "model": "mimo-v2-pro",
+                        "api_key": "jmrai-key-2",
+                        "base_url": "https://jmrai.invalid/v1",
+                        "weight": 1,
+                        "enabled": True,
+                    },
+                    {
+                        "name": "jmrai-3",
+                        "model": "mimo-v2-pro",
+                        "api_key": "jmrai-key-3",
+                        "base_url": "https://jmrai.invalid/v1",
+                        "weight": 2,
+                        "enabled": True,
+                    },
+                ],
+                ensure_ascii=False,
+            ),
+            "TRIPLE_LLM_JMRAI_ENABLED": "true",
+            "TRIPLE_LLM_JMRAI_API_KEY": "legacy-jmrai-key",
+            "TRIPLE_LLM_JMRAI_BASE_URL": "https://legacy.invalid/v1",
+        }
+
+        with mock.patch.dict(os.environ, env_patch, clear=True):
+            providers = _normalize_provider_configs(
+                [],
+                fallback_model="mimo-v2-pro",
+                fallback_api_key="fallback-key",
+                fallback_base_url="https://fallback.invalid/v1",
+            )
+
+        self.assertEqual([provider.name for provider in providers], ["primary", "jmrai-2", "jmrai-3"])
+        self.assertEqual(providers[1].api_key, "jmrai-key-2")
+        self.assertEqual(providers[2].weight, 2)
+
+    def test_get_provider_metrics_reports_rates_and_latency(self) -> None:
+        class MetricsPipeline(TCMTriplePipeline):
+            def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
+                if provider.name == "primary" and prompt == "force-fail":
+                    raise RuntimeError("primary_down")
+                latency = 12.0 if provider.name == "primary" else 24.0
+                return {
+                    "raw_text": '{"triples":[]}',
+                    "usage": {},
+                    "finish_reason": "stop",
+                    "response_format_mode": response_format_mode,
+                    "raw_body": {},
+                    "provider_name": provider.name,
+                    "provider_model": provider.model,
+                    "provider_base_url": provider.base_url,
+                    "provider_latency_ms": latency,
+                }
+
+        pipeline = MetricsPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="mimo-v2-pro",
+                api_key="primary-key",
+                base_url="https://primary.invalid/v1",
+                providers=(
+                    LLMProviderConfig(name="primary", model="mimo-v2-pro", api_key="k1", base_url="https://primary.invalid/v1"),
+                    LLMProviderConfig(name="secondary", model="deepseek-ai/DeepSeek-V3.2", api_key="k2", base_url="https://secondary.invalid/v1"),
+                ),
+                request_delay=0.0,
+                max_retries=0,
+            )
+        )
+
+        pipeline.call_llm_raw("ok-primary", response_format_mode="text")
+        pipeline.call_llm_raw("ok-secondary", response_format_mode="text")
+        with self.assertRaises(RuntimeError):
+            pipeline.call_llm_raw(
+                "force-fail",
+                response_format_mode="text",
+                provider_sequence=[pipeline.config.providers[0]],
+            )
+
+        metrics = {item["name"]: item for item in pipeline.get_provider_metrics()}
+
+        self.assertEqual(metrics["primary"]["attempt_count"], 2)
+        self.assertEqual(metrics["primary"]["success_count"], 1)
+        self.assertEqual(metrics["primary"]["failure_count"], 1)
+        self.assertAlmostEqual(metrics["primary"]["success_rate"], 0.5)
+        self.assertEqual(metrics["secondary"]["attempt_count"], 1)
+        self.assertEqual(metrics["secondary"]["avg_latency_ms"], 24.0)
+        self.assertIn("secondary", pipeline.format_provider_metrics_summary())
 
     def test_extract_books_dry_run_writes_pipeline_outputs(self) -> None:
         book = self.books_dir / "001-测试方书.txt"

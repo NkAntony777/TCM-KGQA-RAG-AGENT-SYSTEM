@@ -242,6 +242,47 @@ class NebulaGraphStore:
             "statements": len(statements),
         }
 
+    def delete_rows(self, rows: list[dict[str, Any]], orphan_entity_names: list[str] | None = None) -> dict[str, Any]:
+        if not self.client_available():
+            raise RuntimeError("nebula3-python not installed")
+
+        deleted_edges = 0
+        deleted_vertices = 0
+        orphan_entity_names = orphan_entity_names or []
+
+        with self._session() as session:  # pragma: no cover - runtime integration path
+            for row in rows:
+                subject = str(row.get("subject", "")).strip()
+                obj = str(row.get("object", "")).strip()
+                if not subject or not obj:
+                    continue
+                statement = (
+                    f'USE `{self.settings.space}`; '
+                    f'DELETE EDGE `relation` "{entity_vid(subject, self.settings.vid_max_length)}"'
+                    f'->"{entity_vid(obj, self.settings.vid_max_length)}"@{edge_rank(row)};'
+                )
+                result = session.execute(statement)
+                if not result.is_succeeded():
+                    raise RuntimeError(result.error_msg())
+                deleted_edges += 1
+
+            for entity_name in orphan_entity_names:
+                statement = (
+                    f'USE `{self.settings.space}`; '
+                    f'DELETE VERTEX "{entity_vid(entity_name, self.settings.vid_max_length)}";'
+                )
+                result = session.execute(statement)
+                if not result.is_succeeded():
+                    raise RuntimeError(result.error_msg())
+                deleted_vertices += 1
+
+        return {
+            "space": self.settings.space,
+            "deleted_edges": deleted_edges,
+            "deleted_vertices": deleted_vertices,
+            "mode": "delete_rows",
+        }
+
     def apply_ngql_file(self, ngql_path: Path) -> dict[str, Any]:
         if not self.client_available():
             raise RuntimeError("nebula3-python not installed")
