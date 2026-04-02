@@ -40,6 +40,7 @@ from scripts.tcm_triple_console import (
     DEFAULT_BOOKS_DIR,
     DEFAULT_GRAPH_TARGET,
     DEFAULT_OUTPUT_DIR,
+    GRAPH_RUNTIME_IO_LOCK,
     PipelineConfig,
     TCMTriplePipeline,
     TripleRecord,
@@ -47,9 +48,11 @@ from scripts.tcm_triple_console import (
     _extract_payload_triples,
     _extract_fact_ids,
     _load_json_file,
+    _load_json_file_strict,
     _load_jsonl_rows,
     _normalize_provider_configs,
     _provider_to_dict,
+    _write_text_atomic,
     _first_env,
 )
 from scripts.chunk_size_benchmark_lab import router as chunk_benchmark_router
@@ -77,8 +80,13 @@ _job_log_file: Path | None = None          # 实时日志磁盘文件，任务�
 _job_log_file_path: Path | None = None     # 日志文件路径（用于任务结束后删除）
 _job_thread: threading.Thread | None = None
 _job_cancelled = threading.Event()         # 用于取消信号
-_publish_lock = threading.Lock()
+_publish_lock = threading.RLock()
 _nebula_publish_threads: dict[str, threading.Thread] = {}
+_publish_queue: deque[dict[str, Any]] = deque()
+_publish_worker_thread: threading.Thread | None = None
+_publish_worker_wakeup = threading.Event()
+_active_publish_task: dict[str, Any] | None = None
+_book_status_lock = threading.RLock()
 
 DEFAULT_AUTO_BOOK_BATCH_SIZE = 7
 LOW_YIELD_RETRY_TRIPLE_THRESHOLD = 1
@@ -120,7 +128,7 @@ def _graph_evidence_path(target: Path | None = None) -> Path:
 
 
 def _write_state(state_path: Path, state: dict[str, Any]) -> None:
-    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _now_iso() -> str:
@@ -145,9 +153,12 @@ def _normalize_publish_status(payload: Any) -> dict[str, Any]:
             "published": bool(json_status.get("published", False)),
             "published_at": str(json_status.get("published_at", "") or ""),
             "updated_at": str(json_status.get("updated_at", "") or ""),
+            "started_at": str(json_status.get("started_at", "") or ""),
+            "finished_at": str(json_status.get("finished_at", "") or ""),
             "target": str(json_status.get("target", "") or ""),
             "graph_triples": int(json_status.get("graph_triples", 0) or 0),
             "evidence_count": int(json_status.get("evidence_count", 0) or 0),
+            "error": str(json_status.get("error", "") or ""),
         },
         "nebula": {
             "status": str(nebula_status.get("status", "idle") or "idle"),
@@ -171,14 +182,16 @@ def _normalize_publish_status(payload: Any) -> dict[str, Any]:
 
 
 def _load_publish_status(run_dir: Path) -> dict[str, Any]:
-    path = _publish_status_path(run_dir)
-    payload = _load_json_file(path, {}) if path.exists() else {}
-    return _normalize_publish_status(payload)
+    with _publish_lock:
+        path = _publish_status_path(run_dir)
+        payload = _load_json_file(path, {}) if path.exists() else {}
+        return _normalize_publish_status(payload)
 
 
 def _write_publish_status(run_dir: Path, payload: dict[str, Any]) -> dict[str, Any]:
     normalized = _normalize_publish_status(payload)
-    _publish_status_path(run_dir).write_text(
+    _write_text_atomic(
+        _publish_status_path(run_dir),
         json.dumps(normalized, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
@@ -197,6 +210,156 @@ def _update_publish_status(run_dir: Path, section: str, patch: dict[str, Any]) -
         section_payload["updated_at"] = _now_iso()
         payload[section] = section_payload
         return _write_publish_status(run_dir, payload)
+
+
+def _publish_task_covers(task_kind: str, requested_kind: str) -> bool:
+    return task_kind == requested_kind or (task_kind == "nebula" and requested_kind == "json")
+
+
+def _set_json_publish_queued(run_dir: Path) -> dict[str, Any]:
+    return _update_publish_status(
+        run_dir,
+        "json",
+        {
+            "status": "queued",
+            "published": False,
+            "published_at": "",
+            "started_at": "",
+            "finished_at": "",
+            "error": "",
+        },
+    )
+
+
+def _set_nebula_publish_queued(run_dir: Path) -> dict[str, Any]:
+    return _update_publish_status(
+        run_dir,
+        "nebula",
+        {
+            "status": "queued",
+            "published": False,
+            "published_at": "",
+            "started_at": "",
+            "finished_at": "",
+            "progress_current": 0,
+            "progress_total": 0,
+            "progress_pct": 0.0,
+            "ok_count": 0,
+            "fail_count": 0,
+            "error": "",
+        },
+    )
+
+
+def _reset_json_publish_to_idle_if_unpublished(run_dir: Path) -> dict[str, Any]:
+    current = _load_publish_status(run_dir).get("json", {})
+    if current.get("published"):
+        return _update_publish_status(
+            run_dir,
+            "json",
+            {
+                "status": "completed",
+                "error": "",
+            },
+        )
+    return _update_publish_status(
+        run_dir,
+        "json",
+        {
+            "status": "idle",
+            "published": False,
+            "published_at": "",
+            "started_at": "",
+            "finished_at": "",
+            "error": "",
+        },
+    )
+
+
+def _publish_worker_loop() -> None:
+    global _active_publish_task
+    while True:
+        _publish_worker_wakeup.wait()
+        while True:
+            with _publish_lock:
+                if not _publish_queue:
+                    _active_publish_task = None
+                    _publish_worker_wakeup.clear()
+                    break
+                task = _publish_queue.popleft()
+                _active_publish_task = dict(task)
+            try:
+                if task.get("kind") == "nebula":
+                    _run_nebula_publish_job(str(task.get("run_name") or ""))
+                else:
+                    _run_json_publish_job(
+                        str(task.get("run_name") or ""),
+                        replace=bool(task.get("replace", False)),
+                    )
+            except Exception:
+                pass
+            finally:
+                with _publish_lock:
+                    if _active_publish_task == task:
+                        _active_publish_task = None
+
+
+def _ensure_publish_worker_locked() -> None:
+    global _publish_worker_thread
+    if _publish_worker_thread is not None and _publish_worker_thread.is_alive():
+        return
+    _publish_worker_thread = threading.Thread(
+        target=_publish_worker_loop,
+        name="publish-queue-worker",
+        daemon=True,
+    )
+    _publish_worker_thread.start()
+
+
+def _enqueue_publish_task(run_name: str, *, kind: str, replace: bool = False) -> tuple[bool, dict[str, Any]]:
+    run_dir = DEFAULT_OUTPUT_DIR / run_name
+    if not run_dir.exists():
+        raise FileNotFoundError("run_not_found")
+
+    with _publish_lock:
+        active = _active_publish_task or {}
+        active_run = str(active.get("run_name", "") or "")
+        active_kind = str(active.get("kind", "") or "")
+        if active_run == run_name and _publish_task_covers(active_kind, kind):
+            return False, _load_publish_status(run_dir)
+
+        queued_task: dict[str, Any] | None = None
+        for task in _publish_queue:
+            if str(task.get("run_name", "") or "") == run_name:
+                queued_task = task
+                break
+
+        if queued_task is not None:
+            queued_kind = str(queued_task.get("kind", "") or "")
+            if _publish_task_covers(queued_kind, kind):
+                return False, _load_publish_status(run_dir)
+            if kind == "nebula" and queued_kind == "json":
+                queued_task["kind"] = "nebula"
+                queued_task["replace"] = False
+                _reset_json_publish_to_idle_if_unpublished(run_dir)
+                status = _set_nebula_publish_queued(run_dir)
+                _ensure_publish_worker_locked()
+                _publish_worker_wakeup.set()
+                return True, status
+            return False, _load_publish_status(run_dir)
+
+        _publish_queue.append(
+            {
+                "run_name": run_name,
+                "kind": kind,
+                "replace": bool(replace),
+                "queued_at": _now_iso(),
+            }
+        )
+        status = _set_nebula_publish_queued(run_dir) if kind == "nebula" else _set_json_publish_queued(run_dir)
+        _ensure_publish_worker_locked()
+        _publish_worker_wakeup.set()
+        return True, status
 
 
 def _mark_cancel_requested() -> None:
@@ -253,75 +416,103 @@ def _count_jsonl_rows(path: Path) -> int:
 
 
 def _load_book_status_overrides() -> dict[str, list[str]]:
-    payload = _load_json_file(_book_status_override_path(), {})
-    if not isinstance(payload, dict):
-        payload = {}
-    force_unprocessed: list[str] = []
-    for item in payload.get("force_unprocessed", []) if isinstance(payload.get("force_unprocessed"), list) else []:
-        value = str(item).strip()
-        if value and value not in force_unprocessed:
-            force_unprocessed.append(value)
-    return {"force_unprocessed": sorted(force_unprocessed)}
+    with _book_status_lock:
+        payload = _load_json_file(_book_status_override_path(), {})
+        if not isinstance(payload, dict):
+            payload = {}
+        force_unprocessed: list[str] = []
+        for item in payload.get("force_unprocessed", []) if isinstance(payload.get("force_unprocessed"), list) else []:
+            value = str(item).strip()
+            if value and value not in force_unprocessed:
+                force_unprocessed.append(value)
+        return {"force_unprocessed": sorted(force_unprocessed)}
 
 
 def _write_book_status_overrides(payload: dict[str, list[str]]) -> dict[str, list[str]]:
-    normalized = _load_book_status_overrides()
-    normalized["force_unprocessed"] = sorted(
-        {
-            str(item).strip()
-            for item in payload.get("force_unprocessed", [])
-            if str(item).strip()
-        }
-    )
-    path = _book_status_override_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8")
-    return normalized
+    with _book_status_lock:
+        normalized = _load_book_status_overrides()
+        normalized["force_unprocessed"] = sorted(
+            {
+                str(item).strip()
+                for item in payload.get("force_unprocessed", [])
+                if str(item).strip()
+            }
+        )
+        path = _book_status_override_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _write_text_atomic(path, json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8")
+        return normalized
 
 
 def _mark_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
-    payload = _load_book_status_overrides()
-    merged = sorted(
-        set(payload.get("force_unprocessed", []))
-        | {str(name).strip() for name in book_names if str(name).strip()}
-    )
-    return _write_book_status_overrides({"force_unprocessed": merged})
+    with _book_status_lock:
+        payload = _load_book_status_overrides()
+        merged = sorted(
+            set(payload.get("force_unprocessed", []))
+            | {str(name).strip() for name in book_names if str(name).strip()}
+        )
+        return _write_book_status_overrides({"force_unprocessed": merged})
 
 
 def _clear_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
-    to_remove = {str(name).strip() for name in book_names if str(name).strip()}
-    payload = _load_book_status_overrides()
-    kept = [name for name in payload.get("force_unprocessed", []) if name not in to_remove]
-    return _write_book_status_overrides({"force_unprocessed": kept})
+    with _book_status_lock:
+        to_remove = {str(name).strip() for name in book_names if str(name).strip()}
+        payload = _load_book_status_overrides()
+        kept = [name for name in payload.get("force_unprocessed", []) if name not in to_remove]
+        return _write_book_status_overrides({"force_unprocessed": kept})
 
 
 def _load_graph_runtime_rows(target: Path | None = None) -> list[dict[str, Any]]:
     path = target or DEFAULT_GRAPH_TARGET
-    payload = _load_json_file(path, [])
-    return [row for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
+    with GRAPH_RUNTIME_IO_LOCK:
+        if not path.exists():
+            return []
+        payload = _load_json_file_strict(path)
+        if not isinstance(payload, list):
+            raise ValueError(f"invalid_graph_runtime_payload: {path}")
+        return [row for row in payload if isinstance(row, dict)]
 
 
 def _write_graph_runtime_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
     path = target or DEFAULT_GRAPH_TARGET
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-    return path
+    with GRAPH_RUNTIME_IO_LOCK:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _write_text_atomic(path, json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+        return path
 
 
 def _load_graph_runtime_evidence_rows(target: Path | None = None) -> list[dict[str, Any]]:
     evidence_path = _graph_evidence_path(target)
-    return _load_jsonl_rows(evidence_path) if evidence_path.exists() else []
+    with GRAPH_RUNTIME_IO_LOCK:
+        return _load_jsonl_rows(evidence_path) if evidence_path.exists() else []
 
 
 def _write_graph_runtime_evidence_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
     evidence_path = _graph_evidence_path(target)
-    evidence_path.parent.mkdir(parents=True, exist_ok=True)
-    deduped = _dedupe_evidence_rows(rows)
-    evidence_path.write_text(
-        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in deduped),
-        encoding="utf-8",
-    )
-    return evidence_path
+    with GRAPH_RUNTIME_IO_LOCK:
+        evidence_path.parent.mkdir(parents=True, exist_ok=True)
+        deduped = _dedupe_evidence_rows(rows)
+        _write_text_atomic(
+            evidence_path,
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in deduped),
+            encoding="utf-8",
+        )
+        return evidence_path
+
+
+def _publish_queue_busy_marker() -> str | None:
+    active = _active_publish_task or {}
+    active_run = str(active.get("run_name", "") or "").strip()
+    active_kind = str(active.get("kind", "") or "").strip()
+    if active_run and active_kind:
+        return f"{active_run}:{active_kind}"
+    if _publish_queue:
+        queued = _publish_queue[0]
+        queued_run = str(queued.get("run_name", "") or "").strip()
+        queued_kind = str(queued.get("kind", "") or "").strip()
+        if queued_run and queued_kind:
+            return f"{queued_run}:{queued_kind}"
+    return None
 
 
 def _collect_fact_ids(rows: list[dict[str, Any]]) -> set[str]:
@@ -343,38 +534,43 @@ def _delete_books_from_runtime_graph(
     if not books:
         raise ValueError("book_names_required")
 
-    rows = _load_graph_runtime_rows()
-    removed_rows = [row for row in rows if str(row.get("source_book", "")).strip() in books]
-    kept_rows = [row for row in rows if str(row.get("source_book", "")).strip() not in books]
-    removed_triples = len(removed_rows)
-    remaining_entities = {
-        str(row.get(key, "")).strip()
-        for row in kept_rows
-        for key in ("subject", "object")
-        if str(row.get(key, "")).strip()
-    }
-    removed_entities = {
-        str(row.get(key, "")).strip()
-        for row in removed_rows
-        for key in ("subject", "object")
-        if str(row.get(key, "")).strip()
-    }
-    orphan_entities = sorted(removed_entities - remaining_entities)
+    with _publish_lock:
+        busy_marker = _publish_queue_busy_marker()
+        if busy_marker:
+            raise RuntimeError(f"publish_queue_busy: {busy_marker}")
 
-    remaining_fact_ids = _collect_fact_ids(kept_rows)
-    evidence_rows = _load_graph_runtime_evidence_rows()
-    kept_evidence_rows = [
-        row
-        for row in evidence_rows
-        if str(row.get("fact_id", "")).strip() in remaining_fact_ids
-    ]
+        rows = _load_graph_runtime_rows()
+        removed_rows = [row for row in rows if str(row.get("source_book", "")).strip() in books]
+        kept_rows = [row for row in rows if str(row.get("source_book", "")).strip() not in books]
+        removed_triples = len(removed_rows)
+        remaining_entities = {
+            str(row.get(key, "")).strip()
+            for row in kept_rows
+            for key in ("subject", "object")
+            if str(row.get(key, "")).strip()
+        }
+        removed_entities = {
+            str(row.get(key, "")).strip()
+            for row in removed_rows
+            for key in ("subject", "object")
+            if str(row.get(key, "")).strip()
+        }
+        orphan_entities = sorted(removed_entities - remaining_entities)
 
-    _write_graph_runtime_rows(kept_rows)
-    _write_graph_runtime_evidence_rows(kept_evidence_rows)
+        remaining_fact_ids = _collect_fact_ids(kept_rows)
+        evidence_rows = _load_graph_runtime_evidence_rows()
+        kept_evidence_rows = [
+            row
+            for row in evidence_rows
+            if str(row.get("fact_id", "")).strip() in remaining_fact_ids
+        ]
 
-    override_payload: dict[str, list[str]] | None = None
-    if mark_unprocessed:
-        override_payload = _mark_books_force_unprocessed(books)
+        _write_graph_runtime_rows(kept_rows)
+        _write_graph_runtime_evidence_rows(kept_evidence_rows)
+
+        override_payload: dict[str, list[str]] | None = None
+        if mark_unprocessed:
+            override_payload = _mark_books_force_unprocessed(books)
 
     nebula_result: dict[str, Any] | None = None
     if sync_nebula:
@@ -611,6 +807,12 @@ def _is_full_completed_run(manifest: dict[str, Any], state: dict[str, Any]) -> b
         return False
 
     manifest_cfg = manifest.get("config", {}) if isinstance(manifest.get("config"), dict) else {}
+    if not _manifest_has_full_book_scope(manifest_cfg):
+        return False
+    return True
+
+
+def _manifest_has_full_book_scope(manifest_cfg: dict[str, Any]) -> bool:
     if manifest_cfg.get("max_chunks_per_book") not in (None, "", 0):
         return False
     if int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0) != 0:
@@ -618,6 +820,67 @@ def _is_full_completed_run(manifest: dict[str, Any], state: dict[str, Any]) -> b
     if any(str(item).strip() for item in (manifest_cfg.get("chapter_excludes") or [])):
         return False
     return True
+
+
+def _collect_completed_book_stems_from_run(manifest: dict[str, Any], state: dict[str, Any], run_dir: Path) -> set[str]:
+    processed: set[str] = set()
+    if bool(manifest.get("dry_run", False)):
+        return processed
+
+    manifest_cfg = manifest.get("config", {}) if isinstance(manifest.get("config"), dict) else {}
+    if not _manifest_has_full_book_scope(manifest_cfg):
+        return processed
+
+    book_paths = [Path(item) for item in manifest.get("books", []) if str(item).strip()]
+    if not book_paths:
+        return processed
+
+    run_status = str(state.get("status", "")).strip().lower()
+    if run_status == "completed":
+        return {path.stem for path in book_paths}
+    if run_status not in {"partial", "completed"}:
+        return processed
+
+    completed_chunk_keys = _load_completed_chunk_keys(run_dir)
+    if not completed_chunk_keys:
+        return processed
+
+    pipeline = TCMTriplePipeline(
+        PipelineConfig(
+            books_dir=book_paths[0].parent if book_paths else DEFAULT_BOOKS_DIR,
+            output_dir=run_dir,
+            model=str(manifest.get("model", "") or "mimo-v2-pro"),
+            api_key="dummy_for_processed_scan",
+            base_url=str(manifest.get("base_url", "") or "https://api.siliconflow.cn/v1"),
+            max_chunk_chars=int(manifest_cfg.get("max_chunk_chars", 800) if manifest_cfg.get("max_chunk_chars", None) is not None else 800),
+            chunk_overlap=int(manifest_cfg.get("chunk_overlap", 200) if manifest_cfg.get("chunk_overlap", None) is not None else 200),
+            chunk_strategy=str(manifest_cfg.get("chunk_strategy", "body_first")),
+            parallel_workers=1,
+            request_delay=0.0,
+            max_retries=0,
+        )
+    )
+
+    chapter_excludes = list(manifest_cfg.get("chapter_excludes", []))
+    skip_initial_chunks = int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0)
+    chunk_strategy = str(manifest_cfg.get("chunk_strategy", "body_first"))
+
+    for book_path in book_paths:
+        if not book_path.exists():
+            continue
+        try:
+            tasks = pipeline.schedule_book_chunks(
+                book_path=book_path,
+                chapter_excludes=chapter_excludes or None,
+                max_chunks_per_book=None,
+                skip_initial_chunks_per_book=skip_initial_chunks,
+                chunk_strategy=chunk_strategy,
+            )
+        except Exception:
+            continue
+        if tasks and all((task.book_name, task.chunk_index) in completed_chunk_keys for task in tasks):
+            processed.add(book_path.stem)
+    return processed
 
 
 def _get_processed_book_stems() -> set[str]:
@@ -636,10 +899,7 @@ def _get_processed_book_stems() -> set[str]:
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             state = json.loads(state_path.read_text(encoding="utf-8"))
-            if not _is_full_completed_run(manifest, state):
-                continue
-            for book_str in manifest.get("books", []):
-                processed.add(Path(book_str).stem)
+            processed.update(_collect_completed_book_stems_from_run(manifest, state, run_dir))
         except Exception:
             continue
     processed -= set(_load_book_status_overrides().get("force_unprocessed", []))
@@ -746,11 +1006,68 @@ def _record_json_publish_status(
             "status": "completed",
             "published": True,
             "published_at": _now_iso(),
+            "finished_at": _now_iso(),
             "target": str(target),
             "graph_triples": graph_triples,
             "evidence_count": evidence_count,
+            "error": "",
         },
     )
+
+
+def _publish_json_for_run(run_dir: Path, *, replace: bool = False) -> dict[str, Any]:
+    pipeline = _build_pipeline()
+    target = pipeline.publish_graph(run_dir=run_dir, replace=replace)
+    with GRAPH_RUNTIME_IO_LOCK:
+        graph_data = json.loads(target.read_text(encoding="utf-8"))
+        evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
+        evidence_count = 0
+        if evidence_path.exists():
+            evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
+    _record_json_publish_status(
+        run_dir,
+        target=target,
+        graph_triples=len(graph_data),
+        evidence_count=evidence_count,
+    )
+    return {
+        "target": target,
+        "graph_triples": len(graph_data),
+        "evidence_count": evidence_count,
+    }
+
+
+def _run_json_publish_job(run_name: str, *, replace: bool = False) -> dict[str, Any]:
+    run_dir = DEFAULT_OUTPUT_DIR / run_name
+    if not run_dir.exists():
+        raise FileNotFoundError("run_not_found")
+    try:
+        _update_publish_status(
+            run_dir,
+            "json",
+            {
+                "status": "running",
+                "published": False,
+                "published_at": "",
+                "started_at": _now_iso(),
+                "finished_at": "",
+                "error": "",
+            },
+        )
+        return _publish_json_for_run(run_dir, replace=replace)
+    except Exception as exc:
+        _update_publish_status(
+            run_dir,
+            "json",
+            {
+                "status": "error",
+                "published": False,
+                "published_at": "",
+                "finished_at": _now_iso(),
+                "error": str(exc),
+            },
+        )
+        raise
 
 
 def _run_nebula_publish_job(run_name: str) -> None:
@@ -759,19 +1076,27 @@ def _run_nebula_publish_job(run_name: str) -> None:
         if not run_dir.exists():
             raise FileNotFoundError("run_not_found")
 
-        pipeline = _build_pipeline()
-        target = pipeline.publish_graph(run_dir=run_dir, replace=False)
-        graph_data = json.loads(target.read_text(encoding="utf-8"))
-        evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-        evidence_count = 0
-        if evidence_path.exists():
-            evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
-        _record_json_publish_status(
+        _update_publish_status(
             run_dir,
-            target=target,
-            graph_triples=len(graph_data),
-            evidence_count=evidence_count,
+            "nebula",
+            {
+                "status": "running",
+                "published": False,
+                "started_at": _now_iso(),
+                "finished_at": "",
+                "published_at": "",
+                "progress_current": 0,
+                "progress_total": 0,
+                "progress_pct": 0.0,
+                "ok_count": 0,
+                "fail_count": 0,
+                "error": "",
+            },
         )
+        json_result = _run_json_publish_job(run_name, replace=False)
+        target = Path(str(json_result["target"]))
+        with GRAPH_RUNTIME_IO_LOCK:
+            graph_data = json.loads(target.read_text(encoding="utf-8"))
 
         graph_import_path, evidence_path = _resolve_run_publish_source(run_dir)
         from services.graph_service.nebulagraph_store import NebulaGraphStore, load_graph_rows
@@ -1227,8 +1552,6 @@ def _run_extraction_job(
                 _write_state(state_path, state)
 
     def finalize_exhausted_low_yield_chunks(results: dict[tuple[str, int], dict[str, Any]]) -> int:
-        nonlocal total_triples
-
         finalized = 0
         for result in results.values():
             error = result.get("error")
@@ -1239,27 +1562,22 @@ def _run_extraction_job(
 
             task = result["task"]
             rows = result.get("rows") or []
-            if len(rows) != 0:
-                continue
-            if not result.get("_written"):
-                for row in rows:
-                    pipeline.append_jsonl(triples_jsonl, asdict(row))
-                result["_written"] = True
-                total_triples += len(rows)
-                state["total_triples"] = total_triples
-
+            drop_error = f"dropped_after_low_yield_retries: {error}"
             result["error"] = None
+            result["rows"] = []
+            result["_written"] = True
             completed_chunk_keys.add((task.book_name, task.chunk_index))
             _append_checkpoint(
                 checkpoint_path,
                 task=task,
-                error=None,
+                error=drop_error,
                 payload=result.get("payload") or {"triples": []},
                 attempt=int(result.get("_retried", 0) or 0),
                 resumed=resume_mode,
-                triples_count=len(rows),
+                triples_count=0,
+                success_override=True,
             )
-            _log("info", f"  chunk {task.chunk_index} 低产出重试耗尽，按空结果完成 | triples={len(rows)}")
+            _log("info", f"  chunk {task.chunk_index} 低产出重试耗尽，按空结果完成 | triples=0")
             finalized += 1
 
         if finalized > 0:
@@ -1299,6 +1617,50 @@ def _run_extraction_job(
             )
             _log("warn", f"  chunk {task.chunk_index} 重试耗尽，已丢弃并按完成处理 | error={error[:80]}")
             finalized += 1
+
+        if finalized > 0:
+            with _run_lock:
+                _current_job.update(state)
+            _write_state(state_path, state)
+        return finalized
+
+    def finalize_any_remaining_unresolved_chunks() -> int:
+        finalized = 0
+        for _, tasks in all_tasks_per_book:
+            for task in tasks:
+                key = (task.book_name, task.chunk_index)
+                if key in completed_chunk_keys:
+                    continue
+                result = results.get(key)
+                payload = (result or {}).get("payload") or {"triples": []}
+                error = str((result or {}).get("error") or "unresolved_after_retries").strip()
+                attempt = int((result or {}).get("_retried", 0) or 0)
+                if result is not None:
+                    result["error"] = None
+                    result["rows"] = []
+                    result["_written"] = True
+                else:
+                    results[key] = {
+                        "task": task,
+                        "payload": payload,
+                        "error": None,
+                        "rows": [],
+                        "_retried": attempt,
+                        "_written": True,
+                    }
+                completed_chunk_keys.add(key)
+                _append_checkpoint(
+                    checkpoint_path,
+                    task=task,
+                    error=f"dropped_after_retries: {error}",
+                    payload=payload,
+                    attempt=attempt,
+                    resumed=resume_mode,
+                    triples_count=0,
+                    success_override=True,
+                )
+                _log("warn", f"  chunk {task.chunk_index} 收尾兜底丢弃并按完成处理 | error={error[:80]}")
+                finalized += 1
 
         if finalized > 0:
             with _run_lock:
@@ -1586,6 +1948,8 @@ def _run_extraction_job(
 
         finalize_exhausted_low_yield_chunks(results)
         finalize_exhausted_failed_chunks(results)
+        if not _job_cancelled.is_set():
+            finalize_any_remaining_unresolved_chunks()
 
         incomplete_books = []
         for book_path, scheduled_tasks in all_tasks_per_book:
@@ -1673,11 +2037,12 @@ def _run_extraction_job(
                 _current_job.update(state)
             _log("info", "开始自动发布到图谱...")
             target = pipeline.publish_graph(run_dir=run_dir)
-            graph_data = json.loads(target.read_text(encoding="utf-8"))
-            evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-            evidence_count = 0
-            if evidence_path.exists():
-                evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
+            with GRAPH_RUNTIME_IO_LOCK:
+                graph_data = json.loads(target.read_text(encoding="utf-8"))
+                evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
+                evidence_count = 0
+                if evidence_path.exists():
+                    evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
             _record_json_publish_status(
                 run_dir,
                 target=target,
@@ -1911,7 +2276,7 @@ def start_job(req: StartJobRequest):
         _job_log.clear()
         _job_cancelled.clear()
         log_file_path = DEFAULT_OUTPUT_DIR / f"current_job_{job_id}.log"
-        log_file_path.write_text("", encoding="utf-8")
+        _write_text_atomic(log_file_path, "", encoding="utf-8")
         global _job_log_file, _job_log_file_path
         _job_log_file = log_file_path
         _job_log_file_path = log_file_path
@@ -1997,7 +2362,7 @@ def resume_run(run_name: str, req: ResumeRunRequest):
         _job_log.clear()
         _job_cancelled.clear()
         log_file_path = DEFAULT_OUTPUT_DIR / f"current_job_{job_id}.log"
-        log_file_path.write_text("", encoding="utf-8")
+        _write_text_atomic(log_file_path, "", encoding="utf-8")
         global _job_log_file, _job_log_file_path
         _job_log_file = log_file_path
         _job_log_file_path = log_file_path
@@ -2227,30 +2592,22 @@ def run_clean(run_name: str):
 
 @app.post("/api/runs/{run_name}/publish")
 def run_publish(run_name: str, replace: bool = False):
-    """将指定运行发布到 graph_runtime.json"""
+    """将指定运行加入 JSON 发布队列"""
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
     try:
-        pipeline = _build_pipeline()
-        target = pipeline.publish_graph(run_dir=run_dir, replace=replace)
-        # 统计发布后图谱大小
-        graph_data = json.loads(target.read_text(encoding="utf-8"))
-        evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-        evidence_count = 0
-        if evidence_path.exists():
-            evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
-        _record_json_publish_status(
-            run_dir,
-            target=target,
-            graph_triples=len(graph_data),
-            evidence_count=evidence_count,
+        enqueued, publish_status = _enqueue_publish_task(run_name, kind="json", replace=replace)
+        return JSONResponse(
+            status_code=202,
+            content={
+                "run_dir": run_name,
+                "enqueued": enqueued,
+                "publish_status": publish_status,
+            },
         )
-        return {
-            "target": str(target),
-            "graph_triples": len(graph_data),
-            "evidence_count": evidence_count,
-        }
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="run_not_found")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2268,53 +2625,116 @@ def run_publish_status(run_name: str):
 
 @app.post("/api/runs/{run_name}/publish-nebula")
 def run_publish_nebula(run_name: str):
-    """将指定运行增量发布到 NebulaGraph（异步启动，可轮询进度）"""
+    """将指定运行加入 Nebula 发布队列（自动先同步 JSON）"""
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    with _publish_lock:
-        existing_thread = _nebula_publish_threads.get(run_name)
-        already_running = existing_thread is not None and existing_thread.is_alive()
-    if already_running:
+    try:
+        enqueued, publish_status = _enqueue_publish_task(run_name, kind="nebula", replace=False)
         return JSONResponse(
             status_code=202,
             content={
                 "run_dir": run_name,
-                "started": False,
-                "publish_status": _load_publish_status(run_dir),
+                "enqueued": enqueued,
+                "publish_status": publish_status,
             },
         )
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
-    _update_publish_status(
-        run_dir,
-        "nebula",
-        {
-            "status": "running",
-            "published": False,
-            "started_at": _now_iso(),
-            "finished_at": "",
-            "published_at": "",
-            "progress_current": 0,
-            "progress_total": 0,
-            "progress_pct": 0.0,
-            "ok_count": 0,
-            "fail_count": 0,
-            "error": "",
-        },
-    )
-    worker = threading.Thread(target=_run_nebula_publish_job, args=(run_name,), daemon=True)
+
+@app.post("/api/runs/publish/stop-all")
+def stop_all_publish_tasks():
+    stopped_runs: list[str] = []
     with _publish_lock:
-        _nebula_publish_threads[run_name] = worker
-    worker.start()
-    return JSONResponse(
-        status_code=202,
-        content={
-            "run_dir": run_name,
-            "started": True,
-            "publish_status": _load_publish_status(run_dir),
-        },
-    )
+        queued_tasks = list(_publish_queue)
+        _publish_queue.clear()
+        _publish_worker_wakeup.clear()
+    for task in queued_tasks:
+        run_name = str(task.get("run_name", "") or "").strip()
+        kind = str(task.get("kind", "") or "json").strip()
+        if not run_name:
+            continue
+        run_dir = DEFAULT_OUTPUT_DIR / run_name
+        if not run_dir.exists():
+            continue
+        if kind == "nebula":
+            _update_publish_status(
+                run_dir,
+                "nebula",
+                {
+                    "status": "error",
+                    "published": False,
+                    "finished_at": _now_iso(),
+                    "error": "cancelled_from_queue",
+                },
+            )
+        else:
+            _update_publish_status(
+                run_dir,
+                "json",
+                {
+                    "status": "error",
+                    "published": False,
+                    "finished_at": _now_iso(),
+                    "error": "cancelled_from_queue",
+                },
+            )
+        stopped_runs.append(f"{run_name}:{kind}")
+
+    active_run = ""
+    with _publish_lock:
+        if isinstance(_active_publish_task, dict):
+            active_run = str(_active_publish_task.get("run_name", "") or "").strip()
+
+    if active_run:
+        active_dir = DEFAULT_OUTPUT_DIR / active_run
+        if active_dir.exists():
+            status = _load_publish_status(active_dir)
+            for section in ("json", "nebula"):
+                current = status.get(section, {})
+                if current.get("status") == "running":
+                    _update_publish_status(
+                        active_dir,
+                        section,
+                        {
+                            "status": "error",
+                            "published": False,
+                            "finished_at": _now_iso(),
+                            "error": "marked_stopped_manually; restart server if worker is still blocked",
+                        },
+                    )
+                    stopped_runs.append(f"{active_run}:{section}")
+
+    if DEFAULT_OUTPUT_DIR.exists():
+        for run_dir in DEFAULT_OUTPUT_DIR.iterdir():
+            if not run_dir.is_dir():
+                continue
+            status = _load_publish_status(run_dir)
+            for section in ("json", "nebula"):
+                current = status.get(section, {})
+                if current.get("status") not in {"queued", "running"}:
+                    continue
+                marker = f"{run_dir.name}:{section}"
+                if marker in stopped_runs:
+                    continue
+                _update_publish_status(
+                    run_dir,
+                    section,
+                    {
+                        "status": "error",
+                        "published": False,
+                        "finished_at": _now_iso(),
+                        "error": "stopped_manually_or_server_restarted",
+                    },
+                )
+                stopped_runs.append(marker)
+    return {
+        "stopped": stopped_runs,
+    }
 
 
 @app.get("/api/graph/stats")
@@ -2322,13 +2742,14 @@ def graph_stats():
     """当前 graph_runtime.json 的统计信息"""
     try:
         target = DEFAULT_GRAPH_TARGET
-        if not target.exists():
-            return {"exists": False}
-        data = json.loads(target.read_text(encoding="utf-8"))
-        evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-        evidence_count = 0
-        if evidence_path.exists():
-            evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
+        with GRAPH_RUNTIME_IO_LOCK:
+            if not target.exists():
+                return {"exists": False}
+            data = json.loads(target.read_text(encoding="utf-8"))
+            evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
+            evidence_count = 0
+            if evidence_path.exists():
+                evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
         predicates: dict[str, int] = {}
         books: dict[str, int] = {}
         for row in data:
@@ -2405,6 +2826,11 @@ def graph_delete_books(req: GraphBookDeleteRequest):
         return result
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        detail = str(exc)
+        if detail.startswith("publish_queue_busy:"):
+            raise HTTPException(status_code=409, detail=detail)
+        raise HTTPException(status_code=500, detail=detail)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

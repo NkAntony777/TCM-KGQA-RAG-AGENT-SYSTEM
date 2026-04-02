@@ -798,7 +798,8 @@
     <div class="page" id="page-runs">
       <div class="card">
         <div class="card-title"><span class="icon">📁</span> 历史运行记录
-          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadRuns()">刷新</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="clearPublishQueue()">清除任务队列</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadRuns()">刷新</button>
         </div>
         <div class="hint" style="margin-bottom:12px">
           发布 JSON = 增量追加到 `graph_runtime.json`；发布 Nebula = 先同步 `graph_runtime.json`，再把当前 run 写入 NebulaGraph。
@@ -983,6 +984,24 @@ let chunkSweepSeenLogs = new Set();
 let chunkSweepHistoryRuns = [];
 let chunkSweepSelectedRunName = '';
 
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
+  const text = await response.text();
+  if (!response.ok) {
+    const detail = text ? text.slice(0, 200) : `HTTP ${response.status}`;
+    throw new Error(detail);
+  }
+  if (!text.trim()) {
+    throw new Error('empty response');
+  }
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    const snippet = text.slice(0, 120).replace(/\s+/g, ' ');
+    throw new Error(`invalid json: ${snippet || 'empty body'}`);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // 初始化
 // ─────────────────────────────────────────────────────────────
@@ -1019,8 +1038,7 @@ function handleModalBackdrop(event, modalId, onClose) {
 // ─────────────────────────────────────────────────────────────
 async function loadEnvConfig() {
   try {
-    const r = await fetch(`${API}/api/config/env`);
-    const d = await r.json();
+    const d = await fetchJson(`${API}/api/config/env`);
     envProviders = Array.isArray(d.providers) ? d.providers : [];
     document.getElementById('envBadge').textContent =
       `${d.model} · ${envProviders.length || 1} provider · Key: ${d.api_key_hint}`;
@@ -1039,13 +1057,12 @@ async function loadEnvConfig() {
 // ─────────────────────────────────────────────────────────────
 async function loadBooks() {
   try {
-    const r = await fetch(`${API}/api/books`);
-    const d = await r.json();
-    allBooks = d.books;
+    const d = await fetchJson(`${API}/api/books`);
+    allBooks = Array.isArray(d.books) ? d.books : [];
     renderBookList(allBooks);
   } catch (e) {
     document.getElementById('bookList').innerHTML =
-      '<div style="padding:12px;color:var(--red);font-size:12px">书库加载失败</div>';
+      `<div style="padding:12px;color:var(--red);font-size:12px">书库加载失败: ${escapeHtml(e?.message || e)}</div>`;
   }
 }
 
@@ -1094,20 +1111,20 @@ function clearSelection() { selectedBooks.clear(); filterBooks(); renderSelected
 
 async function loadRecommended() {
   try {
-    const r = await fetch(`${API}/api/books`);
-    const d = await r.json();
+    const d = await fetchJson(`${API}/api/books`);
     d.books
       .filter(b => b.recommended && !b.processed)
       .slice(0, 7)
       .forEach(b => selectedBooks.add(b.name));
     filterBooks(); renderSelectedChips();
-  } catch (e) { alert('加载推荐书目失败'); }
+  } catch (e) { alert(`加载推荐书目失败: ${e?.message || e}`); }
 }
 
 // ─────────────────────────────────────────────────────────────
 // 任务控制
 // ─────────────────────────────────────────────────────────────
 async function startJob() {
+  const providers = Array.isArray(envProviders) ? envProviders.map(p => ({...p})) : [];
   const body = {
     selected_books: [...selectedBooks],
     label: document.getElementById('cfgLabel').value.trim() || 'extraction',
@@ -1120,6 +1137,7 @@ async function startJob() {
     auto_clean: document.getElementById('cfgAutoClean').checked,
     auto_publish: document.getElementById('cfgAutoPublish').checked,
     api_config: {
+      providers,
       model: document.getElementById('cfgModel').value.trim(),
       api_key: document.getElementById('cfgApiKey').value.trim(),
       base_url: document.getElementById('cfgBaseUrl').value.trim(),
@@ -1393,11 +1411,19 @@ function renderPublishBadges(publishStatus) {
   const parts = [];
   if (jsonStatus.published) {
     parts.push(`<span class="tiny-badge done" title="${escapeHtml(jsonStatus.published_at || '')}">JSON 已发布</span>`);
+  } else if (jsonStatus.status === 'queued') {
+    parts.push('<span class="tiny-badge running">JSON 排队中</span>');
+  } else if (jsonStatus.status === 'running') {
+    parts.push('<span class="tiny-badge running">JSON 发布中</span>');
+  } else if (jsonStatus.status === 'error') {
+    parts.push(`<span class="tiny-badge error" title="${escapeHtml(jsonStatus.error || '')}">JSON 失败</span>`);
   } else if (jsonStatus.status === 'completed') {
     parts.push('<span class="tiny-badge">JSON 已同步</span>');
   }
   if (nebulaStatus.published) {
     parts.push(`<span class="tiny-badge done" title="${escapeHtml(nebulaStatus.published_at || '')}">Nebula 已发布</span>`);
+  } else if (nebulaStatus.status === 'queued') {
+    parts.push('<span class="tiny-badge running">Nebula 排队中</span>');
   } else if (nebulaStatus.status === 'running') {
     parts.push('<span class="tiny-badge running">Nebula 发布中</span>');
   } else if (nebulaStatus.status === 'error') {
@@ -1408,11 +1434,11 @@ function renderPublishBadges(publishStatus) {
 
 function renderNebulaMiniProgress(run) {
   const nebulaStatus = run?.publish_status?.nebula || {};
-  if (nebulaStatus.status !== 'running') return '';
+  if (!['queued', 'running'].includes(nebulaStatus.status)) return '';
   const total = nebulaStatus.progress_total || 0;
   const current = Math.min(nebulaStatus.progress_current || 0, total || 0);
   const pct = Math.max(0, Math.min(100, nebulaStatus.progress_pct || 0));
-  const label = total > 0 ? `${current}/${total}` : '准备中';
+  const label = nebulaStatus.status === 'queued' ? '排队中' : (total > 0 ? `${current}/${total}` : '准备中');
   return `
     <div class="mini-progress">
       <div class="progress-bar"><div class="progress-fill green" style="width:${pct}%"></div></div>
@@ -1425,10 +1451,15 @@ function renderRunActionCell(run) {
   const publishStatus = run.publish_status || {};
   const jsonStatus = publishStatus.json || {};
   const nebulaStatus = publishStatus.nebula || {};
-  const nebulaBusy = nebulaStatus.status === 'running';
-  const jsonLabel = jsonStatus.published ? '已发布 JSON' : '发布 JSON';
+  const jsonBusy = ['queued', 'running'].includes(jsonStatus.status) || ['queued', 'running'].includes(nebulaStatus.status);
+  const nebulaBusy = ['queued', 'running'].includes(nebulaStatus.status);
+  const jsonLabel =
+    jsonStatus.published ? '已发布 JSON' :
+    jsonStatus.status === 'queued' ? 'JSON 排队中' :
+    jsonStatus.status === 'running' ? 'JSON 发布中' : '发布 JSON';
   const nebulaLabel =
     nebulaStatus.published ? '已发布 Nebula' :
+    nebulaStatus.status === 'queued' ? 'Nebula 排队中' :
     nebulaBusy ? 'Nebula 发布中' : '发布 Nebula';
   return `
     <div class="publish-status">
@@ -1436,7 +1467,7 @@ function renderRunActionCell(run) {
         <button class="btn btn-ghost btn-sm" onclick="openResumePanel('${run.run_dir}')">续跑</button>
         <button class="btn btn-ghost btn-sm" onclick="viewTriples('${run.run_dir}')">查看</button>
         <button class="btn btn-ghost btn-sm" onclick="cleanRun('${run.run_dir}')">清洗</button>
-        <button class="btn btn-ghost btn-sm" onclick="publishRun('${run.run_dir}', this)">${jsonLabel}</button>
+        <button class="btn btn-ghost btn-sm" onclick="publishRun('${run.run_dir}', this)" ${jsonBusy ? 'disabled' : ''}>${jsonLabel}</button>
         <button class="btn btn-sm" style="background:var(--cyan);color:#000;font-weight:600" onclick="publishNebula('${run.run_dir}', this)" ${nebulaBusy ? 'disabled' : ''}>${nebulaLabel}</button>
       </div>
       <div class="publish-badges">${renderPublishBadges(publishStatus)}</div>
@@ -1445,12 +1476,12 @@ function renderRunActionCell(run) {
   `;
 }
 
-function scheduleRunsRefresh(hasRunningNebula) {
+function scheduleRunsRefresh(hasActivePublish) {
   if (runsRefreshTimer) {
     clearTimeout(runsRefreshTimer);
     runsRefreshTimer = null;
   }
-  if (currentPage === 'runs' && hasRunningNebula) {
+  if (currentPage === 'runs' && hasActivePublish) {
     runsRefreshTimer = setTimeout(() => loadRuns(), 1200);
   }
 }
@@ -2087,10 +2118,13 @@ async function loadChunkSweepHistoryRun(runName) {
 // 历史记录
 // ─────────────────────────────────────────────────────────────
 async function loadRuns() {
-  const r = await fetch(`${API}/api/runs`);
-  const d = await r.json();
+  const d = await fetchJson(`${API}/api/runs`);
   const tbody = document.getElementById('runsBody');
-  const hasRunningNebula = (d.runs || []).some(run => (run.publish_status?.nebula?.status || '') === 'running');
+  const hasActivePublish = (d.runs || []).some(run => {
+    const jsonStatus = run.publish_status?.json?.status || '';
+    const nebulaStatus = run.publish_status?.nebula?.status || '';
+    return ['queued', 'running'].includes(jsonStatus) || ['queued', 'running'].includes(nebulaStatus);
+  });
   tbody.innerHTML = d.runs.map(run => {
     const statusColors = {
       completed: 'var(--green)', error: 'var(--red)',
@@ -2110,7 +2144,7 @@ async function loadRuns() {
       </td>
     </tr>`;
   }).join('');
-  scheduleRunsRefresh(hasRunningNebula);
+  scheduleRunsRefresh(hasActivePublish);
 }
 
 async function viewTriples(runName) {
@@ -2185,7 +2219,9 @@ async function submitResume() {
   if (!currentResumeRun) return;
   const runName = currentResumeRun;
 
-  const apiConfig = {};
+  const apiConfig = {
+    providers: Array.isArray(envProviders) ? envProviders.map(p => ({...p})) : [],
+  };
   const model = document.getElementById('resumeCfgModel').value.trim();
   const baseUrl = document.getElementById('resumeCfgBaseUrl').value.trim();
   const apiKey = document.getElementById('resumeCfgApiKey').value.trim();
@@ -2231,17 +2267,31 @@ async function cleanRun(runName) {
   alert(`清洗完成：保留 ${d.kept_total}，丢弃 ${d.dropped_total}`);
 }
 
-async function pollNebulaPublishUntilDone(runName) {
+async function clearPublishQueue() {
+  if (!confirm('确认清除所有发布队列吗？\n这会停止当前排队中的 JSON/Nebula 发布任务，并把运行中的发布标记为已停止。')) return;
+  try {
+    const payload = await fetchJson(`${API}/api/runs/publish/stop-all`, {method:'POST'});
+    await loadRuns();
+    const stopped = Array.isArray(payload.stopped) ? payload.stopped : [];
+    if (!stopped.length) {
+      alert('当前没有排队或运行中的发布任务。');
+      return;
+    }
+    const preview = stopped.slice(0, 12).join('\n');
+    const suffix = stopped.length > 12 ? `\n……其余 ${stopped.length - 12} 项已停止` : '';
+    alert(`已停止 ${stopped.length} 个发布任务：\n${preview}${suffix}`);
+  } catch (e) {
+    alert(`清除任务队列失败: ${e.message}`);
+  }
+}
+
+async function pollPublishUntilDone(runName, section) {
   while (true) {
     await loadRuns();
-    const r = await fetch(`${API}/api/runs/${runName}/publish-status`);
-    const d = await r.json();
-    if (!r.ok) {
-      throw new Error(d.detail || '加载 Nebula 发布状态失败');
-    }
-    const nebula = d.publish_status?.nebula || {};
-    if (nebula.status === 'completed') return d.publish_status;
-    if (nebula.status === 'error') throw new Error(nebula.error || 'Nebula 发布失败');
+    const d = await fetchJson(`${API}/api/runs/${runName}/publish-status`);
+    const status = d.publish_status?.[section] || {};
+    if (status.status === 'completed') return d.publish_status;
+    if (status.status === 'error') throw new Error(status.error || `${section} 发布失败`);
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 }
@@ -2250,13 +2300,11 @@ async function publishNebula(runName, btn) {
   if (!confirm(`确认将 ${runName} 增量写入 NebulaGraph（tcm_kg space）？\n同时也会追加到 graph_runtime.json。`)) return;
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Nebula 发布中…';
+    btn.textContent = 'Nebula 排队中…';
   }
   try {
-    const r = await fetch(`${API}/api/runs/${runName}/publish-nebula`, {method:'POST'});
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || 'Nebula 发布失败');
-    const status = await pollNebulaPublishUntilDone(runName);
+    await fetchJson(`${API}/api/runs/${runName}/publish-nebula`, {method:'POST'});
+    const status = await pollPublishUntilDone(runName, 'nebula');
     const nebula = status.nebula || {};
     const jsonStatus = status.json || {};
     alert(`Nebula 发布成功！\n图谱三元组: ${jsonStatus.graph_triples || 0} 条\nNebula 成功语句: ${nebula.ok_count || 0}\nSpace: ${nebula.space || '-'}\n源文件: ${nebula.source_path || '-'}`);
@@ -2275,14 +2323,26 @@ async function publishNebula(runName, btn) {
 
 async function publishRun(runName, btn) {
   if (!confirm(`确认将 ${runName} 发布到 graph_runtime.json（追加模式）？`)) return;
-  if (btn) btn.disabled = true;
-  const r = await fetch(`${API}/api/runs/${runName}/publish`, {method:'POST'});
-  const d = await r.json();
-  if (btn) btn.disabled = false;
-  if (!r.ok) { alert(`发布失败: ${d.detail}`); return; }
-  alert(`发布成功！图谱共 ${d.graph_triples} 条三元组，evidence ${d.evidence_count} 条`);
-  await loadRuns();
-  if (currentPage === 'graph') loadGraphStats();
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'JSON 排队中…';
+  }
+  try {
+    await fetchJson(`${API}/api/runs/${runName}/publish`, {method:'POST'});
+    const status = await pollPublishUntilDone(runName, 'json');
+    const jsonStatus = status.json || {};
+    alert(`发布成功！图谱共 ${jsonStatus.graph_triples || 0} 条三元组，evidence ${jsonStatus.evidence_count || 0} 条`);
+    await loadRuns();
+    if (currentPage === 'graph') loadGraphStats();
+  } catch (e) {
+    await loadRuns();
+    alert(`发布失败: ${e.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '发布 JSON';
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

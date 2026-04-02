@@ -14,6 +14,8 @@ from scripts.tcm_triple_console import _extract_all_json_blocks
 from scripts.tcm_triple_console import _detect_formula_titles
 from scripts.tcm_triple_console import _extract_json_block
 from scripts.tcm_triple_console import _normalize_provider_configs
+from scripts.tcm_triple_console import _write_text_atomic
+from scripts.tcm_triple_console import httpx
 from scripts.tcm_triple_console import resolve_chapter_excludes
 
 
@@ -86,6 +88,24 @@ class TCMTripleConsoleTests(unittest.TestCase):
         self.assertEqual(rows[0].predicate, "治疗证候")
         self.assertEqual(rows[0].subject_type, "formula")
         self.assertEqual(rows[0].object_type, "syndrome")
+
+    def test_write_text_atomic_retries_after_permission_error(self) -> None:
+        target = self.root / "publish_status.json"
+        real_replace = os.replace
+        calls = {"count": 0}
+
+        def flaky_replace(src: str | os.PathLike[str], dst: str | os.PathLike[str]) -> None:
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise PermissionError(5, "Access is denied")
+            real_replace(src, dst)
+
+        with mock.patch("scripts.tcm_triple_console.os.replace", side_effect=flaky_replace):
+            with mock.patch("scripts.tcm_triple_console.time.sleep", return_value=None):
+                _write_text_atomic(target, '{"status":"queued"}', encoding="utf-8")
+
+        self.assertEqual(target.read_text(encoding="utf-8"), '{"status":"queued"}')
+        self.assertEqual(calls["count"], 2)
 
     def test_normalize_triples_accepts_single_triple_dict_payload(self) -> None:
         rows = self.pipeline.normalize_triples(
@@ -444,6 +464,77 @@ class TCMTripleConsoleTests(unittest.TestCase):
         self.assertEqual(providers[1].api_key, "jmrai-key-2")
         self.assertEqual(providers[2].weight, 2)
 
+    def test_normalize_provider_configs_hydrates_masked_provider_list_from_env(self) -> None:
+        env_patch = {
+            "TRIPLE_LLM_PROVIDERS": json.dumps(
+                [
+                    {
+                        "name": "primary",
+                        "model": "mimo-v2-pro",
+                        "api_key": "primary-key",
+                        "base_url": "https://primary.invalid/v1",
+                        "weight": 1,
+                        "enabled": True,
+                    },
+                    {
+                        "name": "jmrai-2",
+                        "model": "mimo-v2-pro",
+                        "api_key": "jmrai-key-2",
+                        "base_url": "https://jmrai.invalid/v1",
+                        "weight": 1,
+                        "enabled": True,
+                    },
+                    {
+                        "name": "jmrai-3",
+                        "model": "mimo-v2-pro",
+                        "api_key": "jmrai-key-3",
+                        "base_url": "https://jmrai.invalid/v1",
+                        "weight": 2,
+                        "enabled": True,
+                    },
+                ],
+                ensure_ascii=False,
+            ),
+        }
+        masked_providers = [
+            {
+                "name": "primary",
+                "model": "mimo-v2-pro",
+                "base_url": "https://primary.invalid/v1",
+                "weight": 1,
+                "enabled": True,
+                "api_key_set": True,
+            },
+            {
+                "name": "jmrai-2",
+                "model": "mimo-v2-pro",
+                "base_url": "https://jmrai.invalid/v1",
+                "weight": 1,
+                "enabled": True,
+                "api_key_set": True,
+            },
+            {
+                "name": "jmrai-3",
+                "model": "mimo-v2-pro",
+                "base_url": "https://jmrai.invalid/v1",
+                "weight": 2,
+                "enabled": True,
+                "api_key_set": True,
+            },
+        ]
+
+        with mock.patch.dict(os.environ, env_patch, clear=True):
+            providers = _normalize_provider_configs(
+                masked_providers,
+                fallback_model="mimo-v2-pro",
+                fallback_api_key="",
+                fallback_base_url="https://primary.invalid/v1",
+            )
+
+        self.assertEqual([provider.name for provider in providers], ["primary", "jmrai-2", "jmrai-3"])
+        self.assertEqual([provider.api_key for provider in providers], ["primary-key", "jmrai-key-2", "jmrai-key-3"])
+        self.assertEqual(providers[2].weight, 2)
+
     def test_get_provider_metrics_reports_rates_and_latency(self) -> None:
         class MetricsPipeline(TCMTriplePipeline):
             def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
@@ -496,6 +587,105 @@ class TCMTripleConsoleTests(unittest.TestCase):
         self.assertEqual(metrics["secondary"]["attempt_count"], 1)
         self.assertEqual(metrics["secondary"]["avg_latency_ms"], 24.0)
         self.assertIn("secondary", pipeline.format_provider_metrics_summary())
+
+    def test_call_llm_ignores_response_format_compatibility_failures_in_metrics(self) -> None:
+        class CompatibilityPipeline(TCMTriplePipeline):
+            def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
+                if provider.name == "primary" and response_format_mode == "json_object":
+                    request = httpx.Request("POST", "https://primary.invalid/v1/chat/completions")
+                    response = httpx.Response(
+                        400,
+                        request=request,
+                        text='{"error":"response_format json_object is not supported"}',
+                    )
+                    raise httpx.HTTPStatusError("response_format_not_supported", request=request, response=response)
+                return {
+                    "raw_text": '{"triples":[]}',
+                    "usage": {},
+                    "finish_reason": "stop",
+                    "response_format_mode": response_format_mode,
+                    "raw_body": {},
+                    "provider_name": provider.name,
+                    "provider_model": provider.model,
+                    "provider_base_url": provider.base_url,
+                    "provider_latency_ms": 3.0,
+                }
+
+        pipeline = CompatibilityPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="mimo-v2-pro",
+                api_key="primary-key",
+                base_url="https://primary.invalid/v1",
+                providers=(
+                    LLMProviderConfig(name="primary", model="mimo-v2-pro", api_key="k1", base_url="https://primary.invalid/v1"),
+                    LLMProviderConfig(name="secondary", model="mimo-v2-pro", api_key="k2", base_url="https://secondary.invalid/v1"),
+                ),
+                request_delay=0.0,
+                max_retries=0,
+            )
+        )
+
+        payload = pipeline.call_llm("prompt")
+        metrics = {item["name"]: item for item in pipeline.get_provider_metrics()}
+
+        self.assertEqual(payload["__meta__"]["provider_name"], "secondary")
+        self.assertEqual(metrics["primary"]["success_count"], 0)
+        self.assertEqual(metrics["primary"]["failure_count"], 0)
+        self.assertEqual(metrics["primary"]["attempt_count"], 0)
+        self.assertEqual(metrics["secondary"]["success_count"], 1)
+
+    def test_call_llm_counts_unprocessable_response_as_provider_failure(self) -> None:
+        class UnprocessablePipeline(TCMTriplePipeline):
+            def _call_llm_raw_once(self, provider, prompt: str, *, response_format_mode: str = "json_object"):  # type: ignore[override]
+                if provider.name == "primary" and response_format_mode == "json_object":
+                    return {
+                        "raw_text": "not-json",
+                        "usage": {},
+                        "finish_reason": "stop",
+                        "response_format_mode": response_format_mode,
+                        "raw_body": {},
+                        "provider_name": provider.name,
+                        "provider_model": provider.model,
+                        "provider_base_url": provider.base_url,
+                        "provider_latency_ms": 5.0,
+                    }
+                return {
+                    "raw_text": '{"triples":[]}',
+                    "usage": {},
+                    "finish_reason": "stop",
+                    "response_format_mode": response_format_mode,
+                    "raw_body": {},
+                    "provider_name": provider.name,
+                    "provider_model": provider.model,
+                    "provider_base_url": provider.base_url,
+                    "provider_latency_ms": 7.0,
+                }
+
+        pipeline = UnprocessablePipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="mimo-v2-pro",
+                api_key="primary-key",
+                base_url="https://primary.invalid/v1",
+                providers=(
+                    LLMProviderConfig(name="primary", model="mimo-v2-pro", api_key="k1", base_url="https://primary.invalid/v1"),
+                    LLMProviderConfig(name="secondary", model="mimo-v2-pro", api_key="k2", base_url="https://secondary.invalid/v1"),
+                ),
+                request_delay=0.0,
+                max_retries=0,
+            )
+        )
+
+        payload = pipeline.call_llm("prompt")
+        metrics = {item["name"]: item for item in pipeline.get_provider_metrics()}
+
+        self.assertEqual(payload["__meta__"]["provider_name"], "primary")
+        self.assertEqual(metrics["primary"]["success_count"], 1)
+        self.assertEqual(metrics["primary"]["failure_count"], 1)
+        self.assertEqual(metrics["primary"]["attempt_count"], 2)
 
     def test_extract_books_dry_run_writes_pipeline_outputs(self) -> None:
         book = self.books_dir / "001-测试方书.txt"

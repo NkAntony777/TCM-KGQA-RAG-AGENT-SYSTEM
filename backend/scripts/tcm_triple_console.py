@@ -5,14 +5,16 @@ import ast
 import csv
 import hashlib
 import json
+import os
 import re
+import tempfile
 import textwrap
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from threading import Lock
+from threading import Lock, RLock
 from typing import Any
 
 import httpx
@@ -25,6 +27,7 @@ DEFAULT_BOOKS_DIR = PROJECT_ROOT / "TCM-Ancient-Books-master" / "TCM-Ancient-Boo
 DEFAULT_OUTPUT_DIR = BACKEND_DIR / "storage" / "triple_pipeline"
 DEFAULT_GRAPH_BASE = BACKEND_DIR / "services" / "graph_service" / "data" / "sample_graph.json"
 DEFAULT_GRAPH_TARGET = BACKEND_DIR / "services" / "graph_service" / "data" / "graph_runtime.json"
+GRAPH_RUNTIME_IO_LOCK = RLock()
 DEFAULT_CHAPTER_EXCLUDES = ["篇名", "目录", "凡例", "序", "自序", "引言"]
 WEAK_SECTION_TITLES = set(DEFAULT_CHAPTER_EXCLUDES) | {"前言", "后记", "跋", "附录", "卷首", "目录上", "目录下"}
 FORMULA_TITLE_SUFFIXES = ("汤", "丸", "散", "饮", "丹", "方", "膏", "煎")
@@ -97,6 +100,35 @@ def _safe_read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def _write_text_atomic(path: Path, content: str, *, encoding: str = "utf-8") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=f"{path.name}.", suffix=".tmp", dir=path.parent)
+    os.close(fd)
+    temp_path = Path(temp_name)
+    try:
+        temp_path.write_text(content, encoding=encoding)
+        last_error: OSError | None = None
+        for attempt in range(20):
+            try:
+                os.replace(temp_path, path)
+                return
+            except OSError as exc:
+                if not isinstance(exc, PermissionError) and getattr(exc, "winerror", None) not in {5, 32}:
+                    raise
+                last_error = exc
+                if attempt == 19:
+                    break
+                time.sleep(min(1.0, 0.05 * (attempt + 1)))
+        if last_error is not None:
+            raise last_error
+    finally:
+        try:
+            if temp_path.exists():
+                temp_path.unlink()
+        except OSError:
+            pass
+
+
 def _slugify(text: str) -> str:
     cleaned = re.sub(r"[^\w\u4e00-\u9fff-]+", "_", text.strip())
     return cleaned.strip("_") or "run"
@@ -116,6 +148,31 @@ def _provider_to_dict(provider: "LLMProviderConfig") -> dict[str, Any]:
         "enabled": bool(provider.enabled),
         "api_key_set": bool(provider.api_key),
     }
+
+
+def _is_response_format_compatibility_error(exc: httpx.HTTPStatusError, *, response_format_mode: str) -> bool:
+    normalized_mode = (response_format_mode or "").strip().lower()
+    if normalized_mode != "json_object":
+        return False
+    response = exc.response
+    if response is None or response.status_code not in {400, 415, 422}:
+        return False
+    try:
+        response_text = response.text.lower()
+    except Exception:
+        response_text = ""
+    return any(token in response_text for token in ("response_format", "json_object", "json_schema"))
+
+
+def _load_env_provider_dicts() -> list[dict[str, Any]]:
+    raw_env_providers = _first_env("TRIPLE_LLM_PROVIDERS")
+    if not raw_env_providers:
+        return []
+    try:
+        decoded = json.loads(raw_env_providers)
+    except json.JSONDecodeError:
+        return []
+    return decoded if isinstance(decoded, list) else []
 
 
 def _env_flag(*names: str, default: bool | None = None) -> bool | None:
@@ -167,15 +224,16 @@ def _normalize_provider_configs(
     fallback_base_url: str,
 ) -> tuple["LLMProviderConfig", ...]:
     providers: list[LLMProviderConfig] = []
-    raw_env_providers = _first_env("TRIPLE_LLM_PROVIDERS")
+    raw_env_providers = _load_env_provider_dicts()
+    env_providers_by_name: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(raw_env_providers, start=1):
+        if not isinstance(item, dict):
+            continue
+        name = _sanitize_provider_name(str(item.get("name") or ""), index)
+        env_providers_by_name[name] = item
 
     if not raw_providers and raw_env_providers:
-        try:
-            decoded = json.loads(raw_env_providers)
-        except json.JSONDecodeError:
-            decoded = []
-        if isinstance(decoded, list):
-            raw_providers = decoded
+        raw_providers = raw_env_providers
 
     if isinstance(raw_providers, list):
         for index, item in enumerate(raw_providers, start=1):
@@ -185,19 +243,25 @@ def _normalize_provider_configs(
                 continue
             if not isinstance(item, dict):
                 continue
-            enabled = bool(item.get("enabled", True))
-            model = str(item.get("model") or fallback_model).strip()
-            api_key = str(item.get("api_key") or "").strip()
-            base_url = str(item.get("base_url") or "").strip()
+            provider_name = _sanitize_provider_name(str(item.get("name") or ""), index)
+            env_match = env_providers_by_name.get(provider_name, {})
+            enabled = bool(item.get("enabled", env_match.get("enabled", True)))
+            model = str(item.get("model") or env_match.get("model") or fallback_model).strip()
+            api_key = str(item.get("api_key") or env_match.get("api_key") or "").strip()
+            base_url = str(item.get("base_url") or env_match.get("base_url") or "").strip()
+            if provider_name == "primary":
+                api_key = api_key or str(fallback_api_key or "").strip()
+                base_url = base_url or str(fallback_base_url or "").strip()
+            weight = max(1, int(item.get("weight", env_match.get("weight", 1)) or 1))
             if not enabled or not model or not api_key or not base_url:
                 continue
             providers.append(
                 LLMProviderConfig(
-                    name=_sanitize_provider_name(str(item.get("name") or ""), index),
+                    name=provider_name,
                     model=model,
                     api_key=api_key,
                     base_url=base_url,
-                    weight=max(1, int(item.get("weight", 1) or 1)),
+                    weight=weight,
                     enabled=True,
                 )
             )
@@ -510,10 +574,32 @@ def _recover_triples_payload_from_text(text: str) -> dict[str, Any] | None:
 def _load_json_file(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
+    raw = path.read_text(encoding="utf-8", errors="ignore").strip()
+    if not raw:
+        return default
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(raw)
     except json.JSONDecodeError:
-        return json.loads(path.read_text(encoding="utf-8-sig"))
+        try:
+            raw_sig = path.read_text(encoding="utf-8-sig", errors="ignore").strip()
+            return json.loads(raw_sig) if raw_sig else default
+        except json.JSONDecodeError:
+            return default
+
+
+def _load_json_file_strict(path: Path) -> Any:
+    if not path.exists():
+        raise FileNotFoundError(f"json_file_not_found: {path}")
+    raw = path.read_text(encoding="utf-8", errors="ignore").strip()
+    if not raw:
+        raise ValueError(f"json_file_empty: {path}")
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        raw_sig = path.read_text(encoding="utf-8-sig", errors="ignore").strip()
+        if not raw_sig:
+            raise ValueError(f"json_file_empty: {path}")
+        return json.loads(raw_sig)
 
 
 def _extract_payload_triples(payload: Any) -> list[dict[str, Any]]:
@@ -1407,6 +1493,35 @@ class TCMTriplePipeline:
                 stats["consecutive_failures"] = int(stats.get("consecutive_failures", 0)) + 1
                 stats["last_error"] = error[:300]
 
+    def _reclassify_provider_success_as_failure(
+        self,
+        provider_name: str,
+        *,
+        error: str,
+        latency_ms: float | None = None,
+    ) -> None:
+        with self._provider_lock:
+            stats = self._provider_stats.setdefault(
+                provider_name,
+                {
+                    "success_count": 0,
+                    "failure_count": 0,
+                    "consecutive_failures": 0,
+                    "last_error": "",
+                    "last_latency_ms": 0.0,
+                    "total_latency_ms": 0.0,
+                    "latency_sample_count": 0,
+                },
+            )
+            current_success = int(stats.get("success_count", 0) or 0)
+            if current_success > 0:
+                stats["success_count"] = current_success - 1
+            stats["failure_count"] = int(stats.get("failure_count", 0) or 0) + 1
+            stats["consecutive_failures"] = int(stats.get("consecutive_failures", 0) or 0) + 1
+            stats["last_error"] = error[:300]
+            if latency_ms is not None:
+                stats["last_latency_ms"] = round(float(latency_ms), 2)
+
     def get_provider_metrics(self) -> list[dict[str, Any]]:
         metrics: list[dict[str, Any]] = []
         with self._provider_lock:
@@ -1530,6 +1645,11 @@ class TCMTriplePipeline:
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 latency_ms = (time.perf_counter() - attempt_started_at) * 1000
+                if _is_response_format_compatibility_error(exc, response_format_mode=response_format_mode):
+                    if attempt < total_attempts - 1:
+                        backoff = self.config.retry_backoff_base * (2 ** attempt)
+                        time.sleep(min(backoff, 20.0))
+                    continue
                 self._record_provider_result(
                     provider.name,
                     success=False,
@@ -1557,6 +1677,7 @@ class TCMTriplePipeline:
         provider_sequence = self._select_provider_sequence()
         last_error: Exception | None = None
         for response_format_mode in ("json_object", "text"):
+            meta: dict[str, Any] | None = None
             try:
                 meta = self.call_llm_raw(
                     prompt,
@@ -1579,6 +1700,13 @@ class TCMTriplePipeline:
                         continue
                 break
             except Exception as exc:
+                provider_name = str(meta.get("provider_name", "")).strip() if isinstance(meta, dict) else ""
+                if provider_name:
+                    self._reclassify_provider_success_as_failure(
+                        provider_name,
+                        error=f"unprocessable_response: {str(exc)}",
+                        latency_ms=float(meta.get("provider_latency_ms", 0.0) or 0.0),
+                    )
                 last_error = exc
                 if response_format_mode == "json_object":
                     continue
@@ -1847,20 +1975,11 @@ class TCMTriplePipeline:
                     )
                 )
 
-        cleaned_jsonl.write_text(
-            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in cleaned_payload_rows),
-            encoding="utf-8",
-        )
         self.write_csv(cleaned_csv, cleaned_rows)
-        graph_facts_jsonl.write_text(
-            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in graph_fact_rows),
-            encoding="utf-8",
-        )
-        graph_facts_json.write_text(json.dumps(graph_fact_rows, ensure_ascii=False, indent=2), encoding="utf-8")
-        evidence_metadata_jsonl.write_text(
-            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in evidence_rows),
-            encoding="utf-8",
-        )
+        _write_text_atomic(cleaned_jsonl, "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in cleaned_payload_rows), encoding="utf-8")
+        _write_text_atomic(graph_facts_jsonl, "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in graph_fact_rows), encoding="utf-8")
+        _write_text_atomic(graph_facts_json, json.dumps(graph_fact_rows, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_text_atomic(evidence_metadata_jsonl, "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in evidence_rows), encoding="utf-8")
 
         report = {
             "run_dir": str(run_dir),
@@ -1874,11 +1993,12 @@ class TCMTriplePipeline:
             "graph_facts_json": str(graph_facts_json),
             "evidence_metadata_jsonl": str(evidence_metadata_jsonl),
         }
-        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_text_atomic(report_path, json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         return report
 
     def save_manifest(self, run_dir: Path, payload: dict[str, Any]) -> None:
-        (run_dir / "manifest.json").write_text(
+        _write_text_atomic(
+            run_dir / "manifest.json",
             json.dumps(payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
@@ -1923,7 +2043,7 @@ class TCMTriplePipeline:
             }
             for row in rows
         ]
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_text_atomic(path, json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def publish_graph(
         self,
@@ -1955,34 +2075,36 @@ class TCMTriplePipeline:
         target.parent.mkdir(parents=True, exist_ok=True)
         evidence_target_path = _derive_evidence_target_path(target)
 
-        incoming = _load_json_file(graph_import_path, [])
-        if not isinstance(incoming, list):
-            raise ValueError("graph_import_invalid")
+        with GRAPH_RUNTIME_IO_LOCK:
+            incoming = _load_json_file_strict(graph_import_path)
+            if not isinstance(incoming, list):
+                raise ValueError("graph_import_invalid")
 
-        base_rows: list[dict[str, Any]] = []
-        if not replace and target.exists():
-            existing = _load_json_file(target, [])
-            if isinstance(existing, list):
-                base_rows = existing
-        elif not replace and target == DEFAULT_GRAPH_TARGET and DEFAULT_GRAPH_BASE.exists():
-            base_graph = _load_json_file(DEFAULT_GRAPH_BASE, [])
-            if isinstance(base_graph, list):
-                base_rows = base_graph
+            base_rows: list[dict[str, Any]] = []
+            if not replace and target.exists():
+                existing = _load_json_file_strict(target)
+                if isinstance(existing, list):
+                    base_rows = existing
+            elif not replace and target == DEFAULT_GRAPH_TARGET and DEFAULT_GRAPH_BASE.exists():
+                base_graph = _load_json_file_strict(DEFAULT_GRAPH_BASE)
+                if isinstance(base_graph, list):
+                    base_rows = base_graph
 
-        merged = _dedupe_graph_rows(base_rows + incoming)
-        target.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+            merged = _dedupe_graph_rows(base_rows + incoming)
+            _write_text_atomic(target, json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        base_evidence_rows: list[dict[str, Any]] = []
-        if not replace and evidence_target_path.exists():
-            base_evidence_rows = _load_jsonl_rows(evidence_target_path)
+            base_evidence_rows: list[dict[str, Any]] = []
+            if not replace and evidence_target_path.exists():
+                base_evidence_rows = _load_jsonl_rows(evidence_target_path)
 
-        incoming_evidence_rows = _load_jsonl_rows(evidence_source_path) if evidence_source_path else []
-        if base_evidence_rows or incoming_evidence_rows:
-            merged_evidence_rows = _dedupe_evidence_rows(base_evidence_rows + incoming_evidence_rows)
-            evidence_target_path.write_text(
-                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in merged_evidence_rows),
-                encoding="utf-8",
-            )
+            incoming_evidence_rows = _load_jsonl_rows(evidence_source_path) if evidence_source_path else []
+            if base_evidence_rows or incoming_evidence_rows:
+                merged_evidence_rows = _dedupe_evidence_rows(base_evidence_rows + incoming_evidence_rows)
+                _write_text_atomic(
+                    evidence_target_path,
+                    "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in merged_evidence_rows),
+                    encoding="utf-8",
+                )
         return target
 
     def extract_books(
@@ -2035,7 +2157,7 @@ class TCMTriplePipeline:
                 },
             },
         )
-        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
         for book_index, book_path in enumerate(selected_books, start=1):
             state["current_book"] = str(book_path)
@@ -2048,11 +2170,11 @@ class TCMTriplePipeline:
                 chunk_strategy=chunk_strategy,
             )
             state["chunks_total"] = int(state.get("chunks_total", 0)) + len(tasks)
-            state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+            _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
             if not tasks:
                 state["books_completed"] = book_index
-                state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+                _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
                 continue
 
             results: dict[int, dict[str, Any]] = {}
@@ -2060,7 +2182,7 @@ class TCMTriplePipeline:
                 for task in tasks:
                     state["current_chapter"] = task.chapter_name
                     state["current_chunk_index"] = task.chunk_index
-                    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+                    _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
                     try:
                         payload = self.extract_chunk_payload(task, dry_run=dry_run)
                         error = None
@@ -2074,7 +2196,7 @@ class TCMTriplePipeline:
                         "error": error,
                     }
                     state["chunks_completed"] = int(state.get("chunks_completed", 0)) + 1
-                    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+                    _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
             else:
                 with ThreadPoolExecutor(max_workers=max(1, self.config.parallel_workers)) as executor:
                     future_map = {
@@ -2098,7 +2220,7 @@ class TCMTriplePipeline:
                             "error": error,
                         }
                         state["chunks_completed"] = int(state.get("chunks_completed", 0)) + 1
-                        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+                        _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
             for task in tasks:
                 result = results.get(task.sequence, {"task": task, "payload": {"triples": []}, "error": "missing_result"})
@@ -2129,13 +2251,13 @@ class TCMTriplePipeline:
                     self.append_jsonl(triples_jsonl, asdict(row))
                 all_rows.extend(rows)
             state["books_completed"] = book_index
-            state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+            _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
         self.write_csv(run_dir / "triples.normalized.csv", all_rows)
         self.write_graph_import(run_dir / "graph_import.json", all_rows)
         state["status"] = "completed"
         state["total_triples"] = len(all_rows)
-        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
         return run_dir
 
     def latest_run(self) -> Path | None:

@@ -122,6 +122,51 @@ class LowYieldRetryPipeline(TCMTriplePipeline):
         return {"triples": triples}
 
 
+class PersistentLowYieldPipeline(TCMTriplePipeline):
+    def __init__(self, config: PipelineConfig) -> None:
+        super().__init__(config)
+        self.calls_by_chunk: dict[int, int] = {}
+
+    def extract_chunk_payload(self, task, dry_run: bool):  # type: ignore[override]
+        self.calls_by_chunk[task.chunk_index] = self.calls_by_chunk.get(task.chunk_index, 0) + 1
+        if task.chunk_index == 1:
+            return {
+                "triples": [
+                    {
+                        "subject": "FormulaLow",
+                        "predicate": "治疗证候",
+                        "object": "SyndromeLow1",
+                        "subject_type": "formula",
+                        "object_type": "syndrome",
+                        "source_text": task.text_chunk[:60],
+                        "confidence": 0.9,
+                    }
+                ]
+            }
+        return {
+            "triples": [
+                {
+                    "subject": f"Formula{task.chunk_index}",
+                    "predicate": "治疗证候",
+                    "object": f"Syndrome{task.chunk_index}-1",
+                    "subject_type": "formula",
+                    "object_type": "syndrome",
+                    "source_text": task.text_chunk[:60],
+                    "confidence": 0.9,
+                },
+                {
+                    "subject": f"Formula{task.chunk_index}",
+                    "predicate": "治疗证候",
+                    "object": f"Syndrome{task.chunk_index}-2",
+                    "subject_type": "formula",
+                    "object_type": "syndrome",
+                    "source_text": task.text_chunk[:60],
+                    "confidence": 0.9,
+                },
+            ]
+        }
+
+
 class PartialSuccessPipeline(TCMTriplePipeline):
     def __init__(self, config: PipelineConfig) -> None:
         super().__init__(config)
@@ -304,6 +349,86 @@ class PipelineServerTests(unittest.TestCase):
         self.assertIn(self.book.stem, processed)
         self.assertNotIn(partial_book.stem, processed)
 
+    def test_get_processed_book_stems_includes_completed_books_from_partial_run(self) -> None:
+        second_book = self.books_dir / "002-partial-done-book.txt"
+        second_book.write_text("second book text " * 20, encoding="utf-8")
+        partial_run = self.output_dir / "partial-run"
+        partial_run.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "books": [str(self.book), str(second_book)],
+            "model": "test-model",
+            "base_url": "https://example.invalid/v1",
+            "dry_run": False,
+            "config": {
+                "max_chunks_per_book": None,
+                "skip_initial_chunks_per_book": 0,
+                "chapter_excludes": [],
+                "chunk_strategy": "body_first",
+                "max_chunk_chars": 20,
+                "chunk_overlap": 0,
+            },
+        }
+        (partial_run / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (partial_run / "state.json").write_text(
+            json.dumps({"status": "partial"}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        pipeline = TCMTriplePipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.invalid/v1",
+                max_chunk_chars=20,
+                chunk_overlap=0,
+            )
+        )
+        completed_tasks = pipeline.schedule_book_chunks(
+            book_path=self.book,
+            chapter_excludes=None,
+            max_chunks_per_book=None,
+            skip_initial_chunks_per_book=0,
+            chunk_strategy="body_first",
+        )
+        partial_tasks = pipeline.schedule_book_chunks(
+            book_path=second_book,
+            chapter_excludes=None,
+            max_chunks_per_book=None,
+            skip_initial_chunks_per_book=0,
+            chunk_strategy="body_first",
+        )
+        checkpoint_rows = [
+            {
+                "book": task.book_name,
+                "chunk_index": task.chunk_index,
+                "success": True,
+            }
+            for task in completed_tasks
+        ]
+        checkpoint_rows.extend(
+            {
+                "book": task.book_name,
+                "chunk_index": task.chunk_index,
+                "success": True,
+            }
+            for task in partial_tasks[:-1]
+        )
+        (partial_run / "chunks.checkpoint.jsonl").write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in checkpoint_rows),
+            encoding="utf-8",
+        )
+
+        with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+            processed = pipeline_server._get_processed_book_stems()
+
+        self.assertIn(self.book.stem, processed)
+        self.assertNotIn(second_book.stem, processed)
+
     def test_exclude_processed_books_for_new_run_keeps_manual_candidates_out(self) -> None:
         book_two = self.books_dir / "002-next-book.txt"
         book_two.write_text("next text " * 10, encoding="utf-8")
@@ -391,6 +516,45 @@ class PipelineServerTests(unittest.TestCase):
         self.assertEqual(remaining_rows[0]["source_book"], "002-other-book")
         self.assertEqual(len(remaining_evidence), 1)
         self.assertIn(self.book.stem, payload["force_unprocessed"])
+
+    def test_delete_books_from_runtime_graph_rejects_when_publish_queue_busy(self) -> None:
+        graph_target = self.root / "graph_runtime.json"
+        graph_target.write_text(
+            json.dumps(
+                [
+                    {
+                        "subject": "A",
+                        "predicate": "治疗证候",
+                        "object": "B",
+                        "source_book": self.book.stem,
+                        "fact_id": "fact-1",
+                    }
+                ],
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", graph_target):
+            with patch.object(pipeline_server, "_active_publish_task", {"run_name": "busy-run", "kind": "json"}):
+                with self.assertRaisesRegex(RuntimeError, "publish_queue_busy"):
+                    pipeline_server._delete_books_from_runtime_graph(
+                        [self.book.stem],
+                        sync_nebula=False,
+                        mark_unprocessed=False,
+                    )
+
+        remaining_rows = json.loads(graph_target.read_text(encoding="utf-8"))
+        self.assertEqual(len(remaining_rows), 1)
+
+    def test_load_graph_runtime_rows_rejects_empty_file(self) -> None:
+        graph_target = self.root / "graph_runtime.json"
+        graph_target.write_text("", encoding="utf-8")
+
+        with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", graph_target):
+            with self.assertRaisesRegex(ValueError, "json_file_empty"):
+                pipeline_server._load_graph_runtime_rows()
 
     def test_select_auto_start_books_prefers_recommended_unprocessed_and_limits_to_seven(self) -> None:
         books = [self.books_dir / f"{i:03d}-book.txt" for i in range(1, 11)]
@@ -948,8 +1112,11 @@ class PipelineServerTests(unittest.TestCase):
 
         self.assertEqual(pipeline_server._current_job.get("total_triples"), 0)
         self.assertEqual(len(rows), 0)
-        self.assertEqual(checkpoint_rows[-1]["error"], "low_yield_retry: triples_count=1")
-        self.assertEqual(checkpoint_rows[-1]["triples_count"], 1)
+        self.assertEqual(pipeline_server._current_job.get("status"), "completed")
+        self.assertEqual(pipeline_server._current_job.get("pending_chunks", 0), 0)
+        self.assertEqual(checkpoint_rows[-1]["error"], "dropped_after_low_yield_retries: low_yield_retry: triples_count=1")
+        self.assertEqual(checkpoint_rows[-1]["triples_count"], 0)
+        self.assertTrue(checkpoint_rows[-1]["success"])
 
     def test_low_yield_parallel_chunk_retries_without_double_counting(self) -> None:
         pipeline = LowYieldRetryPipeline(
@@ -991,6 +1158,48 @@ class PipelineServerTests(unittest.TestCase):
         self.assertEqual(len(rows), 5)
         self.assertTrue(any(row["error"] == "low_yield_retry: triples_count=1" for row in chunk_one_rows))
         self.assertTrue(any(row["success"] is True and row["triples_count"] == 3 for row in chunk_one_rows))
+
+    def test_persistent_low_yield_chunks_are_dropped_and_do_not_leave_partial_run(self) -> None:
+        pipeline = PersistentLowYieldPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.invalid/v1",
+                request_delay=0.0,
+                max_chunk_chars=20,
+                chunk_overlap=0,
+                parallel_workers=4,
+            )
+        )
+
+        with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
+            pipeline_server._run_extraction_job(
+                job_id="persistlow01",
+                selected_books=[self.book],
+                label="persistent-low-yield",
+                dry_run=False,
+                cfg_override={},
+                chapter_excludes=[],
+                max_chunks_per_book=2,
+                skip_initial_chunks=0,
+                chunk_strategy="body_first",
+                auto_clean=False,
+                auto_publish=False,
+                max_chunk_retries=1,
+            )
+
+        run_dir = Path(str(pipeline_server._current_job["run_dir"]))
+        checkpoint_rows = [json.loads(line) for line in (run_dir / "chunks.checkpoint.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+        chunk_one_rows = [row for row in checkpoint_rows if row["chunk_index"] == 1]
+        triples_rows = [line for line in (run_dir / "triples.normalized.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+
+        self.assertEqual(pipeline_server._current_job.get("status"), "completed")
+        self.assertEqual(pipeline_server._current_job.get("pending_chunks", 0), 0)
+        self.assertEqual(pipeline_server._current_job.get("total_triples"), 2)
+        self.assertEqual(len(triples_rows), 2)
+        self.assertTrue(any(row["error"] == "dropped_after_low_yield_retries: low_yield_retry: triples_count=1" and row["success"] is True for row in chunk_one_rows))
 
     def test_book_still_completes_when_some_chunks_fail_after_retry_exhaustion(self) -> None:
         pipeline = PartialSuccessPipeline(
@@ -1181,7 +1390,7 @@ class PipelineServerTests(unittest.TestCase):
 
         with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
             with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
-                payload = pipeline_server.run_publish("publish-status-run")
+                payload = pipeline_server._run_json_publish_job("publish-status-run")
 
         self.assertEqual(payload["graph_triples"], 2)
         publish_status = json.loads((run_dir / "publish_status.json").read_text(encoding="utf-8"))
