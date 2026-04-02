@@ -6,6 +6,7 @@ pipeline_server.py  —  TCM 三元组提取流水线 Web 控制台（后端）
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 import hashlib
 import json
 import os
@@ -13,7 +14,7 @@ import re
 import sys
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, as_completed, wait
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -981,7 +982,7 @@ def _run_extraction_job(
     total_triples = _count_jsonl_rows(triples_jsonl)
     chunk_errors = 0
     retry_parallel_workers = _derive_retry_parallel_workers(pipeline.config.parallel_workers)
-    completed_books_count = 0
+    completed_book_stems: set[str] = set()
     incomplete_books: list[str] = []
     last_provider_monitor_attempts = 0
     last_provider_monitor_failures = 0
@@ -1056,6 +1057,10 @@ def _run_extraction_job(
         })
     all_rows = _load_existing_triple_records(triples_jsonl) if resume_mode else []
     cancel_logged = False
+    results: dict[tuple[str, int], dict[str, Any]] = {}
+
+    def result_key(task: Any) -> tuple[str, int]:
+        return (str(task.book_name), int(task.chunk_index))
 
     def note_cancelling() -> None:
         nonlocal cancel_logged
@@ -1221,7 +1226,7 @@ def _run_extraction_job(
                     _current_job.update(state)
                 _write_state(state_path, state)
 
-    def finalize_exhausted_low_yield_chunks(results: dict[int, dict[str, Any]]) -> int:
+    def finalize_exhausted_low_yield_chunks(results: dict[tuple[str, int], dict[str, Any]]) -> int:
         nonlocal total_triples
 
         finalized = 0
@@ -1263,7 +1268,7 @@ def _run_extraction_job(
             _write_state(state_path, state)
         return finalized
 
-    def finalize_exhausted_failed_chunks(results: dict[int, dict[str, Any]]) -> int:
+    def finalize_exhausted_failed_chunks(results: dict[tuple[str, int], dict[str, Any]]) -> int:
         finalized = 0
         for result in results.values():
             error = str(result.get("error") or "").strip()
@@ -1302,7 +1307,7 @@ def _run_extraction_job(
         return finalized
 
     try:
-        # ── 第一阶段：分块调度 ──────────────────────────────────────────
+        # ── 第一阶段：分块调度（跨书交错，统一送入全局并行池） ─────────────────────
         all_tasks_per_book: list[tuple[Path, list]] = []
         for book_path in selected_books:
             tasks = pipeline.schedule_book_chunks(
@@ -1314,6 +1319,7 @@ def _run_extraction_job(
             )
             all_tasks_per_book.append((book_path, tasks))
             total_chunks_all += len(tasks)
+
         if resume_mode:
             scheduled_chunk_keys = {
                 (task.book_name, task.chunk_index)
@@ -1326,6 +1332,39 @@ def _run_extraction_job(
             }
             total_chunks_done = len(completed_chunk_keys)
             state["resume_skipped_chunks"] = total_chunks_done
+
+        pending_tasks_per_book: list[tuple[Path, list[Any]]] = []
+        for book_index, (book_path, scheduled_tasks) in enumerate(all_tasks_per_book, start=1):
+            pending_tasks = [task for task in scheduled_tasks if (task.book_name, task.chunk_index) not in completed_chunk_keys]
+            skipped_completed = len(scheduled_tasks) - len(pending_tasks)
+            if not pending_tasks:
+                completed_book_stems.add(book_path.stem)
+                state["books_completed"] = len(completed_book_stems)
+                _clear_books_force_unprocessed([book_path.stem])
+                if resume_mode and skipped_completed == len(scheduled_tasks):
+                    _log("info", f"{book_path.stem} 本次续跑无需处理：{skipped_completed} 个 chunk 已在当前 run 完成，已自动跳过")
+                else:
+                    _log("warn", f"{book_path.stem} 无可处理 chunk（全部被过滤）")
+                continue
+            pending_tasks_per_book.append((book_path, pending_tasks))
+            _log(
+                "info",
+                f"纳入全局队列 [{book_index}/{len(selected_books)}] {book_path.stem}，"
+                f"{len(pending_tasks)} chunks | parallel={pipeline.config.parallel_workers} "
+                f"retry_parallel={retry_parallel_workers} dry_run={dry_run}",
+            )
+
+        task_queues = [deque(tasks) for _, tasks in pending_tasks_per_book]
+        interleaved_tasks: list[Any] = []
+        while True:
+            appended = False
+            for queue in task_queues:
+                if queue:
+                    interleaved_tasks.append(queue.popleft())
+                    appended = True
+            if not appended:
+                break
+
         state["chunks_total"] = total_chunks_all
         state["chunks_completed"] = total_chunks_done
         state["total_triples"] = total_triples
@@ -1341,163 +1380,122 @@ def _run_extraction_job(
         with _run_lock:
             _current_job.update(state)
         _write_state(state_path, state)
-        _log("info", f"调度完成，共 {total_chunks_all} 个 chunk")
+        _log("info", f"调度完成，共 {total_chunks_all} 个 chunk，全局队列待处理 {len(interleaved_tasks)} 个")
+        if _job_cancelled.is_set():
+            note_cancelling()
 
-        # ── 第二阶段：逐书提取 ──────────────────────────────────────────
-        for book_index, (book_path, tasks) in enumerate(all_tasks_per_book, start=1):
-            scheduled_tasks = list(tasks)
-            skipped_completed = 0
-            if _job_cancelled.is_set():
-                note_cancelling()
-                break
-            if resume_mode:
-                pending_tasks = []
-                for task in scheduled_tasks:
-                    if (task.book_name, task.chunk_index) in completed_chunk_keys:
-                        skipped_completed += 1
-                    else:
-                        pending_tasks.append(task)
-                tasks = pending_tasks
-
-            state["current_book"] = book_path.stem
-            state["books_completed"] = completed_books_count
-            with _run_lock:
-                _current_job.update(state)
-            _write_state(state_path, state)
-            _log("info", f"开始处理 [{book_index}/{len(selected_books)}] {book_path.stem}，{len(tasks)} chunks | parallel={pipeline.config.parallel_workers} retry_parallel={retry_parallel_workers} dry_run={dry_run}")
-
-            if not tasks:
-                completed_books_count += 1
-                state["books_completed"] = completed_books_count
-                with _run_lock:
-                    _current_job.update(state)
-                _write_state(state_path, state)
-                if resume_mode and skipped_completed == len(scheduled_tasks):
-                    _log(
-                        "info",
-                        f"{book_path.stem} 本次续跑无需处理：{skipped_completed} 个 chunk 已在当前 run 完成，已自动跳过",
-                    )
-                else:
-                    _log("warn", f"{book_path.stem} 无可处理 chunk（全部被过滤）")
-                continue
-
-            results: dict[int, dict[str, Any]] = {}
-
-            if dry_run or pipeline.config.parallel_workers <= 1 or len(tasks) == 1:
-                for task in tasks:
-                    if _job_cancelled.is_set():
-                        note_cancelling()
-                        break
-                    state["current_chapter"] = task.chapter_name
-                    with _run_lock:
-                        _current_job.update(state)
-                    _log("info", f"  -> 处理 chunk {task.chunk_index}/{len(tasks)} {task.chapter_name[:20]}")
-                    try:
-                        payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
-                        error = None
-                        _log("ok", f"  chunk {task.chunk_index}/{len(tasks)} ✓ {task.chapter_name[:30]}")
-                    except Exception as exc:
-                        payload = {"triples": []}
-                        error = str(exc)
-                        chunk_errors += 1
-                        state["chunk_errors"] = chunk_errors
-                        _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
-                    rows, effective_error = _evaluate_chunk_attempt(
-                        pipeline,
-                        task=task,
-                        payload=payload,
-                        error=error,
-                    )
-                    results[task.sequence] = {
-                        "task": task,
-                        "payload": payload,
-                        "error": effective_error,
-                        "rows": rows,
-                        "_retried": 0,
-                    }
-                    result = results[task.sequence]
-                    result["_written"] = False
-                    if effective_error is not None and error is None:
-                        _log("warn", f"  chunk {task.chunk_index} low_yield | triples={len(rows)} | queued_for_retry")
-                    if effective_error is None:
-                        for row in rows:
-                            pipeline.append_jsonl(triples_jsonl, asdict(row))
-                        result["_written"] = True
-                    if error is None and False:
-                        _log("warn", f"  chunk {task.chunk_index} 无三元组 | triple_count={len(rows)} | error={error} | payload_keys={list(payload.keys()) if isinstance(payload, dict) else 'not_dict'}")
-                    if effective_error is None:
-                        total_triples += len(rows)
-                        state["total_triples"] = total_triples
-                        completed_chunk_keys.add((task.book_name, task.chunk_index))
-                    pipeline.append_jsonl(
-                        raw_jsonl,
-                        _build_raw_chunk_record(
-                            task=task,
-                            payload=payload,
-                            error=effective_error,
-                            rows_count=len(rows),
-                        ),
-                    )
-                    _append_checkpoint(
-                        checkpoint_path,
-                        task=task,
-                        error=effective_error,
-                        payload=payload,
-                        attempt=0,
-                        resumed=resume_mode,
-                        triples_count=len(rows),
-                    )
-                    total_chunks_done += 1
-                    session_chunks_done += 1
-                    _update_runtime_metrics(
-                        state,
-                        start_ts=start_ts,
-                        session_chunks_done=session_chunks_done,
-                        total_chunks_done=total_chunks_done,
-                        total_chunks_all=total_chunks_all,
-                    )
-                    refresh_provider_monitor()
-                    with _run_lock:
-                        _current_job.update(state)
-                    _write_state(state_path, state)
-                if _job_cancelled.is_set():
-                    break
-
-            # Retry failed chunks (serial path)
-            retry_count = 0
-            while retry_count < max_chunk_retries:
+        if not _job_cancelled.is_set() and (dry_run or pipeline.config.parallel_workers <= 1 or len(interleaved_tasks) <= 1):
+            for task_index, task in enumerate(interleaved_tasks, start=1):
                 if _job_cancelled.is_set():
                     note_cancelling()
                     break
-                failed_tasks = [r for r in results.values() if r["error"] is not None and r.get("_retried", 0) < max_chunk_retries]
-                if not failed_tasks:
-                    break
-                retry_count += 1
-                _log("warn", f"  开始第 {retry_count} 轮重试，{len(failed_tasks)} 个 chunk 待重试")
-                state["chunk_retries"] = retry_count
-                run_retry_batch(failed_tasks, retry_count)
-                if _job_cancelled.is_set():
-                    break
-            finalize_exhausted_low_yield_chunks(results)
-            if not (dry_run or pipeline.config.parallel_workers <= 1 or len(tasks) == 1):
-                with ThreadPoolExecutor(max_workers=pipeline.config.parallel_workers) as executor:
-                    future_map = {
-                        executor.submit(pipeline.extract_chunk_payload, task, False): task
-                        for task in tasks
-                    }
-                    _log("info", f"  [并行] 已提交 {len(tasks)} 个 chunk 到线程池，parallel_workers={pipeline.config.parallel_workers}")
-                    for future in as_completed(future_map):
-                        if _job_cancelled.is_set():
-                            note_cancelling()
-                            executor.shutdown(wait=False, cancel_futures=True)
-                            break
-                        task = future_map[future]
+                state["current_book"] = task.book_name
+                state["current_chapter"] = task.chapter_name
+                state["current_chunk_index"] = task.chunk_index
+                with _run_lock:
+                    _current_job.update(state)
+                _log("info", f"  -> 处理 {task.book_name} chunk {task.chunk_index}/{len(interleaved_tasks)}")
+                try:
+                    payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
+                    error = None
+                    _log("ok", f"  chunk {task.chunk_index}/{len(interleaved_tasks)} ✓ {task.book_name}")
+                except Exception as exc:
+                    payload = {"triples": []}
+                    error = str(exc)
+                    chunk_errors += 1
+                    state["chunk_errors"] = chunk_errors
+                    _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
+                rows, effective_error = _evaluate_chunk_attempt(
+                    pipeline,
+                    task=task,
+                    payload=payload,
+                    error=error,
+                )
+                key = result_key(task)
+                results[key] = {
+                    "task": task,
+                    "payload": payload,
+                    "error": effective_error,
+                    "rows": rows,
+                    "_retried": 0,
+                    "_written": False,
+                }
+                if effective_error is not None and error is None:
+                    _log("warn", f"  chunk {task.chunk_index} low_yield | triples={len(rows)} | queued_for_retry")
+                if effective_error is None:
+                    for row in rows:
+                        pipeline.append_jsonl(triples_jsonl, asdict(row))
+                    results[key]["_written"] = True
+                    total_triples += len(rows)
+                    state["total_triples"] = total_triples
+                    completed_chunk_keys.add((task.book_name, task.chunk_index))
+                pipeline.append_jsonl(
+                    raw_jsonl,
+                    _build_raw_chunk_record(
+                        task=task,
+                        payload=payload,
+                        error=effective_error,
+                        rows_count=len(rows),
+                    ),
+                )
+                _append_checkpoint(
+                    checkpoint_path,
+                    task=task,
+                    error=effective_error,
+                    payload=payload,
+                    attempt=0,
+                    resumed=resume_mode,
+                    triples_count=len(rows),
+                )
+                total_chunks_done += 1
+                session_chunks_done += 1
+                _update_runtime_metrics(
+                    state,
+                    start_ts=start_ts,
+                    session_chunks_done=session_chunks_done,
+                    total_chunks_done=total_chunks_done,
+                    total_chunks_all=total_chunks_all,
+                )
+                refresh_provider_monitor()
+                with _run_lock:
+                    _current_job.update(state)
+                _write_state(state_path, state)
+        elif not _job_cancelled.is_set():
+            with ThreadPoolExecutor(max_workers=pipeline.config.parallel_workers) as executor:
+                future_map: dict[Any, Any] = {}
+                pending_queue: deque[Any] = deque(interleaved_tasks)
+                future_index = 0
+
+                def submit_available_tasks() -> None:
+                    while (
+                        pending_queue
+                        and len(future_map) < pipeline.config.parallel_workers
+                        and not _job_cancelled.is_set()
+                    ):
+                        task = pending_queue.popleft()
+                        future_map[executor.submit(pipeline.extract_chunk_payload, task, False)] = task
+
+                submit_available_tasks()
+                _log(
+                    "info",
+                    f"  [全局并行] 已启动 {len(future_map)} 个 worker，"
+                    f"队列总量={len(interleaved_tasks)} parallel_workers={pipeline.config.parallel_workers}",
+                )
+                while future_map:
+                    if _job_cancelled.is_set():
+                        note_cancelling()
+                        executor.shutdown(wait=False, cancel_futures=True)
+                        break
+                    done, _ = wait(tuple(future_map), return_when=FIRST_COMPLETED)
+                    for future in done:
+                        future_index += 1
+                        task = future_map.pop(future)
+                        state["current_book"] = task.book_name
                         state["current_chapter"] = task.chapter_name
+                        state["current_chunk_index"] = task.chunk_index
                         try:
                             payload = future.result()
                             error = None
-                            if task.chunk_index == 1:
-                                _log("info", f"  chunk1结果 payload_keys={list(payload.keys()) if isinstance(payload, dict) else type(payload)} triples={len(payload.get('triples',[])) if isinstance(payload,dict) else 'N/A'}")
                         except Exception as exc:
                             payload = {"triples": []}
                             error = str(exc)
@@ -1510,28 +1508,26 @@ def _run_extraction_job(
                             payload=payload,
                             error=error,
                         )
-                        results[task.sequence] = {
+                        key = result_key(task)
+                        results[key] = {
                             "task": task,
                             "payload": payload,
                             "error": effective_error,
                             "rows": rows,
                             "_retried": 0,
+                            "_written": False,
                         }
                         if error is None and effective_error is not None:
-                            results[task.sequence]["_written"] = False
                             _log("warn", f"  chunk {task.chunk_index} low_yield | triples={len(rows)} | queued_for_retry")
                         if effective_error is None:
                             for row in rows:
                                 pipeline.append_jsonl(triples_jsonl, asdict(row))
-                            results[task.sequence]["_written"] = True
-                        if error is not None:
-                            results[task.sequence]["_written"] = False
-                            _log("warn", f"  chunk {task.chunk_index} 无三元组 | error={error} | is_dict={isinstance(payload,dict)}")
-                        if effective_error is None:
+                            results[key]["_written"] = True
                             total_triples += len(rows)
                             state["total_triples"] = total_triples
-                        if effective_error is None:
                             completed_chunk_keys.add((task.book_name, task.chunk_index))
+                        if error is not None:
+                            _log("warn", f"  chunk {task.chunk_index} 无三元组 | error={error} | is_dict={isinstance(payload,dict)}")
                         pipeline.append_jsonl(
                             raw_jsonl,
                             _build_raw_chunk_record(
@@ -1559,73 +1555,67 @@ def _run_extraction_job(
                             total_chunks_done=total_chunks_done,
                             total_chunks_all=total_chunks_all,
                         )
-                        book_chunks_done = len(results)
                         _log(
                             "info",
-                            f"  [parallel] progress {book_chunks_done}/{len(tasks)} | chunk={task.chunk_index} | "
-                            f"triples={len(rows)} | total_triples={total_triples} | error={effective_error or '-'}",
+                            f"  [parallel] progress {future_index}/{len(interleaved_tasks)} | "
+                            f"book={task.book_name} | chunk={task.chunk_index} | triples={len(rows)} | "
+                            f"total_triples={total_triples} | error={effective_error or '-'}",
                         )
                         refresh_provider_monitor()
                         with _run_lock:
                             _current_job.update(state)
                         _write_state(state_path, state)
-                if _job_cancelled.is_set():
-                    note_cancelling()
+                    submit_available_tasks()
+            if _job_cancelled.is_set():
+                note_cancelling()
 
-                # Retry failed chunks (parallel path)
-                retry_count = 0
-                while retry_count < max_chunk_retries:
-                    if _job_cancelled.is_set():
-                        note_cancelling()
-                        break
-                    failed_tasks = [r for r in results.values() if r["error"] is not None and r.get("_retried", 0) < max_chunk_retries]
-                    if not failed_tasks:
-                        break
-                    retry_count += 1
-                    _log("warn", f"  开始第 {retry_count} 轮重试，{len(failed_tasks)} 个 chunk 待重试")
-                    state["chunk_retries"] = retry_count
-                    run_retry_batch(failed_tasks, retry_count)
-                    if _job_cancelled.is_set():
-                        break
+        retry_count = 0
+        while retry_count < max_chunk_retries:
+            if _job_cancelled.is_set():
+                note_cancelling()
+                break
+            failed_tasks = [r for r in results.values() if r["error"] is not None and r.get("_retried", 0) < max_chunk_retries]
+            if not failed_tasks:
+                break
+            retry_count += 1
+            _log("warn", f"  开始第 {retry_count} 轮重试，{len(failed_tasks)} 个 chunk 待重试")
+            state["chunk_retries"] = retry_count
+            run_retry_batch(failed_tasks, retry_count)
+            if _job_cancelled.is_set():
+                break
 
-            # 按序收集 all_rows（triples_jsonl 已在 per-chunk 循环中实时写入，不再重复 normalize_triples）
-            book_triples = 0
-            finalize_exhausted_low_yield_chunks(results)
-            finalize_exhausted_failed_chunks(results)
+        finalize_exhausted_low_yield_chunks(results)
+        finalize_exhausted_failed_chunks(results)
 
-            # Collect book rows in task order. triples_jsonl is already written in per-chunk loops.
-            book_triples = 0
-            for task in tasks:
-                result = results.get(task.sequence, {"task": task, "payload": {"triples": []}, "error": "missing", "rows": []})
-                rows = result.get("rows") or []
-                if result.get("error") is not None:
-                    continue
-                book_triples += len(rows)
-                all_rows.extend(rows)
-            # 仅当该书所有调度 chunk 都已有成功 checkpoint，才标记为已完成
+        incomplete_books = []
+        for book_path, scheduled_tasks in all_tasks_per_book:
             book_all_completed = bool(scheduled_tasks) and all(
                 (task.book_name, task.chunk_index) in completed_chunk_keys
                 for task in scheduled_tasks
             )
             if book_all_completed:
-                completed_books_count += 1
-                state["books_completed"] = completed_books_count
+                if book_path.stem not in completed_book_stems:
+                    _log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
                 _clear_books_force_unprocessed([book_path.stem])
+                completed_book_stems.add(book_path.stem)
+                state["books_completed"] = len(completed_book_stems)
             else:
                 pending_for_book = sum(
                     1
                     for task in scheduled_tasks
                     if (task.book_name, task.chunk_index) not in completed_chunk_keys
                 )
-                incomplete_books.append(book_path.stem)
-                state["books_completed"] = completed_books_count
-                _log("warn", f"  {book_path.stem} 仍有 {pending_for_book} 个 chunk 未完成，当前 run 保留为未完成状态")
-            with _run_lock:
-                _current_job.update(state)
-            _log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
-            if _job_cancelled.is_set():
-                note_cancelling()
-                break
+                if pending_for_book > 0:
+                    incomplete_books.append(book_path.stem)
+                    _log("warn", f"  {book_path.stem} 仍有 {pending_for_book} 个 chunk 未完成，当前 run 保留为未完成状态")
+
+        for _, tasks in all_tasks_per_book:
+            for task in tasks:
+                result = results.get(result_key(task), {"task": task, "payload": {"triples": []}, "error": "missing", "rows": []})
+                rows = result.get("rows") or []
+                if result.get("error") is not None:
+                    continue
+                all_rows.extend(rows)
 
         # ── 写出 CSV + graph_import ─────────────────────────────────────
         pipeline.write_csv(run_dir / "triples.normalized.csv", all_rows)
@@ -1649,7 +1639,7 @@ def _run_extraction_job(
         state["elapsed_secs"] = int(time.time() - start_ts)
         state["eta"] = "已取消" if was_cancelled else ("未完成" if pending_chunk_count > 0 else "完成")
         state["total_triples"] = total_triples
-        state["books_completed"] = completed_books_count
+        state["books_completed"] = len(completed_book_stems)
         state["pending_chunks"] = pending_chunk_count
         state["books_incomplete"] = len(incomplete_books)
         state["incomplete_books"] = incomplete_books

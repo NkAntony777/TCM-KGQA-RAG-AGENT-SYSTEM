@@ -155,6 +155,37 @@ class PartialSuccessPipeline(TCMTriplePipeline):
         }
 
 
+class OrderRecordingPipeline(TCMTriplePipeline):
+    def __init__(self, config: PipelineConfig) -> None:
+        super().__init__(config)
+        self.started: list[tuple[str, int]] = []
+
+    def extract_chunk_payload(self, task, dry_run: bool):  # type: ignore[override]
+        self.started.append((task.book_name, task.chunk_index))
+        return {
+            "triples": [
+                {
+                    "subject": f"Formula{task.book_name}",
+                    "predicate": "治疗证候",
+                    "object": f"Syndrome{task.chunk_index}",
+                    "subject_type": "formula",
+                    "object_type": "syndrome",
+                    "source_text": task.text_chunk[:60],
+                    "confidence": 0.9,
+                },
+                {
+                    "subject": f"Formula{task.book_name}",
+                    "predicate": "组成药物",
+                    "object": f"Herb{task.chunk_index}",
+                    "subject_type": "formula",
+                    "object_type": "herb",
+                    "source_text": task.text_chunk[:60],
+                    "confidence": 0.88,
+                }
+            ]
+        }
+
+
 class PipelineServerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -564,6 +595,50 @@ class PipelineServerTests(unittest.TestCase):
         self.assertTrue(triples_jsonl.exists())
         rows = [line for line in triples_jsonl.read_text(encoding="utf-8").splitlines() if line.strip()]
         self.assertEqual(len(rows), 6)
+
+    def test_run_extraction_job_interleaves_chunks_across_books(self) -> None:
+        second_book = self.books_dir / "002-second-book.txt"
+        second_book.write_text("Second book text for chunk splitting. " * 20, encoding="utf-8")
+        pipeline = OrderRecordingPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.invalid/v1",
+                request_delay=0.0,
+                max_chunk_chars=20,
+                chunk_overlap=0,
+                parallel_workers=1,
+            )
+        )
+
+        with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
+            pipeline_server._run_extraction_job(
+                job_id="interleave01",
+                selected_books=[self.book, second_book],
+                label="interleave-check",
+                dry_run=False,
+                cfg_override={},
+                chapter_excludes=[],
+                max_chunks_per_book=2,
+                skip_initial_chunks=0,
+                chunk_strategy="body_first",
+                auto_clean=False,
+                auto_publish=False,
+                max_chunk_retries=0,
+            )
+
+        self.assertEqual(
+            pipeline.started[:4],
+            [
+                (self.book.stem, 1),
+                (second_book.stem, 1),
+                (self.book.stem, 2),
+                (second_book.stem, 2),
+            ],
+        )
+        self.assertEqual(pipeline_server._current_job.get("status"), "completed")
 
     def test_run_extraction_job_resume_skips_completed_chunks(self) -> None:
         run_dir = self.output_dir / "resume-run"
