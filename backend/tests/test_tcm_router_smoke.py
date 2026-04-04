@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from eval.runners.run_eval import DEFAULT_DATASET, evaluate_router, load_dataset
 from router.query_router import decide_route
+from router.retrieval_strategy import derive_retrieval_strategy
 from tools.tcm_route_tool import TCMRouteSearchTool
 
 
@@ -27,6 +28,14 @@ class QueryRouterDecisionTests(unittest.TestCase):
         summary = evaluate_router(dataset)
         self.assertGreaterEqual(summary["accuracy"], 0.8)
         self.assertEqual(summary["total"], 20)
+
+    def test_composition_query_derives_predicate_scoped_strategy(self) -> None:
+        strategy = derive_retrieval_strategy("六味地黄丸的组成是什么", requested_top_k=12, route_hint="graph")
+        self.assertEqual(strategy.intent, "formula_composition")
+        self.assertEqual(strategy.graph_query_kind, "entity")
+        self.assertEqual(strategy.entity_name, "六味地黄丸")
+        self.assertEqual(strategy.predicate_allowlist, ["使用药材"])
+        self.assertIn("entity://六味地黄丸/使用药材", strategy.evidence_paths)
 
 
 class RouteToolDegradationTests(unittest.TestCase):
@@ -65,7 +74,7 @@ class RouteToolDegradationTests(unittest.TestCase):
                 return_value={"code": 30001, "message": "RETRIEVE_EMPTY", "trace_id": "r1"},
             ),
             patch(
-                "tools.tcm_route_tool.call_graph_syndrome_chain",
+                "tools.tcm_route_tool.call_graph_entity_lookup",
                 return_value={"code": 0, "message": "ok", "trace_id": "g1", "backend": "graph-service"},
             ),
         ):
@@ -128,6 +137,25 @@ class RouteToolDegradationTests(unittest.TestCase):
         self.assertEqual(payload["final_route"], "graph")
         self.assertEqual(payload["graph_result"]["trace_id"], "p1")
         self.assertEqual(payload["graph_result"]["data"]["paths"][0]["nodes"][-1], "逍遥散")
+
+    def test_composition_query_uses_filtered_entity_lookup_strategy(self) -> None:
+        with (
+            patch("tools.tcm_route_tool.service_health_snapshot", return_value={}),
+            patch(
+                "tools.tcm_route_tool.call_graph_entity_lookup",
+                return_value={"code": 0, "message": "ok", "trace_id": "g1", "backend": "graph-service", "data": {"relations": []}},
+            ) as entity_mock,
+        ):
+            payload = json.loads(self.tool._run("逍遥散的组成是什么", top_k=12))
+
+        self.assertEqual(payload["route"], "graph")
+        self.assertEqual(payload["retrieval_strategy"]["intent"], "formula_composition")
+        self.assertEqual(payload["retrieval_strategy"]["predicate_allowlist"], ["使用药材"])
+        self.assertIn("entity://逍遥散/使用药材", payload["evidence_paths"])
+        entity_mock.assert_called()
+        _, kwargs = entity_mock.call_args
+        self.assertEqual(kwargs["name"], "逍遥散")
+        self.assertEqual(kwargs["predicate_allowlist"], ["使用药材"])
 
 
 if __name__ == "__main__":

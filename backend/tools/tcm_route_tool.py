@@ -9,6 +9,7 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from router.query_router import decide_route
+from router.retrieval_strategy import derive_retrieval_strategy
 from tools.tcm_service_client import (
     call_graph_entity_lookup,
     call_graph_path_query,
@@ -20,7 +21,7 @@ from tools.tcm_service_client import (
 
 class TCMRouteSearchInput(BaseModel):
     query: str = Field(..., description="Original user query")
-    top_k: int = Field(default=5, ge=1, le=20, description="Result size")
+    top_k: int = Field(default=12, ge=1, le=20, description="Result size")
 
 
 class TCMRouteSearchTool(BaseTool):
@@ -34,14 +35,17 @@ class TCMRouteSearchTool(BaseTool):
     def _run(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 12,
         run_manager: CallbackManagerForToolRun | None = None,
     ) -> str:
         decision = decide_route(query)
+        strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route)
         health = service_health_snapshot()
         output: dict[str, object] = {
             "route": decision.route,
             "route_reason": decision.reason,
+            "retrieval_strategy": strategy.to_dict(),
+            "evidence_paths": strategy.evidence_paths,
             "service_health": health,
             "status": "ok",
             "degradation": [],
@@ -51,42 +55,43 @@ class TCMRouteSearchTool(BaseTool):
         graph_result = None
         retrieval_result = None
 
-        def extract_path_targets(text: str) -> tuple[str, str] | None:
-            normalized = text.strip()
-            if not normalized:
-                return None
-            if "到" not in normalized:
-                return None
-            if not any(token in normalized for token in ("路径", "关系", "链路", "怎么到", "如何到")):
-                return None
-
-            left, right = normalized.split("到", 1)
-            start = left.replace("从", "").replace("请问", "").replace("请解释", "").strip(" ，。？?：:")
-            end = right
-            for marker in ("的路径", "路径", "关系", "链路", "怎么到", "如何到", "是什么", "有哪些", "吗"):
-                end = end.split(marker, 1)[0]
-            end = end.strip(" ，。？?：:")
-            if not start or not end:
-                return None
-            return start, end
-
         def graph_search() -> dict[str, object]:
-            path_targets = extract_path_targets(query)
-            if path_targets is not None:
-                start, end = path_targets
+            if strategy.graph_query_kind == "path" and strategy.path_start and strategy.path_end:
                 path_result = call_graph_path_query(
-                    start=start,
-                    end=end,
+                    start=strategy.path_start,
+                    end=strategy.path_end,
                     max_hops=3,
-                    path_limit=max(1, min(top_k, 5)),
+                    path_limit=max(1, min(strategy.graph_final_k, 5)),
                 )
                 if path_result.get("code") == 0:
                     return path_result
 
-            primary = call_graph_syndrome_chain(symptom=query, top_k=top_k)
+            if strategy.graph_query_kind == "entity" and strategy.graph_query_text:
+                primary = call_graph_entity_lookup(
+                    name=strategy.graph_query_text,
+                    top_k=strategy.graph_final_k,
+                    predicate_allowlist=strategy.predicate_allowlist,
+                    predicate_blocklist=strategy.predicate_blocklist,
+                )
+                if primary.get("code") == 0:
+                    return primary
+                secondary = call_graph_entity_lookup(
+                    name=strategy.graph_query_text,
+                    top_k=strategy.graph_final_k,
+                )
+                primary["fallback_attempt"] = {
+                    "tool": "tcm_entity_lookup",
+                    "mode": "unfiltered_retry",
+                    "code": secondary.get("code"),
+                    "message": secondary.get("message"),
+                    "trace_id": secondary.get("trace_id"),
+                }
+                return secondary if secondary.get("code") == 0 else primary
+
+            primary = call_graph_syndrome_chain(symptom=strategy.symptom_name or query, top_k=min(strategy.graph_final_k, 8))
             if primary.get("code") == 0:
                 return primary
-            secondary = call_graph_entity_lookup(name=query, top_k=top_k)
+            secondary = call_graph_entity_lookup(name=strategy.graph_query_text or query, top_k=strategy.graph_final_k)
             if secondary.get("code") == 0:
                 return secondary
             primary["fallback_attempt"] = {
@@ -101,7 +106,7 @@ class TCMRouteSearchTool(BaseTool):
             return call_retrieval_hybrid(
                 query=query,
                 top_k=top_k,
-                candidate_k=max(top_k * 3, 9),
+                candidate_k=max(strategy.vector_candidate_k, top_k * 3, 9),
                 enable_rerank=False,
             )
 
@@ -194,7 +199,7 @@ class TCMRouteSearchTool(BaseTool):
     async def _arun(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 12,
         run_manager: AsyncCallbackManagerForToolRun | None = None,
     ) -> str:
         return await asyncio.to_thread(self._run, query, top_k, None)

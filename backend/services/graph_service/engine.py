@@ -131,14 +131,24 @@ class GraphQueryEngine:
             "edge_count": stats["total_triples"],
         }
 
-    def entity_lookup(self, name: str, top_k: int = 20) -> dict[str, Any]:
+    def entity_lookup(
+        self,
+        name: str,
+        top_k: int = 12,
+        predicate_allowlist: list[str] | None = None,
+        predicate_blocklist: list[str] | None = None,
+    ) -> dict[str, Any]:
         candidates = self._resolve_entities(name)
         if not candidates:
             return {}
         canonical_name = candidates[0]
         entity_type = self.entity_type(canonical_name)
         relations = self._select_relation_clusters(
-            self._collect_relations(canonical_name),
+            self._filter_relations(
+                self._collect_relations(canonical_name),
+                predicate_allowlist=predicate_allowlist,
+                predicate_blocklist=predicate_blocklist,
+            ),
             query_text=name,
             top_k=max(1, top_k),
         )
@@ -224,6 +234,27 @@ class GraphQueryEngine:
 
     def _collect_relations(self, entity_name: str) -> list[dict[str, Any]]:
         return self.store.collect_relations(entity_name)
+
+    def _filter_relations(
+        self,
+        rows: list[dict[str, Any]],
+        *,
+        predicate_allowlist: list[str] | None = None,
+        predicate_blocklist: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        allow = {_normalize_relation_name(str(item).strip()) for item in (predicate_allowlist or []) if str(item).strip()}
+        block = {_normalize_relation_name(str(item).strip()) for item in (predicate_blocklist or []) if str(item).strip()}
+        if not allow and not block:
+            return rows
+        filtered: list[dict[str, Any]] = []
+        for row in rows:
+            predicate = _normalize_relation_name(str(row.get("predicate", "")).strip())
+            if allow and predicate not in allow:
+                continue
+            if block and predicate in block:
+                continue
+            filtered.append(row)
+        return filtered
 
     def _select_relation_clusters(self, rows: list[dict[str, Any]], *, query_text: str, top_k: int) -> list[dict[str, Any]]:
         clusters = self._build_relation_clusters(rows)
@@ -524,9 +555,20 @@ class NebulaPrimaryGraphEngine:
             "edge_count": fallback.get("edge_count", 0),
         }
 
-    def entity_lookup(self, name: str, top_k: int = 20) -> dict[str, Any]:
+    def entity_lookup(
+        self,
+        name: str,
+        top_k: int = 12,
+        predicate_allowlist: list[str] | None = None,
+        predicate_blocklist: list[str] | None = None,
+    ) -> dict[str, Any]:
         if not self._use_primary():
-            return self.fallback_engine.entity_lookup(name, top_k=top_k)
+            return self.fallback_engine.entity_lookup(
+                name,
+                top_k=top_k,
+                predicate_allowlist=predicate_allowlist,
+                predicate_blocklist=predicate_blocklist,
+            )
         try:
             candidates = self.fallback_engine._resolve_entities(name)
             if not candidates:
@@ -535,7 +577,11 @@ class NebulaPrimaryGraphEngine:
                 if not self.primary_store.exact_entity(canonical_name):
                     continue
                 relations = self.fallback_engine._select_relation_clusters(
-                    self._collect_nebula_relations(canonical_name),
+                    self.fallback_engine._filter_relations(
+                        self._collect_nebula_relations(canonical_name),
+                        predicate_allowlist=predicate_allowlist,
+                        predicate_blocklist=predicate_blocklist,
+                    ),
                     query_text=name,
                     top_k=max(1, top_k),
                 )
@@ -553,7 +599,12 @@ class NebulaPrimaryGraphEngine:
                 }
         except Exception:
             pass
-        return self.fallback_engine.entity_lookup(name, top_k=top_k)
+        return self.fallback_engine.entity_lookup(
+            name,
+            top_k=top_k,
+            predicate_allowlist=predicate_allowlist,
+            predicate_blocklist=predicate_blocklist,
+        )
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
         if not self._use_primary():

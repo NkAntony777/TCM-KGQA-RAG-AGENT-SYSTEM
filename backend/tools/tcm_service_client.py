@@ -36,15 +36,30 @@ def _health(url: str) -> bool:
     return True
 
 
-def call_graph_entity_lookup(name: str, top_k: int = 20) -> dict[str, Any]:
+def call_graph_entity_lookup(
+    name: str,
+    top_k: int = 12,
+    predicate_allowlist: list[str] | None = None,
+    predicate_blocklist: list[str] | None = None,
+) -> dict[str, Any]:
     try:
         payload = _post(
             f"{GRAPH_SERVICE_BASE_URL}/api/v1/graph/entity/lookup",
-            {"name": name, "top_k": top_k},
+            {
+                "name": name,
+                "top_k": top_k,
+                "predicate_allowlist": predicate_allowlist,
+                "predicate_blocklist": predicate_blocklist,
+            },
         )
         return {"backend": "graph-service", **payload}
     except Exception as exc:
-        mock = lookup_entity(name, top_k=top_k)
+        mock = lookup_entity(
+            name,
+            top_k=top_k,
+            predicate_allowlist=predicate_allowlist,
+            predicate_blocklist=predicate_blocklist,
+        )
         return {
             "backend": "local-fallback",
             "code": 0 if mock else 20001,

@@ -134,6 +134,16 @@ class TestEntityLookup(unittest.TestCase):
         self.assertIn("avg_confidence", herb_relation)
         self.assertIn("max_confidence", herb_relation)
 
+    def test_lookup_predicate_allowlist_supports_intent_scoped_retrieval(self) -> None:
+        """深度模式应能按问题意图限制谓词空间，例如组成问题只看使用药材。"""
+        result = self.engine.entity_lookup(
+            "六味地黄丸",
+            top_k=12,
+            predicate_allowlist=["使用药材"],
+        )
+        predicates = _predicates(result["relations"])
+        self.assertEqual(predicates, {"使用药材"})
+
 
 class TestPathQuery(unittest.TestCase):
     """路径查询：验证 runtime 图中实际存在的连通路径。"""

@@ -9,7 +9,9 @@ from services.graph_service.engine import get_graph_engine
 
 class EntityLookupRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    top_k: int = Field(default=20, ge=1, le=100)
+    top_k: int = Field(default=12, ge=1, le=100)
+    predicate_allowlist: list[str] | None = None
+    predicate_blocklist: list[str] | None = None
 
 
 class PathQueryRequest(BaseModel):
@@ -34,7 +36,12 @@ def health(x_trace_id: str | None = Header(default=None, alias="X-Trace-Id")):
 
 @app.post("/api/v1/graph/entity/lookup")
 def entity_lookup(payload: EntityLookupRequest, x_trace_id: str | None = Header(default=None, alias="X-Trace-Id")):
-    data = get_graph_engine().entity_lookup(payload.name, top_k=payload.top_k)
+    data = get_graph_engine().entity_lookup(
+        payload.name,
+        top_k=payload.top_k,
+        predicate_allowlist=payload.predicate_allowlist,
+        predicate_blocklist=payload.predicate_blocklist,
+    )
     if not data:
         return error(20001, "KG_ENTITY_NOT_FOUND", trace_id=x_trace_id)
     return success(data, trace_id=x_trace_id)

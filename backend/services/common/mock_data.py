@@ -62,14 +62,30 @@ MOCK_DOCS: list[dict[str, Any]] = [
 ]
 
 
-def lookup_entity(name: str, top_k: int = 20) -> dict[str, Any]:
+def lookup_entity(
+    name: str,
+    top_k: int = 12,
+    predicate_allowlist: list[str] | None = None,
+    predicate_blocklist: list[str] | None = None,
+) -> dict[str, Any]:
     normalized = name.strip()
     if not normalized:
         return {}
 
+    allow = {str(item).strip() for item in (predicate_allowlist or []) if str(item).strip()}
+    block = {str(item).strip() for item in (predicate_blocklist or []) if str(item).strip()}
+
     for key, payload in ENTITY_RELATIONS.items():
         if normalized == key or normalized in key or key in normalized:
-            relations = payload["relations"][: max(1, top_k)]
+            relations = []
+            for row in payload["relations"]:
+                predicate = str(row.get("predicate", "")).strip()
+                if allow and predicate not in allow:
+                    continue
+                if block and predicate in block:
+                    continue
+                relations.append(row)
+            relations = relations[: max(1, top_k)]
             return {
                 "entity": {
                     "name": normalized,
@@ -160,4 +176,3 @@ def rewrite_query(query: str, strategy: str = "complex") -> dict[str, Any]:
         "step_back_answer": "先辨证后论治，兼顾疏肝健脾与调和气血。",
         "hypothetical_doc": f"{q} 可从证候识别、治法匹配、方剂出处三方面组织答案。",
     }
-

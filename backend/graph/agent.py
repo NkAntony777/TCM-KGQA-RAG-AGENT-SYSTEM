@@ -615,9 +615,9 @@ class AgentManager:
             yield {"type": "done", "content": ""}
             return
 
-        tool_input = json.dumps({"query": message, "top_k": 5}, ensure_ascii=False)
+        tool_input = json.dumps({"query": message, "top_k": 12}, ensure_ascii=False)
         yield {"type": "tool_start", "tool": "tcm_route_search", "input": tool_input}
-        output = route_tool._run(query=message, top_k=5)
+        output = route_tool._run(query=message, top_k=12)
         yield {
             "type": "tool_end",
             "tool": "tcm_route_search",
@@ -679,9 +679,9 @@ class AgentManager:
                 yield {"type": "done", "content": ""}
                 return
 
-            tool_input = json.dumps({"query": message, "top_k": 5}, ensure_ascii=False)
+            tool_input = json.dumps({"query": message, "top_k": 12}, ensure_ascii=False)
             yield {"type": "tool_start", "tool": "tcm_route_search", "input": tool_input}
-            route_output = route_tool._run(query=message, top_k=5)
+            route_output = route_tool._run(query=message, top_k=12)
             yield {
                 "type": "tool_end",
                 "tool": "tcm_route_search",

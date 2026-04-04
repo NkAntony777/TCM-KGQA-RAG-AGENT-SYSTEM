@@ -16,6 +16,20 @@
 
 ## 本轮已落实的行为
 
+### 回答链路与深度模式骨架
+
+- 图谱实体查询默认 `top_k` 已按快速模式方向收敛到 `12`。
+- 图谱实体查询已支持 `predicate_allowlist / predicate_blocklist`，为深度模式的定向检索做准备。
+- 路由工具已新增结构化 `retrieval_strategy` 输出，而不再只有粗粒度 route。
+- 当前 `retrieval_strategy` 已能识别组成、功效、主治、出处、路径等基础意图，并给出：
+  - graph query kind
+  - entity / symptom / path target
+  - predicate allowlist
+  - candidate / final k
+  - sources
+  - evidence paths
+- 当前已引入第一版“证据路径”抽象，用于让后续深度模式 Agent 以路径方式浏览证据，而不是直接耦合底层存储。
+
 ### 自动选书
 
 - 新建提取任务时，如果没有手动选择书籍，会进入自动批处理模式。
@@ -97,6 +111,7 @@
 
 ## 后续可选工作
 
+- 新增并维护 [TOP_K策略与深度模式最佳实践.md](./TOP_K策略与深度模式最佳实践.md)，作为后续检索策略与深度模式的正式设计基线
 - 为“每批书籍数量”提供前端可配置入口
 - 为 `resume` 增加前端可见的“完成当前 run 后继续下一批”开关
 - 在历史页增加自动批次链路的关联展示
