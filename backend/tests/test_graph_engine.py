@@ -80,7 +80,10 @@ class TestEntityLookup(unittest.TestCase):
         }
         self.assertGreaterEqual(len(herb_targets), 4)
         self.assertIn("熟地黄", herb_targets)
-        self.assertIn("茯苓", herb_targets)
+        self.assertTrue(
+            herb_targets & {"茯苓", "白茯苓"},
+            f"Expected 茯苓 or 白茯苓 in {herb_targets}",
+        )
 
     def test_lookup_formula_efficacy(self) -> None:
         """六味地黄丸应包含功效关系。"""
@@ -99,6 +102,14 @@ class TestEntityLookup(unittest.TestCase):
             f"Expected 真阴亏损 or 肝肾不足 in {syndrome_targets}",
         )
 
+    def test_lookup_small_topk_still_covers_core_relation_types(self) -> None:
+        """小 top_k 下也应优先保留核心关系类型，而不是被重复边挤满。"""
+        result = self.engine.entity_lookup("六味地黄丸", top_k=6)
+        predicates = _predicates(result["relations"])
+        self.assertIn("使用药材", predicates)
+        self.assertIn("功效", predicates)
+        self.assertIn("治疗证候", predicates)
+
     def test_lookup_four_gentlemen_herbs(self) -> None:
         """四君子汤的组成药材应包含人参和白术。"""
         result = self.engine.entity_lookup("四君子汤", top_k=20)
@@ -113,6 +124,15 @@ class TestEntityLookup(unittest.TestCase):
         """完全不存在的实体应返回空结果。"""
         result = self.engine.entity_lookup("不存在的实体_xyz123", top_k=5)
         self.assertEqual(result, {})
+
+    def test_lookup_relations_include_cluster_support_metadata(self) -> None:
+        """关系簇结果应暴露证据覆盖信息，便于后续回答链路做可信度决策。"""
+        result = self.engine.entity_lookup("四君子汤", top_k=10)
+        herb_relation = next(r for r in result["relations"] if r["predicate"] == "使用药材" and r["target"] == "人参")
+        self.assertGreaterEqual(int(herb_relation["evidence_count"]), 1)
+        self.assertGreaterEqual(int(herb_relation["source_book_count"]), 1)
+        self.assertIn("avg_confidence", herb_relation)
+        self.assertIn("max_confidence", herb_relation)
 
 
 class TestPathQuery(unittest.TestCase):

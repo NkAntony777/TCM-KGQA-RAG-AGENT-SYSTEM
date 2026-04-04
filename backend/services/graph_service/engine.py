@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections import Counter
 from dataclasses import dataclass
+import math
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +50,25 @@ RELATION_QUERY_HINTS: dict[str, set[str]] = {
     "类别": {"属于范畴"},
     "别名": {"别名"},
 }
+
+PREDICATE_BASE_PRIORITY: dict[str, float] = {
+    "治疗证候": 1.0,
+    "功效": 0.98,
+    "使用药材": 0.96,
+    "治疗症状": 0.93,
+    "治法": 0.9,
+    "治疗疾病": 0.9,
+    "推荐方剂": 0.88,
+    "归经": 0.85,
+    "药性": 0.82,
+    "配伍禁忌": 0.8,
+    "食忌": 0.78,
+    "常见症状": 0.76,
+    "别名": 0.72,
+    "属于范畴": 0.65,
+}
+
+RRF_RANK_CONSTANT = 20
 
 
 @dataclass(frozen=True)
@@ -116,8 +137,9 @@ class GraphQueryEngine:
             return {}
         canonical_name = candidates[0]
         entity_type = self.entity_type(canonical_name)
-        relations = self._compact_relations(
-            self._collect_relations(canonical_name, query_text=name),
+        relations = self._select_relation_clusters(
+            self._collect_relations(canonical_name),
+            query_text=name,
             top_k=max(1, top_k),
         )
         return {
@@ -200,45 +222,200 @@ class GraphQueryEngine:
     def _resolve_entities(self, query: str, preferred_types: set[str] | None = None) -> list[str]:
         return self.store.resolve_entities(query, preferred_types, limit=20)
 
-    def _collect_relations(self, entity_name: str, query_text: str = "") -> list[dict[str, Any]]:
-        rows = self.store.collect_relations(entity_name)
-        rows.sort(
-            key=lambda item: (
-                -self._relation_score(item, query_text),
-                -float(item.get("confidence", 0.0) or 0.0),
-                item.get("direction", ""),
-                item.get("predicate", ""),
-                item.get("target", ""),
-            )
-        )
-        return rows
+    def _collect_relations(self, entity_name: str) -> list[dict[str, Any]]:
+        return self.store.collect_relations(entity_name)
 
-    def _compact_relations(self, rows: list[dict[str, Any]], *, top_k: int) -> list[dict[str, Any]]:
+    def _select_relation_clusters(self, rows: list[dict[str, Any]], *, query_text: str, top_k: int) -> list[dict[str, Any]]:
+        clusters = self._build_relation_clusters(rows)
+        if not clusters:
+            return []
+        self._apply_rrf_scores(clusters, query_text=query_text)
+        return self._diversify_relation_clusters(clusters, query_text=query_text, top_k=top_k)
+
+    def _build_relation_clusters(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         deduped: dict[tuple[str, str, str], dict[str, Any]] = {}
         for row in rows:
+            predicate = _normalize_relation_name(str(row.get("predicate", "")).strip())
+            target = str(row.get("target", "")).strip()
+            direction = str(row.get("direction", "")).strip()
+            if not predicate or not target or not direction:
+                continue
             key = (
-                str(row.get("predicate", "")).strip(),
-                str(row.get("target", "")).strip(),
-                str(row.get("direction", "")).strip(),
+                predicate,
+                target,
+                direction,
             )
+            confidence = float(row.get("confidence", 0.0) or 0.0)
+            source_book = str(row.get("source_book", "")).strip()
+            source_chapter = str(row.get("source_chapter", "")).strip()
+            raw_fact_ids = row.get("fact_ids")
+            fact_ids: set[str] = set()
+            if isinstance(raw_fact_ids, list):
+                fact_ids = {str(item).strip() for item in raw_fact_ids if str(item).strip()}
+            fact_id = str(row.get("fact_id", "")).strip()
+            if fact_id:
+                fact_ids.add(fact_id)
             existing = deduped.get(key)
             if existing is None:
-                deduped[key] = row
+                cluster = dict(row)
+                cluster["predicate"] = predicate
+                cluster["target"] = target
+                cluster["direction"] = direction
+                cluster["target_type"] = str(row.get("target_type", "")).strip() or "other"
+                cluster["_source_books"] = {source_book} if source_book else set()
+                cluster["_source_chapters"] = {source_chapter} if source_chapter else set()
+                cluster["_fact_ids"] = set(fact_ids)
+                cluster["_confidence_sum"] = confidence
+                cluster["_evidence_count"] = 1
+                deduped[key] = cluster
                 continue
-            current_confidence = float(row.get("confidence", 0.0) or 0.0)
+            existing["_evidence_count"] = int(existing.get("_evidence_count", 0) or 0) + 1
+            existing["_confidence_sum"] = float(existing.get("_confidence_sum", 0.0) or 0.0) + confidence
+            if source_book:
+                existing["_source_books"].add(source_book)
+            if source_chapter:
+                existing["_source_chapters"].add(source_chapter)
+            existing["_fact_ids"].update(fact_ids)
+            current_confidence = confidence
             existing_confidence = float(existing.get("confidence", 0.0) or 0.0)
-            if current_confidence > existing_confidence:
-                deduped[key] = row
-        compacted = list(deduped.values())
-        compacted.sort(
-            key=lambda item: (
-                -float(item.get("confidence", 0.0) or 0.0),
-                item.get("direction", ""),
-                item.get("predicate", ""),
-                item.get("target", ""),
-            )
-        )
-        return compacted[:top_k]
+            existing_text = str(existing.get("source_text", "")).strip()
+            current_text = str(row.get("source_text", "")).strip()
+            if current_confidence > existing_confidence or (
+                math.isclose(current_confidence, existing_confidence) and len(current_text) > len(existing_text)
+            ):
+                for field in ("fact_id", "source_text", "confidence", "source_book", "source_chapter", "target_type"):
+                    if field in row and row.get(field) not in (None, ""):
+                        existing[field] = row.get(field)
+
+        clusters: list[dict[str, Any]] = []
+        for cluster in deduped.values():
+            source_books = sorted(book for book in cluster.pop("_source_books", set()) if book)
+            source_chapters = sorted(chapter for chapter in cluster.pop("_source_chapters", set()) if chapter)
+            fact_ids = sorted(fact_id for fact_id in cluster.pop("_fact_ids", set()) if fact_id)
+            evidence_count = int(cluster.pop("_evidence_count", 0) or 0)
+            confidence_sum = float(cluster.pop("_confidence_sum", 0.0) or 0.0)
+            avg_confidence = confidence_sum / evidence_count if evidence_count else float(cluster.get("confidence", 0.0) or 0.0)
+            cluster["evidence_count"] = evidence_count
+            cluster["source_book_count"] = len(source_books)
+            cluster["source_chapter_count"] = len(source_chapters)
+            cluster["source_books"] = source_books[:5]
+            cluster["avg_confidence"] = round(avg_confidence, 4)
+            cluster["max_confidence"] = round(float(cluster.get("confidence", 0.0) or 0.0), 4)
+            if fact_ids:
+                cluster["fact_ids"] = fact_ids[:12]
+                cluster["fact_id"] = str(cluster.get("fact_id", "")).strip() or fact_ids[0]
+            clusters.append(cluster)
+        return clusters
+
+    def _apply_rrf_scores(self, clusters: list[dict[str, Any]], *, query_text: str) -> None:
+        rank_views = [
+            sorted(
+                clusters,
+                key=lambda item: (
+                    -self._relation_score(item, query_text),
+                    -self._predicate_priority(item),
+                    -float(item.get("max_confidence", 0.0) or 0.0),
+                    -int(item.get("source_book_count", 0) or 0),
+                ),
+            ),
+            sorted(
+                clusters,
+                key=lambda item: (
+                    -float(item.get("max_confidence", 0.0) or 0.0),
+                    -float(item.get("avg_confidence", 0.0) or 0.0),
+                    -int(item.get("source_book_count", 0) or 0),
+                    -int(item.get("evidence_count", 0) or 0),
+                ),
+            ),
+            sorted(
+                clusters,
+                key=lambda item: (
+                    -int(item.get("source_book_count", 0) or 0),
+                    -int(item.get("evidence_count", 0) or 0),
+                    -float(item.get("max_confidence", 0.0) or 0.0),
+                ),
+            ),
+            sorted(
+                clusters,
+                key=lambda item: (
+                    -self._predicate_priority(item),
+                    -self._relation_score(item, query_text),
+                    -int(item.get("source_book_count", 0) or 0),
+                    -float(item.get("max_confidence", 0.0) or 0.0),
+                ),
+            ),
+        ]
+        for cluster in clusters:
+            cluster["_fusion_score"] = 0.0
+        for view in rank_views:
+            for rank, cluster in enumerate(view, start=1):
+                cluster["_fusion_score"] += 1.0 / (RRF_RANK_CONSTANT + rank)
+        max_fusion = max(float(cluster.get("_fusion_score", 0.0) or 0.0) for cluster in clusters) or 1.0
+        for cluster in clusters:
+            cluster["_fusion_score_norm"] = float(cluster.get("_fusion_score", 0.0) or 0.0) / max_fusion
+
+    def _diversify_relation_clusters(self, clusters: list[dict[str, Any]], *, query_text: str, top_k: int) -> list[dict[str, Any]]:
+        hinted_predicates = self._hinted_predicates(query_text)
+        diversity_lambda = 0.18 if hinted_predicates else 0.42
+        remaining = list(clusters)
+        selected: list[dict[str, Any]] = []
+        predicate_counts: Counter[str] = Counter()
+        direction_counts: Counter[str] = Counter()
+        target_type_counts: Counter[str] = Counter()
+        target_predicate_coverage = min(max(3, top_k // 2), top_k)
+
+        while remaining and len(selected) < top_k:
+            best_index = 0
+            best_score = float("-inf")
+            for index, cluster in enumerate(remaining):
+                predicate = str(cluster.get("predicate", "")).strip()
+                direction = str(cluster.get("direction", "")).strip()
+                target_type = str(cluster.get("target_type", "")).strip() or "other"
+                predicate_novelty = 1.0 / (1 + predicate_counts[predicate])
+                direction_novelty = 1.0 / (1 + direction_counts[direction])
+                target_type_novelty = 1.0 / (1 + target_type_counts[target_type])
+                novelty = 0.7 * predicate_novelty + 0.15 * direction_novelty + 0.15 * target_type_novelty
+                if predicate_counts[predicate] == 0:
+                    novelty += 0.2
+                hinted_bonus = 0.0
+                if hinted_predicates:
+                    if predicate in hinted_predicates:
+                        hinted_bonus = 0.08
+                    else:
+                        novelty *= 0.55
+                elif len(predicate_counts) < target_predicate_coverage and predicate_counts[predicate] > 0:
+                    novelty *= 0.55
+                diversified_score = (
+                    (1.0 - diversity_lambda) * float(cluster.get("_fusion_score_norm", 0.0) or 0.0)
+                    + diversity_lambda * novelty
+                    + hinted_bonus
+                )
+                if diversified_score > best_score:
+                    best_score = diversified_score
+                    best_index = index
+            chosen = remaining.pop(best_index)
+            chosen["score"] = round(best_score, 4)
+            selected.append(chosen)
+            predicate_counts[str(chosen.get("predicate", "")).strip()] += 1
+            direction_counts[str(chosen.get("direction", "")).strip()] += 1
+            target_type_counts[str(chosen.get("target_type", "")).strip() or "other"] += 1
+
+        for cluster in selected:
+            cluster.pop("_fusion_score", None)
+            cluster.pop("_fusion_score_norm", None)
+        return selected
+
+    def _predicate_priority(self, relation: dict[str, Any]) -> float:
+        predicate = _normalize_relation_name(str(relation.get("predicate", "")).strip())
+        return float(PREDICATE_BASE_PRIORITY.get(predicate, 0.6))
+
+    def _hinted_predicates(self, query_text: str) -> set[str]:
+        hinted: set[str] = set()
+        normalized_query = (query_text or "").strip()
+        for token, predicates in RELATION_QUERY_HINTS.items():
+            if token in normalized_query:
+                hinted.update(predicates)
+        return hinted
 
     def _relation_score(self, relation: dict[str, Any], query_text: str) -> int:
         score = 0
@@ -255,6 +432,9 @@ class GraphQueryEngine:
             score += 10
         if source_text and any(fragment and fragment in source_text for fragment in self._query_fragments(normalized_query)):
             score += 5
+        score += int(round(self._predicate_priority(relation) * 10))
+        score += min(int(relation.get("source_book_count", 0) or 0), 5)
+        score += min(int(math.log1p(int(relation.get("evidence_count", 0) or 0)) * 4), 8)
         if relation.get("direction") == "out":
             score += 1
         return score
@@ -354,7 +534,11 @@ class NebulaPrimaryGraphEngine:
             for canonical_name in candidates[:5]:
                 if not self.primary_store.exact_entity(canonical_name):
                     continue
-                relations = self._collect_nebula_relations(canonical_name, query_text=name)[: max(1, top_k)]
+                relations = self.fallback_engine._select_relation_clusters(
+                    self._collect_nebula_relations(canonical_name),
+                    query_text=name,
+                    top_k=max(1, top_k),
+                )
                 entity_type = self.fallback_engine.entity_type(canonical_name)
                 if not relations and canonical_name != candidates[0]:
                     continue
@@ -449,13 +633,14 @@ class NebulaPrimaryGraphEngine:
     def _use_primary(self) -> bool:
         return self.primary_store.ready()
 
-    def _collect_nebula_relations(self, entity_name: str, query_text: str = "") -> list[dict[str, Any]]:
+    def _collect_nebula_relations(self, entity_name: str) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for row in self.primary_store.neighbors(entity_name, reverse=False):
             rows.append(
                 {
                     "predicate": _normalize_relation_name(str(row.get("predicate", "")).strip()),
                     "target": str(row.get("neighbor_name", "")).strip(),
+                    "target_type": str(row.get("neighbor_type", "")).strip() or "other",
                     "direction": "out",
                     "source_book": str(row.get("source_book", "")).strip(),
                     "source_chapter": str(row.get("source_chapter", "")).strip(),
@@ -467,20 +652,13 @@ class NebulaPrimaryGraphEngine:
                 {
                     "predicate": _normalize_relation_name(str(row.get("predicate", "")).strip()),
                     "target": str(row.get("neighbor_name", "")).strip(),
+                    "target_type": str(row.get("neighbor_type", "")).strip() or "other",
                     "direction": "in",
                     "source_book": str(row.get("source_book", "")).strip(),
                     "source_chapter": str(row.get("source_chapter", "")).strip(),
                     **self._evidence_payload_from_row(row),
                 }
             )
-        rows.sort(
-            key=lambda item: (
-                -self.fallback_engine._relation_score(item, query_text),
-                item["direction"],
-                item["predicate"],
-                item["target"],
-            )
-        )
         return rows
 
     def _adjacent_names(self, entity_name: str) -> list[str]:

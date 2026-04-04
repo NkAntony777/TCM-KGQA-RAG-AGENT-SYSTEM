@@ -239,7 +239,7 @@ class RuntimeGraphStore:
     ) -> dict[str, Any]:
         self.ensure_ready()
         with _RUNTIME_STORE_LOCK:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn:
                 if evidence_path and evidence_path.exists():
                     self._import_evidence_rows(conn, _iter_jsonl_rows(evidence_path))
                 if graph_path.suffix.lower() == ".jsonl":
@@ -783,9 +783,13 @@ class RuntimeGraphStore:
         """
 
     def _row_to_relation_dict(self, row: sqlite3.Row) -> dict[str, Any]:
+        target_type = _normalize_text(row["object_type"])
+        if _normalize_text(row["target"]) == _normalize_text(row["subject"]):
+            target_type = _normalize_text(row["subject_type"])
         payload = {
             "predicate": _normalize_text(row["predicate"]),
             "target": _normalize_text(row["target"]),
+            "target_type": target_type or "other",
             "source_book": _normalize_text(row["source_book"]),
             "source_chapter": _normalize_text(row["source_chapter"]),
         }
