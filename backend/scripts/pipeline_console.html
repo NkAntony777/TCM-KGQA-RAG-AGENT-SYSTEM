@@ -91,6 +91,8 @@
   .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
   .btn-sm { padding: 4px 12px; font-size: 12px; }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .pager { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .pager-info { font-size:12px; color:var(--text3); margin-right:auto; }
 
   /* ── 进度 ── */
   .progress-bar { height: 8px; border-radius: 99px; background: var(--surface2);
@@ -799,10 +801,12 @@
       <div class="card">
         <div class="card-title"><span class="icon">📁</span> 历史运行记录
           <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="clearPublishQueue()">清除任务队列</button>
+          <button class="btn btn-ghost btn-sm" onclick="batchPublishRuns('json')">批量同步未发布图谱</button>
+          <button class="btn btn-ghost btn-sm" onclick="batchPublishRuns('nebula')">批量发未发布 Nebula</button>
           <button class="btn btn-ghost btn-sm" onclick="loadRuns()">刷新</button>
         </div>
         <div class="hint" style="margin-bottom:12px">
-          发布 JSON = 增量追加到 `graph_runtime.json`；发布 Nebula = 先同步 `graph_runtime.json`，再把当前 run 写入 NebulaGraph。
+          同步运行时图谱 = 增量导入 SQLite 运行时图谱；发布 Nebula = 先同步 SQLite 运行时图谱，再把当前 run 写入 NebulaGraph。
         </div>
         <div class="table-wrap">
           <table id="runsTable">
@@ -814,6 +818,11 @@
             </thead>
             <tbody id="runsBody"></tbody>
           </table>
+        </div>
+        <div class="pager" id="runsPager">
+          <div class="pager-info" id="runsPagerInfo">第 1 页</div>
+          <button class="btn btn-ghost btn-sm" id="runsPrevBtn" onclick="changeRunsPage(-1)">上一页</button>
+          <button class="btn btn-ghost btn-sm" id="runsNextBtn" onclick="changeRunsPage(1)">下一页</button>
         </div>
       </div>
       <div class="modal-overlay" id="resumeConfigModal" onclick="handleModalBackdrop(event, 'resumeConfigModal', closeResumePanel)">
@@ -875,7 +884,7 @@
               <input type="checkbox" id="resumeAutoClean" /> <span>续跑完成后自动清洗</span>
             </label>
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
-              <input type="checkbox" id="resumeAutoPublish" /> <span>续跑完成后自动发布 JSON</span>
+              <input type="checkbox" id="resumeAutoPublish" /> <span>续跑完成后自动同步运行时图谱</span>
             </label>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -970,6 +979,9 @@ let latestJobState = null;
 let seenStreamLogs = new Set();
 let currentResumeRun = '';
 let runsRefreshTimer = null;
+let runsPage = 1;
+const runsPageSize = 20;
+let runsPageData = [];
 let graphBooksCache = [];
 let envProviders = [];
 let benchmarkConfig = null;
@@ -1410,15 +1422,15 @@ function renderPublishBadges(publishStatus) {
   const nebulaStatus = publishStatus?.nebula || {};
   const parts = [];
   if (jsonStatus.published) {
-    parts.push(`<span class="tiny-badge done" title="${escapeHtml(jsonStatus.published_at || '')}">JSON 已发布</span>`);
+    parts.push(`<span class="tiny-badge done" title="${escapeHtml(jsonStatus.published_at || '')}">运行时图谱已同步</span>`);
   } else if (jsonStatus.status === 'queued') {
-    parts.push('<span class="tiny-badge running">JSON 排队中</span>');
+    parts.push('<span class="tiny-badge running">运行时图谱排队中</span>');
   } else if (jsonStatus.status === 'running') {
-    parts.push('<span class="tiny-badge running">JSON 发布中</span>');
+    parts.push('<span class="tiny-badge running">运行时图谱同步中</span>');
   } else if (jsonStatus.status === 'error') {
-    parts.push(`<span class="tiny-badge error" title="${escapeHtml(jsonStatus.error || '')}">JSON 失败</span>`);
+    parts.push(`<span class="tiny-badge error" title="${escapeHtml(jsonStatus.error || '')}">运行时图谱失败</span>`);
   } else if (jsonStatus.status === 'completed') {
-    parts.push('<span class="tiny-badge">JSON 已同步</span>');
+    parts.push('<span class="tiny-badge">运行时图谱已同步</span>');
   }
   if (nebulaStatus.published) {
     parts.push(`<span class="tiny-badge done" title="${escapeHtml(nebulaStatus.published_at || '')}">Nebula 已发布</span>`);
@@ -1454,9 +1466,9 @@ function renderRunActionCell(run) {
   const jsonBusy = ['queued', 'running'].includes(jsonStatus.status) || ['queued', 'running'].includes(nebulaStatus.status);
   const nebulaBusy = ['queued', 'running'].includes(nebulaStatus.status);
   const jsonLabel =
-    jsonStatus.published ? '已发布 JSON' :
-    jsonStatus.status === 'queued' ? 'JSON 排队中' :
-    jsonStatus.status === 'running' ? 'JSON 发布中' : '发布 JSON';
+    jsonStatus.published ? '已同步图谱' :
+    jsonStatus.status === 'queued' ? '图谱排队中' :
+    jsonStatus.status === 'running' ? '图谱同步中' : '同步图谱';
   const nebulaLabel =
     nebulaStatus.published ? '已发布 Nebula' :
     nebulaStatus.status === 'queued' ? 'Nebula 排队中' :
@@ -2118,33 +2130,85 @@ async function loadChunkSweepHistoryRun(runName) {
 // 历史记录
 // ─────────────────────────────────────────────────────────────
 async function loadRuns() {
-  const d = await fetchJson(`${API}/api/runs`);
+  const d = await fetchJson(`${API}/api/runs?page=${runsPage}&page_size=${runsPageSize}`);
+  runsPageData = Array.isArray(d.runs) ? d.runs : [];
   const tbody = document.getElementById('runsBody');
-  const hasActivePublish = (d.runs || []).some(run => {
+  const pagerInfo = document.getElementById('runsPagerInfo');
+  const prevBtn = document.getElementById('runsPrevBtn');
+  const nextBtn = document.getElementById('runsNextBtn');
+  const total = Math.max(0, d.total || 0);
+  const totalPages = Math.max(0, d.total_pages || 0);
+  if (totalPages > 0 && runsPage > totalPages) {
+    runsPage = totalPages;
+    return loadRuns();
+  }
+  const hasActivePublish = runsPageData.some(run => {
     const jsonStatus = run.publish_status?.json?.status || '';
     const nebulaStatus = run.publish_status?.nebula?.status || '';
     return ['queued', 'running'].includes(jsonStatus) || ['queued', 'running'].includes(nebulaStatus);
   });
-  tbody.innerHTML = d.runs.map(run => {
-    const statusColors = {
-      completed: 'var(--green)', error: 'var(--red)',
-      running: 'var(--accent)', cancelled: 'var(--yellow)', partial: 'var(--yellow)',
-    };
-    const color = statusColors[run.status] || 'var(--text3)';
-    return `<tr>
-      <td title="${run.run_dir}" style="max-width:160px">${run.run_dir}</td>
-      <td><span style="color:${color};font-weight:600">${run.status}</span>${run.dry_run?' <span style="font-size:10px;color:var(--text3)">[dry]</span>':''}</td>
-      <td>${run.books_completed}/${run.books_total}</td>
-      <td>${run.total_triples}</td>
-      <td style="color:${run.chunk_errors>0?'var(--red)':'var(--text3)'}">${run.chunk_errors}</td>
-      <td title="${run.model}" style="max-width:120px">${run.model || '—'}</td>
-      <td style="white-space:nowrap">${run.created_at ? run.created_at.slice(0,16) : '—'}</td>
-      <td class="actions-cell">
-        ${renderRunActionCell(run)}
-      </td>
-    </tr>`;
-  }).join('');
+  if (!runsPageData.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text3)">当前页没有历史记录</td></tr>';
+  } else {
+    tbody.innerHTML = runsPageData.map(run => {
+      const statusColors = {
+        completed: 'var(--green)', error: 'var(--red)',
+        running: 'var(--accent)', cancelled: 'var(--yellow)', partial: 'var(--yellow)',
+      };
+      const color = statusColors[run.status] || 'var(--text3)';
+      return `<tr>
+        <td title="${run.run_dir}" style="max-width:160px">${run.run_dir}</td>
+        <td><span style="color:${color};font-weight:600">${run.status}</span>${run.dry_run?' <span style="font-size:10px;color:var(--text3)">[dry]</span>':''}</td>
+        <td>${run.books_completed}/${run.books_total}</td>
+        <td>${run.total_triples}</td>
+        <td style="color:${run.chunk_errors>0?'var(--red)':'var(--text3)'}">${run.chunk_errors}</td>
+        <td title="${run.model}" style="max-width:120px">${run.model || '—'}</td>
+        <td style="white-space:nowrap">${run.created_at ? run.created_at.slice(0,16) : '—'}</td>
+        <td class="actions-cell">
+          ${renderRunActionCell(run)}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  const from = total === 0 ? 0 : ((runsPage - 1) * runsPageSize + 1);
+  const to = total === 0 ? 0 : Math.min(runsPage * runsPageSize, total);
+  pagerInfo.textContent = totalPages
+    ? `第 ${runsPage} / ${totalPages} 页，显示 ${from}-${to} / 共 ${total} 条`
+    : '暂无历史记录';
+  prevBtn.disabled = runsPage <= 1;
+  nextBtn.disabled = totalPages === 0 || runsPage >= totalPages;
   scheduleRunsRefresh(hasActivePublish);
+}
+
+function changeRunsPage(delta) {
+  const nextPage = Math.max(1, runsPage + delta);
+  if (nextPage === runsPage) return;
+  runsPage = nextPage;
+  loadRuns();
+}
+
+async function batchPublishRuns(kind) {
+  const label = kind === 'nebula' ? 'Nebula' : '运行时图谱';
+  if (!confirm(`确认扫描全部历史 run，并将所有未发布的 ${label} 任务逐个加入队列吗？已发布的会自动跳过。`)) return;
+  try {
+    const path = kind === 'nebula'
+      ? `${API}/api/runs/publish-nebula-unpublished`
+      : `${API}/api/runs/publish-unpublished`;
+    const payload = await fetchJson(path, {method:'POST'});
+    await loadRuns();
+    const enqueued = Array.isArray(payload.enqueued) ? payload.enqueued : [];
+    const failed = Array.isArray(payload.failed) ? payload.failed : [];
+    const skipped = Array.isArray(payload.skipped) ? payload.skipped : [];
+    let message = `${label} 批量入队完成。\n扫描 ${payload.scanned || 0} 个 run\n符合条件 ${payload.eligible || 0} 个\n成功入队 ${enqueued.length} 个\n跳过 ${skipped.length} 个`;
+    if (failed.length) {
+      const preview = failed.slice(0, 8).map(item => `${item.run_dir}: ${item.error}`).join('\n');
+      message += `\n失败 ${failed.length} 个：\n${preview}`;
+      if (failed.length > 8) message += `\n……其余 ${failed.length - 8} 个失败项未展开`;
+    }
+    alert(message);
+  } catch (e) {
+    alert(`${label} 批量入队失败: ${e.message}`);
+  }
 }
 
 async function viewTriples(runName) {
@@ -2297,7 +2361,7 @@ async function pollPublishUntilDone(runName, section) {
 }
 
 async function publishNebula(runName, btn) {
-  if (!confirm(`确认将 ${runName} 增量写入 NebulaGraph（tcm_kg space）？\n同时也会追加到 graph_runtime.json。`)) return;
+  if (!confirm(`确认将 ${runName} 增量写入 NebulaGraph（tcm_kg space）？\n同时也会先同步到 SQLite 运行时图谱。`)) return;
   if (btn) {
     btn.disabled = true;
     btn.textContent = 'Nebula 排队中…';
@@ -2322,25 +2386,25 @@ async function publishNebula(runName, btn) {
 }
 
 async function publishRun(runName, btn) {
-  if (!confirm(`确认将 ${runName} 发布到 graph_runtime.json（追加模式）？`)) return;
+  if (!confirm(`确认将 ${runName} 同步到 SQLite 运行时图谱？`)) return;
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'JSON 排队中…';
+    btn.textContent = '图谱排队中…';
   }
   try {
     await fetchJson(`${API}/api/runs/${runName}/publish`, {method:'POST'});
     const status = await pollPublishUntilDone(runName, 'json');
     const jsonStatus = status.json || {};
-    alert(`发布成功！图谱共 ${jsonStatus.graph_triples || 0} 条三元组，evidence ${jsonStatus.evidence_count || 0} 条`);
+    alert(`运行时图谱同步成功！当前图谱共 ${jsonStatus.graph_triples || 0} 条三元组，evidence ${jsonStatus.evidence_count || 0} 条`);
     await loadRuns();
     if (currentPage === 'graph') loadGraphStats();
   } catch (e) {
     await loadRuns();
-    alert(`发布失败: ${e.message}`);
+    alert(`运行时图谱同步失败: ${e.message}`);
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '发布 JSON';
+      btn.textContent = '同步图谱';
     }
   }
 }
@@ -2434,7 +2498,7 @@ async function loadGraphStats() {
   const d = await r.json();
   const grid = document.getElementById('graphStatGrid');
   if (!d.exists) {
-    grid.innerHTML = '<div style="color:var(--text3)">graph_runtime.json 尚未生成</div>';
+    grid.innerHTML = '<div style="color:var(--text3)">SQLite 运行时图谱尚未生成</div>';
     return;
   }
   grid.innerHTML = `

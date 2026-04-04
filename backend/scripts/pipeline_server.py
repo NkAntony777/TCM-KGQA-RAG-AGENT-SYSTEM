@@ -14,6 +14,7 @@ import re
 import sys
 import threading
 import time
+import traceback
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, as_completed, wait
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -38,6 +39,7 @@ from pydantic import BaseModel, Field
 
 from scripts.tcm_triple_console import (
     DEFAULT_BOOKS_DIR,
+    DEFAULT_GRAPH_BASE,
     DEFAULT_GRAPH_TARGET,
     DEFAULT_OUTPUT_DIR,
     GRAPH_RUNTIME_IO_LOCK,
@@ -55,6 +57,7 @@ from scripts.tcm_triple_console import (
     _write_text_atomic,
     _first_env,
 )
+from services.graph_service.runtime_store import RuntimeGraphStore
 from scripts.chunk_size_benchmark_lab import router as chunk_benchmark_router
 from scripts.triple_benchmark_lab import router as benchmark_router
 
@@ -87,6 +90,7 @@ _publish_worker_thread: threading.Thread | None = None
 _publish_worker_wakeup = threading.Event()
 _active_publish_task: dict[str, Any] | None = None
 _book_status_lock = threading.RLock()
+_runtime_graph_mutation_lock = threading.RLock()
 
 DEFAULT_AUTO_BOOK_BATCH_SIZE = 7
 LOW_YIELD_RETRY_TRIPLE_THRESHOLD = 1
@@ -127,12 +131,31 @@ def _graph_evidence_path(target: Path | None = None) -> Path:
     return graph_path.parent / f"{graph_path.stem}.evidence.jsonl"
 
 
+def _runtime_graph_store() -> RuntimeGraphStore:
+    return RuntimeGraphStore.from_graph_paths(
+        graph_path=DEFAULT_GRAPH_TARGET,
+        evidence_path=_graph_evidence_path(DEFAULT_GRAPH_TARGET),
+        sample_graph_path=DEFAULT_GRAPH_BASE,
+    )
+
+
 def _write_state(state_path: Path, state: dict[str, Any]) -> None:
     _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def _describe_exception(exc: Exception) -> str:
+    message = str(exc).strip()
+    exc_type = type(exc).__name__
+    if message:
+        return f"{exc_type}: {message}"
+    exc_repr = repr(exc).strip()
+    if exc_repr and exc_repr != f"{exc_type}()":
+        return f"{exc_type}: {exc_repr}"
+    return exc_type
 
 
 def _publish_status_path(run_dir: Path) -> Path:
@@ -362,6 +385,60 @@ def _enqueue_publish_task(run_name: str, *, kind: str, replace: bool = False) ->
         return True, status
 
 
+def _iter_run_dirs_desc() -> list[Path]:
+    if not DEFAULT_OUTPUT_DIR.exists():
+        return []
+    return sorted((path for path in DEFAULT_OUTPUT_DIR.iterdir() if path.is_dir()), reverse=True)
+
+
+def _eligible_for_bulk_publish(run_dir: Path, *, kind: str) -> bool:
+    manifest = _load_json_file(run_dir / "manifest.json", {})
+    state = _load_json_file(run_dir / "state.json", {})
+    if bool(manifest.get("dry_run", False)):
+        return False
+    status = str(state.get("status", "")).strip().lower()
+    if status not in {"completed", "partial"}:
+        return False
+    publish_status = _load_publish_status(run_dir)
+    json_status = publish_status.get("json", {})
+    nebula_status = publish_status.get("nebula", {})
+    if kind == "json":
+        return not bool(json_status.get("published")) and str(json_status.get("status", "")) not in {"queued", "running"}
+    return not bool(nebula_status.get("published")) and str(nebula_status.get("status", "")) not in {"queued", "running"}
+
+
+def _bulk_enqueue_unpublished_runs(kind: str) -> dict[str, Any]:
+    if kind not in {"json", "nebula"}:
+        raise ValueError(f"unsupported_bulk_publish_kind: {kind}")
+    scanned = 0
+    eligible = 0
+    enqueued_runs: list[str] = []
+    skipped_runs: list[str] = []
+    failed_runs: list[dict[str, str]] = []
+    for run_dir in _iter_run_dirs_desc():
+        scanned += 1
+        if not _eligible_for_bulk_publish(run_dir, kind=kind):
+            skipped_runs.append(run_dir.name)
+            continue
+        eligible += 1
+        try:
+            enqueued, _ = _enqueue_publish_task(run_dir.name, kind=kind, replace=False)
+            if enqueued:
+                enqueued_runs.append(run_dir.name)
+            else:
+                skipped_runs.append(run_dir.name)
+        except Exception as exc:
+            failed_runs.append({"run_dir": run_dir.name, "error": str(exc)})
+    return {
+        "kind": kind,
+        "scanned": scanned,
+        "eligible": eligible,
+        "enqueued": enqueued_runs,
+        "skipped": skipped_runs,
+        "failed": failed_runs,
+    }
+
+
 def _mark_cancel_requested() -> None:
     run_dir = None
     state_snapshot: dict[str, Any] | None = None
@@ -462,44 +539,6 @@ def _clear_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]
         return _write_book_status_overrides({"force_unprocessed": kept})
 
 
-def _load_graph_runtime_rows(target: Path | None = None) -> list[dict[str, Any]]:
-    path = target or DEFAULT_GRAPH_TARGET
-    with GRAPH_RUNTIME_IO_LOCK:
-        if not path.exists():
-            return []
-        payload = _load_json_file_strict(path)
-        if not isinstance(payload, list):
-            raise ValueError(f"invalid_graph_runtime_payload: {path}")
-        return [row for row in payload if isinstance(row, dict)]
-
-
-def _write_graph_runtime_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
-    path = target or DEFAULT_GRAPH_TARGET
-    with GRAPH_RUNTIME_IO_LOCK:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        _write_text_atomic(path, json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-        return path
-
-
-def _load_graph_runtime_evidence_rows(target: Path | None = None) -> list[dict[str, Any]]:
-    evidence_path = _graph_evidence_path(target)
-    with GRAPH_RUNTIME_IO_LOCK:
-        return _load_jsonl_rows(evidence_path) if evidence_path.exists() else []
-
-
-def _write_graph_runtime_evidence_rows(rows: list[dict[str, Any]], target: Path | None = None) -> Path:
-    evidence_path = _graph_evidence_path(target)
-    with GRAPH_RUNTIME_IO_LOCK:
-        evidence_path.parent.mkdir(parents=True, exist_ok=True)
-        deduped = _dedupe_evidence_rows(rows)
-        _write_text_atomic(
-            evidence_path,
-            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in deduped),
-            encoding="utf-8",
-        )
-        return evidence_path
-
-
 def _publish_queue_busy_marker() -> str | None:
     active = _active_publish_task or {}
     active_run = str(active.get("run_name", "") or "").strip()
@@ -515,15 +554,6 @@ def _publish_queue_busy_marker() -> str | None:
     return None
 
 
-def _collect_fact_ids(rows: list[dict[str, Any]]) -> set[str]:
-    fact_ids: set[str] = set()
-    for row in rows:
-        for fact_id in _extract_fact_ids(row):
-            if fact_id:
-                fact_ids.add(fact_id)
-    return fact_ids
-
-
 def _delete_books_from_runtime_graph(
     book_names: list[str],
     *,
@@ -534,43 +564,18 @@ def _delete_books_from_runtime_graph(
     if not books:
         raise ValueError("book_names_required")
 
-    with _publish_lock:
-        busy_marker = _publish_queue_busy_marker()
-        if busy_marker:
-            raise RuntimeError(f"publish_queue_busy: {busy_marker}")
-
-        rows = _load_graph_runtime_rows()
-        removed_rows = [row for row in rows if str(row.get("source_book", "")).strip() in books]
-        kept_rows = [row for row in rows if str(row.get("source_book", "")).strip() not in books]
-        removed_triples = len(removed_rows)
-        remaining_entities = {
-            str(row.get(key, "")).strip()
-            for row in kept_rows
-            for key in ("subject", "object")
-            if str(row.get(key, "")).strip()
-        }
-        removed_entities = {
-            str(row.get(key, "")).strip()
-            for row in removed_rows
-            for key in ("subject", "object")
-            if str(row.get(key, "")).strip()
-        }
-        orphan_entities = sorted(removed_entities - remaining_entities)
-
-        remaining_fact_ids = _collect_fact_ids(kept_rows)
-        evidence_rows = _load_graph_runtime_evidence_rows()
-        kept_evidence_rows = [
-            row
-            for row in evidence_rows
-            if str(row.get("fact_id", "")).strip() in remaining_fact_ids
-        ]
-
-        _write_graph_runtime_rows(kept_rows)
-        _write_graph_runtime_evidence_rows(kept_evidence_rows)
-
-        override_payload: dict[str, list[str]] | None = None
-        if mark_unprocessed:
-            override_payload = _mark_books_force_unprocessed(books)
+    with _runtime_graph_mutation_lock:
+        with _publish_lock:
+            busy_marker = _publish_queue_busy_marker()
+            if busy_marker:
+                raise RuntimeError(f"publish_queue_busy: {busy_marker}")
+        store = _runtime_graph_store()
+        delete_result = store.delete_books(books)
+        removed_rows = delete_result.get("removed_rows", [])
+        removed_triples = int(delete_result.get("removed_triples", 0) or 0)
+        orphan_entities = list(delete_result.get("orphan_entities", []))
+        remaining_evidence = int(delete_result.get("remaining_evidence", 0) or 0)
+        override_payload: dict[str, list[str]] | None = _mark_books_force_unprocessed(books) if mark_unprocessed else None
 
     nebula_result: dict[str, Any] | None = None
     if sync_nebula:
@@ -585,9 +590,9 @@ def _delete_books_from_runtime_graph(
     return {
         "books": books,
         "removed_triples": removed_triples,
-        "remaining_triples": len(kept_rows),
-        "removed_evidence": max(0, len(evidence_rows) - len(kept_evidence_rows)),
-        "remaining_evidence": len(kept_evidence_rows),
+        "remaining_triples": int(delete_result.get("remaining_triples", 0) or 0),
+        "removed_evidence": int(delete_result.get("removed_evidence", 0) or 0),
+        "remaining_evidence": remaining_evidence,
         "orphan_entities": orphan_entities,
         "force_unprocessed": (override_payload or _load_book_status_overrides()).get("force_unprocessed", []),
         "nebula": nebula_result,
@@ -981,6 +986,10 @@ def _select_auto_start_books(
 
 
 def _resolve_run_publish_source(run_dir: Path) -> tuple[Path, Path | None]:
+    cleaned_graph_jsonl_path = run_dir / "graph_facts.cleaned.jsonl"
+    if cleaned_graph_jsonl_path.exists():
+        evidence_path = run_dir / "evidence_metadata.jsonl"
+        return cleaned_graph_jsonl_path, evidence_path if evidence_path.exists() else None
     cleaned_graph_path = run_dir / "graph_facts.cleaned.json"
     if cleaned_graph_path.exists():
         evidence_path = run_dir / "evidence_metadata.jsonl"
@@ -1016,24 +1025,23 @@ def _record_json_publish_status(
 
 
 def _publish_json_for_run(run_dir: Path, *, replace: bool = False) -> dict[str, Any]:
-    pipeline = _build_pipeline()
-    target = pipeline.publish_graph(run_dir=run_dir, replace=replace)
-    with GRAPH_RUNTIME_IO_LOCK:
-        graph_data = json.loads(target.read_text(encoding="utf-8"))
-        evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-        evidence_count = 0
-        if evidence_path.exists():
-            evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
+    graph_import_path, evidence_path = _resolve_run_publish_source(run_dir)
+    store = _runtime_graph_store()
+    with _runtime_graph_mutation_lock:
+        if replace:
+            raise RuntimeError("sqlite_runtime_replace_not_supported")
+        stats = store.import_run(graph_path=graph_import_path, evidence_path=evidence_path)
+        target = store.settings.db_path
     _record_json_publish_status(
         run_dir,
         target=target,
-        graph_triples=len(graph_data),
-        evidence_count=evidence_count,
+        graph_triples=int(stats["total_triples"]),
+        evidence_count=int(stats["evidence_count"]),
     )
     return {
         "target": target,
-        "graph_triples": len(graph_data),
-        "evidence_count": evidence_count,
+        "graph_triples": int(stats["total_triples"]),
+        "evidence_count": int(stats["evidence_count"]),
     }
 
 
@@ -1064,7 +1072,7 @@ def _run_json_publish_job(run_name: str, *, replace: bool = False) -> dict[str, 
                 "published": False,
                 "published_at": "",
                 "finished_at": _now_iso(),
-                "error": str(exc),
+                "error": _describe_exception(exc),
             },
         )
         raise
@@ -1095,8 +1103,6 @@ def _run_nebula_publish_job(run_name: str) -> None:
         )
         json_result = _run_json_publish_job(run_name, replace=False)
         target = Path(str(json_result["target"]))
-        with GRAPH_RUNTIME_IO_LOCK:
-            graph_data = json.loads(target.read_text(encoding="utf-8"))
 
         graph_import_path, evidence_path = _resolve_run_publish_source(run_dir)
         from services.graph_service.nebulagraph_store import NebulaGraphStore, load_graph_rows
@@ -1118,7 +1124,7 @@ def _run_nebula_publish_job(run_name: str) -> None:
                 "target": str(target),
                 "source_path": str(graph_import_path),
                 "space": store.settings.space,
-                "graph_triples": len(graph_data),
+                "graph_triples": int(json_result["graph_triples"]),
                 "progress_current": 0,
                 "progress_total": total,
                 "progress_pct": 0.0,
@@ -1194,7 +1200,7 @@ def _run_nebula_publish_job(run_name: str) -> None:
                     "status": "error",
                     "published": False,
                     "finished_at": _now_iso(),
-                    "error": str(exc),
+                    "error": _describe_exception(exc),
                 },
             )
     finally:
@@ -2035,21 +2041,17 @@ def _run_extraction_job(
             state["phase"] = "publishing"
             with _run_lock:
                 _current_job.update(state)
-            _log("info", "开始自动发布到图谱...")
-            target = pipeline.publish_graph(run_dir=run_dir)
-            with GRAPH_RUNTIME_IO_LOCK:
-                graph_data = json.loads(target.read_text(encoding="utf-8"))
-                evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-                evidence_count = 0
-                if evidence_path.exists():
-                    evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
-            _record_json_publish_status(
-                run_dir,
-                target=target,
-                graph_triples=len(graph_data),
-                evidence_count=evidence_count,
-            )
-            _log("info", f"发布完成: {target}")
+            _log("info", "开始自动发布到图谱队列...")
+            enqueued, publish_status = _enqueue_publish_task(run_dir.name, kind="json", replace=False)
+            state["publish_status"] = publish_status
+            with _run_lock:
+                _current_job.update(state)
+            _write_state(state_path, state)
+            if enqueued:
+                _log("info", f"已加入自动发布队列: {run_dir.name}")
+            else:
+                json_status = publish_status.get("json", {}) if isinstance(publish_status, dict) else {}
+                _log("info", f"自动发布未重复入队，当前状态: {json_status.get('status', 'unknown')}")
 
         state["phase"] = "finished"
         refresh_provider_monitor(force_log=True)
@@ -2061,12 +2063,15 @@ def _run_extraction_job(
 
     except Exception as exc:
         state["status"] = "error"
-        state["error"] = str(exc)
+        state["phase"] = "error"
+        state["error"] = _describe_exception(exc)
         state["finished_at"] = datetime.now().isoformat(timespec="seconds")
         refresh_provider_monitor(force_log=True)
         with _run_lock:
             _current_job.update(state)
-        _log("error", f"任务异常: {exc}")
+        _write_state(state_path, state)
+        _log("error", f"任务异常: {state['error']}")
+        _log("error", traceback.format_exc().rstrip())
         if cleanup_job_log_file:
             _cleanup_job_log_file()
 
@@ -2470,14 +2475,26 @@ async def job_stream():
 
 
 @app.get("/api/runs")
-def list_runs():
+def list_runs(page: int = 1, page_size: int = 20):
     """列出历史运行记录"""
     output_dir = DEFAULT_OUTPUT_DIR
     if not output_dir.exists():
-        return {"runs": []}
+        return {
+            "runs": [],
+            "total": 0,
+            "page": max(1, int(page or 1)),
+            "page_size": max(1, min(int(page_size or 20), 100)),
+            "total_pages": 0,
+        }
+    page = max(1, int(page or 1))
+    page_size = max(1, min(int(page_size or 20), 100))
     runs = sorted((p for p in output_dir.iterdir() if p.is_dir()), reverse=True)
+    total = len(runs)
+    total_pages = (total + page_size - 1) // page_size if total else 0
+    start = (page - 1) * page_size
+    end = start + page_size
     result = []
-    for run_dir in runs[:20]:
+    for run_dir in runs[start:end]:
         state_path = run_dir / "state.json"
         manifest_path = run_dir / "manifest.json"
         state = _load_json_file(state_path, {})
@@ -2495,7 +2512,13 @@ def list_runs():
             "dry_run": manifest.get("dry_run", False),
             "publish_status": publish_status,
         })
-    return {"runs": result}
+    return {
+        "runs": result,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
 
 
 @app.get("/api/runs/{run_name}/resume-config")
@@ -2532,8 +2555,8 @@ def run_resume_config(run_name: str):
             "max_chunk_retries": int(manifest_cfg.get("max_chunk_retries", 2) or 2),
         },
         "notes": {
-            "publish_json": "append_graph_runtime_json",
-            "publish_nebula": "append_graph_runtime_json_then_write_nebulagraph",
+            "publish_json": "import_sqlite_runtime_graph",
+            "publish_nebula": "import_sqlite_runtime_graph_then_write_nebulagraph",
             "resume_safe_fields": [
                 "model",
                 "base_url",
@@ -2592,7 +2615,7 @@ def run_clean(run_name: str):
 
 @app.post("/api/runs/{run_name}/publish")
 def run_publish(run_name: str, replace: bool = False):
-    """将指定运行加入 JSON 发布队列"""
+    """将指定运行加入 SQLite 运行时图谱同步队列"""
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
@@ -2625,7 +2648,7 @@ def run_publish_status(run_name: str):
 
 @app.post("/api/runs/{run_name}/publish-nebula")
 def run_publish_nebula(run_name: str):
-    """将指定运行加入 Nebula 发布队列（自动先同步 JSON）"""
+    """将指定运行加入 Nebula 发布队列（自动先同步 SQLite 运行时图谱）"""
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
@@ -2642,6 +2665,22 @@ def run_publish_nebula(run_name: str):
         )
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="run_not_found")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/runs/publish-unpublished")
+def publish_unpublished_runs():
+    try:
+        return _bulk_enqueue_unpublished_runs("json")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/runs/publish-nebula-unpublished")
+def publish_unpublished_runs_nebula():
+    try:
+        return _bulk_enqueue_unpublished_runs("nebula")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2739,30 +2778,15 @@ def stop_all_publish_tasks():
 
 @app.get("/api/graph/stats")
 def graph_stats():
-    """当前 graph_runtime.json 的统计信息"""
+    """当前 runtime 图谱的统计信息"""
     try:
-        target = DEFAULT_GRAPH_TARGET
-        with GRAPH_RUNTIME_IO_LOCK:
-            if not target.exists():
-                return {"exists": False}
-            data = json.loads(target.read_text(encoding="utf-8"))
-            evidence_path = target.parent / f"{target.stem}.evidence.jsonl"
-            evidence_count = 0
-            if evidence_path.exists():
-                evidence_count = sum(1 for line in evidence_path.read_text(encoding="utf-8").splitlines() if line.strip())
-        predicates: dict[str, int] = {}
-        books: dict[str, int] = {}
-        for row in data:
-            p = row.get("predicate", "")
-            b = row.get("source_book", "")
-            predicates[p] = predicates.get(p, 0) + 1
-            books[b] = books.get(b, 0) + 1
+        stats = _runtime_graph_store().stats()
         return {
-            "exists": True,
-            "total_triples": len(data),
-            "evidence_count": evidence_count,
-            "predicate_dist": sorted(predicates.items(), key=lambda x: -x[1])[:15],
-            "book_dist": sorted(books.items(), key=lambda x: -x[1])[:10],
+            "exists": bool(stats["exists"]),
+            "total_triples": int(stats["total_triples"]),
+            "evidence_count": int(stats["evidence_count"]),
+            "predicate_dist": [(item["predicate"], int(item["count"])) for item in stats["predicate_dist"]],
+            "book_dist": [(item["name"], int(item["count"])) for item in stats["book_dist"]],
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
@@ -2771,29 +2795,20 @@ def graph_stats():
 @app.get("/api/graph/books")
 def graph_books(limit: int = 200, q: str = ""):
     try:
-        rows = _load_graph_runtime_rows()
+        store = _runtime_graph_store()
+        rows = store.list_books(limit=max(1, limit), keyword=q.strip())
         processed_stems = _get_processed_book_stems()
-        counts: dict[str, int] = {}
-        keyword = q.strip().lower()
-        for row in rows:
-            book = str(row.get("source_book", "")).strip()
-            if not book:
-                continue
-            if keyword and keyword not in book.lower():
-                continue
-            counts[book] = counts.get(book, 0) + 1
-        ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
         return {
-            "exists": DEFAULT_GRAPH_TARGET.exists(),
+            "exists": bool(store.stats()["exists"]),
             "books": [
                 {
-                    "name": name,
-                    "triple_count": count,
-                    "processed": name in processed_stems,
+                    "name": row["name"],
+                    "triple_count": int(row["triple_count"]),
+                    "processed": row["name"] in processed_stems,
                 }
-                for name, count in ordered[: max(1, limit)]
+                for row in rows
             ],
-            "total": len(ordered),
+            "total": store.total_books(q.strip()),
             "force_unprocessed": _load_book_status_overrides().get("force_unprocessed", []),
         }
     except Exception as exc:
@@ -2803,12 +2818,11 @@ def graph_books(limit: int = 200, q: str = ""):
 @app.get("/api/graph/books/{book_name}/triples")
 def graph_book_triples(book_name: str, limit: int = 200):
     try:
-        rows = _load_graph_runtime_rows()
-        exact = [row for row in rows if str(row.get("source_book", "")).strip() == book_name]
-        matched = exact or [row for row in rows if book_name in str(row.get("source_book", "")).strip()]
+        store = _runtime_graph_store()
+        matched = store.book_triples(book_name, limit=max(1, limit))
         return {
             "book": book_name,
-            "total": len(matched),
+            "total": store.book_total(book_name),
             "rows": matched[: max(1, limit)],
         }
     except Exception as exc:

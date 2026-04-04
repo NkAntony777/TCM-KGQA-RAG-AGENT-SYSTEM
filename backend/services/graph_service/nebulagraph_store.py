@@ -109,16 +109,31 @@ def _load_evidence_map(path: Path | None) -> dict[str, dict[str, Any]]:
     return evidence_map
 
 
-def load_graph_rows(graph_path: Path, evidence_path: Path | None = None) -> list[dict[str, Any]]:
-    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+def _load_graph_payload(path: Path) -> list[dict[str, Any]]:
+    suffix = path.suffix.lower()
+    if suffix == ".jsonl":
+        rows: list[dict[str, Any]] = []
+        with path.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line.lstrip("\ufeff"))
+                if isinstance(row, dict):
+                    rows.append(row)
+        return rows
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, list):
         raise ValueError("graph_payload_must_be_array")
+    return [row for row in payload if isinstance(row, dict)]
 
+
+def load_graph_rows(graph_path: Path, evidence_path: Path | None = None) -> list[dict[str, Any]]:
+    payload = _load_graph_payload(graph_path)
     evidence_map = _load_evidence_map(evidence_path)
     rows: list[dict[str, Any]] = []
     for row in payload:
-        if not isinstance(row, dict):
-            continue
         merged = dict(row)
         fact_ids = merged.get("fact_ids")
         chosen_fact_id = ""

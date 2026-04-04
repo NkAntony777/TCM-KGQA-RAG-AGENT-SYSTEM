@@ -21,12 +21,17 @@ backend/router/__pycache__/
 backend/eval/**/__pycache__/
 backend/services/graph_service/data/graph_runtime.json
 backend/services/graph_service/data/graph_runtime.evidence.jsonl
+backend/services/graph_service/data/graph_runtime.db
+backend/services/graph_service/data/graph_runtime.rebuild_manifest*.json
+backend/services/graph_service/data/backups/
 backend/services/graph_service/data/nebula/
 backend/services/graph_service/logs/nebula/
 backend/storage/graph_service/
+backend/storage/chunk_size_benchmark_lab/
 backend/storage/retrieval_local_index.json
 backend/storage/retrieval_parent_chunks.json
 backend/storage/retrieval_sparse_lexicon.json
+backend/storage/triple_benchmark_lab/
 backend/storage/triple_pipeline/
 backend/storage/triple_pipeline_test_books/
 frontend/.next/
@@ -34,6 +39,7 @@ frontend/node_modules/
 frontend/.npm-cache/
 .vscode/
 .idea/
+.claude/
 *.log
 .DS_Store
 Thumbs.db

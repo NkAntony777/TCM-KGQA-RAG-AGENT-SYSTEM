@@ -46,7 +46,7 @@ class TestGraphEngineHealth(unittest.TestCase):
 
     def test_backend_is_runtime_graph(self) -> None:
         health = self.engine.health()
-        self.assertEqual(health["backend"], "networkx_runtime_graph")
+        self.assertIn(health["backend"], {"sqlite_runtime_graph", "nebulagraph_primary"})
         self.assertEqual(health["status"], "ok")
 
     def test_graph_has_minimum_scale(self) -> None:
@@ -226,12 +226,12 @@ class TestRuntimeGraphPrecedence(unittest.TestCase):
             )
 
             health = engine.health()
-            # 加载了 runtime_graph 后 backend 标识应为 networkx_runtime_graph
-            self.assertEqual(health["backend"], "networkx_runtime_graph")
-            self.assertEqual(health["graph_path"], str(runtime_path))
-            # runtime 图节点存在，sample 专属节点（A）也存在（两图合并加载）
-            self.assertTrue(engine.graph.has_node("X"))
-            self.assertTrue(engine.graph.has_node("Y"))
+            # runtime 图存在时，SQLite runtime 后端应被选中
+            self.assertEqual(health["backend"], "sqlite_runtime_graph")
+            self.assertEqual(health["graph_path"], str(runtime_path.with_suffix(".db")))
+            # runtime 与 sample 均可查询，说明导入与合并正常
+            self.assertEqual(engine.entity_lookup("X", top_k=5)["entity"]["canonical_name"], "X")
+            self.assertEqual(engine.entity_lookup("A", top_k=5)["entity"]["canonical_name"], "A")
 
 
 class TestRuntimeEvidence(unittest.TestCase):

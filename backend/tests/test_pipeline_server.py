@@ -250,6 +250,11 @@ class PipelineServerTests(unittest.TestCase):
             pipeline_server._job_log_file = None
             pipeline_server._job_log_file_path = None
         pipeline_server._job_cancelled.clear()
+        with pipeline_server._publish_lock:
+            pipeline_server._publish_queue.clear()
+            pipeline_server._active_publish_task = None
+            pipeline_server._publish_worker_wakeup.clear()
+            pipeline_server._nebula_publish_threads.clear()
 
     def tearDown(self) -> None:
         pipeline_server._job_cancelled.clear()
@@ -258,6 +263,11 @@ class PipelineServerTests(unittest.TestCase):
             pipeline_server._job_log.clear()
             pipeline_server._job_log_file = None
             pipeline_server._job_log_file_path = None
+        with pipeline_server._publish_lock:
+            pipeline_server._publish_queue.clear()
+            pipeline_server._active_publish_task = None
+            pipeline_server._publish_worker_wakeup.clear()
+            pipeline_server._nebula_publish_threads.clear()
         self.temp_dir.cleanup()
 
     def test_resolve_start_selected_books_returns_all_books_when_empty(self) -> None:
@@ -1398,6 +1408,83 @@ class PipelineServerTests(unittest.TestCase):
         self.assertEqual(publish_status["json"]["graph_triples"], 2)
         self.assertEqual(publish_status["json"]["evidence_count"], 1)
 
+    def test_run_extraction_job_auto_publish_enqueues_json_publish(self) -> None:
+        pipeline = CountingPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.invalid/v1",
+                parallel_workers=1,
+            )
+        )
+        pipeline.publish_graph = Mock(side_effect=AssertionError("auto publish should enqueue instead of direct publish"))  # type: ignore[method-assign]
+
+        with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
+            with patch("scripts.pipeline_server._enqueue_publish_task", return_value=(True, {"json": {"status": "queued"}})) as enqueue_mock:
+                pipeline_server._run_extraction_job(
+                    job_id="job-auto-publish-queue",
+                    selected_books=[self.book],
+                    label="auto-publish-queue",
+                    dry_run=False,
+                    cfg_override={},
+                    chapter_excludes=[],
+                    max_chunks_per_book=1,
+                    skip_initial_chunks=0,
+                    chunk_strategy="body_first",
+                    auto_clean=False,
+                    auto_publish=True,
+                    max_chunk_retries=0,
+                    cleanup_job_log_file=False,
+                )
+
+        enqueue_mock.assert_called_once()
+        args, kwargs = enqueue_mock.call_args
+        self.assertEqual(kwargs["kind"], "json")
+        run_name = args[0]
+        state = json.loads((self.output_dir / run_name / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["status"], "completed")
+        self.assertEqual(state["phase"], "finished")
+        self.assertEqual(state["publish_status"]["json"]["status"], "queued")
+
+    def test_run_extraction_job_persists_empty_publish_exception_details(self) -> None:
+        pipeline = CountingPipeline(
+            PipelineConfig(
+                books_dir=self.books_dir,
+                output_dir=self.output_dir,
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.invalid/v1",
+                parallel_workers=1,
+            )
+        )
+
+        with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
+            with patch("scripts.pipeline_server._enqueue_publish_task", side_effect=RuntimeError()):
+                pipeline_server._run_extraction_job(
+                    job_id="job-auto-publish-error",
+                    selected_books=[self.book],
+                    label="auto-publish-error",
+                    dry_run=False,
+                    cfg_override={},
+                    chapter_excludes=[],
+                    max_chunks_per_book=1,
+                    skip_initial_chunks=0,
+                    chunk_strategy="body_first",
+                    auto_clean=False,
+                    auto_publish=True,
+                    max_chunk_retries=0,
+                    cleanup_job_log_file=False,
+                )
+
+        run_dir = Path(str(pipeline_server._current_job["run_dir"]))
+        state = json.loads((run_dir / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["status"], "error")
+        self.assertEqual(state["phase"], "error")
+        self.assertEqual(state["error"], "RuntimeError")
+        self.assertTrue(any("Traceback" in entry["msg"] for entry in pipeline_server._job_log if entry["level"] == "error"))
+
     def test_list_runs_includes_publish_status_summary(self) -> None:
         run_dir = self.output_dir / "publish-list-run"
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -1425,8 +1512,81 @@ class PipelineServerTests(unittest.TestCase):
             payload = pipeline_server.list_runs()
 
         self.assertEqual(len(payload["runs"]), 1)
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual(payload["page"], 1)
+        self.assertEqual(payload["page_size"], 20)
+        self.assertEqual(payload["total_pages"], 1)
         self.assertTrue(payload["runs"][0]["publish_status"]["json"]["published"])
         self.assertEqual(payload["runs"][0]["publish_status"]["nebula"]["status"], "running")
+
+    def test_list_runs_supports_pagination(self) -> None:
+        for index in range(3):
+            run_dir = self.output_dir / f"20260403_070{index:02d}_extraction"
+            run_dir.mkdir(parents=True, exist_ok=True)
+            (run_dir / "manifest.json").write_text(
+                json.dumps({"created_at": f"2026-04-03T07:0{index}:00", "dry_run": False}, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            (run_dir / "state.json").write_text(
+                json.dumps({"status": "completed", "books_total": 1, "books_completed": 1}, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+        with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+            payload = pipeline_server.list_runs(page=2, page_size=1)
+
+        self.assertEqual(payload["total"], 3)
+        self.assertEqual(payload["page"], 2)
+        self.assertEqual(payload["page_size"], 1)
+        self.assertEqual(payload["total_pages"], 3)
+        self.assertEqual(len(payload["runs"]), 1)
+
+    def test_bulk_enqueue_unpublished_runs_skips_published_and_dry_run(self) -> None:
+        queued_run = self.output_dir / "20260403_queued_extraction"
+        queued_run.mkdir(parents=True, exist_ok=True)
+        (queued_run / "manifest.json").write_text(
+            json.dumps({"created_at": "2026-04-03T07:00:00", "dry_run": False}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (queued_run / "state.json").write_text(
+            json.dumps({"status": "completed"}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        published_run = self.output_dir / "20260403_published_extraction"
+        published_run.mkdir(parents=True, exist_ok=True)
+        (published_run / "manifest.json").write_text(
+            json.dumps({"created_at": "2026-04-03T06:59:00", "dry_run": False}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (published_run / "state.json").write_text(
+            json.dumps({"status": "completed"}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (published_run / "publish_status.json").write_text(
+            json.dumps({"json": {"published": True, "status": "completed"}}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        dry_run = self.output_dir / "20260403_dryrun_extraction"
+        dry_run.mkdir(parents=True, exist_ok=True)
+        (dry_run / "manifest.json").write_text(
+            json.dumps({"created_at": "2026-04-03T06:58:00", "dry_run": True}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (dry_run / "state.json").write_text(
+            json.dumps({"status": "completed"}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+            payload = pipeline_server._bulk_enqueue_unpublished_runs("json")
+
+        self.assertEqual(payload["kind"], "json")
+        self.assertEqual(payload["eligible"], 1)
+        self.assertIn("20260403_queued_extraction", payload["enqueued"])
+        self.assertNotIn("20260403_published_extraction", payload["enqueued"])
+        self.assertNotIn("20260403_dryrun_extraction", payload["enqueued"])
 
 
 if __name__ == "__main__":

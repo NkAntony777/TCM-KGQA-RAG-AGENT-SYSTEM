@@ -58,6 +58,60 @@ class TestNebulaGraphStore(unittest.TestCase):
             self.assertEqual(rows[0]["source_text"], "测试方以甘草为君。")
             self.assertAlmostEqual(float(rows[0]["confidence"]), 0.95, places=2)
 
+    def test_load_graph_rows_supports_jsonl_graph(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            graph_path = root / "graph.jsonl"
+            evidence_path = root / "graph.evidence.jsonl"
+
+            graph_path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "subject": "测试方",
+                                "predicate": "使用药材",
+                                "object": "甘草",
+                                "subject_type": "formula",
+                                "object_type": "herb",
+                                "fact_id": "fact-1",
+                                "fact_ids": ["fact-1"],
+                            },
+                            ensure_ascii=False,
+                        ),
+                        json.dumps(
+                            {
+                                "subject": "测试方",
+                                "predicate": "治疗证候",
+                                "object": "气虚证",
+                                "subject_type": "formula",
+                                "object_type": "syndrome",
+                                "fact_id": "fact-2",
+                                "fact_ids": ["fact-2"],
+                            },
+                            ensure_ascii=False,
+                        ),
+                    ]
+                ) + "\n",
+                encoding="utf-8",
+            )
+            evidence_path.write_text(
+                json.dumps(
+                    {
+                        "fact_id": "fact-1",
+                        "source_text": "测试方以甘草为君。",
+                        "confidence": 0.95,
+                    },
+                    ensure_ascii=False,
+                ) + "\n",
+                encoding="utf-8",
+            )
+
+            rows = load_graph_rows(graph_path, evidence_path)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]["source_text"], "测试方以甘草为君。")
+            self.assertAlmostEqual(float(rows[0]["confidence"]), 0.95, places=2)
+
     def test_export_ngql_contains_schema_and_insert_statements(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
