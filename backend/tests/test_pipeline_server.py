@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from services.graph_service.runtime_store import RuntimeGraphStore
 from scripts import pipeline_server
 from scripts.tcm_triple_console import PipelineConfig
 from scripts.tcm_triple_console import TCMTriplePipeline
@@ -472,6 +473,8 @@ class PipelineServerTests(unittest.TestCase):
     def test_delete_books_from_runtime_graph_updates_runtime_and_marks_unprocessed(self) -> None:
         graph_target = self.root / "graph_runtime.json"
         evidence_target = self.root / "graph_runtime.evidence.jsonl"
+        sample_graph_path = self.root / "sample_graph.json"
+        sample_graph_path.write_text("[]", encoding="utf-8")
         graph_target.write_text(
             json.dumps(
                 [
@@ -511,20 +514,26 @@ class PipelineServerTests(unittest.TestCase):
         )
 
         with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", graph_target):
-            with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
-                payload = pipeline_server._delete_books_from_runtime_graph(
-                    [self.book.stem],
-                    sync_nebula=False,
-                    mark_unprocessed=True,
-                )
+            with patch.object(pipeline_server, "DEFAULT_GRAPH_BASE", sample_graph_path):
+                with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+                    payload = pipeline_server._delete_books_from_runtime_graph(
+                        [self.book.stem],
+                        sync_nebula=False,
+                        mark_unprocessed=True,
+                    )
 
-        remaining_rows = json.loads(graph_target.read_text(encoding="utf-8"))
-        remaining_evidence = [line for line in evidence_target.read_text(encoding="utf-8").splitlines() if line.strip()]
+        store = RuntimeGraphStore.from_graph_paths(
+            graph_path=graph_target,
+            evidence_path=evidence_target,
+            sample_graph_path=sample_graph_path,
+        )
+        stats = store.stats()
 
         self.assertEqual(payload["removed_triples"], 1)
-        self.assertEqual(len(remaining_rows), 1)
-        self.assertEqual(remaining_rows[0]["source_book"], "002-other-book")
-        self.assertEqual(len(remaining_evidence), 1)
+        self.assertEqual(stats["total_triples"], 1)
+        self.assertEqual(stats["evidence_count"], 1)
+        self.assertEqual(store.book_total("002-other-book"), 1)
+        self.assertEqual(store.book_total(self.book.stem), 0)
         self.assertIn(self.book.stem, payload["force_unprocessed"])
 
     def test_delete_books_from_runtime_graph_rejects_when_publish_queue_busy(self) -> None:
@@ -547,24 +556,17 @@ class PipelineServerTests(unittest.TestCase):
         )
 
         with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", graph_target):
-            with patch.object(pipeline_server, "_active_publish_task", {"run_name": "busy-run", "kind": "json"}):
-                with self.assertRaisesRegex(RuntimeError, "publish_queue_busy"):
-                    pipeline_server._delete_books_from_runtime_graph(
-                        [self.book.stem],
-                        sync_nebula=False,
-                        mark_unprocessed=False,
-                    )
+            with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
+                with patch.object(pipeline_server, "_active_publish_task", {"run_name": "busy-run", "kind": "json"}):
+                    with self.assertRaisesRegex(RuntimeError, "publish_queue_busy"):
+                        pipeline_server._delete_books_from_runtime_graph(
+                            [self.book.stem],
+                            sync_nebula=False,
+                            mark_unprocessed=False,
+                        )
 
         remaining_rows = json.loads(graph_target.read_text(encoding="utf-8"))
         self.assertEqual(len(remaining_rows), 1)
-
-    def test_load_graph_runtime_rows_rejects_empty_file(self) -> None:
-        graph_target = self.root / "graph_runtime.json"
-        graph_target.write_text("", encoding="utf-8")
-
-        with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", graph_target):
-            with self.assertRaisesRegex(ValueError, "json_file_empty"):
-                pipeline_server._load_graph_runtime_rows()
 
     def test_select_auto_start_books_prefers_recommended_unprocessed_and_limits_to_seven(self) -> None:
         books = [self.books_dir / f"{i:03d}-book.txt" for i in range(1, 11)]
@@ -1380,7 +1382,10 @@ class PipelineServerTests(unittest.TestCase):
         run_dir = self.output_dir / "publish-status-run"
         run_dir.mkdir(parents=True, exist_ok=True)
         target = self.root / "graph_runtime.json"
-        target.write_text(
+        sample_graph_path = self.root / "sample_graph.json"
+        sample_graph_path.write_text("[]", encoding="utf-8")
+        target.write_text("[]", encoding="utf-8")
+        (run_dir / "graph_import.json").write_text(
             json.dumps(
                 [
                     {"subject": "A", "predicate": "治疗证候", "object": "B"},
@@ -1390,23 +1395,22 @@ class PipelineServerTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        (self.root / "graph_runtime.evidence.jsonl").write_text(
+        (run_dir / "evidence_metadata.jsonl").write_text(
             json.dumps({"fact_id": "f1"}, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
 
-        pipeline = Mock()
-        pipeline.publish_graph.return_value = target
-
         with patch.object(pipeline_server, "DEFAULT_OUTPUT_DIR", self.output_dir):
-            with patch("scripts.pipeline_server._build_pipeline", return_value=pipeline):
-                payload = pipeline_server._run_json_publish_job("publish-status-run")
+            with patch.object(pipeline_server, "DEFAULT_GRAPH_TARGET", target):
+                with patch.object(pipeline_server, "DEFAULT_GRAPH_BASE", sample_graph_path):
+                    payload = pipeline_server._run_json_publish_job("publish-status-run")
 
         self.assertEqual(payload["graph_triples"], 2)
         publish_status = json.loads((run_dir / "publish_status.json").read_text(encoding="utf-8"))
         self.assertTrue(publish_status["json"]["published"])
         self.assertEqual(publish_status["json"]["graph_triples"], 2)
         self.assertEqual(publish_status["json"]["evidence_count"], 1)
+        self.assertTrue(str(payload["target"]).endswith("graph_runtime.db"))
 
     def test_run_extraction_job_auto_publish_enqueues_json_publish(self) -> None:
         pipeline = CountingPipeline(

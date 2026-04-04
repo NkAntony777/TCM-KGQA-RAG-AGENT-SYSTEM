@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, TypeVar
@@ -161,7 +162,7 @@ class RuntimeGraphStore:
 
     def ensure_ready(self) -> None:
         with _RUNTIME_STORE_LOCK:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn:
                 self._ensure_schema(conn)
                 facts_count = int(conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0])
                 if facts_count > 0:
@@ -256,7 +257,7 @@ class RuntimeGraphStore:
         if not books:
             raise ValueError("book_names_required")
         with _RUNTIME_STORE_LOCK:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn:
                 removed_rows = self.fetch_rows_for_books(conn, books)
                 removed_fact_ids = {
                     fact_id
@@ -346,7 +347,7 @@ class RuntimeGraphStore:
             where += " AND lower(source_book) LIKE ?"
             params.append(f"%{keyword.lower()}%")
         params.append(max(1, limit))
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             rows = conn.execute(
                 f"""
                 SELECT source_book, COUNT(*) AS triple_count
@@ -367,7 +368,7 @@ class RuntimeGraphStore:
         if keyword:
             where += " AND lower(source_book) LIKE ?"
             params.append(f"%{keyword.lower()}%")
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             row = conn.execute(
                 f"SELECT COUNT(*) FROM (SELECT 1 FROM facts {where} GROUP BY source_book)",
                 params,
@@ -377,7 +378,7 @@ class RuntimeGraphStore:
     def book_total(self, book_name: str) -> int:
         self.ensure_ready()
         query = _normalize_text(book_name)
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             exact = int(conn.execute("SELECT COUNT(*) FROM facts WHERE source_book = ?", (query,)).fetchone()[0])
             if exact > 0:
                 return exact
@@ -388,7 +389,7 @@ class RuntimeGraphStore:
         query = _normalize_text(book_name)
         sql = self._relation_projection_sql(where_clause="source_book = ?")
         params: tuple[Any, ...] = (query, max(1, limit))
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             rows = conn.execute(sql, params).fetchall()
             if rows:
                 return [self._row_to_relation_dict(row) for row in rows]
@@ -409,7 +410,7 @@ class RuntimeGraphStore:
             placeholders = ",".join("?" for _ in preferred_types)
             type_filter = f" AND entity_type IN ({placeholders})"
             params.extend(sorted(preferred_types))
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             exact_rows = conn.execute(
                 f"SELECT name FROM entities WHERE name = ?{type_filter} ORDER BY name ASC LIMIT ?",
                 (*params, max(1, limit)),
@@ -421,7 +422,8 @@ class RuntimeGraphStore:
                 f"""
                 SELECT name
                 FROM entities
-                WHERE (name LIKE ? OR ? LIKE '%' || name || '%'){type_filter}
+                WHERE length(name) >= 2
+                  AND (name LIKE ? OR ? LIKE '%' || name || '%'){type_filter}
                 ORDER BY length(name) ASC, name ASC
                 LIMIT ?
                 """,
@@ -438,14 +440,14 @@ class RuntimeGraphStore:
 
     def entity_type(self, entity_name: str) -> str:
         self.ensure_ready()
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             row = conn.execute("SELECT entity_type FROM entities WHERE name = ?", (_normalize_text(entity_name),)).fetchone()
         return _normalize_text(row["entity_type"]) if row else "entity"
 
     def collect_relations(self, entity_name: str) -> list[dict[str, Any]]:
         self.ensure_ready()
         entity = _normalize_text(entity_name)
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             outgoing = conn.execute(
                 self._relation_projection_sql(where_clause="subject = ?", direction="out"),
                 (entity, 1000),
@@ -468,7 +470,7 @@ class RuntimeGraphStore:
     def adjacent_names(self, entity_name: str) -> list[str]:
         self.ensure_ready()
         entity = _normalize_text(entity_name)
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
                 SELECT object AS neighbor_name FROM facts WHERE subject = ?
@@ -482,7 +484,7 @@ class RuntimeGraphStore:
 
     def first_edge_between(self, source: str, target: str) -> dict[str, Any] | None:
         self.ensure_ready()
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             row = conn.execute(
                 self._relation_projection_sql(where_clause="subject = ? AND object = ?", direction="edge"),
                 (_normalize_text(source), _normalize_text(target), 1),
@@ -492,7 +494,7 @@ class RuntimeGraphStore:
     def recommended_formulas(self, syndrome_name: str) -> list[str]:
         self.ensure_ready()
         syndrome = _normalize_text(syndrome_name)
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             out_rows = conn.execute(
                 """
                 SELECT object
@@ -517,7 +519,7 @@ class RuntimeGraphStore:
     def syndromes_for_symptom(self, symptom_name: str) -> list[dict[str, Any]]:
         self.ensure_ready()
         symptom = _normalize_text(symptom_name)
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             rows = conn.execute(
                 self._relation_projection_sql(
                     where_clause="object = ? AND subject_type = 'syndrome'",

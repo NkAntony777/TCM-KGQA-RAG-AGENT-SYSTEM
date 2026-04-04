@@ -116,7 +116,10 @@ class GraphQueryEngine:
             return {}
         canonical_name = candidates[0]
         entity_type = self.entity_type(canonical_name)
-        relations = self._collect_relations(canonical_name, query_text=name)[: max(1, top_k)]
+        relations = self._compact_relations(
+            self._collect_relations(canonical_name, query_text=name),
+            top_k=max(1, top_k),
+        )
         return {
             "entity": {
                 "name": name.strip(),
@@ -202,12 +205,40 @@ class GraphQueryEngine:
         rows.sort(
             key=lambda item: (
                 -self._relation_score(item, query_text),
+                -float(item.get("confidence", 0.0) or 0.0),
                 item.get("direction", ""),
                 item.get("predicate", ""),
                 item.get("target", ""),
             )
         )
         return rows
+
+    def _compact_relations(self, rows: list[dict[str, Any]], *, top_k: int) -> list[dict[str, Any]]:
+        deduped: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for row in rows:
+            key = (
+                str(row.get("predicate", "")).strip(),
+                str(row.get("target", "")).strip(),
+                str(row.get("direction", "")).strip(),
+            )
+            existing = deduped.get(key)
+            if existing is None:
+                deduped[key] = row
+                continue
+            current_confidence = float(row.get("confidence", 0.0) or 0.0)
+            existing_confidence = float(existing.get("confidence", 0.0) or 0.0)
+            if current_confidence > existing_confidence:
+                deduped[key] = row
+        compacted = list(deduped.values())
+        compacted.sort(
+            key=lambda item: (
+                -float(item.get("confidence", 0.0) or 0.0),
+                item.get("direction", ""),
+                item.get("predicate", ""),
+                item.get("target", ""),
+            )
+        )
+        return compacted[:top_k]
 
     def _relation_score(self, relation: dict[str, Any], query_text: str) -> int:
         score = 0
