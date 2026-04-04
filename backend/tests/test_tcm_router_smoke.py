@@ -37,6 +37,14 @@ class QueryRouterDecisionTests(unittest.TestCase):
         self.assertEqual(strategy.predicate_allowlist, ["使用药材"])
         self.assertIn("entity://六味地黄丸/使用药材", strategy.evidence_paths)
 
+    def test_origin_query_derives_hybrid_strategy(self) -> None:
+        strategy = derive_retrieval_strategy("逍遥散出自哪本古籍", requested_top_k=12, route_hint="retrieval")
+        self.assertEqual(strategy.intent, "formula_origin")
+        self.assertEqual(strategy.preferred_route, "hybrid")
+        self.assertIn("classic_docs", strategy.sources)
+        self.assertIn("qa_vector_db", strategy.sources)
+        self.assertIn("qa://逍遥散/similar", strategy.evidence_paths)
+
 
 class RouteToolDegradationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -151,6 +159,7 @@ class RouteToolDegradationTests(unittest.TestCase):
         self.assertEqual(payload["route"], "graph")
         self.assertEqual(payload["retrieval_strategy"]["intent"], "formula_composition")
         self.assertEqual(payload["retrieval_strategy"]["predicate_allowlist"], ["使用药材"])
+        self.assertEqual(payload["query_analysis"]["dominant_intent"], "formula_composition")
         self.assertIn("entity://逍遥散/使用药材", payload["evidence_paths"])
         entity_mock.assert_called()
         _, kwargs = entity_mock.call_args

@@ -1,6 +1,6 @@
 # 项目进展
 
-更新时间：2026-03-31
+更新时间：2026-04-04
 
 ## 当前状态
 
@@ -21,6 +21,13 @@
 - 图谱实体查询默认 `top_k` 已按快速模式方向收敛到 `12`。
 - 图谱实体查询已支持 `predicate_allowlist / predicate_blocklist`，为深度模式的定向检索做准备。
 - 路由工具已新增结构化 `retrieval_strategy` 输出，而不再只有粗粒度 route。
+- 路由工具现已新增 `query_analysis` 输出，暴露：
+  - matched entities
+  - entity types
+  - intent candidates
+  - matched keywords
+  - graph / retrieval score
+  - route reason
 - 当前 `retrieval_strategy` 已能识别组成、功效、主治、出处、路径等基础意图，并给出：
   - graph query kind
   - entity / symptom / path target
@@ -29,6 +36,32 @@
   - sources
   - evidence paths
 - 当前已引入第一版“证据路径”抽象，用于让后续深度模式 Agent 以路径方式浏览证据，而不是直接耦合底层存储。
+
+### 意图识别模块适配
+
+- 已吸收 `E:\TCM_Web_System_v2` 中最有价值的骨架：
+  - 分类器与路由器解耦
+  - 词典匹配优先于纯关键词硬编码
+  - Aho-Corasick 风格的多实体命中
+  - 多标签意图候选而不是单标签硬分流
+- 当前项目中已经落地新的 `TCMIntentClassifier`，位置：
+  - `backend/router/tcm_intent_classifier.py`
+- 当前分类器不是照搬旧项目的疾病标签，而是改写为当前图谱问答所需的标签：
+  - `formula_composition`
+  - `formula_efficacy`
+  - `formula_indication`
+  - `formula_origin`
+  - `syndrome_to_formula`
+  - `compare_entities`
+  - `graph_path`
+  - `open_ended_grounded_qa`
+- 当前词典识别采用“轻量实体词典 + Aho-Corasick（若环境存在）+ 规则抽取兜底”。
+- 如果运行环境没有 `ahocorasick`，系统会自动回退到子串扫描，不阻塞当前问答链路。
+- `query_router.py` 与 `retrieval_strategy.py` 现已共享同一份分类结果，避免路由与策略层各自猜意图、各自漂移。
+
+### 新增设计文档
+
+- 详见 [意图识别模块适配方案.md](./意图识别模块适配方案.md)
 
 ### 自动选书
 
@@ -101,6 +134,8 @@
 - 当前关系簇聚合仍在 Python 层执行，输入是单实体的高阶邻接边集合。对于高出度实体，这会带来额外的内存与排序开销。
 - 从测试表现看，`graph_engine` 全量测试在真实 runtime 图上耗时仍偏高，说明查询期聚合和排序还存在优化空间。
 - 后续应优先评估把“关系簇聚合”和“覆盖统计”下推到 SQLite 聚合查询层，减少 Python 层处理的候选边数量。
+- 当前意图分类器仍是“轻量词典 + 规则”版本，覆盖度足够支撑当前快速/深度双模式骨架，但还未接入完整实体词表和外部问答向量库的语义反馈信号。
+- 后续如果要覆盖更大的古籍实体空间，应优先补齐实体词典自动构建，而不是继续堆更多正则。
 
 ## 已确认的实现边界
 
@@ -112,6 +147,9 @@
 ## 后续可选工作
 
 - 新增并维护 [TOP_K策略与深度模式最佳实践.md](./TOP_K策略与深度模式最佳实践.md)，作为后续检索策略与深度模式的正式设计基线
+- 用已发布图谱或字典构建脚本自动生成更完整的方剂 / 药材 / 证候 / 症状词典
+- 在深度模式中把 `query_analysis` 作为 Planner 的输入，而不只作为调试输出
+- 给外部 Qwen embedding 问答库定义统一的 `qa://` 证据路径和实体对齐策略
 - 为“每批书籍数量”提供前端可配置入口
 - 为 `resume` 增加前端可见的“完成当前 run 后继续下一批”开关
 - 在历史页增加自动批次链路的关联展示

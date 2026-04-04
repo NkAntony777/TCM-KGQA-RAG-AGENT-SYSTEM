@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from router.query_router import decide_route
 from router.retrieval_strategy import derive_retrieval_strategy
+from router.tcm_intent_classifier import analyze_tcm_query
 from tools.tcm_service_client import (
     call_graph_entity_lookup,
     call_graph_path_query,
@@ -38,12 +39,14 @@ class TCMRouteSearchTool(BaseTool):
         top_k: int = 12,
         run_manager: CallbackManagerForToolRun | None = None,
     ) -> str:
-        decision = decide_route(query)
-        strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route)
+        analysis = analyze_tcm_query(query)
+        decision = decide_route(query, analysis=analysis)
+        strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route, analysis=analysis)
         health = service_health_snapshot()
         output: dict[str, object] = {
             "route": decision.route,
             "route_reason": decision.reason,
+            "query_analysis": analysis.to_dict(),
             "retrieval_strategy": strategy.to_dict(),
             "evidence_paths": strategy.evidence_paths,
             "service_health": health,
