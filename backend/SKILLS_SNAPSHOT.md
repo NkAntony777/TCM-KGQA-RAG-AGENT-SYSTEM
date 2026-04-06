@@ -1,15 +1,24 @@
 <skills>
   <summary>Available local skills that the agent can inspect with read_file.</summary>
-  <skill name="天气查询" path="skills/get_weather/SKILL.md">
-    <description>查询指定城市的天气情况，并整理成适合直接回复用户的简洁结果。</description>
+  <skill name="compare-formulas" path="skills/compare-formulas/SKILL.md">
+    <description>当用户比较两个或多个方剂、证候方案、功效差异、适用边界时使用。分别读取各实体证据，再补充出处或教材对照信息，不要只用单一实体证据回答比较题。</description>
   </skill>
-  <skill name="kb-retriever" path="skills/rag-skill/SKILL.md">
-    <description>面向本地知识库目录的检索和问答助手。核心流程：(1)分层索引导航 (2)遇到PDF/Excel时必须先读取references学习处理方法 (3)处理文件后再检索。按文件类型组合使用 grep、Read、pdfplumber、pandas 进行渐进式检索，避免整文件加载。用户问题涉及"从知识库目录回答问题/检索信息/查资料"时使用。</description>
+  <skill name="external-source-verification" path="skills/external-source-verification/SKILL.md">
+    <description>只有在用户明确要求联网、核验外部事实、查询最新官方信息，或本地知识库没有覆盖该问题时使用。优先核验官方来源或一手来源，不要默认替代本地中医知识链路。</description>
   </skill>
-  <skill name="失败恢复经验沉淀" path="skills/retry-lesson-capture/SKILL.md">
-    <description>当一个任务首次执行失败，但在重试其他工具、接口、参数或流程后成功时，使用此技能总结可复用经验，并将经验同时写入当前正在使用的 SKILL.md 与 memory/MEMORY.md。适用于 API 失败后切换备用 API、命令失败后改用其他命令、抓取失败后改用其他数据源、解析失败后改用其他流程等场景。</description>
+  <skill name="find-case-reference" path="skills/find-case-reference/SKILL.md">
+    <description>当用户问题需要病例参考、类似医案、临床案例、主诉现病史体征对照时使用。优先查询 caseqa:// 或 search_evidence_text，返回相似案例摘要，不把病例参考当成事实主结论。</description>
   </skill>
-  <skill name="联网搜索" path="skills/web-search/SKILL.md">
-    <description>使用 Tavily 联网搜索最新信息、官方文档、新闻动态、实时行情和外部事实来源。适用于用户明确要求搜索、联网、查官网、给链接、核验事实，或任务明显依赖实时外部信息的场景。优先调用本技能目录下的 Tavily 脚本，不要退回抓搜索结果页。</description>
+  <skill name="read-formula-composition" path="skills/read-formula-composition/SKILL.md">
+    <description>当用户问方剂组成、药材、配伍、君臣佐使、加减基础时使用。优先从 entity://<方剂>/使用药材 读取证据，必要时回退到 tcm_route_search 或 list_evidence_paths，不要直接给结论而不取证。</description>
+  </skill>
+  <skill name="read-formula-origin" path="skills/read-formula-origin/SKILL.md">
+    <description>当用户问出处、出自、古籍、原文、教材来源、哪本书时使用。优先读取 book:// 或 qa:// 路径，补充书名、篇章、原文片段与该方剂/功效/组成的对应关系。</description>
+  </skill>
+  <skill name="route-tcm-query" path="skills/route-tcm-query/SKILL.md">
+    <description>中医问答入口技能。用户问题涉及方剂、证候、功效、组成、出处、比较、古籍、教材、病例参考时使用。先识别意图、实体、比较对象和是否需要出处，再优先调用 tcm_route_search，不要跳过首轮路由。</description>
+  </skill>
+  <skill name="trace-source-passage" path="skills/trace-source-passage/SKILL.md">
+    <description>当答案已经有初步结论，但还缺可引用的书名、篇章、原文片段时使用。优先从 graph/doc/book 证据中抽取最适合展示给用户的出处片段。</description>
   </skill>
 </skills>

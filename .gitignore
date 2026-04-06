@@ -34,6 +34,8 @@ backend/storage/retrieval_sparse_lexicon.json
 backend/storage/triple_benchmark_lab/
 backend/storage/triple_pipeline/
 backend/storage/triple_pipeline_test_books/
+backend/storage/chroma_case_query_mirror/
+backend/.smoke_logs/
 frontend/.next/
 frontend/node_modules/
 frontend/.npm-cache/

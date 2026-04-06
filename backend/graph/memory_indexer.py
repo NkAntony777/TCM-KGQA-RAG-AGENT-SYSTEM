@@ -2,8 +2,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import warnings
 from pathlib import Path
 from typing import Any
+
+try:
+    from pydantic.warnings import UnsupportedFieldAttributeWarning
+except ImportError:  # pragma: no cover - pydantic compatibility
+    UnsupportedFieldAttributeWarning = None
+
+if UnsupportedFieldAttributeWarning is not None:
+    warnings.filterwarnings("ignore", category=UnsupportedFieldAttributeWarning)
 
 try:
     from llama_index.core import (

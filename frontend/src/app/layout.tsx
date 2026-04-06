@@ -16,7 +16,10 @@ const monoFont = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Mini-OpenClaw",
-  description: "A transparent, file-first local AI agent system."
+  description: "A transparent, file-first local AI agent system.",
+  icons: {
+    icon: "/favicon.svg"
+  }
 };
 
 export default function RootLayout({

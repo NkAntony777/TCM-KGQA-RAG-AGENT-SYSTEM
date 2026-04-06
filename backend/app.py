@@ -9,11 +9,13 @@ from api.chat import router as chat_router
 from api.compress import router as compress_router
 from api.config_api import router as config_router
 from api.files import router as files_router
+from api.qa import router as qa_router
 from api.sessions import router as sessions_router
 from api.tokens import router as tokens_router
 from config import get_settings
 from graph.agent import agent_manager
 from graph.memory_indexer import memory_indexer
+from services.qa_service.skill_registry import clear_runtime_skills_cache
 from tools.skills_scanner import refresh_snapshot
 
 
@@ -21,6 +23,7 @@ from tools.skills_scanner import refresh_snapshot
 async def lifespan(_: FastAPI):
     settings = get_settings()
     refresh_snapshot(settings.backend_dir)
+    clear_runtime_skills_cache()
     agent_manager.initialize(settings.backend_dir)
     memory_indexer.configure(settings.backend_dir)
     memory_indexer.rebuild_index()
@@ -42,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(chat_router, prefix="/api", tags=["chat"])
+app.include_router(qa_router, prefix="/api", tags=["qa"])
 app.include_router(sessions_router, prefix="/api", tags=["sessions"])
 app.include_router(files_router, prefix="/api", tags=["files"])
 app.include_router(tokens_router, prefix="/api", tags=["tokens"])

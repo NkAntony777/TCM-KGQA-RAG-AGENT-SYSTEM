@@ -90,6 +90,29 @@ def _collect_retrieval_evidence(payload: dict[str, Any], bucket: list[dict[str, 
         )
 
 
+def _collect_case_qa_evidence(payload: dict[str, Any], bucket: list[dict[str, Any]]) -> None:
+    data = payload.get("data", {}) if isinstance(payload, dict) else {}
+    chunks = data.get("chunks", []) if isinstance(data, dict) else []
+    for chunk in chunks:
+        if not isinstance(chunk, dict):
+            continue
+        collection = str(chunk.get("collection", "caseqa"))
+        embedding_id = str(chunk.get("embedding_id", chunk.get("chunk_id", ""))).strip()
+        source = f"{collection}/{embedding_id}".strip("/")
+        answer = str(chunk.get("answer", "")).strip()
+        document = str(chunk.get("document", "")).strip()
+        snippet = answer or document
+        _add_evidence(
+            bucket,
+            source_type="case_qa",
+            source=source,
+            snippet=snippet,
+            score=float(chunk.get("rerank_score")) if chunk.get("rerank_score") is not None else float(chunk.get("score")) if chunk.get("score") is not None else None,
+            source_text=document or None,
+            target=answer[:120] if answer else None,
+        )
+
+
 def _collect_graph_evidence(payload: dict[str, Any], bucket: list[dict[str, Any]]) -> None:
     data = payload.get("data", {}) if isinstance(payload, dict) else {}
     if not isinstance(data, dict):
@@ -199,15 +222,20 @@ def _extract_route_and_evidence(tool_name: str, output: str) -> tuple[dict[str, 
             }
         graph_result = payload.get("graph_result")
         retrieval_result = payload.get("retrieval_result")
+        case_qa_result = payload.get("case_qa_result")
         if isinstance(graph_result, dict):
             _collect_graph_evidence(graph_result, evidence)
         if isinstance(retrieval_result, dict):
             _collect_retrieval_evidence(retrieval_result, evidence)
+        if isinstance(case_qa_result, dict):
+            _collect_case_qa_evidence(case_qa_result, evidence)
         return route_event, evidence
 
-    if tool_name in {"tcm_hybrid_search", "tcm_query_rewrite"}:
+    if tool_name in {"tcm_hybrid_search", "tcm_query_rewrite", "tcm_case_qa_search"}:
         if tool_name == "tcm_hybrid_search":
             _collect_retrieval_evidence(payload, evidence)
+        if tool_name == "tcm_case_qa_search":
+            _collect_case_qa_evidence(payload, evidence)
         return None, evidence
 
     if tool_name in {"tcm_entity_lookup", "tcm_path_query", "tcm_syndrome_chain"}:

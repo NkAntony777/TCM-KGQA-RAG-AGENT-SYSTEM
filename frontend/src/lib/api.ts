@@ -10,9 +10,31 @@ export type ToolCall = {
     warning?: string;
     status?: string;
     final_route?: string;
+    reason?: string;
+    path?: string;
+    query?: string;
+    skill?: string;
+    count?: number;
     service_trace_ids?: Record<string, string | null>;
     service_backends?: Record<string, string | null>;
   };
+};
+
+export type PlannerStep = {
+  stage: string;
+  label: string;
+  detail?: string;
+  skill?: string;
+};
+
+export type DeepTraceStep = {
+  step: number;
+  skill?: string;
+  tool?: string;
+  input?: Record<string, unknown>;
+  why_this_step?: string;
+  new_evidence?: EvidenceItem[];
+  coverage_after_step?: Record<string, unknown>;
 };
 
 export type RetrievalResult = {
@@ -22,10 +44,12 @@ export type RetrievalResult = {
 };
 
 export type EvidenceItem = {
+  evidence_type?: string;
   source_type: string;
   source: string;
   snippet: string;
   score: number | null;
+  document?: string;
   fact_id?: string;
   source_book?: string;
   source_chapter?: string;
@@ -45,10 +69,10 @@ export type EvidenceItem = {
 };
 
 export type RouteEvent = {
-  route: string;
+  route: string | null;
   reason: string;
   status: string;
-  final_route?: string;
+  final_route?: string | null;
   executed_routes?: string[];
   degradation?: Array<{
     from: string;
@@ -80,14 +104,62 @@ export type SessionHistory = {
     tool_calls?: ToolCall[];
     route?: RouteEvent;
     evidence?: EvidenceItem[];
+    planner_steps?: PlannerStep[];
+    deep_trace?: DeepTraceStep[];
+    evidence_bundle?: Record<string, unknown>;
+    notes?: string[];
+    citations?: string[];
+    qa_mode?: "quick" | "deep";
   }>;
+};
+
+export type SkillMeta = {
+  name: string;
+  description: string;
+  path: string;
+  preferred_tools?: string[];
+  workflow_steps?: string[];
+  output_focus?: string[];
+  stop_rules?: string[];
 };
 
 export type StreamHandlers = {
   onEvent: (event: string, data: Record<string, unknown>) => void;
 };
 
+export type QAAnswerResponse = {
+  code: number;
+  message: string;
+  trace_id: string;
+  data: {
+    answer: string;
+    mode: "quick" | "deep";
+    status: string;
+    route: RouteEvent;
+    query_analysis: Record<string, unknown>;
+    retrieval_strategy: Record<string, unknown>;
+    evidence_paths: string[];
+    factual_evidence: EvidenceItem[];
+    case_references: EvidenceItem[];
+    citations: string[];
+    book_citations?: string[];
+    planner_steps?: PlannerStep[];
+    deep_trace?: DeepTraceStep[];
+    evidence_bundle?: Record<string, unknown>;
+    service_trace_ids: Record<string, string | null>;
+    service_backends: Record<string, string | null>;
+    tool_trace?: Array<{ tool: string; meta?: Record<string, unknown> }>;
+    notes?: string[];
+    session_title?: string;
+  };
+};
+
 function getApiBase() {
+  const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
+  if (configuredBase) {
+    return configuredBase.replace(/\/+$/, "");
+  }
+
   if (typeof window === "undefined") {
     return "http://127.0.0.1:8002/api";
   }
@@ -149,7 +221,7 @@ export async function getSessionTokens(sessionId: string) {
 }
 
 export async function listSkills() {
-  return request<Array<{ name: string; description: string; path: string }>>("/skills");
+  return request<SkillMeta[]>("/skills");
 }
 
 export async function loadFile(path: string) {
@@ -187,6 +259,8 @@ export async function streamChat(
   payload: {
     message: string;
     session_id: string;
+    mode: "quick" | "deep";
+    top_k?: number;
   },
   handlers: StreamHandlers
 ) {
@@ -249,4 +323,16 @@ export async function streamChat(
       break;
     }
   }
+}
+
+export async function answerQuestion(payload: {
+  query: string;
+  mode: "quick" | "deep";
+  top_k?: number;
+  session_id?: string;
+}) {
+  return request<QAAnswerResponse>("/qa/answer", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
 }

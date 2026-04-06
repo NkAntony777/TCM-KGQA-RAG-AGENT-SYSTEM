@@ -42,9 +42,10 @@ def derive_retrieval_strategy(
     resolved = analysis or analyze_tcm_query(text)
 
     if resolved.graph_query_kind == "path" and resolved.path_start and resolved.path_end:
+        preferred_route = route_hint if route_hint == "hybrid" else "graph"
         strategy = RetrievalStrategy(
             intent="graph_path",
-            preferred_route="graph",
+            preferred_route=preferred_route,
             graph_query_kind="path",
             graph_query_text=text,
             path_start=resolved.path_start,
@@ -53,7 +54,7 @@ def derive_retrieval_strategy(
             graph_candidate_k=max(final_k * 3, 12),
             graph_final_k=min(final_k, 5),
             vector_candidate_k=max(final_k * 2, 8),
-            sources=["graph_sqlite", "graph_nebula"],
+            sources=["graph_sqlite", "graph_nebula"] if preferred_route == "graph" else ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"],
             notes=resolved.notes + ["path query detected from classifier"],
         )
         strategy.evidence_paths = [
@@ -61,6 +62,8 @@ def derive_retrieval_strategy(
             f"entity://{strategy.path_start}/*",
             f"entity://{strategy.path_end}/*",
         ]
+        if preferred_route == "hybrid":
+            strategy.evidence_paths.append(f"qa://{strategy.path_start}->{strategy.path_end}/similar")
         return strategy
 
     intent = resolved.dominant_intent
@@ -88,8 +91,9 @@ def derive_retrieval_strategy(
         sources = ["graph_sqlite", "graph_nebula"]
     elif intent == "formula_origin":
         preferred_route = "hybrid"
-        predicate_allowlist = ["别名", "属于范畴", "治疗证候", "功效"]
+        predicate_allowlist = []
         sources = ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"]
+        notes.append("origin queries keep graph lookup broad to expose source-book clues")
     elif intent == "compare_entities":
         preferred_route = "hybrid"
         sources = ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"]
@@ -102,6 +106,11 @@ def derive_retrieval_strategy(
         sources = ["graph_sqlite", "graph_nebula"]
     elif route_hint == "retrieval":
         sources = ["qa_vector_db", "classic_docs"]
+
+    if _should_use_case_qa(text=text, intent=intent, analysis=resolved):
+        if "qa_case_vector_db" not in sources:
+            sources.append("qa_case_vector_db")
+        notes.append("case qa vector source enabled")
 
     graph_candidate_k, graph_final_k, vector_candidate_k = _tune_k(
         intent=intent,
@@ -179,5 +188,41 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
 
     if "qa_vector_db" in strategy.sources and strategy.graph_query_text:
         paths.append(f"qa://{strategy.graph_query_text}/similar")
+    if "qa_case_vector_db" in strategy.sources and strategy.graph_query_text:
+        paths.append(f"caseqa://{strategy.graph_query_text}/similar")
 
     return list(dict.fromkeys(paths))
+
+
+def _should_use_case_qa(*, text: str, intent: str, analysis: QueryAnalysis) -> bool:
+    if intent not in {"syndrome_to_formula", "open_ended_grounded_qa", "formula_indication"}:
+        return False
+
+    case_markers = (
+        "基本信息",
+        "主诉",
+        "现病史",
+        "体格检查",
+        "年龄",
+        "性别",
+        "舌",
+        "脉",
+        "口苦",
+        "失眠",
+        "便溏",
+        "头晕",
+        "腰酸",
+    )
+    hits = sum(1 for marker in case_markers if marker in text)
+    symptom_like_hits = 0
+    for entity in analysis.matched_entities:
+        if "symptom" in entity.types or "syndrome" in entity.types:
+            symptom_like_hits += 1
+    symptom_separator_count = text.count("、") + text.count("，") + text.count(",")
+    if hits >= 3 or (len(text) >= 40 and hits >= 2):
+        return True
+    if symptom_like_hits >= 2 and any(marker in text for marker in ("什么证候", "什么方剂", "推荐什么方剂", "可参考什么方剂")):
+        return True
+    if symptom_separator_count >= 3 and any(marker in text for marker in ("什么证候", "什么方剂", "推荐什么方剂", "可参考什么方剂")):
+        return True
+    return False

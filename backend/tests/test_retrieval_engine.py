@@ -43,6 +43,42 @@ class FakeMilvusStore:
         ]
 
 
+class FakeCaseQAStore:
+    def health(self) -> dict:
+        return {
+            "case_qa_configured": True,
+            "case_qa_client_available": True,
+            "case_qa_db_path": "E:/tcm_vector_db",
+            "case_qa_collection_prefix": "tcm_shard_",
+            "case_qa_collection_count": 2,
+            "case_qa_collections": ["tcm_shard_0", "tcm_shard_1"],
+        }
+
+    def search(self, *, query: str, query_embedding: list[float], top_k: int, candidate_k: int) -> dict:
+        return {
+            "retrieval_mode": "chroma_case_qa",
+            "collection_count": 2,
+            "per_collection_k": 2,
+            "chunks": [
+                {
+                    "chunk_id": "case-1",
+                    "embedding_id": "case-1",
+                    "collection": "tcm_shard_0",
+                    "document": "基本信息: 年龄: 47 性别: 女 主诉: 胁肋胀痛 失眠 现病史: 口苦。",
+                    "answer": "诊断: 肝郁脾虚证 治疗方案: 方剂: 逍遥散。",
+                    "text": "诊断: 肝郁脾虚证 治疗方案: 方剂: 逍遥散。",
+                    "source_file": "caseqa:tcm_shard_0",
+                    "score": 0.88,
+                    "distance": 0.12,
+                    "rerank_score": 1.03,
+                    "metadata": {"answer": "诊断: 肝郁脾虚证 治疗方案: 方剂: 逍遥散。"},
+                }
+            ],
+            "total": 1,
+            "warnings": [],
+        }
+
+
 class RetrievalEngineTests(unittest.TestCase):
     def _settings(self, tmpdir: Path) -> RetrievalServiceSettings:
         return RetrievalServiceSettings(
@@ -64,6 +100,9 @@ class RetrievalEngineTests(unittest.TestCase):
             auto_merge_threshold=2,
             leaf_retrieve_level=3,
             dense_dim=3,
+            chroma_case_db_path=tmpdir / "case_db",
+            chroma_case_mirror_path=tmpdir / "case_db_mirror",
+            chroma_case_collection_prefix="tcm_shard_",
             sparse_lexicon_path=tmpdir / "sparse.json",
             parent_chunk_store_path=tmpdir / "parents.json",
             local_index_path=tmpdir / "local_index.json",
@@ -119,6 +158,17 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["retrieval_mode"], "dense_local_fallback")
             self.assertEqual(result["total"], 1)
             self.assertEqual(result["chunks"][0]["source_file"], "医方集解.txt")
+
+    def test_search_case_qa_normalizes_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = RetrievalEngine(self._settings(Path(tmp)))
+            engine.embedding_client = FakeEmbeddingClient()
+            engine.case_qa = FakeCaseQAStore()
+            result = engine.search_case_qa("基本信息: 年龄:47 性别:女 主诉:胁肋胀痛 失眠", top_k=3, candidate_k=12)
+            self.assertEqual(result["retrieval_mode"], "chroma_case_qa")
+            self.assertEqual(result["total"], 1)
+            self.assertEqual(result["chunks"][0]["collection"], "tcm_shard_0")
+            self.assertIn("逍遥散", result["chunks"][0]["answer"])
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ from router.tcm_intent_classifier import analyze_tcm_query
 from tools.tcm_service_client import (
     call_graph_entity_lookup,
     call_graph_path_query,
+    call_retrieval_case_qa,
     call_graph_syndrome_chain,
     call_retrieval_hybrid,
     service_health_snapshot,
@@ -42,10 +43,16 @@ class TCMRouteSearchTool(BaseTool):
         analysis = analyze_tcm_query(query)
         decision = decide_route(query, analysis=analysis)
         strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route, analysis=analysis)
+        execution_route = decision.route
+        route_reason = decision.reason
+        if strategy.intent == "formula_origin" and strategy.entity_name and decision.route == "retrieval":
+            execution_route = "hybrid"
+            route_reason = f"{decision.reason}; origin_entity_forced_hybrid"
         health = service_health_snapshot()
         output: dict[str, object] = {
-            "route": decision.route,
-            "route_reason": decision.reason,
+            "route": execution_route,
+            "route_reason": route_reason,
+            "classifier_route": decision.route,
             "query_analysis": analysis.to_dict(),
             "retrieval_strategy": strategy.to_dict(),
             "evidence_paths": strategy.evidence_paths,
@@ -57,6 +64,7 @@ class TCMRouteSearchTool(BaseTool):
 
         graph_result = None
         retrieval_result = None
+        case_qa_result = None
 
         def graph_search() -> dict[str, object]:
             if strategy.graph_query_kind == "path" and strategy.path_start and strategy.path_end:
@@ -113,8 +121,27 @@ class TCMRouteSearchTool(BaseTool):
                 enable_rerank=False,
             )
 
+        def case_qa_search() -> dict[str, object]:
+            return call_retrieval_case_qa(
+                query=query,
+                top_k=min(top_k, max(3, strategy.graph_final_k)),
+                candidate_k=max(strategy.vector_candidate_k, top_k * 4, 20),
+            )
+
         def is_success(result: dict[str, object] | None) -> bool:
             return isinstance(result, dict) and result.get("code") == 0
+
+        def has_graph_evidence(result: dict[str, object] | None) -> bool:
+            if not isinstance(result, dict):
+                return False
+            data = result.get("data")
+            if not isinstance(data, dict):
+                return False
+            for key in ("relations", "syndromes", "paths"):
+                items = data.get(key)
+                if isinstance(items, list) and items:
+                    return True
+            return False
 
         def add_degradation(source_route: str, target_route: str, reason: str) -> None:
             degradation = output.setdefault("degradation", [])
@@ -127,16 +154,16 @@ class TCMRouteSearchTool(BaseTool):
                     }
                 )
 
-        if decision.route == "graph":
+        if execution_route == "graph":
             output["executed_routes"] = ["graph"]
             graph_result = graph_search()
             output["graph_result"] = graph_result
 
-            if not is_success(graph_result):
+            if not is_success(graph_result) or not has_graph_evidence(graph_result):
                 output["executed_routes"] = ["graph", "retrieval"]
                 retrieval_result = retrieval_search()
                 output["retrieval_result"] = retrieval_result
-                add_degradation("graph", "retrieval", "graph_primary_failed")
+                add_degradation("graph", "retrieval", "graph_primary_empty" if is_success(graph_result) else "graph_primary_failed")
 
                 if is_success(retrieval_result):
                     output["status"] = "degraded"
@@ -146,7 +173,14 @@ class TCMRouteSearchTool(BaseTool):
                     output["final_route"] = "graph"
             else:
                 output["final_route"] = "graph"
-        elif decision.route == "retrieval":
+
+            if "qa_case_vector_db" in strategy.sources:
+                output["executed_routes"] = list(dict.fromkeys([*output["executed_routes"], "case_qa"]))
+                case_qa_result = case_qa_search()
+                output["case_qa_result"] = case_qa_result
+                if not is_success(case_qa_result):
+                    add_degradation("graph", "case_qa", "case_qa_branch_failed")
+        elif execution_route == "retrieval":
             output["executed_routes"] = ["retrieval"]
             retrieval_result = retrieval_search()
             output["retrieval_result"] = retrieval_result
@@ -157,7 +191,7 @@ class TCMRouteSearchTool(BaseTool):
                 output["graph_result"] = graph_result
                 add_degradation("retrieval", "graph", "retrieval_primary_failed")
 
-                if is_success(graph_result):
+                if is_success(graph_result) and has_graph_evidence(graph_result):
                     output["status"] = "degraded"
                     output["final_route"] = "graph"
                 else:
@@ -165,6 +199,13 @@ class TCMRouteSearchTool(BaseTool):
                     output["final_route"] = "retrieval"
             else:
                 output["final_route"] = "retrieval"
+
+            if "qa_case_vector_db" in strategy.sources:
+                output["executed_routes"] = list(dict.fromkeys([*output["executed_routes"], "case_qa"]))
+                case_qa_result = case_qa_search()
+                output["case_qa_result"] = case_qa_result
+                if not is_success(case_qa_result):
+                    add_degradation("retrieval", "case_qa", "case_qa_branch_failed")
         else:
             output["executed_routes"] = ["graph", "retrieval"]
             graph_result = graph_search()
@@ -172,7 +213,13 @@ class TCMRouteSearchTool(BaseTool):
             output["graph_result"] = graph_result
             output["retrieval_result"] = retrieval_result
 
-            graph_ok = is_success(graph_result)
+            if "qa_case_vector_db" in strategy.sources:
+                output["executed_routes"] = ["graph", "retrieval", "case_qa"]
+                case_qa_result = case_qa_search()
+                output["case_qa_result"] = case_qa_result
+
+            raw_graph_ok = is_success(graph_result)
+            graph_ok = raw_graph_ok and has_graph_evidence(graph_result)
             retrieval_ok = is_success(retrieval_result)
             if graph_ok and retrieval_ok:
                 output["final_route"] = "hybrid"
@@ -183,21 +230,26 @@ class TCMRouteSearchTool(BaseTool):
             elif retrieval_ok:
                 output["status"] = "degraded"
                 output["final_route"] = "retrieval"
-                add_degradation("hybrid", "retrieval", "graph_branch_failed")
+                add_degradation("hybrid", "retrieval", "graph_branch_empty" if raw_graph_ok else "graph_branch_failed")
             else:
                 output["status"] = "evidence_insufficient"
                 output["final_route"] = "hybrid"
 
+            if "qa_case_vector_db" in strategy.sources and not is_success(case_qa_result):
+                add_degradation("hybrid", "case_qa", "case_qa_branch_failed")
+
         output["service_trace_ids"] = {
             "graph": graph_result.get("trace_id") if isinstance(graph_result, dict) else None,
             "retrieval": retrieval_result.get("trace_id") if isinstance(retrieval_result, dict) else None,
+            "case_qa": case_qa_result.get("trace_id") if isinstance(case_qa_result, dict) else None,
         }
         output["service_backends"] = {
             "graph": graph_result.get("backend") if isinstance(graph_result, dict) else None,
             "retrieval": retrieval_result.get("backend") if isinstance(retrieval_result, dict) else None,
+            "case_qa": case_qa_result.get("backend") if isinstance(case_qa_result, dict) else None,
         }
 
-        return json.dumps(output, ensure_ascii=False, indent=2)[:10000]
+        return json.dumps(output, ensure_ascii=False, indent=2)
 
     async def _arun(
         self,

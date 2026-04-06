@@ -1,0 +1,53 @@
+[
+  {
+    "id": "diag_001",
+    "category": "graph_path_syndrome_to_formula",
+    "query": "从肝郁脾虚到逍遥散的链路是什么，并给一个古籍出处佐证。",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["肝郁脾虚", "逍遥散"],
+    "evidence_predicates_any": ["推荐方剂", "治疗证候", "治疗症状"],
+    "evidence_source_books_any": ["医宗金鉴", "医方集解", "中医内科学"]
+  },
+  {
+    "id": "diag_002",
+    "category": "graph_path_symptom_to_formula",
+    "query": "从胁肋胀痛到逍遥散的辨证路径是什么？",
+    "expected_routes_any": ["graph", "hybrid"],
+    "answer_contains_all": ["胁肋胀痛", "逍遥散"],
+    "evidence_predicates_any": ["辨证链", "治疗症状", "推荐方剂"]
+  },
+  {
+    "id": "diag_003",
+    "category": "graph_path_symptom_to_syndrome",
+    "query": "胁肋胀痛常可辨到什么证候？请给出辨证链。",
+    "expected_routes_any": ["graph", "hybrid"],
+    "answer_contains_any": ["肝郁脾虚", "气闭", "肝郁"],
+    "evidence_predicates_any": ["辨证链", "常见症状", "治疗证候"]
+  },
+  {
+    "id": "diag_004",
+    "category": "agent_followup_origin",
+    "query": "六味地黄丸出自哪本书？请给出处原文。",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["小儿药证直诀", "钱乙", "地黄丸"],
+    "evidence_source_books_any": ["小儿药证直诀", "保婴撮要", "医方论"]
+  },
+  {
+    "id": "diag_005",
+    "category": "agent_case_branch",
+    "query": "如果见胁肋胀痛、食少乏力、口苦、失眠，常见什么证候，可参考什么方剂？",
+    "expected_routes_any": ["graph", "hybrid"],
+    "executed_routes_contains_any": ["case_qa"],
+    "answer_contains_any": ["肝郁脾虚", "逍遥散"],
+    "evidence_predicates_any": ["推荐方剂", "治疗证候", "辨证链"]
+  },
+  {
+    "id": "diag_006",
+    "category": "agent_compare_entities",
+    "query": "四君子汤和六君子汤共用哪些药材，六君子汤又多了什么？",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["四君子汤", "六君子汤"],
+    "answer_contains_any": ["陈皮", "半夏"],
+    "evidence_predicates_any": ["使用药材"]
+  }
+]

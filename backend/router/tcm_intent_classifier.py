@@ -14,9 +14,9 @@ RouteName = Literal["graph", "retrieval", "hybrid"]
 GraphQueryKind = Literal["entity", "syndrome", "path", "none"]
 
 COMPOSITION_KEYWORDS = ("组成", "药材", "配伍", "方组", "组方", "由什么组成", "由哪些药材组成")
-EFFICACY_KEYWORDS = ("功效", "作用", "有什么用", "有什么功效", "有何功效", "归经")
+EFFICACY_KEYWORDS = ("功效", "作用", "有什么用", "有什么功效", "有何功效", "归经", "治法", "性味")
 INDICATION_KEYWORDS = ("主治", "适应症", "证候", "治什么", "治疗什么", "治疗哪些", "适用于", "适合")
-SOURCE_KEYWORDS = ("出处", "出自", "原文", "文献", "古籍", "记载", "来源", "原句", "哪本书", "哪部书", "原书", "医书")
+SOURCE_KEYWORDS = ("出处", "出自", "原文", "文献", "古籍", "记载", "来源", "原句", "哪本书", "哪部书", "原书", "医书", "佐证")
 COMPARE_KEYWORDS = ("区别", "比较", "对比", "异同")
 PATH_KEYWORDS = ("路径", "关系", "链路", "怎么到", "如何到")
 DEFINITION_KEYWORDS = ("定义", "是什么", "什么意思", "何谓", "概念", "怎么解释", "解释")
@@ -32,6 +32,7 @@ BOOK_HINTS = (
     "金匮要略",
     "伤寒论",
     "黄帝内经",
+    "小儿药证直诀",
 )
 
 DEFAULT_ENTITY_LEXICON: dict[str, tuple[str, ...]] = {
@@ -117,7 +118,9 @@ class QueryAnalysis:
         return {item.name: list(item.types) for item in self.matched_entities}
 
     def compare_entities(self) -> list[str]:
-        return [item.name for item in self.matched_entities if "source_book" not in item.types]
+        entities = [item.name for item in self.matched_entities if "source_book" not in item.types]
+        deduped = list(dict.fromkeys(entity for entity in entities if entity))
+        return deduped if len(deduped) >= 2 else []
 
     def to_dict(self) -> dict[str, object]:
         payload = asdict(self)
@@ -194,6 +197,14 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
 
     if path_targets is not None:
         start, end = path_targets
+        source_hits = _hit_keywords(text, SOURCE_KEYWORDS)
+        route_hint: RouteName = "hybrid" if source_hits else "graph"
+        route_reason = f"path_pattern_detected: start={start}, end={end}"
+        if source_hits:
+            route_reason += f"; source_hits={source_hits}"
+        matched_keywords = {"graph_path": ["path_pattern"]}
+        if source_hits:
+            matched_keywords["formula_origin"] = source_hits
         return QueryAnalysis(
             query=query,
             normalized_query=text,
@@ -206,16 +217,16 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
                     _make_entity_match(end, text, "heuristic_path"),
                 ],
             ),
-            matched_keywords={"graph_path": ["path_pattern"]},
+            matched_keywords=matched_keywords,
             graph_score=8,
-            retrieval_score=0,
-            route_hint="graph",
-            route_reason=f"path_pattern_detected: start={start}, end={end}",
+            retrieval_score=4 if source_hits else 0,
+            route_hint=route_hint,
+            route_reason=route_reason,
             graph_query_kind="path",
             primary_entity=start,
             path_start=start,
             path_end=end,
-            notes=["explicit path query detected"],
+            notes=["explicit path query detected"] + (["path query also requests source support"] if source_hits else []),
         )
 
     keyword_hits: dict[str, list[str]] = {}
@@ -256,13 +267,6 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
         retrieval_score += 5
         notes.append("origin/source intent signal detected")
 
-    definition_hits = _hit_keywords(text, DEFINITION_KEYWORDS)
-    if definition_hits and not composition_hits and not source_hits:
-        keyword_hits["definition_lookup"] = definition_hits
-        score_board["open_ended_grounded_qa"] = max(score_board.get("open_ended_grounded_qa", 0), 4)
-        retrieval_score += 4
-        notes.append("definition/explanation intent signal detected")
-
     compare_hits = _hit_keywords(text, COMPARE_KEYWORDS)
     if compare_hits or (len(non_book_entities) >= 2 and _contains_any(text, MIXED_CONNECTORS)):
         keyword_hits["compare_entities"] = compare_hits or ["entity_pair"]
@@ -277,6 +281,14 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
         score_board["syndrome_to_formula"] = 8
         graph_score += 5
         notes.append("syndrome-to-formula signal detected")
+
+    definition_hits = _hit_keywords(text, DEFINITION_KEYWORDS)
+    strong_graph_intent = bool(composition_hits or efficacy_hits or indication_hits or syndrome_formula_hits)
+    if definition_hits and not source_hits and not strong_graph_intent:
+        keyword_hits["definition_lookup"] = definition_hits
+        score_board["open_ended_grounded_qa"] = max(score_board.get("open_ended_grounded_qa", 0), 4)
+        retrieval_score += 4
+        notes.append("definition/explanation intent signal detected")
 
     book_hits = [book for book in BOOK_HINTS if book in text]
     if book_hits:
@@ -406,9 +418,34 @@ def _clean_candidate(raw: str) -> str:
         if value.startswith(prefix):
             value = value[len(prefix) :].strip(" ，。？?：:")
     if "的" in value:
-        head, tail = value.rsplit("的", 1)
-        if tail in {"组成", "药材", "配伍", "功效", "作用", "主治", "适应症", "证候", "出处", "原文", "古籍", "来源", "定义", "归经"}:
+        head, tail = value.split("的", 1)
+        if any(
+            token in tail
+            for token in {
+                "组成",
+                "药材",
+                "配伍",
+                "功效",
+                "作用",
+                "主治",
+                "适应症",
+                "证候",
+                "出处",
+                "原文",
+                "古籍",
+                "来源",
+                "定义",
+                "归经",
+                "治法",
+                "性味",
+                "推荐什么方剂",
+                "什么方剂",
+            }
+        ):
             value = head.strip(" ，。？?：:")
+    for suffix in ("一般", "常见", "通常", "可参考", "可能"):
+        if value.endswith(suffix):
+            value = value[: -len(suffix)].strip(" ，。？?：:")
     return value
 
 
@@ -453,21 +490,45 @@ def _merge_entity_matches(*groups: list[EntityMatch]) -> list[EntityMatch]:
 def _dedupe_overlaps(items: list[EntityMatch]) -> list[EntityMatch]:
     if not items:
         return []
-    sorted_items = sorted(items, key=lambda item: (item.start, -len(item.name)))
+    sorted_items = sorted(items, key=lambda item: (item.start, -_entity_priority(item), -len(item.name)))
     kept: list[EntityMatch] = []
     for item in sorted_items:
-        covered = False
-        for other in kept:
+        handled = False
+        for index, other in enumerate(kept):
             if item.name == other.name:
                 other.types = list(dict.fromkeys(other.types + item.types))
-                covered = True
+                handled = True
                 break
-            if item.name in other.name and item.start >= other.start:
-                covered = True
+            if _spans_overlap(item, other):
+                if _entity_priority(item) > _entity_priority(other):
+                    item.types = list(dict.fromkeys(item.types + other.types))
+                    kept[index] = item
+                else:
+                    other.types = list(dict.fromkeys(other.types + item.types))
+                handled = True
                 break
-        if not covered:
+        if not handled:
             kept.append(item)
     return kept
+
+
+def _spans_overlap(left: EntityMatch, right: EntityMatch) -> bool:
+    left_end = left.start + len(left.name)
+    right_end = right.start + len(right.name)
+    return max(left.start, right.start) < min(left_end, right_end)
+
+
+def _entity_priority(item: EntityMatch) -> int:
+    score = 0
+    if not item.source.startswith("heuristic"):
+        score += 10
+    for entity_type in item.types:
+        if entity_type == "unknown":
+            continue
+        score += 4
+    if "unknown" not in item.types:
+        score += 2
+    return score
 
 
 def _collect_entity_types(matches: list[EntityMatch]) -> set[str]:

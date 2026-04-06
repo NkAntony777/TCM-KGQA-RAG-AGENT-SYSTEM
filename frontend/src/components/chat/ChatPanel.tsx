@@ -7,7 +7,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { useAppStore } from "@/lib/store";
 
 export function ChatPanel() {
-  const { messages, sendMessage, isStreaming, tokenStats } = useAppStore();
+  const { messages, sendMessage, isStreaming, tokenStats, qaMode, setQaMode, skills } = useAppStore();
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -50,9 +50,14 @@ export function ChatPanel() {
               content={message.content}
               evidence={message.evidence}
               key={message.id}
+              citations={message.citations}
+              notes={message.notes}
+              plannerSteps={message.plannerSteps}
+              qaMode={message.qaMode}
               retrievals={message.retrievals}
               role={message.role}
               route={message.route}
+              skills={skills}
               toolCalls={message.toolCalls}
             />
           ))}
@@ -60,7 +65,7 @@ export function ChatPanel() {
         </div>
       </div>
 
-      <ChatInput disabled={isStreaming} onSend={sendMessage} />
+      <ChatInput disabled={isStreaming} mode={qaMode} onModeChange={setQaMode} onSend={sendMessage} />
     </section>
   );
 }

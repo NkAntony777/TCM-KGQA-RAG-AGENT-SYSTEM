@@ -27,15 +27,20 @@ def get_all_tools(base_dir: Path) -> list[BaseTool]:
     tools.append(ReadFileTool(root_dir=base_dir))
 
     # TCM fusion tools (S0 integration)
+    from tools.tcm_evidence_tools import TCMListEvidencePathsTool, TCMReadEvidencePathTool, TCMSearchEvidenceTextTool
     from tools.tcm_graph_tools import TCMEntityLookupTool, TCMPathQueryTool, TCMSyndromeChainTool
-    from tools.tcm_retrieval_tools import TCMHybridSearchTool, TCMRewriteTool
+    from tools.tcm_retrieval_tools import TCMCaseQASearchTool, TCMHybridSearchTool, TCMRewriteTool
     from tools.tcm_route_tool import TCMRouteSearchTool
 
     tools.append(TCMRouteSearchTool())
+    tools.append(TCMListEvidencePathsTool())
+    tools.append(TCMReadEvidencePathTool())
+    tools.append(TCMSearchEvidenceTextTool())
     tools.append(TCMEntityLookupTool())
     tools.append(TCMPathQueryTool())
     tools.append(TCMSyndromeChainTool())
     tools.append(TCMHybridSearchTool())
+    tools.append(TCMCaseQASearchTool())
     tools.append(TCMRewriteTool())
 
     # Optional legacy/local-knowledge tool: keep non-blocking on missing deps.

@@ -8,7 +8,7 @@ import { GraphPathCard } from "@/components/chat/GraphPathCard";
 import { RetrievalCard } from "@/components/chat/RetrievalCard";
 import { RouteCard } from "@/components/chat/RouteCard";
 import { ThoughtChain } from "@/components/chat/ThoughtChain";
-import type { EvidenceItem, RetrievalResult, RouteEvent, ToolCall } from "@/lib/api";
+import type { EvidenceItem, PlannerStep, RetrievalResult, RouteEvent, SkillMeta, ToolCall } from "@/lib/api";
 
 export function ChatMessage({
   role,
@@ -16,7 +16,12 @@ export function ChatMessage({
   toolCalls,
   retrievals,
   route,
-  evidence
+  evidence,
+  plannerSteps,
+  notes,
+  citations,
+  qaMode,
+  skills
 }: {
   role: "user" | "assistant";
   content: string;
@@ -24,6 +29,11 @@ export function ChatMessage({
   retrievals: RetrievalResult[];
   route?: RouteEvent;
   evidence: EvidenceItem[];
+  plannerSteps: PlannerStep[];
+  notes: string[];
+  citations: string[];
+  qaMode?: "quick" | "deep";
+  skills: SkillMeta[];
 }) {
   const isUser = role === "user";
 
@@ -39,7 +49,16 @@ export function ChatMessage({
       {!isUser && <RouteCard route={route} />}
       {!isUser && <GraphPathCard items={evidence} />}
       {!isUser && <EvidenceCard items={evidence} />}
-      {!isUser && <ThoughtChain toolCalls={toolCalls} />}
+      {!isUser && (
+        <ThoughtChain
+          citations={citations}
+          notes={notes}
+          plannerSteps={plannerSteps}
+          qaMode={qaMode}
+          skills={skills}
+          toolCalls={toolCalls}
+        />
+      )}
       <div className={isUser ? "whitespace-pre-wrap leading-7" : "markdown"}>
         {isUser ? (
           content

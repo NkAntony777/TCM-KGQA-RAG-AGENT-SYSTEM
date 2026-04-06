@@ -61,6 +61,23 @@ MOCK_DOCS: list[dict[str, Any]] = [
     },
 ]
 
+MOCK_CASE_QA: list[dict[str, Any]] = [
+    {
+        "embedding_id": "case_001",
+        "collection": "tcm_shard_0",
+        "document": "基于输入的患者医案记录，直接给出你认为的【治疗方案】：中药、方剂，和【诊断】：证型。\n基本信息: 年龄: 47 性别: 女 主诉: 胁肋胀痛 失眠 口苦 现病史: 情绪波动后加重 纳差 体格检查: 舌苔薄白 脉弦。",
+        "answer": "诊断: 证型: 肝郁脾虚证 治疗方案: 方剂: 逍遥散 中药: 柴胡 当归 白芍 茯苓 白术 甘草。",
+        "score": 0.86,
+    },
+    {
+        "embedding_id": "case_002",
+        "collection": "tcm_shard_4",
+        "document": "基于输入的患者医案记录，直接给出你认为的【治疗方案】：中药、方剂，和【诊断】：证型。\n基本信息: 年龄: 61 性别: 男 主诉: 腰酸 头晕 耳鸣 现病史: 夜尿频多 体格检查: 舌红少苔 脉细数。",
+        "answer": "诊断: 证型: 肝肾阴虚证 治疗方案: 方剂: 六味地黄丸 中药: 熟地黄 山茱萸 山药 泽泻 牡丹皮 茯苓。",
+        "score": 0.83,
+    },
+]
+
 
 def lookup_entity(
     name: str,
@@ -175,4 +192,46 @@ def rewrite_query(query: str, strategy: str = "complex") -> dict[str, Any]:
         "step_back_question": "中医辨证调理的通用原则是什么？",
         "step_back_answer": "先辨证后论治，兼顾疏肝健脾与调和气血。",
         "hypothetical_doc": f"{q} 可从证候识别、治法匹配、方剂出处三方面组织答案。",
+    }
+
+
+def case_qa_search(
+    query: str,
+    top_k: int = 5,
+    candidate_k: int = 20,
+) -> dict[str, Any]:
+    q = query.strip()
+    if not q:
+        return {"retrieval_mode": "case_qa_mock", "chunks": [], "total": 0}
+
+    scored: list[dict[str, Any]] = []
+    for item in MOCK_CASE_QA:
+        score = float(item.get("score", 0.0))
+        if any(token in item["document"] or token in item["answer"] for token in [q, "胁肋胀痛", "失眠", "口苦", "腰酸", "头晕", "耳鸣"] if token):
+            score += 0.03
+        scored.append(
+            {
+                "chunk_id": item["embedding_id"],
+                "embedding_id": item["embedding_id"],
+                "collection": item["collection"],
+                "document": item["document"],
+                "answer": item["answer"],
+                "text": item["answer"],
+                "source_file": f"caseqa:{item['collection']}",
+                "source_page": None,
+                "score": round(score, 4),
+                "distance": round(max(0.0, 1.0 - score), 4),
+                "rerank_score": round(score + 0.08, 4),
+                "metadata": {"answer": item["answer"]},
+            }
+        )
+    scored.sort(key=lambda x: x["rerank_score"], reverse=True)
+    limited = scored[: max(1, top_k)]
+    return {
+        "retrieval_mode": "case_qa_mock",
+        "candidate_k": max(candidate_k, top_k),
+        "collection_count": len({item["collection"] for item in MOCK_CASE_QA}),
+        "per_collection_k": max(1, top_k // 2),
+        "chunks": limited,
+        "total": len(limited),
     }

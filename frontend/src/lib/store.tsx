@@ -7,6 +7,8 @@ import {
   createSession,
   deleteSession,
   type EvidenceItem,
+  type PlannerStep,
+  type SkillMeta,
   getRagMode,
   getSessionHistory,
   getSessionTokens,
@@ -16,10 +18,10 @@ import {
   renameSession,
   saveFile,
   setRagMode,
-  streamChat,
   type RouteEvent,
   type RetrievalResult,
   type SessionSummary,
+  streamChat,
   type ToolCall
 } from "@/lib/api";
 
@@ -31,6 +33,10 @@ type Message = {
   retrievals: RetrievalResult[];
   route?: RouteEvent;
   evidence: EvidenceItem[];
+  plannerSteps: PlannerStep[];
+  notes: string[];
+  citations: string[];
+  qaMode?: "quick" | "deep";
 };
 
 type TokenStats = {
@@ -45,7 +51,8 @@ type AppStore = {
   messages: Message[];
   isStreaming: boolean;
   ragMode: boolean;
-  skills: Array<{ name: string; description: string; path: string }>;
+  qaMode: "quick" | "deep";
+  skills: SkillMeta[];
   editableFiles: string[];
   inspectorPath: string;
   inspectorContent: string;
@@ -57,6 +64,7 @@ type AppStore = {
   selectSession: (sessionId: string) => Promise<void>;
   sendMessage: (value: string) => Promise<void>;
   toggleRagMode: () => Promise<void>;
+  setQaMode: (mode: "quick" | "deep") => void;
   renameCurrentSession: (title: string) => Promise<void>;
   removeSession: (sessionId: string) => Promise<void>;
   loadInspectorFile: (path: string) => Promise<void>;
@@ -90,7 +98,11 @@ function toUiMessages(history: Awaited<ReturnType<typeof getSessionHistory>>["me
     toolCalls: message.tool_calls ?? [],
     retrievals: [],
     route: message.route,
-    evidence: message.evidence ?? []
+    evidence: message.evidence ?? [],
+    plannerSteps: message.planner_steps ?? [],
+    notes: message.notes ?? [],
+    citations: message.citations ?? [],
+    qaMode: message.qa_mode
   }));
 }
 
@@ -100,7 +112,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [ragMode, setRagModeState] = useState(false);
-  const [skills, setSkills] = useState<Array<{ name: string; description: string; path: string }>>([]);
+  const [qaMode, setQaModeState] = useState<"quick" | "deep">("quick");
+  const [skills, setSkills] = useState<SkillMeta[]>([]);
   const [inspectorPath, setInspectorPath] = useState("memory/MEMORY.md");
   const [inspectorContent, setInspectorContent] = useState("");
   const [inspectorDirty, setInspectorDirty] = useState(false);
@@ -166,7 +179,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       content: value.trim(),
       toolCalls: [],
       retrievals: [],
-      evidence: []
+      evidence: [],
+      plannerSteps: [],
+      notes: [],
+      citations: []
     };
     const assistantMessage: Message = {
       id: makeId(),
@@ -174,136 +190,135 @@ export function AppProvider({ children }: { children: ReactNode }) {
       content: "",
       toolCalls: [],
       retrievals: [],
-      evidence: []
+      evidence: [],
+      plannerSteps: [],
+      notes: [],
+      citations: [],
+      qaMode
     };
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setIsStreaming(true);
 
-    let activeAssistantId = assistantMessage.id;
-
-    const patchAssistant = (updater: (message: Message) => Message) => {
-      setMessages((prev) =>
-        prev.map((message) => (message.id === activeAssistantId ? updater(message) : message))
-      );
-    };
-
     try {
-      await streamChat(
-        { message: value.trim(), session_id: sessionId },
-        {
-          onEvent(event, data) {
-            if (event === "retrieval") {
-              patchAssistant((message) => ({
-                ...message,
-                retrievals: (data.results as RetrievalResult[]) ?? []
-              }));
-              return;
-            }
+      await streamChat({
+        message: value.trim(),
+        session_id: sessionId,
+        mode: qaMode,
+        top_k: 12
+      }, {
+        onEvent: (event, data) => {
+          setMessages((prev) =>
+            prev.map((message) => {
+              if (message.id !== assistantMessage.id) {
+                return message;
+              }
 
-            if (event === "token") {
-              patchAssistant((message) => ({
-                ...message,
-                content: `${message.content}${String(data.content ?? "")}`
-              }));
-              return;
-            }
+              if (event === "qa_mode") {
+                return {
+                  ...message,
+                  qaMode: data.mode === "deep" ? "deep" : "quick"
+                };
+              }
 
-            if (event === "tool_start") {
-              patchAssistant((message) => ({
-                ...message,
-                toolCalls: [
-                  ...message.toolCalls,
-                  {
-                    tool: String(data.tool ?? "tool"),
-                    input: String(data.input ?? ""),
-                    output: "",
-                    meta: undefined
-                  }
-                ]
-              }));
-              return;
-            }
-
-            if (event === "tool_end") {
-              patchAssistant((message) => ({
-                ...message,
-                toolCalls: message.toolCalls.map((toolCall, index, list) =>
-                  index === list.length - 1
-                    ? {
-                        ...toolCall,
-                        output: String(data.output ?? ""),
-                        meta:
-                          data.meta && typeof data.meta === "object"
-                            ? (data.meta as ToolCall["meta"])
-                            : toolCall.meta
-                      }
-                    : toolCall
-                )
-              }));
-              return;
-            }
-
-            if (event === "route") {
-              patchAssistant((message) => ({
-                ...message,
-                route: data as unknown as RouteEvent
-              }));
-              return;
-            }
-
-            if (event === "evidence") {
-              patchAssistant((message) => ({
-                ...message,
-                evidence: Array.isArray(data.items)
-                  ? [...message.evidence, ...(data.items as EvidenceItem[])]
-                  : message.evidence
-              }));
-              return;
-            }
-
-            if (event === "new_response") {
-              const nextAssistant: Message = {
-                id: makeId(),
-                role: "assistant",
-                content: "",
-                toolCalls: [],
-                retrievals: [],
-                evidence: []
-              };
-              activeAssistantId = nextAssistant.id;
-              setMessages((prev) => [...prev, nextAssistant]);
-              return;
-            }
-
-            if (event === "done") {
-              const finalContent = String(data.content ?? "");
-              patchAssistant((message) =>
-                message.content
-                  ? message
-                  : {
-                      ...message,
-                      content: finalContent
+              if (event === "tool_start") {
+                return {
+                  ...message,
+                  toolCalls: [
+                    ...message.toolCalls,
+                    {
+                      tool: String(data.tool ?? "tool"),
+                      input: String(data.input ?? ""),
+                      output: ""
                     }
-              );
-              return;
-            }
+                  ]
+                };
+              }
 
-            if (event === "title") {
-              void refreshSessions();
-              return;
-            }
+              if (event === "tool_end") {
+                const meta = typeof data.meta === "object" && data.meta ? (data.meta as ToolCall["meta"]) : undefined;
+                const nextToolCalls = [...message.toolCalls];
+                if (nextToolCalls.length) {
+                  nextToolCalls[nextToolCalls.length - 1] = {
+                    ...nextToolCalls[nextToolCalls.length - 1],
+                    output: String(data.output ?? ""),
+                    meta
+                  };
+                }
+                return {
+                  ...message,
+                  toolCalls: nextToolCalls
+                };
+              }
 
-            if (event === "error") {
-              patchAssistant((message) => ({
-                ...message,
-                content:
-                  message.content || `请求失败: ${String(data.error ?? "unknown error")}`
-              }));
-            }
-          }
+              if (event === "route") {
+                return {
+                  ...message,
+                  route: data as RouteEvent
+                };
+              }
+
+              if (event === "evidence") {
+                const nextItems = Array.isArray(data.items) ? (data.items as EvidenceItem[]) : [];
+                const merged = [...message.evidence, ...nextItems];
+                const deduped: EvidenceItem[] = [];
+                const seen = new Set<string>();
+                for (const item of merged) {
+                  const key = [item.source_type, item.source, item.snippet].join("::");
+                  if (seen.has(key)) {
+                    continue;
+                  }
+                  seen.add(key);
+                  deduped.push(item);
+                }
+                return {
+                  ...message,
+                  evidence: deduped
+                };
+              }
+
+              if (event === "planner_step") {
+                return {
+                  ...message,
+                  plannerSteps: typeof data.step === "object" && data.step
+                    ? [...message.plannerSteps, data.step as PlannerStep]
+                    : message.plannerSteps
+                };
+              }
+
+              if (event === "notes") {
+                return {
+                  ...message,
+                  notes: Array.isArray(data.items) ? data.items.map((item) => String(item)) : message.notes
+                };
+              }
+
+              if (event === "citations") {
+                return {
+                  ...message,
+                  citations: Array.isArray(data.items) ? data.items.map((item) => String(item)) : message.citations
+                };
+              }
+
+              if (event === "token") {
+                return {
+                  ...message,
+                  content: `${message.content}${String(data.content ?? "")}`
+                };
+              }
+
+              if (event === "done" && !message.content) {
+                return {
+                  ...message,
+                  content: String(data.content ?? "")
+                };
+              }
+
+              return message;
+            })
+          );
         }
-      );
+      });
     } finally {
       setIsStreaming(false);
       await refreshSessions();
@@ -407,6 +422,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     messages,
     isStreaming,
     ragMode,
+    qaMode,
     skills,
     editableFiles,
     inspectorPath,
@@ -419,6 +435,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectSession,
     sendMessage,
     toggleRagMode,
+    setQaMode: setQaModeState,
     renameCurrentSession,
     removeSession,
     loadInspectorFile,

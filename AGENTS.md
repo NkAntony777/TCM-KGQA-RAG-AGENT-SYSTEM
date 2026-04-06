@@ -24,3 +24,9 @@
 - Do not commit `.env`, runtime extraction outputs, Nebula local data, or graph runtime data files.
 - Do not change relation types to work around mojibake or parsing issues. Prefer decoding, normalization, or compatibility parsing.
 - Preserve per-run isolation so checkpointing, resume, publish, and audit remain traceable.
+
+## Dependency Management
+
+- For this subproject, install or sync Python dependencies with `uv` only.
+- Prefer `uv sync`, `uv add`, or `uv pip install --python <venv-python>` over direct `pip install`.
+- If a runtime dependency is missing in `backend/.venv`, default to fixing it with `uv` first.

@@ -37,6 +37,53 @@
   - evidence paths
 - 当前已引入第一版“证据路径”抽象，用于让后续深度模式 Agent 以路径方式浏览证据，而不是直接耦合底层存储。
 
+### 统一问答接口与双模式问答
+
+- 当前 backend 已新增统一问答接口：
+  - `/api/qa/answer`
+- 当前接口支持：
+  - `mode = quick`
+  - `mode = deep`
+- 当前 `quick` 模式已经按“固定工程链路”落地：
+  - 医疗边界前置检查
+  - `tcm_route_search` 路由与检索编排
+  - 结构化证据抽取
+  - 基于意图的确定性答案拼装
+  - 区分 `factual_evidence` 与 `case_references`
+- 当前 `deep` 模式已经接入现有 `agent_manager.astream(...)`：
+  - 由 Agent 参与工具调用与答案生成
+  - 最终仍回收到统一的结构化返回格式
+  - 若深度模式不可用，会自动降级回快速模式
+- 当前统一问答返回中已明确包含：
+  - `answer`
+  - `mode`
+  - `status`
+  - `route`
+  - `query_analysis`
+  - `retrieval_strategy`
+  - `evidence_paths`
+  - `factual_evidence`
+  - `case_references`
+  - `citations`
+  - `service_trace_ids`
+  - `service_backends`
+
+### 快速模式当前定位
+
+- 当前快速模式不是 Agent 自由规划模式，而是稳定优先的工程化链路。
+- 其目标不是“最聪明”，而是：
+  - 稳定返回
+  - 证据可解释
+  - 延迟可控
+  - 明确区分事实依据与案例参考
+- 当前已经能覆盖的主要问题类型包括：
+  - 方剂组成
+  - 方剂功效
+  - 主治/适应证
+  - 症状/证候到方剂
+  - 图谱路径类问题
+  - 带相似案例参考的病例风格问题
+
 ### 意图识别模块适配
 
 - 已吸收 `E:\TCM_Web_System_v2` 中最有价值的骨架：
@@ -62,6 +109,57 @@
 ### 新增设计文档
 
 - 详见 [意图识别模块适配方案.md](./意图识别模块适配方案.md)
+- 详见 [QA向量库接入开发方案.md](./QA向量库接入开发方案.md)
+
+### 外部 QA 向量库定位已确认
+
+- `E:\tcm_vector_db` 已确认是本地持久化 `ChromaDB`，不是 `FAISS`、不是 `Milvus`。
+- 其底层结构为：
+  - `chroma.sqlite3` 元数据库
+  - `hnsw-local-persisted` 向量索引目录
+  - `10` 个手工分片 collection：`tcm_shard_0..9`
+- 当前总记录数约 `367.7` 万条，向量维度为 `1024`。
+- 当前每条记录主要包含：
+  - `chroma:document`
+  - `answer`
+- 结合样本内容，已确认其业务定位更接近“病例/医案 QA 向量库”或“相似医案检索库”，而不是古籍知识库。
+- 因此，后续接入原则已经明确：
+  - 不作为快速模式默认主检索源
+  - 不混入普通古籍/知识文档检索
+  - 主要作为深度模式的“案例参考证据源”
+  - 需要按 `10` shard fan-out 查询，再做统一过滤与重排
+
+### 外部 QA 向量库已完成第一阶段接入
+
+- 当前项目已经新增只读 `ChromaCaseQAStore`，位置：
+  - `backend/services/retrieval_service/chroma_case_store.py`
+- 当前接入方式不是依赖 `chromadb` client，而是改为：
+  - `sqlite` 读取元数据
+  - `hnswlib` 直接读取持久化索引
+- 原因已经明确：
+  - 当前库的实际 schema / config 与不同版本 `chromadb` client 存在兼容性断层
+  - 继续硬依赖 client 会把运行稳定性绑死在环境版本上
+- 当前系统已经新增：
+  - `/api/v1/retrieval/search/case-qa`
+  - `tcm_case_qa_search`
+  - `qa_case_vector_db` source
+  - `caseqa://` evidence path 体系
+- 当前深度模式链路已经可以把该库作为“相似医案参考源”接入，而不是把它误当作古籍事实源。
+
+### 外部 QA 向量库检索性能优化已落地
+
+- 当前 case QA 检索已经从“固定 fan-out 并行查全部分片”升级为：
+  - `FTS shard 预选`
+  - `按索引体积分波次 fan-out`
+  - `小容量热缓存 + 淘汰`
+  - `内存失败后的单 shard 重试`
+- 当前目标不是单纯拉高并发，而是避免首次查询时多个大 shard 同时加载导致的内存冲击。
+- 在当前真实库测试中，问题：
+  - `如何治疗食生米病`
+- 10 shard 检索耗时从约 `47.6s` 降到约 `35.1s`，并消除了同一测试下出现的 HNSW 内存加载失败告警。
+- 这说明当前瓶颈并不是“SQLite 慢”，而是：
+  - 大 shard HNSW 冷加载成本高
+  - fan-out 查询需要更谨慎的调度和路由
 
 ### 自动选书
 
@@ -136,6 +234,10 @@
 - 后续应优先评估把“关系簇聚合”和“覆盖统计”下推到 SQLite 聚合查询层，减少 Python 层处理的候选边数量。
 - 当前意图分类器仍是“轻量词典 + 规则”版本，覆盖度足够支撑当前快速/深度双模式骨架，但还未接入完整实体词表和外部问答向量库的语义反馈信号。
 - 后续如果要覆盖更大的古籍实体空间，应优先补齐实体词典自动构建，而不是继续堆更多正则。
+- 外部 QA 向量库虽然已经完成第一阶段接入，但首次冷启动的 HNSW shard 加载依然昂贵，深度模式必须接受高于快速模式的检索延迟。
+- 当前 shard 预选仍是第一版，主要依赖 `embedding_fulltext_search` 的 trigram FTS 与轻量 query 短语抽取，后续还有继续优化空间。
+- 该库依然采用 `10` 个 collection 分片，本质上仍是 query-time fan-out；如果后续深度模式调用频率升高，需要继续评估 shard 路由索引、预热与独立 service 化。
+- 该库中存在少量异质样本，当前虽然已有基础过滤逻辑，但后续仍应继续强化 query intent 与案例输出结构之间的匹配约束。
 
 ## 已确认的实现边界
 
@@ -150,6 +252,12 @@
 - 用已发布图谱或字典构建脚本自动生成更完整的方剂 / 药材 / 证候 / 症状词典
 - 在深度模式中把 `query_analysis` 作为 Planner 的输入，而不只作为调试输出
 - 给外部 Qwen embedding 问答库定义统一的 `qa://` 证据路径和实体对齐策略
+- 继续优化 case QA shard 预选策略，减少深度模式中不必要的 HNSW shard 打开次数
+- 为 case QA 检索增加更细粒度的调试指标，例如：
+  - 命中 shard 数
+  - 跳过 shard 数
+  - FTS 预选分数
+  - 索引冷加载耗时
 - 为“每批书籍数量”提供前端可配置入口
 - 为 `resume` 增加前端可见的“完成当前 run 后继续下一批”开关
 - 在历史页增加自动批次链路的关联展示

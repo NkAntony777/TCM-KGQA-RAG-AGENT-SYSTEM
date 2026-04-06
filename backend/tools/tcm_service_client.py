@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import httpx
 
-from services.common.mock_data import hybrid_search, lookup_entity, query_path, rewrite_query, syndrome_chain
+from services.common.mock_data import case_qa_search, hybrid_search, lookup_entity, query_path, rewrite_query, syndrome_chain
 
 
 GRAPH_SERVICE_BASE_URL = os.getenv("GRAPH_SERVICE_BASE_URL", "http://127.0.0.1:8101")
@@ -160,6 +160,37 @@ def call_retrieval_rewrite(query: str, strategy: str = "complex") -> dict[str, A
             "backend": "local-fallback",
             "code": 0,
             "message": "ok",
+            "data": mock,
+            "trace_id": str(uuid4()),
+            "warning": f"retrieval-service unavailable: {exc}",
+        }
+
+
+def call_retrieval_case_qa(
+    query: str,
+    top_k: int = 5,
+    candidate_k: int = 30,
+) -> dict[str, Any]:
+    try:
+        payload = _post(
+            f"{RETRIEVAL_SERVICE_BASE_URL}/api/v1/retrieval/search/case-qa",
+            {
+                "query": query,
+                "top_k": top_k,
+                "candidate_k": candidate_k,
+            },
+        )
+        return {"backend": "retrieval-service", **payload}
+    except Exception as exc:
+        mock = case_qa_search(
+            query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+        )
+        return {
+            "backend": "local-fallback",
+            "code": 0 if mock.get("chunks") else 30002,
+            "message": "ok" if mock.get("chunks") else "CASE_QA_EMPTY",
             "data": mock,
             "trace_id": str(uuid4()),
             "warning": f"retrieval-service unavailable: {exc}",

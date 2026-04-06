@@ -13,6 +13,8 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
+from services.retrieval_service.chroma_case_store import ChromaCaseQASettings, ChromaCaseQAStore
+
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 _raw_milvus_uri = os.getenv("MILVUS_URI", "").strip()
@@ -60,6 +62,9 @@ class RetrievalServiceSettings:
     auto_merge_threshold: int
     leaf_retrieve_level: int
     dense_dim: int
+    chroma_case_db_path: Path
+    chroma_case_mirror_path: Path
+    chroma_case_collection_prefix: str
     sparse_lexicon_path: Path
     parent_chunk_store_path: Path
     local_index_path: Path
@@ -95,6 +100,9 @@ def load_settings() -> RetrievalServiceSettings:
         auto_merge_threshold=int(_first_env("AUTO_MERGE_THRESHOLD", default="2")),
         leaf_retrieve_level=int(_first_env("LEAF_RETRIEVE_LEVEL", default="3")),
         dense_dim=int(_first_env("RETRIEVAL_DENSE_DIM", default="2560")),
+        chroma_case_db_path=Path(_first_env("CHROMA_CASE_DB_PATH", default="E:/tcm_vector_db")),
+        chroma_case_mirror_path=backend_dir / "storage" / "chroma_case_query_mirror",
+        chroma_case_collection_prefix=_first_env("CHROMA_CASE_COLLECTION_PREFIX", default="tcm_shard_"),
         sparse_lexicon_path=backend_dir / "storage" / "retrieval_sparse_lexicon.json",
         parent_chunk_store_path=backend_dir / "storage" / "retrieval_parent_chunks.json",
         local_index_path=backend_dir / "storage" / "retrieval_local_index.json",
@@ -641,6 +649,13 @@ class RetrievalEngine:
             base_url=self.settings.embedding_base_url,
             api_key=self.settings.embedding_api_key,
         )
+        self.case_qa = ChromaCaseQAStore(
+            ChromaCaseQASettings(
+                db_path=self.settings.chroma_case_db_path,
+                mirror_path=self.settings.chroma_case_mirror_path,
+                collection_prefix=self.settings.chroma_case_collection_prefix,
+            )
+        )
         self.rewrite_client = OpenAICompatibleClient(
             base_url=self.settings.rewrite_base_url,
             api_key=self.settings.rewrite_api_key,
@@ -660,8 +675,48 @@ class RetrievalEngine:
             "embedding_configured": self.embedding_client.is_ready(),
             "rewrite_configured": self.rewrite_client.is_ready(),
             "sparse_lexicon_loaded": self.lexicon.is_ready(),
+            **self.case_qa.health(),
             **milvus_health,
             **local_health,
+        }
+
+    def search_case_qa(
+        self,
+        query: str,
+        *,
+        top_k: int,
+        candidate_k: int,
+    ) -> dict[str, Any]:
+        warnings: list[str] = []
+        if not self.embedding_client.is_ready():
+            return {
+                "backend": "case-qa",
+                "retrieval_mode": "unconfigured",
+                "candidate_k": candidate_k,
+                "chunks": [],
+                "total": 0,
+                "warnings": ["embedding_client_not_configured"],
+            }
+
+        dense_vector = self.embedding_client.embed([query], self.settings.embedding_model)[0]
+        data = self.case_qa.search(
+            query=query,
+            query_embedding=dense_vector,
+            top_k=top_k,
+            candidate_k=candidate_k,
+        )
+        warnings.extend(data.get("warnings", []))
+        chunks = [self._normalize_case_chunk(item) for item in data.get("chunks", []) if isinstance(item, dict)]
+
+        return {
+            "backend": "case-qa",
+            "retrieval_mode": data.get("retrieval_mode", "case_qa"),
+            "candidate_k": candidate_k,
+            "collection_count": data.get("collection_count", 0),
+            "per_collection_k": data.get("per_collection_k"),
+            "chunks": chunks,
+            "total": len(chunks),
+            "warnings": warnings,
         }
 
     def search_hybrid(
@@ -846,6 +901,23 @@ class RetrievalEngine:
         if not isinstance(docs, list):
             raise ValueError("invalid_sample_corpus")
         return self.index_documents(docs, reset_collection=reset_collection)
+
+    @staticmethod
+    def _normalize_case_chunk(item: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "chunk_id": item.get("chunk_id", ""),
+            "embedding_id": item.get("embedding_id", ""),
+            "collection": item.get("collection", ""),
+            "text": str(item.get("text", "")).strip(),
+            "document": str(item.get("document", "")).strip(),
+            "answer": str(item.get("answer", "")).strip(),
+            "source_file": item.get("source_file", "caseqa"),
+            "source_page": item.get("source_page"),
+            "score": float(item.get("score", 0.0) or 0.0),
+            "distance": float(item.get("distance", 0.0) or 0.0),
+            "rerank_score": float(item.get("rerank_score", 0.0) or 0.0),
+            "metadata": item.get("metadata", {}),
+        }
 
     def _auto_merge(self, docs: list[dict[str, Any]], top_k: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         meta = {
