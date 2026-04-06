@@ -22,6 +22,18 @@ class SkillRegistryTests(unittest.TestCase):
         self.assertEqual(origin_skill.primary_tool, "read_evidence_path")
         self.assertTrue(any("书名" in item for item in origin_skill.output_focus))
         self.assertTrue(any("原文片段" in item for item in origin_skill.output_focus))
+        self.assertTrue(any("出处" in item for item in origin_skill.trigger_phrases))
+        self.assertTrue(any("book://" in item for item in origin_skill.preferred_path_patterns))
+
+    def test_executable_skill_filter_keeps_only_deep_qa_relevant_skills(self) -> None:
+        clear_runtime_skills_cache()
+        skills = get_runtime_skills(executable_only=True, allowed_tools={"read_evidence_path", "search_evidence_text"})
+
+        self.assertIn("read-formula-origin", skills)
+        self.assertIn("search-source-text", skills)
+        self.assertIn("trace-graph-path", skills)
+        self.assertIn("read-syndrome-treatment", skills)
+        self.assertNotIn("external-source-verification", skills)
 
 
 if __name__ == "__main__":

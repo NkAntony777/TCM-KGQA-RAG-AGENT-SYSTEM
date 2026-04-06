@@ -4,6 +4,29 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 AnswerMode = Literal["quick", "deep"]
+PlannerGap = Literal[
+    "composition",
+    "efficacy",
+    "indication",
+    "syndrome_formula",
+    "origin",
+    "source_trace",
+    "path_reasoning",
+    "comparison",
+    "case_reference",
+]
+
+ALLOWED_PLANNER_GAPS: tuple[PlannerGap, ...] = (
+    "composition",
+    "efficacy",
+    "indication",
+    "syndrome_formula",
+    "origin",
+    "source_trace",
+    "path_reasoning",
+    "comparison",
+    "case_reference",
+)
 
 @dataclass(frozen=True)
 class QAServiceSettings:

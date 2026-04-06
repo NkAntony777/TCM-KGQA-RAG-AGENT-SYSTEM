@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Any, Iterable
 
 import yaml
 
@@ -17,8 +18,11 @@ DEFAULT_SKILL_TOOL_MAP: dict[str, str] = {
     "route-tcm-query": "tcm_route_search",
     "read-formula-composition": "read_evidence_path",
     "read-formula-origin": "read_evidence_path",
+    "read-syndrome-treatment": "read_evidence_path",
+    "trace-graph-path": "read_evidence_path",
     "compare-formulas": "read_evidence_path",
     "find-case-reference": "search_evidence_text",
+    "search-source-text": "search_evidence_text",
     "trace-source-passage": "search_evidence_text",
     "external-source-verification": "web_search",
 }
@@ -33,6 +37,9 @@ class RuntimeSkill:
     workflow_steps: tuple[str, ...]
     output_focus: tuple[str, ...]
     stop_rules: tuple[str, ...]
+    trigger_phrases: tuple[str, ...] = ()
+    preferred_path_patterns: tuple[str, ...] = ()
+    examples: tuple[str, ...] = ()
 
     @property
     def primary_tool(self) -> str:
@@ -41,12 +48,12 @@ class RuntimeSkill:
         return DEFAULT_SKILL_TOOL_MAP.get(self.name, "")
 
 
-def _parse_frontmatter(text: str) -> dict[str, str]:
+def _parse_frontmatter(text: str) -> dict[str, Any]:
     match = FRONTMATTER_PATTERN.match(text)
     if not match:
         return {}
     data = yaml.safe_load(match.group(1)) or {}
-    return {str(key): str(value) for key, value in data.items()}
+    return {str(key): value for key, value in data.items()}
 
 
 def _split_body(text: str) -> str:
@@ -85,6 +92,15 @@ def _clean_items(lines: list[str]) -> tuple[str, ...]:
     return tuple(items)
 
 
+def _clean_values(values: Iterable[Any]) -> tuple[str, ...]:
+    items: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            items.append(text)
+    return tuple(items)
+
+
 def _extract_tools(lines: list[str]) -> tuple[str, ...]:
     tools: list[str] = []
     for raw in lines:
@@ -112,11 +128,14 @@ def _parse_skill_file(base_dir: Path, skill_file: Path) -> RuntimeSkill:
     body = _split_body(text)
     sections = _collect_section_lines(body)
     name = meta.get("name", skill_file.parent.name)
-    description = meta.get("description", "")
+    description = str(meta.get("description", ""))
     preferred_tools = _extract_tools(sections.get("preferred tools", []))
     workflow_steps = _clean_items(sections.get("workflow", []))
     output_focus = _clean_items(sections.get("output focus", []))
     stop_rules = _clean_items(sections.get("stop rule", []))
+    trigger_phrases = _clean_items(sections.get("trigger phrases", [])) or _clean_values(meta.get("trigger_phrases", []))
+    preferred_path_patterns = _clean_items(sections.get("preferred paths", [])) or _clean_values(meta.get("preferred_paths", []))
+    examples = _clean_items(sections.get("examples", [])) or _clean_values(meta.get("examples", []))
     if not preferred_tools and name in DEFAULT_SKILL_TOOL_MAP:
         preferred_tools = (DEFAULT_SKILL_TOOL_MAP[name],)
     return RuntimeSkill(
@@ -127,11 +146,14 @@ def _parse_skill_file(base_dir: Path, skill_file: Path) -> RuntimeSkill:
         workflow_steps=workflow_steps,
         output_focus=output_focus,
         stop_rules=stop_rules,
+        trigger_phrases=trigger_phrases,
+        preferred_path_patterns=preferred_path_patterns,
+        examples=examples,
     )
 
 
 @lru_cache(maxsize=1)
-def get_runtime_skills() -> dict[str, RuntimeSkill]:
+def _get_all_runtime_skills() -> dict[str, RuntimeSkill]:
     base_dir = get_settings().backend_dir
     skills_dir = base_dir / "skills"
     skills: dict[str, RuntimeSkill] = {}
@@ -143,5 +165,17 @@ def get_runtime_skills() -> dict[str, RuntimeSkill]:
     return skills
 
 
+def get_runtime_skills(*, executable_only: bool = False, allowed_tools: set[str] | None = None) -> dict[str, RuntimeSkill]:
+    skills = dict(_get_all_runtime_skills())
+    if not executable_only:
+        return skills
+    tool_allowlist = allowed_tools or {"read_evidence_path", "search_evidence_text", "tcm_route_search", "list_evidence_paths"}
+    return {
+        name: skill
+        for name, skill in skills.items()
+        if skill.primary_tool in tool_allowlist
+    }
+
+
 def clear_runtime_skills_cache() -> None:
-    get_runtime_skills.cache_clear()
+    _get_all_runtime_skills.cache_clear()

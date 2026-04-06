@@ -29,6 +29,7 @@ from services.qa_service.models import AnswerMode, QAServiceSettings, RouteConte
 from services.qa_service.planner import (
     _action_key,
     _apply_origin_action_policy,
+    _normalize_gap_names,
     _normalize_planner_actions,
     _plan_followup_actions,
 )
@@ -59,7 +60,10 @@ class QAService:
         self.settings = settings or QAServiceSettings()
         self.answer_generator = answer_generator or GroundedAnswerLLMClient()
         self.evidence_navigator = evidence_navigator or EvidenceNavigator()
-        self.planner_skills = get_runtime_skills()
+        self.planner_skills = get_runtime_skills(
+            executable_only=True,
+            allowed_tools={"read_evidence_path", "search_evidence_text"},
+        )
 
     async def answer(
         self,
@@ -227,6 +231,7 @@ class QAService:
         list_meta = {"count": len(evidence_paths), "query": query}
         yield {"type": "tool_end", "tool": "list_evidence_paths", "output": _compact_json(list_meta), "meta": list_meta}
         tool_trace.append({"tool": "list_evidence_paths", "meta": list_meta})
+        yield {"type": "new_response"}
 
         executed_actions: set[str] = set()
         for round_index in range(1, self.settings.max_deep_rounds + 1):
@@ -287,12 +292,20 @@ class QAService:
                 step = _planner_step_for_action(action=action, round_index=round_index, action_index=action_index)
                 planner_steps.append(step)
                 yield {"type": "planner_step", "step": step}
+                coverage_before = _coverage_summary(
+                    query=query,
+                    payload=payload,
+                    evidence_paths=evidence_paths,
+                    factual_evidence=factual_evidence,
+                    case_references=case_references,
+                )
 
                 tool_name = str(action.get("tool", "followup"))
                 yield {"type": "tool_start", "tool": tool_name, "input": _tool_input_for_action(action)}
                 result = self._execute_action(action)
+                action_status = str(result.get("status", "ok") or "ok")
                 meta = {
-                    "status": result.get("status", "ok"),
+                    "status": action_status,
                     "count": result.get("count", 0),
                     "reason": action.get("reason", ""),
                     "path": action.get("path"),
@@ -306,8 +319,12 @@ class QAService:
                 if not items:
                     trace_step = _trace_step(
                         step_index=len(deep_trace) + 1,
+                        round_index=round_index,
+                        action_index=action_index,
                         action=action,
+                        status=action_status,
                         new_evidence=[],
+                        coverage_before_step=coverage_before,
                         coverage_after_step=_coverage_summary(
                             query=query,
                             payload=payload,
@@ -326,8 +343,11 @@ class QAService:
                             evidence_paths=evidence_paths,
                             factual_evidence=factual_evidence,
                             case_references=case_references,
+                            planner_steps=planner_steps,
+                            deep_trace=deep_trace,
                         ),
                     }
+                    yield {"type": "new_response"}
                     continue
 
                 new_factual = [item for item in items if str(item.get("evidence_type", "")).strip() != "case_reference"]
@@ -347,8 +367,12 @@ class QAService:
                     yield {"type": "evidence", "items": merged_new_items}
                 trace_step = _trace_step(
                     step_index=len(deep_trace) + 1,
+                    round_index=round_index,
+                    action_index=action_index,
                     action=action,
+                    status=action_status,
                     new_evidence=merged_new_items[: self.settings.max_trace_evidence_per_step],
+                    coverage_before_step=coverage_before,
                     coverage_after_step=_coverage_summary(
                         query=query,
                         payload=payload,
@@ -367,8 +391,11 @@ class QAService:
                         evidence_paths=evidence_paths,
                         factual_evidence=factual_evidence,
                         case_references=case_references,
+                        planner_steps=planner_steps,
+                        deep_trace=deep_trace,
                     ),
                 }
+                yield {"type": "new_response"}
 
             if new_items_this_round <= 0:
                 notes.append(f"deep_round_{round_index}:no_new_evidence")
@@ -384,6 +411,7 @@ class QAService:
 
         answer_step = _planner_step(stage="answer_synthesis", label="生成最终答案", detail="deep_grounded_answer")
         planner_steps.append(answer_step)
+        yield {"type": "new_response"}
         yield {"type": "planner_step", "step": answer_step}
 
         result = await self._build_response(
@@ -534,12 +562,20 @@ class QAService:
                     deep_trace=deep_trace,
                     heuristic_gaps=heuristic_gaps,
                     max_actions=self.settings.max_actions_per_round,
+                    executed_actions=sorted(executed_actions),
+                    coverage_summary=_coverage_summary(
+                        query=query,
+                        payload=payload,
+                        evidence_paths=evidence_paths,
+                        factual_evidence=factual_evidence,
+                        case_references=case_references,
+                    ),
                 ),
             )
             parsed = _extract_json_object(content)
             if not isinstance(parsed, dict):
                 raise RuntimeError("planner_json_unparseable")
-            parsed.setdefault("gaps", heuristic_gaps)
+            parsed["gaps"] = _normalize_gap_names(parsed.get("gaps", [])) or heuristic_gaps
             parsed.setdefault("next_actions", [])
             parsed.setdefault("stop_reason", "")
             return parsed, "planner_llm", None
@@ -626,6 +662,8 @@ class QAService:
                 "case_references": selected_cases,
                 "book_citations": book_citations,
                 "coverage": coverage,
+                "planner_steps": planner_steps or [],
+                "deep_trace": deep_trace or [],
             },
             "service_trace_ids": payload.get("service_trace_ids", {}),
             "service_backends": payload.get("service_backends", {}),
@@ -642,6 +680,8 @@ class QAService:
         evidence_paths: list[str],
         factual_evidence: list[dict[str, Any]],
         case_references: list[dict[str, Any]],
+        planner_steps: list[dict[str, str]],
+        deep_trace: list[dict[str, Any]],
     ) -> dict[str, Any]:
         selected_factual = factual_evidence[: self.settings.max_factual_evidence]
         selected_cases = case_references[: self.settings.max_case_references]
@@ -657,6 +697,8 @@ class QAService:
                 factual_evidence=factual_evidence,
                 case_references=case_references,
             ),
+            "planner_steps": planner_steps,
+            "deep_trace": deep_trace,
         }
 
     async def _generate_grounded_answer(

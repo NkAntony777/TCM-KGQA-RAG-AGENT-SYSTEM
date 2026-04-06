@@ -134,11 +134,16 @@ function DeepTraceCard({ steps }: { steps: DeepTraceStep[] }) {
           return (
             <div className="rounded-2xl bg-[rgba(13,37,48,0.06)] p-3" key={`deep-trace-${step.step}`}>
               <div className="font-medium text-[var(--color-ink)]">
-                step {step.step} · {step.tool ?? "followup"}
+                round {step.round ?? "?"} · step {step.step} · {step.tool ?? "followup"}
               </div>
               <div className="mt-1 text-[var(--color-ink-soft)]">
-                skill: {step.skill ?? "n/a"}
+                skill: {step.skill ?? "n/a"}{step.action_index ? ` · action ${step.action_index}` : ""}
               </div>
+              {step.status && (
+                <div className="mt-1 text-[var(--color-ink-soft)]">
+                  status: {step.status}
+                </div>
+              )}
               {step.why_this_step && (
                 <div className="mt-1 text-[var(--color-ink-soft)]">
                   why: {step.why_this_step}

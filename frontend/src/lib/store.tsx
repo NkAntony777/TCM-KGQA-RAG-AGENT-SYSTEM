@@ -115,6 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const trimmedValue = value.trim();
     const userMessage = createMessage("user", trimmedValue);
     const assistantMessage = createMessage("assistant", "", qaMode);
+    let currentAssistantId = assistantMessage.id;
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setIsStreaming(true);
@@ -127,9 +128,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         top_k: 12
       }, {
         onEvent: (streamEvent) => {
+          if (streamEvent.event === "new_response") {
+            const nextAssistantMessage = createMessage("assistant", "", qaMode);
+            currentAssistantId = nextAssistantMessage.id;
+            setMessages((prev) => [...prev, nextAssistantMessage]);
+            return;
+          }
           setMessages((prev) =>
             prev.map((message) => {
-              if (message.id !== assistantMessage.id) {
+              if (message.id !== currentAssistantId) {
                 return message;
               }
               return applyChatStreamEvent(message, streamEvent);

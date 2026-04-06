@@ -115,14 +115,19 @@ def _planner_step_for_action(*, action: dict[str, Any], round_index: int, action
     )
 
 
-def _trace_step(*, step_index: int, action: dict[str, Any], new_evidence: list[dict[str, Any]], coverage_after_step: dict[str, Any]) -> dict[str, Any]:
+def _trace_step(*, step_index: int, round_index: int, action_index: int, action: dict[str, Any], status: str, new_evidence: list[dict[str, Any]], coverage_before_step: dict[str, Any], coverage_after_step: dict[str, Any]) -> dict[str, Any]:
     return {
         "step": step_index,
+        "round": round_index,
+        "action_index": action_index,
         "skill": action.get("skill"),
         "tool": action.get("tool"),
         "input": {key: value for key, value in action.items() if key in {"path", "query", "scope_paths", "top_k", "skill"} and value not in (None, "", [], {})},
         "why_this_step": action.get("reason", ""),
+        "status": status,
+        "new_evidence_count": len(new_evidence),
         "new_evidence": new_evidence,
+        "coverage_before_step": coverage_before_step,
         "coverage_after_step": coverage_after_step,
     }
 

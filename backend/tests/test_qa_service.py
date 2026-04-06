@@ -192,6 +192,49 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(len(result["factual_evidence"]), 1)
         self.assertTrue(any(step["stage"] == "planner" for step in result["planner_steps"]))
         self.assertTrue(any(step["tool"] == "read_evidence_path" for step in result["deep_trace"]))
+        self.assertEqual(result["deep_trace"][0]["round"], 1)
+        self.assertEqual(result["deep_trace"][0]["action_index"], 1)
+        self.assertIn(result["deep_trace"][0]["status"], {"ok", "empty", "degraded"})
+        self.assertIn("coverage_before_step", result["deep_trace"][0])
+        self.assertIn("deep_trace", result["evidence_bundle"])
+        self.assertIn("planner_steps", result["evidence_bundle"])
+
+    async def test_deep_stream_emits_agent_style_new_response_boundaries(self) -> None:
+        navigator = FakeEvidenceNavigator(
+            listed_paths=["entity://六味地黄丸/使用药材"],
+            read_results={
+                "entity://六味地黄丸/使用药材": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://六味地黄丸/使用药材",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph",
+                            "source": "小儿药证直诀/卷下",
+                            "snippet": "使用药材: 熟地黄",
+                            "predicate": "使用药材",
+                            "target": "熟地黄",
+                            "score": 0.91,
+                        }
+                    ],
+                }
+            },
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_deep_followup_payload()),
+            answer_generator=FakeAnswerGenerator("Deep streaming answer"),
+            evidence_navigator=navigator,
+        )
+
+        events = []
+        async for event in service.stream_answer("六味地黄丸的组成是什么", mode="deep", top_k=12):
+            events.append(event["type"])
+
+        self.assertIn("new_response", events)
+        self.assertGreaterEqual(events.count("new_response"), 2)
+        self.assertEqual(events[-1], "result")
 
     async def test_guard_refuses_high_risk_query(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))

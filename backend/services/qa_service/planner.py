@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from services.qa_service.models import ALLOWED_PLANNER_GAPS
 from services.qa_service.skill_registry import RuntimeSkill
+
+def _normalize_gap_names(raw_gaps: list[Any]) -> list[str]:
+    allowed = set(ALLOWED_PLANNER_GAPS)
+    normalized: list[str] = []
+    for item in raw_gaps:
+        gap = str(item or "").strip()
+        if gap and gap in allowed and gap not in normalized:
+            normalized.append(gap)
+    return normalized
+
 
 def _normalize_planner_actions(*, planner_skills: dict[str, RuntimeSkill], raw_actions: list[Any], query: str, payload: dict[str, Any], evidence_paths: list[str], executed_actions: set[str], max_actions: int) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
@@ -18,6 +29,11 @@ def _normalize_planner_actions(*, planner_skills: dict[str, RuntimeSkill], raw_a
             continue
         if not action.get("tool"):
             continue
+        if skill_meta is not None:
+            action.setdefault("skill_description", skill_meta.description)
+            action.setdefault("output_focus", list(skill_meta.output_focus[:4]))
+            action.setdefault("stop_rules", list(skill_meta.stop_rules[:2]))
+            action.setdefault("preferred_paths", list(skill_meta.preferred_path_patterns[:2]))
         action.setdefault("query", query)
         action.setdefault("top_k", 6)
         if skill == "read-formula-composition":
@@ -36,6 +52,13 @@ def _normalize_planner_actions(*, planner_skills: dict[str, RuntimeSkill], raw_a
             action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
             action.setdefault("scope_paths", [path for path in evidence_paths if path.startswith(("book://", "qa://"))])
             action["query"] = str(action.get("query") or f"{query} 古籍出处 原文 佐证")
+        if skill == "read-syndrome-treatment":
+            action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
+        if skill == "trace-graph-path":
+            action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
+        if skill == "search-source-text":
+            action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
+            action.setdefault("scope_paths", [path for path in evidence_paths if path.startswith(("book://", "qa://"))])
         if str(action.get("tool", "")) == "read_evidence_path" and not str(action.get("path", "")).strip():
             continue
         key = _action_key(action)
@@ -127,6 +150,12 @@ def _preferred_path_for_skill(*, skill: str, payload: dict[str, Any], evidence_p
         return _pick_existing_path(evidence_paths, prefix=f"entity://{entity}/", suffix="*") or f"entity://{entity}/*"
     if skill == "compare-formulas" and entity_name:
         return _pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="*") or f"entity://{entity_name}/*"
+    if skill == "read-syndrome-treatment" and entity_name:
+        return _pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="治法") or f"entity://{entity_name}/治法"
+    if skill == "trace-graph-path" and symptom_name:
+        return _pick_existing_path(evidence_paths, prefix=f"symptom://{symptom_name}/", suffix="syndrome_chain") or f"symptom://{symptom_name}/syndrome_chain"
+    if skill == "trace-graph-path" and entity_name:
+        return _pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="推荐方剂") or f"entity://{entity_name}/推荐方剂"
     if skill == "find-case-reference":
         return _pick_first_matching_path(evidence_paths, prefixes=("caseqa://",))
     if skill == "search-source-text":
@@ -192,7 +221,7 @@ def _plan_followup_actions(*, planner_skills: dict[str, RuntimeSkill], query: st
     if "efficacy" in gaps and entity_name:
         add_action(_build_skill_action(
             planner_skills=planner_skills,
-            skill_name="compare-formulas",
+            skill_name="read-syndrome-treatment",
             path=_pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="功效") or f"entity://{entity_name}/功效",
             query=query,
             top_k=6,
@@ -201,7 +230,7 @@ def _plan_followup_actions(*, planner_skills: dict[str, RuntimeSkill], query: st
     if "indication" in gaps and entity_name:
         add_action(_build_skill_action(
             planner_skills=planner_skills,
-            skill_name="compare-formulas",
+            skill_name="read-syndrome-treatment",
             path=_pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="治疗证候") or f"entity://{entity_name}/治疗证候",
             query=query,
             top_k=6,
@@ -216,7 +245,7 @@ def _plan_followup_actions(*, planner_skills: dict[str, RuntimeSkill], query: st
         if target_path:
             add_action(_build_skill_action(
                 planner_skills=planner_skills,
-                skill_name="compare-formulas",
+                skill_name="trace-graph-path",
                 path=target_path,
                 query=query,
                 top_k=6,
@@ -252,7 +281,7 @@ def _plan_followup_actions(*, planner_skills: dict[str, RuntimeSkill], query: st
         if target_path:
             add_action(_build_skill_action(
                 planner_skills=planner_skills,
-                skill_name="compare-formulas",
+                skill_name="trace-graph-path",
                 path=target_path,
                 query=query,
                 top_k=6,

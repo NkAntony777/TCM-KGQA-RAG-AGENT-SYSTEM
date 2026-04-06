@@ -31,11 +31,16 @@ export type PlannerStep = {
 
 export type DeepTraceStep = {
   step: number;
+  round?: number;
+  action_index?: number;
   skill?: string;
   tool?: string;
+  status?: string;
   input?: Record<string, unknown>;
   why_this_step?: string;
+  new_evidence_count?: number;
   new_evidence?: EvidenceItem[];
+  coverage_before_step?: Record<string, unknown>;
   coverage_after_step?: Record<string, unknown>;
 };
 
@@ -138,6 +143,9 @@ export type SkillMeta = {
   workflow_steps?: string[];
   output_focus?: string[];
   stop_rules?: string[];
+  trigger_phrases?: string[];
+  preferred_path_patterns?: string[];
+  examples?: string[];
 };
 
 export type StreamHandlers = {

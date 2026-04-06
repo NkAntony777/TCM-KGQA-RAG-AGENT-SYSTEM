@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.qa_service.models import AnswerMode
+from services.qa_service.models import ALLOWED_PLANNER_GAPS, AnswerMode
 from services.qa_service.skill_registry import RuntimeSkill
 
 def _build_grounded_system_prompt(*, mode: AnswerMode) -> str:
@@ -68,23 +68,32 @@ def _build_planner_system_prompt(planner_skills: dict[str, RuntimeSkill]) -> str
     for name, skill in planner_skills.items():
         tool_text = ", ".join(skill.preferred_tools[:2]) if skill.preferred_tools else skill.primary_tool
         workflow_text = "；".join(skill.workflow_steps[:2])
+        trigger_text = "；".join(skill.trigger_phrases[:3])
+        path_text = "；".join(skill.preferred_path_patterns[:2])
         stop_text = "；".join(skill.stop_rules[:1])
         skill_lines.append(
-            f"- {name}: {skill.description} | preferred_tools={tool_text or 'n/a'} | workflow={workflow_text or 'n/a'} | stop={stop_text or 'n/a'}"
+            f"- {name}: {skill.description} | preferred_tools={tool_text or 'n/a'} | triggers={trigger_text or 'n/a'} | preferred_paths={path_text or 'n/a'} | workflow={workflow_text or 'n/a'} | stop={stop_text or 'n/a'}"
         )
     skills = "\n".join(skill_lines)
+    allowed_gaps = "、".join(ALLOWED_PLANNER_GAPS)
     return (
         "你是中医知识问答系统中的 deep planner。"
         "你不能直接回答问题，只能规划下一步检索。"
         "你必须输出 JSON 对象，字段固定为 gaps、next_actions、stop_reason。"
         "每轮最多规划 2 个动作。"
+        "每轮优先只补 1 到 2 个最关键缺口，不要把所有问题一次查完。"
+        "不要重复已经执行过的动作。"
         "如果证据已足够，next_actions 返回空数组并填写 stop_reason。"
+        f"gaps 只能来自：{allowed_gaps}。"
         f"可用 skill 如下：\n{skills}\n"
-        "动作对象允许字段：skill、path、query、scope_paths、reason。不要输出 markdown。"
+        "动作对象允许字段：skill、path、query、scope_paths、reason、top_k。"
+        "不要输出 markdown，不要输出解释文本。"
+        "输出格式示例："
+        "{\"gaps\":[\"origin\"],\"next_actions\":[{\"skill\":\"read-formula-origin\",\"path\":\"entity://六味地黄丸/*\",\"reason\":\"先锁定来源书目\"}],\"stop_reason\":\"\"}"
     )
 
 
-def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_paths: list[str], factual_evidence: list[dict[str, Any]], case_references: list[dict[str, Any]], deep_trace: list[dict[str, Any]], heuristic_gaps: list[str], max_actions: int) -> str:
+def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_paths: list[str], factual_evidence: list[dict[str, Any]], case_references: list[dict[str, Any]], deep_trace: list[dict[str, Any]], heuristic_gaps: list[str], max_actions: int, executed_actions: list[str], coverage_summary: dict[str, Any]) -> str:
     strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
     lines = [
         f"query: {query}",
@@ -93,7 +102,9 @@ def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_
         f"symptom_name: {strategy.get('symptom_name', '')}",
         f"compare_entities: {strategy.get('compare_entities', [])}",
         f"heuristic_gaps: {heuristic_gaps}",
+        f"coverage_summary: {coverage_summary}",
         f"evidence_paths: {evidence_paths[:10]}",
+        f"executed_actions: {executed_actions[:8]}",
         f"max_actions: {max_actions}",
         "factual_evidence:",
     ]
@@ -106,8 +117,13 @@ def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_
     if deep_trace:
         lines.append("previous_steps:")
         for item in deep_trace[-4:]:
-            lines.append(f"- step={item.get('step')} skill={item.get('skill')} why={item.get('why_this_step')} remaining={item.get('coverage_after_step', {}).get('gaps', [])}")
-    lines.append("请输出 JSON，例如：{\"gaps\":[\"origin\"],\"next_actions\":[{\"skill\":\"read-formula-origin\",\"path\":\"book://某书/*\",\"reason\":\"补出处\"}],\"stop_reason\":\"\"}")
+            lines.append(
+                f"- step={item.get('step')} round={item.get('round')} skill={item.get('skill')} "
+                f"status={item.get('status')} why={item.get('why_this_step')} "
+                f"remaining={item.get('coverage_after_step', {}).get('gaps', [])}"
+            )
+    lines.append("规划原则：先补最关键缺口；优先使用已有 evidence_path；不要重复 executed_actions；不要规划超过 2 个动作。")
+    lines.append("请只输出 JSON。")
     return "\n".join(lines)
 
 

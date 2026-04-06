@@ -15,8 +15,17 @@
   <skill name="read-formula-origin" path="skills/read-formula-origin/SKILL.md">
     <description>当用户问出处、出自、古籍、原文、教材来源、哪本书时使用。优先读取 book:// 或 qa:// 路径，补充书名、篇章、原文片段与该方剂/功效/组成的对应关系。</description>
   </skill>
+  <skill name="read-syndrome-treatment" path="skills/read-syndrome-treatment/SKILL.md">
+    <description>当用户问功效、治法、主治、治疗证候、适用边界时使用。优先读取实体下的功效、治法、治疗证候等结构化路径，避免把比较题和出处题混在一起。</description>
+  </skill>
   <skill name="route-tcm-query" path="skills/route-tcm-query/SKILL.md">
     <description>中医问答入口技能。用户问题涉及方剂、证候、功效、组成、出处、比较、古籍、教材、病例参考时使用。先识别意图、实体、比较对象和是否需要出处，再优先调用 tcm_route_search，不要跳过首轮路由。</description>
+  </skill>
+  <skill name="search-source-text" path="skills/search-source-text/SKILL.md">
+    <description>当现有书目路径不足、需要补古籍原文、教材出处、定义解释或文献佐证时使用。优先在已有 `book://`、`qa://` 范围内搜索，不要脱离当前证据上下文盲搜。</description>
+  </skill>
+  <skill name="trace-graph-path" path="skills/trace-graph-path/SKILL.md">
+    <description>当用户问辨证链、路径、为什么从症状推到证候或从证候参考某方时使用。优先读取 `symptom://` 或实体级路径证据，输出链路节点与关系，而不是只给结论。</description>
   </skill>
   <skill name="trace-source-passage" path="skills/trace-source-passage/SKILL.md">
     <description>当答案已经有初步结论，但还缺可引用的书名、篇章、原文片段时使用。优先从 graph/doc/book 证据中抽取最适合展示给用户的出处片段。</description>
