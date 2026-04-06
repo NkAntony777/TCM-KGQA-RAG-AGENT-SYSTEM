@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
+from router.tcm_intent_classifier import analyze_tcm_query
 from services.retrieval_service.chroma_case_store import ChromaCaseQASettings, ChromaCaseQAStore
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
@@ -789,6 +790,7 @@ class RetrievalEngine:
 
         merged_docs, merge_meta = self._auto_merge(reranked_docs, top_k)
         normalized = [self._normalize_chunk(item) for item in merged_docs[:top_k]]
+        normalized = self._apply_lexical_sanity_gate(query, normalized, warnings)
 
         return {
             "backend": "supermew_hybrid",
@@ -980,6 +982,73 @@ class RetrievalEngine:
             }
         )
         return deduped[:top_k], meta
+
+    def _apply_lexical_sanity_gate(
+        self,
+        query: str,
+        docs: list[dict[str, Any]],
+        warnings: list[str],
+    ) -> list[dict[str, Any]]:
+        if not docs:
+            return docs
+        anchors = self._extract_query_anchors(query)
+        if not anchors:
+            return docs
+
+        filtered = [item for item in docs if self._doc_matches_anchors(item, anchors)]
+        if len(filtered) == len(docs):
+            return docs
+        if filtered:
+            warnings.append(f"lexical_sanity_filtered:{len(docs)}->{len(filtered)}")
+            return filtered
+        warnings.append("lexical_sanity_filtered_all")
+        return []
+
+    @staticmethod
+    def _doc_matches_anchors(item: dict[str, Any], anchors: list[str]) -> bool:
+        haystacks = [
+            str(item.get("text", "") or ""),
+            str(item.get("source_file", "") or ""),
+            str(item.get("filename", "") or ""),
+        ]
+        joined = "\n".join(part for part in haystacks if part).lower()
+        for anchor in anchors:
+            probe = anchor.lower()
+            if probe and probe in joined:
+                return True
+        return False
+
+    @staticmethod
+    def _extract_query_anchors(query: str) -> list[str]:
+        anchors: list[str] = []
+        try:
+            analysis = analyze_tcm_query(query)
+            for item in analysis.matched_entities:
+                if "source_book" in item.types:
+                    continue
+                name = str(item.name).strip()
+                if len(name) >= 2:
+                    anchors.append(name)
+        except Exception:
+            pass
+
+        for match in re.finditer(r"[\u4e00-\u9fff]{2,10}(?:丸|散|汤|饮|膏|丹|颗粒|胶囊)", query):
+            anchors.append(match.group(0))
+        for match in re.finditer(r"\b[A-Za-z][A-Za-z0-9\-]{1,14}\b", query):
+            token = match.group(0)
+            if len(token) >= 2:
+                anchors.append(token)
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for item in anchors:
+            normalized = str(item).strip()
+            key = normalized.lower()
+            if not normalized or key in seen:
+                continue
+            seen.add(key)
+            deduped.append(normalized)
+        return deduped
 
     def _rerank(self, query: str, docs: list[dict[str, Any]], top_k: int) -> tuple[list[dict[str, Any]], bool, str | None]:
         payload = {

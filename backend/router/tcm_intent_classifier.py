@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from functools import lru_cache
+from pathlib import Path
+import sqlite3
 import re
 from typing import Literal
 
@@ -8,6 +11,11 @@ try:
     import ahocorasick  # type: ignore
 except ImportError:  # pragma: no cover - exercised via substring fallback
     ahocorasick = None
+
+try:
+    import jieba  # type: ignore
+except ImportError:  # pragma: no cover - optional enhancement only
+    jieba = None
 
 
 RouteName = Literal["graph", "retrieval", "hybrid"]
@@ -23,6 +31,26 @@ DEFINITION_KEYWORDS = ("定义", "是什么", "什么意思", "何谓", "概念"
 SYNDROME_TO_FORMULA_KEYWORDS = ("推荐什么方剂", "推荐方剂", "对应什么方剂", "用什么方", "哪首方", "什么方剂")
 MIXED_CONNECTORS = ("并", "以及", "同时", "结合", "并且", "并说明", "并给出", "并附", "和", "与")
 QUESTION_PREFIXES = ("请问", "请解释", "请给我", "请告诉我", "想知道", "帮我看看", "麻烦问下")
+FORMULA_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "方", "颗粒", "胶囊")
+FORMULA_PATTERN_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "颗粒", "胶囊")
+FORMULA_ENTITY_PATTERN = re.compile(
+    rf"(?<![\u4e00-\u9fffA-Za-z0-9])([\u4e00-\u9fff]{{2,10}}?(?:{'|'.join(FORMULA_PATTERN_SUFFIXES)}))(?![\u4e00-\u9fff])"
+)
+ALNUM_ENTITY_PATTERN = re.compile(r"\b[A-Za-z][A-Za-z0-9\-]{1,14}\b")
+CLASSIFIER_RUNTIME_GRAPH_DB_PATH = (
+    Path(__file__).resolve().parents[1] / "services" / "graph_service" / "data" / "graph_runtime.db"
+)
+GENERIC_ENTITY_STOPWORDS = set(
+    COMPOSITION_KEYWORDS
+    + EFFICACY_KEYWORDS
+    + INDICATION_KEYWORDS
+    + SOURCE_KEYWORDS
+    + COMPARE_KEYWORDS
+    + PATH_KEYWORDS
+    + DEFINITION_KEYWORDS
+    + SYNDROME_TO_FORMULA_KEYWORDS
+    + ("方剂", "治法", "归经", "性味", "功效", "作用", "主治", "出处", "原文", "古籍")
+)
 
 BOOK_HINTS = (
     "本草纲目",
@@ -177,6 +205,114 @@ class _EntityMatcher:
 ENTITY_MATCHER = _EntityMatcher(DEFAULT_ENTITY_LEXICON)
 
 
+def _runtime_graph_db_path() -> Path:
+    return CLASSIFIER_RUNTIME_GRAPH_DB_PATH
+
+
+def _normalize_runtime_entity_type(entity_type: str) -> str | None:
+    normalized = str(entity_type or "").strip().lower()
+    mapping = {
+        "formula": "formula",
+        "方剂": "formula",
+        "herb": "herb",
+        "中药": "herb",
+        "药物": "herb",
+        "symptom": "symptom",
+        "症状": "symptom",
+        "syndrome": "syndrome",
+        "证候": "syndrome",
+        "证型": "syndrome",
+        "therapy": "therapy",
+        "治法": "therapy",
+        "source_book": "source_book",
+        "古籍": "source_book",
+        "医书": "source_book",
+    }
+    return mapping.get(normalized)
+
+
+def _should_skip_runtime_entity_name(name: str) -> bool:
+    normalized = str(name or "").strip()
+    if len(normalized) < 2 or len(normalized) > 24:
+        return True
+    return normalized in GENERIC_ENTITY_STOPWORDS
+
+
+@lru_cache(maxsize=1)
+def _load_runtime_entity_lexicon() -> dict[str, tuple[str, ...]]:
+    path = _runtime_graph_db_path()
+    if not path.exists():
+        return {}
+
+    grouped: dict[str, list[str]] = {
+        "formula": [],
+        "herb": [],
+        "syndrome": [],
+        "symptom": [],
+        "therapy": [],
+        "source_book": [],
+    }
+    try:
+        with sqlite3.connect(str(path)) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                """
+                SELECT name, entity_type
+                FROM entities
+                WHERE length(name) BETWEEN 2 AND 24
+                """
+            ).fetchall()
+    except sqlite3.Error:
+        return {}
+
+    for row in rows:
+        name = str(row["name"] or "").strip()
+        entity_type = _normalize_runtime_entity_type(str(row["entity_type"] or ""))
+        if not name or entity_type is None or _should_skip_runtime_entity_name(name):
+            continue
+        grouped[entity_type].append(name)
+
+    return {
+        key: tuple(dict.fromkeys(sorted(values, key=lambda item: (-len(item), item))))
+        for key, values in grouped.items()
+        if values
+    }
+
+
+@lru_cache(maxsize=1)
+def _get_runtime_entity_matcher() -> _EntityMatcher | None:
+    lexicon = _load_runtime_entity_lexicon()
+    if not lexicon:
+        return None
+    return _EntityMatcher(lexicon)
+
+
+@lru_cache(maxsize=1)
+def _combined_word_types() -> dict[str, list[str]]:
+    combined: dict[str, list[str]] = {
+        word: list(types)
+        for word, types in ENTITY_MATCHER.word_types.items()
+    }
+    runtime_matcher = _get_runtime_entity_matcher()
+    if runtime_matcher is not None:
+        for word, types in runtime_matcher.word_types.items():
+            bucket = combined.setdefault(word, [])
+            for entity_type in types:
+                if entity_type not in bucket:
+                    bucket.append(entity_type)
+    return combined
+
+
+@lru_cache(maxsize=1)
+def _init_jieba_user_dict() -> bool:
+    if jieba is None:
+        return False
+    for word in _combined_word_types():
+        if len(word) >= 2:
+            jieba.add_word(word, freq=200000)
+    return True
+
+
 def analyze_tcm_query(query: str) -> QueryAnalysis:
     text = _normalize_query(query)
     if not text:
@@ -192,8 +328,18 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
 
     path_targets = _extract_path_targets(text)
     lexicon_matches = ENTITY_MATCHER.match(text)
+    runtime_matcher = _get_runtime_entity_matcher()
+    runtime_matches = runtime_matcher.match(text) if runtime_matcher is not None else []
+    jieba_matches = _extract_jieba_entities(text)
     heuristic_matches = _extract_heuristic_entities(text)
-    matched_entities = _merge_entity_matches(lexicon_matches, heuristic_matches)
+    formula_regex_matches = _extract_formula_regex_entities(text)
+    matched_entities = _merge_entity_matches(
+        lexicon_matches,
+        runtime_matches,
+        jieba_matches,
+        heuristic_matches,
+        formula_regex_matches,
+    )
 
     if path_targets is not None:
         start, end = path_targets
@@ -296,6 +442,10 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
         keyword_hits.setdefault("formula_origin", [])
         keyword_hits["formula_origin"].extend(book_hits)
 
+    if not score_board and primary_entity and _has_any_type(entity_types, "formula", "herb", "syndrome", "therapy"):
+        graph_score += 3
+        notes.append("structured entity anchor detected in open-ended query")
+
     if primary_entity:
         graph_score += 1
 
@@ -327,6 +477,9 @@ def analyze_tcm_query(query: str) -> QueryAnalysis:
         graph_score=graph_score,
         retrieval_score=retrieval_score,
         keyword_hits=keyword_hits,
+        dominant_intent=dominant_intent,
+        primary_entity=primary_entity,
+        matched_entities=matched_entities,
     )
 
     return QueryAnalysis(
@@ -402,6 +555,61 @@ def _extract_heuristic_entities(text: str) -> list[EntityMatch]:
     return _dedupe_overlaps(candidates)
 
 
+def _extract_jieba_entities(text: str) -> list[EntityMatch]:
+    if jieba is None or not text:
+        return []
+    _init_jieba_user_dict()
+    combined_types = _combined_word_types()
+    candidates: list[EntityMatch] = []
+    for token, start, _ in jieba.tokenize(text):
+        normalized = str(token).strip()
+        if len(normalized) < 2:
+            continue
+        types = combined_types.get(normalized)
+        if not types:
+            continue
+        candidates.append(
+            EntityMatch(
+                name=normalized,
+                types=list(types),
+                source="jieba_runtime",
+                start=max(start, 0),
+            )
+        )
+    return _dedupe_overlaps(candidates)
+
+
+def _extract_formula_regex_entities(text: str) -> list[EntityMatch]:
+    candidates: list[EntityMatch] = []
+    for match in FORMULA_ENTITY_PATTERN.finditer(text):
+        entity = str(match.group(1) or "").strip()
+        if not entity:
+            continue
+        candidates.append(
+            EntityMatch(
+                name=entity,
+                types=["formula"],
+                source="regex_formula",
+                start=match.start(1),
+            )
+        )
+    for match in ALNUM_ENTITY_PATTERN.finditer(text):
+        token = str(match.group(0) or "").strip()
+        if len(token) < 2:
+            continue
+        if token.lower() not in {"aqp", "hif", "mmp"} and "-" not in token:
+            continue
+        candidates.append(
+            EntityMatch(
+                name=token,
+                types=["unknown"],
+                source="regex_alnum",
+                start=match.start(0),
+            )
+        )
+    return _dedupe_overlaps(candidates)
+
+
 def _make_entity_match(entity: str, text: str, source: str) -> EntityMatch:
     guessed_types = _guess_entity_types(entity)
     return EntityMatch(
@@ -453,7 +661,7 @@ def _guess_entity_types(entity: str) -> list[str]:
     guessed: list[str] = []
     if entity in BOOK_HINTS or entity.endswith(("论", "经", "鉴", "目")):
         guessed.append("source_book")
-    if entity.endswith(("丸", "散", "汤", "饮", "膏", "丹", "方", "颗粒", "胶囊")):
+    if entity.endswith(FORMULA_SUFFIXES):
         guessed.append("formula")
     if entity.endswith(("证", "虚", "郁", "亏损", "不足", "上亢", "化火")):
         guessed.append("syndrome")
@@ -574,6 +782,11 @@ def _derive_graph_query_kind(
         if _looks_like_symptom_question(text):
             return "syndrome", primary_entity or text
 
+    if primary_entity:
+        for item in matched_entities:
+            if item.name == primary_entity and any(entity_type in item.types for entity_type in ("formula", "herb", "syndrome", "therapy")):
+                return "entity", ""
+
     for item in matched_entities:
         if "symptom" in item.types:
             return "syndrome", item.name
@@ -592,15 +805,43 @@ def _decide_route(
     graph_score: int,
     retrieval_score: int,
     keyword_hits: dict[str, list[str]],
+    dominant_intent: str,
+    primary_entity: str,
+    matched_entities: list[EntityMatch],
 ) -> tuple[RouteName, str]:
     graph_hits = sorted({hit for label, hits in keyword_hits.items() if label != "formula_origin" for hit in hits})
     retrieval_hits = sorted({hit for label, hits in keyword_hits.items() if label == "formula_origin" or label == "definition_lookup" for hit in hits})
+    has_non_book_entity = bool(primary_entity) or any("source_book" not in item.types for item in matched_entities)
+    source_requested = "formula_origin" in keyword_hits
+    graph_first_intents = {"formula_composition", "formula_efficacy", "formula_indication", "syndrome_to_formula", "graph_path"}
+    hybrid_bias_markers = (
+        "结合",
+        "分析",
+        "论证",
+        "机制",
+        "原理",
+        "阈值",
+        "通路",
+        "现代",
+        "分布",
+        "差异",
+        "对接",
+        "跨学科",
+    )
+    explanatory_complex = len(text) >= 30 or _contains_any(text, hybrid_bias_markers)
 
     if "compare_entities" in keyword_hits:
         return (
             "hybrid",
             "compare_entities_forced_hybrid: "
             f"graph_score={graph_score}, retrieval_score={retrieval_score}, hits={keyword_hits['compare_entities']}",
+        )
+
+    if source_requested and has_non_book_entity:
+        return (
+            "hybrid",
+            "entity_source_request_prefers_hybrid: "
+            f"intent={dominant_intent}, primary_entity={primary_entity or 'missing'}, retrieval_hits={retrieval_hits}",
         )
 
     if graph_score >= 3 and retrieval_score >= 3:
@@ -612,12 +853,24 @@ def _decide_route(
         )
 
     if graph_score >= 3:
+        if dominant_intent in graph_first_intents and not explanatory_complex:
+            return (
+                "graph",
+                f"classifier_graph_match: score={graph_score}, intent={dominant_intent}, hits={graph_hits}",
+            )
         return (
-            "graph",
-            f"classifier_graph_match: score={graph_score}, hits={graph_hits}",
+            "hybrid",
+            "graph_anchor_prefers_hybrid: "
+            f"score={graph_score}, intent={dominant_intent}, primary_entity={primary_entity or 'missing'}, graph_hits={graph_hits}",
         )
 
     if retrieval_score >= 3:
+        if has_non_book_entity:
+            return (
+                "hybrid",
+                "retrieval_signal_with_entity_prefers_hybrid: "
+                f"score={retrieval_score}, intent={dominant_intent}, primary_entity={primary_entity or 'missing'}, retrieval_hits={retrieval_hits}",
+            )
         return (
             "retrieval",
             f"classifier_retrieval_match: score={retrieval_score}, hits={retrieval_hits}",
@@ -625,6 +878,12 @@ def _decide_route(
 
     if _contains_any(text, MIXED_CONNECTORS):
         return ("hybrid", "connector_only_hybrid_fallback")
+
+    if has_non_book_entity:
+        return (
+            "hybrid",
+            f"entity_present_default_hybrid: intent={dominant_intent}, primary_entity={primary_entity or 'missing'}",
+        )
 
     return (
         "hybrid",

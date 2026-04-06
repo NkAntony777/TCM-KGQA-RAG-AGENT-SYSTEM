@@ -1,3 +1,5 @@
+import type { ChatStreamEvent, ChatStreamEventName } from "@/lib/chatEvents";
+
 export type ToolCall = {
   tool: string;
   input: string;
@@ -35,6 +37,21 @@ export type DeepTraceStep = {
   why_this_step?: string;
   new_evidence?: EvidenceItem[];
   coverage_after_step?: Record<string, unknown>;
+};
+
+export type EvidenceBundle = {
+  evidence_paths?: string[];
+  factual_evidence?: EvidenceItem[];
+  case_references?: EvidenceItem[];
+  book_citations?: string[];
+  coverage?: {
+    gaps?: string[];
+    factual_count?: number;
+    case_count?: number;
+    evidence_path_count?: number;
+    sufficient?: boolean;
+    [key: string]: unknown;
+  };
 };
 
 export type RetrievalResult = {
@@ -106,7 +123,7 @@ export type SessionHistory = {
     evidence?: EvidenceItem[];
     planner_steps?: PlannerStep[];
     deep_trace?: DeepTraceStep[];
-    evidence_bundle?: Record<string, unknown>;
+    evidence_bundle?: EvidenceBundle;
     notes?: string[];
     citations?: string[];
     qa_mode?: "quick" | "deep";
@@ -124,7 +141,7 @@ export type SkillMeta = {
 };
 
 export type StreamHandlers = {
-  onEvent: (event: string, data: Record<string, unknown>) => void;
+  onEvent: (event: ChatStreamEvent) => void;
 };
 
 export type QAAnswerResponse = {
@@ -145,7 +162,7 @@ export type QAAnswerResponse = {
     book_citations?: string[];
     planner_steps?: PlannerStep[];
     deep_trace?: DeepTraceStep[];
-    evidence_bundle?: Record<string, unknown>;
+    evidence_bundle?: EvidenceBundle;
     service_trace_ids: Record<string, string | null>;
     service_backends: Record<string, string | null>;
     tool_trace?: Array<{ tool: string; meta?: Record<string, unknown> }>;
@@ -153,6 +170,10 @@ export type QAAnswerResponse = {
     session_title?: string;
   };
 };
+
+const JSON_HEADERS = {
+  "Content-Type": "application/json"
+} as const;
 
 function getApiBase() {
   const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
@@ -167,14 +188,18 @@ function getApiBase() {
   return `http://${window.location.hostname}:8002/api`;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${getApiBase()}${path}`, {
+function createJsonRequest(init?: RequestInit): RequestInit {
+  return {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...JSON_HEADERS,
       ...(init?.headers ?? {})
     }
-  });
+  };
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${getApiBase()}${path}`, createJsonRequest(init));
 
   if (!response.ok) {
     const text = await response.text();
@@ -182,6 +207,30 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+function parseSseBlock(block: string): ChatStreamEvent | null {
+  const lines = block.split("\n");
+  let event: ChatStreamEventName = "token";
+  const dataLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      event = line.slice(6).trim() as ChatStreamEventName;
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice(5).trim());
+    }
+  }
+
+  if (!dataLines.length) {
+    return null;
+  }
+
+  return {
+    event,
+    data: JSON.parse(dataLines.join("\n")) as Record<string, unknown>
+  };
 }
 
 export async function listSessions() {
@@ -264,16 +313,13 @@ export async function streamChat(
   },
   handlers: StreamHandlers
 ) {
-  const response = await fetch(`${getApiBase()}/chat`, {
+  const response = await fetch(`${getApiBase()}/chat`, createJsonRequest({
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
     body: JSON.stringify({
       ...payload,
       stream: true
     })
-  });
+  }));
 
   if (!response.ok || !response.body) {
     throw new Error(`Chat request failed: ${response.status}`);
@@ -284,36 +330,23 @@ export async function streamChat(
   let buffer = "";
 
   const flushBlock = (block: string) => {
-    const lines = block.split("\n");
-    let event = "message";
-    const dataLines: string[] = [];
-
-    for (const line of lines) {
-      if (line.startsWith("event:")) {
-        event = line.slice(6).trim();
-      }
-      if (line.startsWith("data:")) {
-        dataLines.push(line.slice(5).trim());
-      }
-    }
-
-    if (!dataLines.length) {
+    const streamEvent = parseSseBlock(block);
+    if (!streamEvent) {
       return;
     }
-
-    const data = JSON.parse(dataLines.join("\n")) as Record<string, unknown>;
-    handlers.onEvent(event, data);
+    if (streamEvent.event === "error") {
+      throw new Error(String(streamEvent.data.error ?? "Chat stream failed"));
+    }
+    handlers.onEvent(streamEvent);
   };
 
   while (true) {
     const { value, done } = await reader.read();
     buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
 
-    let boundary = buffer.indexOf("\n\n");
-    while (boundary >= 0) {
+    for (let boundary = buffer.indexOf("\n\n"); boundary >= 0; boundary = buffer.indexOf("\n\n")) {
       flushBlock(buffer.slice(0, boundary));
       buffer = buffer.slice(boundary + 2);
-      boundary = buffer.indexOf("\n\n");
     }
 
     if (done) {

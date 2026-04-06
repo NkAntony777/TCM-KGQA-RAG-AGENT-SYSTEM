@@ -14,10 +14,10 @@ class TCMIntentClassifierTests(unittest.TestCase):
         self.assertEqual(analysis.primary_entity, "六味地黄丸")
         self.assertIn("formula_composition", analysis.matched_keywords)
 
-    def test_formula_origin_query_prefers_retrieval(self) -> None:
+    def test_formula_origin_query_prefers_hybrid(self) -> None:
         analysis = analyze_tcm_query("逍遥散出自哪本古籍")
         self.assertEqual(analysis.dominant_intent, "formula_origin")
-        self.assertEqual(analysis.route_hint, "retrieval")
+        self.assertEqual(analysis.route_hint, "hybrid")
         self.assertGreaterEqual(analysis.retrieval_score, 5)
 
     def test_compare_query_extracts_two_entities(self) -> None:
@@ -67,6 +67,15 @@ class TCMIntentClassifierTests(unittest.TestCase):
     def test_path_query_with_source_request_prefers_hybrid(self) -> None:
         analysis = analyze_tcm_query("从肝郁脾虚到逍遥散的链路是什么，并给一个古籍出处佐证。")
         self.assertEqual(analysis.dominant_intent, "graph_path")
+        self.assertEqual(analysis.route_hint, "hybrid")
+
+    def test_long_formula_mechanism_query_anchors_formula_entity(self) -> None:
+        analysis = analyze_tcm_query(
+            "《伤寒论》五苓散方后注“多饮暖水，汗出愈”，请从AQP分布差异论证五苓散利小便与发汗是否存在阈值效应。"
+        )
+        self.assertIn("五苓散", analysis.entity_types())
+        self.assertEqual(analysis.primary_entity, "五苓散")
+        self.assertEqual(analysis.graph_query_kind, "entity")
         self.assertEqual(analysis.route_hint, "hybrid")
 
 

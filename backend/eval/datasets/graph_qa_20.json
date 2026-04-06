@@ -72,36 +72,36 @@
   {
     "id": "retrieval_001",
     "query": "医方集解中对六味地黄丸有什么记载",
-    "expected_route": "retrieval",
-    "category": "retrieval",
+    "expected_route": "hybrid",
+    "category": "hybrid",
     "note": "原文出处查询"
   },
   {
     "id": "retrieval_002",
     "query": "汤头歌诀原文中六君子汤怎么说",
-    "expected_route": "retrieval",
-    "category": "retrieval",
+    "expected_route": "hybrid",
+    "category": "hybrid",
     "note": "古籍原句查询"
   },
   {
     "id": "retrieval_003",
     "query": "伤寒恒论对中风的定义和解释",
-    "expected_route": "retrieval",
-    "category": "retrieval",
+    "expected_route": "hybrid",
+    "category": "hybrid",
     "note": "概念定义查询"
   },
   {
     "id": "retrieval_004",
     "query": "补养之剂的来源出自哪部古籍",
-    "expected_route": "retrieval",
-    "category": "retrieval",
+    "expected_route": "hybrid",
+    "category": "hybrid",
     "note": "出处查询"
   },
   {
     "id": "retrieval_005",
     "query": "下法是什么意思，古籍有哪些记载",
-    "expected_route": "retrieval",
-    "category": "retrieval",
+    "expected_route": "hybrid",
+    "category": "hybrid",
     "note": "定义+文献"
   },
   {

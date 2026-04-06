@@ -1,0 +1,87 @@
+[
+  {
+    "id": "hard_001",
+    "category": "origin_quote_followup",
+    "query": "六味地黄丸最早见于哪本书？请给出处原文或接近原文的古籍片段。",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["小儿药证直诀", "钱乙", "地黄丸"],
+    "evidence_source_books_any": ["小儿药证直诀", "保婴撮要", "医方论"]
+  },
+  {
+    "id": "hard_002",
+    "category": "path_with_source",
+    "query": "从肝郁脾虚到逍遥散的链路是什么，并给一个古籍出处佐证。",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["肝郁脾虚", "逍遥散"],
+    "evidence_predicates_any": ["推荐方剂", "治疗证候", "辨证链"],
+    "evidence_source_books_any": ["医宗金鉴", "医方集解", "中医内科学"]
+  },
+  {
+    "id": "hard_003",
+    "category": "symptom_path_reasoning",
+    "query": "胁肋胀痛一般怎么辨到肝郁脾虚，再为什么会参考逍遥散？",
+    "expected_routes_any": ["graph", "hybrid"],
+    "answer_contains_any": ["胁肋胀痛", "肝郁脾虚", "逍遥散"],
+    "evidence_predicates_any": ["辨证链", "常见症状", "推荐方剂"]
+  },
+  {
+    "id": "hard_004",
+    "category": "compare_with_boundary",
+    "query": "四君子汤和六君子汤除了组成差异，适用边界上有什么不同？请顺带给出处依据。",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["四君子汤", "六君子汤"],
+    "answer_contains_any": ["陈皮", "半夏", "痰", "脾胃气虚"],
+    "evidence_predicates_any": ["使用药材"]
+  },
+  {
+    "id": "hard_005",
+    "category": "why_with_treatment_and_source",
+    "query": "为什么肝郁脾虚常参考逍遥散？请结合治法和古籍出处说明。",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["肝郁脾虚", "逍遥散"],
+    "answer_contains_any": ["疏肝", "健脾", "养血", "和中"],
+    "evidence_source_books_any": ["医方论", "儿科要略", "删补名医方论", "中医内科学"]
+  },
+  {
+    "id": "hard_006",
+    "category": "case_branch_open_question",
+    "query": "如果患者见胁肋胀痛、食少乏力、口苦、失眠，常见什么证候，可参考什么方剂？请给依据。",
+    "expected_routes_any": ["graph", "hybrid"],
+    "executed_routes_contains_any": ["case_qa"],
+    "answer_contains_any": ["肝郁脾虚", "逍遥散"],
+    "evidence_predicates_any": ["推荐方剂", "治疗证候", "辨证链"]
+  },
+  {
+    "id": "hard_007",
+    "category": "divergent_summary_with_quote",
+    "query": "请从组成、功效、主治、出处四个角度概括六味地黄丸，并尽量给出处片段。",
+    "expected_route": "hybrid",
+    "answer_contains_all": ["组成", "功效", "主治", "出处"],
+    "answer_contains_any": ["六味地黄丸", "小儿药证直诀", "肾阴不足"],
+    "evidence_predicates_any": ["使用药材", "功效", "治疗证候"]
+  },
+  {
+    "id": "hard_008",
+    "category": "herb_source_support",
+    "query": "柴胡的性味归经和功效是什么？请给教材或古籍依据。",
+    "expected_route": "graph",
+    "answer_contains_any": ["苦", "辛", "微寒", "肝胆经", "疏肝"],
+    "evidence_predicates_any": ["归经", "性味", "功效"]
+  },
+  {
+    "id": "hard_009",
+    "category": "syndrome_treatment_source",
+    "query": "肝郁脾虚的治法是什么？最好给一个出处支持。",
+    "expected_route": "graph",
+    "answer_contains_any": ["疏肝健脾", "疏肝解郁", "健脾益气"],
+    "evidence_predicates_any": ["治法"]
+  },
+  {
+    "id": "hard_010",
+    "category": "source_trace_only",
+    "query": "请给逍遥散一个比较适合直接引用的古籍出处片段，并说明它为什么适合肝郁脾虚。",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["逍遥散", "肝郁", "血虚", "健脾"],
+    "evidence_source_books_any": ["儿科要略", "删补名医方论", "医方论"]
+  }
+]

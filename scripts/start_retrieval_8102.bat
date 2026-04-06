@@ -8,4 +8,8 @@ if not exist "%PYTHON_EXE%" (
   exit /b 1
 )
 echo [INFO] Using project env: "%PYTHON_EXE%"
-"%PYTHON_EXE%" -m uvicorn services.retrieval_service.app:app --reload --host 0.0.0.0 --port 8102
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start_uvicorn_service.ps1" ^
+  -BackendDir "%CD%" ^
+  -PythonExe "%PYTHON_EXE%" ^
+  -Module "services.retrieval_service.app:app" ^
+  -Port 8102

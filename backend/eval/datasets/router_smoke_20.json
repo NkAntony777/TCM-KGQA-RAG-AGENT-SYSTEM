@@ -38,38 +38,38 @@
   {
     "id": "route_007",
     "query": "逍遥散出自哪本古籍",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_008",
     "query": "请给我逍遥散的原文",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_009",
     "query": "柴胡在本草纲目里怎么解释",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_010",
     "query": "什么是肝郁脾虚",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_011",
     "query": "逍遥散的定义是什么",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_012",
     "query": "天麻钩藤饮的文献记载是什么",
-    "expected_route": "retrieval",
-    "category": "retrieval"
+    "expected_route": "hybrid",
+    "category": "hybrid"
   },
   {
     "id": "route_013",

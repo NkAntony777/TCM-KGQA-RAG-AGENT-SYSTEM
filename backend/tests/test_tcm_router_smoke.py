@@ -17,7 +17,7 @@ class QueryRouterDecisionTests(unittest.TestCase):
 
     def test_retrieval_route_keywords(self) -> None:
         decision = decide_route("逍遥散的古籍出处和原文解释是什么")
-        self.assertEqual(decision.route, "retrieval")
+        self.assertEqual(decision.route, "hybrid")
 
     def test_hybrid_route_keywords(self) -> None:
         decision = decide_route("逍遥散的证候出处与古籍原文是什么")
@@ -135,7 +135,7 @@ class RouteToolDegradationTests(unittest.TestCase):
         ):
             payload = json.loads(self.tool._run("逍遥散的古籍出处和原文", top_k=3))
 
-        self.assertEqual(payload["classifier_route"], "retrieval")
+        self.assertEqual(payload["classifier_route"], "hybrid")
         self.assertEqual(payload["route"], "hybrid")
         self.assertEqual(payload["status"], "degraded")
         self.assertEqual(payload["final_route"], "graph")
@@ -156,7 +156,7 @@ class RouteToolDegradationTests(unittest.TestCase):
         ):
             payload = json.loads(self.tool._run("六味地黄丸出自哪本书？请给出处原文。", top_k=6))
 
-        self.assertEqual(payload["classifier_route"], "retrieval")
+        self.assertEqual(payload["classifier_route"], "hybrid")
         self.assertEqual(payload["route"], "hybrid")
         self.assertEqual(payload["final_route"], "retrieval")
         self.assertEqual(payload["status"], "degraded")

@@ -1,5 +1,8 @@
 @echo off
 setlocal
 cd /d "%~dp0..\backend"
-set "UV_CACHE_DIR=%~dp0..\.uv-cache"
-uv run uvicorn services.graph_service.app:app --reload --host 0.0.0.0 --port 8101
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start_uvicorn_service.ps1" ^
+  -BackendDir "%CD%" ^
+  -Module "services.graph_service.app:app" ^
+  -Port 8101 ^
+  -UseUvRun

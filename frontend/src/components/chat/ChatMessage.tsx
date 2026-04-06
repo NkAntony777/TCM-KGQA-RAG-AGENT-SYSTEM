@@ -8,7 +8,7 @@ import { GraphPathCard } from "@/components/chat/GraphPathCard";
 import { RetrievalCard } from "@/components/chat/RetrievalCard";
 import { RouteCard } from "@/components/chat/RouteCard";
 import { ThoughtChain } from "@/components/chat/ThoughtChain";
-import type { EvidenceItem, PlannerStep, RetrievalResult, RouteEvent, SkillMeta, ToolCall } from "@/lib/api";
+import type { DeepTraceStep, EvidenceBundle, EvidenceItem, PlannerStep, RetrievalResult, RouteEvent, SkillMeta, ToolCall } from "@/lib/api";
 
 export function ChatMessage({
   role,
@@ -18,6 +18,8 @@ export function ChatMessage({
   route,
   evidence,
   plannerSteps,
+  deepTrace,
+  evidenceBundle,
   notes,
   citations,
   qaMode,
@@ -30,6 +32,8 @@ export function ChatMessage({
   route?: RouteEvent;
   evidence: EvidenceItem[];
   plannerSteps: PlannerStep[];
+  deepTrace: DeepTraceStep[];
+  evidenceBundle?: EvidenceBundle;
   notes: string[];
   citations: string[];
   qaMode?: "quick" | "deep";
@@ -52,6 +56,8 @@ export function ChatMessage({
       {!isUser && (
         <ThoughtChain
           citations={citations}
+          deepTrace={deepTrace}
+          evidenceBundle={evidenceBundle}
           notes={notes}
           plannerSteps={plannerSteps}
           qaMode={qaMode}

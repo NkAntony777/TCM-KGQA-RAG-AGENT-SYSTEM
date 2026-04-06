@@ -28,12 +28,9 @@ class RiskLevel(str, Enum):
 
 # 极高风险：直接拒答，不继续路由
 _REFUSE_PATTERNS: tuple[str, ...] = (
-    "剂量",
     "每次吃几",
     "吃几克",
     "吃多少",
-    "用量",
-    "几毫克",
     "几片",
     "自己配药",
     "自己开方",
@@ -44,6 +41,64 @@ _REFUSE_PATTERNS: tuple[str, ...] = (
     "不用看医生",
     "不需要看医生",
     "自行诊断",
+)
+
+_DOSAGE_TRIGGER_PATTERNS: tuple[str, ...] = (
+    "剂量",
+    "用量",
+    "几毫克",
+    "几克",
+)
+
+_ACTIONABLE_DOSAGE_PATTERNS: tuple[str, ...] = (
+    "每次",
+    "一天",
+    "每日",
+    "一天几次",
+    "饭前",
+    "饭后",
+    "怎么吃",
+    "如何吃",
+    "服用",
+    "能吃",
+    "可以吃",
+    "适合吃",
+    "合适",
+    "最合适",
+    "给我开方",
+    "开方",
+    "患者",
+    "孕妇",
+    "儿童",
+    "婴儿",
+    "新生儿",
+    "我",
+    "本人",
+)
+
+_ACADEMIC_DOSAGE_CONTEXT_PATTERNS: tuple[str, ...] = (
+    "机制",
+    "原理",
+    "理论",
+    "学说",
+    "论证",
+    "分析",
+    "探讨",
+    "比较",
+    "差异",
+    "阈值",
+    "阈值效应",
+    "煎煮法",
+    "水通道蛋白",
+    "aqp",
+    "通路",
+    "分子",
+    "现代",
+    "古籍",
+    "经典",
+    "原文",
+    "文献",
+    "研究",
 )
 
 # 高风险：附加免责声明 + 强烈建议就医
@@ -149,7 +204,18 @@ def assess_query(query: str) -> GuardResult:
           - refuse_response: should_refuse=True 时的完整拒答文本
     """
     text = (query or "").strip()
+    lowered_text = text.lower()
     matched: list[str] = []
+
+    if _should_refuse_dosage_query(text, lowered_text):
+        matched.extend(pattern for pattern in _DOSAGE_TRIGGER_PATTERNS if pattern in text or pattern in lowered_text)
+        return GuardResult(
+            risk_level=RiskLevel.HIGH_RISK,
+            matched_patterns=matched,
+            should_refuse=True,
+            disclaimer=DISCLAIMER_HIGH_RISK,
+            refuse_response=REFUSE_RESPONSE,
+        )
 
     # 拒答检查（优先级最高）
     for pattern in _REFUSE_PATTERNS:
@@ -199,3 +265,11 @@ def append_disclaimer(answer: str, disclaimer: str) -> str:
     if disclaimer_stripped in answer:
         return answer
     return answer + disclaimer
+
+
+def _should_refuse_dosage_query(text: str, lowered_text: str) -> bool:
+    if not any(pattern in text or pattern in lowered_text for pattern in _DOSAGE_TRIGGER_PATTERNS):
+        return False
+    if any(pattern in text or pattern in lowered_text for pattern in _ACADEMIC_DOSAGE_CONTEXT_PATTERNS):
+        return False
+    return any(pattern in text or pattern in lowered_text for pattern in _ACTIONABLE_DOSAGE_PATTERNS)

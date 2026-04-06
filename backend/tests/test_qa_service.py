@@ -202,6 +202,21 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["generation_backend"], "medical_guard")
         self.assertEqual(result["factual_evidence"], [])
 
+    async def test_guard_allows_academic_dosage_threshold_query(self) -> None:
+        service = QAService(
+            route_tool=FakeRouteTool(_composition_payload()),
+            answer_generator=FakeAnswerGenerator("这是一个关于剂量阈值效应的学术回答。"),
+        )
+
+        result = await service.answer(
+            "请从AQP分布差异分析五苓散利小便与发汗是否存在剂量或煎煮法阈值效应",
+            mode="quick",
+            top_k=12,
+        )
+
+        self.assertNotEqual(result["status"], "guard_refused")
+        self.assertEqual(result["generation_backend"], "grounded_llm")
+
     def test_origin_gap_prefers_entity_first_then_book_from_graph_source(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
         payload = {

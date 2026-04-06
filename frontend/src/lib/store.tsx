@@ -6,8 +6,6 @@ import {
   compressSession,
   createSession,
   deleteSession,
-  type EvidenceItem,
-  type PlannerStep,
   type SkillMeta,
   getRagMode,
   getSessionHistory,
@@ -18,93 +16,21 @@ import {
   renameSession,
   saveFile,
   setRagMode,
-  type RouteEvent,
-  type RetrievalResult,
   type SessionSummary,
-  streamChat,
-  type ToolCall
+  streamChat
 } from "@/lib/api";
-
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  toolCalls: ToolCall[];
-  retrievals: RetrievalResult[];
-  route?: RouteEvent;
-  evidence: EvidenceItem[];
-  plannerSteps: PlannerStep[];
-  notes: string[];
-  citations: string[];
-  qaMode?: "quick" | "deep";
-};
-
-type TokenStats = {
-  system_tokens: number;
-  message_tokens: number;
-  total_tokens: number;
-};
-
-type AppStore = {
-  sessions: SessionSummary[];
-  currentSessionId: string | null;
-  messages: Message[];
-  isStreaming: boolean;
-  ragMode: boolean;
-  qaMode: "quick" | "deep";
-  skills: SkillMeta[];
-  editableFiles: string[];
-  inspectorPath: string;
-  inspectorContent: string;
-  inspectorDirty: boolean;
-  sidebarWidth: number;
-  inspectorWidth: number;
-  tokenStats: TokenStats | null;
-  createNewSession: () => Promise<void>;
-  selectSession: (sessionId: string) => Promise<void>;
-  sendMessage: (value: string) => Promise<void>;
-  toggleRagMode: () => Promise<void>;
-  setQaMode: (mode: "quick" | "deep") => void;
-  renameCurrentSession: (title: string) => Promise<void>;
-  removeSession: (sessionId: string) => Promise<void>;
-  loadInspectorFile: (path: string) => Promise<void>;
-  updateInspectorContent: (value: string) => void;
-  saveInspector: () => Promise<void>;
-  compressCurrentSession: () => Promise<void>;
-  setSidebarWidth: (width: number) => void;
-  setInspectorWidth: (width: number) => void;
-};
-
-const FIXED_FILES = [
-  "workspace/SOUL.md",
-  "workspace/IDENTITY.md",
-  "workspace/USER.md",
-  "workspace/AGENTS.md",
-  "memory/MEMORY.md",
-  "SKILLS_SNAPSHOT.md"
-];
+import { applyChatStreamEvent } from "@/lib/chatEvents";
+import { loadInitialAppState } from "@/lib/storeBootstrap";
+import {
+  buildEditableFiles,
+  createMessage,
+  type AppStore,
+  type Message,
+  type TokenStats,
+  toUiMessages
+} from "@/lib/storeModels";
 
 const StoreContext = createContext<AppStore | null>(null);
-
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function toUiMessages(history: Awaited<ReturnType<typeof getSessionHistory>>["messages"]) {
-  return history.map((message) => ({
-    id: makeId(),
-    role: message.role,
-    content: message.content ?? "",
-    toolCalls: message.tool_calls ?? [],
-    retrievals: [],
-    route: message.route,
-    evidence: message.evidence ?? [],
-    plannerSteps: message.planner_steps ?? [],
-    notes: message.notes ?? [],
-    citations: message.citations ?? [],
-    qaMode: message.qa_mode
-  }));
-}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -121,10 +47,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [inspectorWidth, setInspectorWidth] = useState(360);
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
 
-  const editableFiles = useMemo(
-    () => [...FIXED_FILES, ...skills.map((skill) => skill.path)],
-    [skills]
-  );
+  const editableFiles = useMemo(() => buildEditableFiles(skills), [skills]);
+
+  function applyInspectorFile(file: { path: string; content: string }) {
+    setInspectorPath(file.path);
+    setInspectorContent(file.content);
+    setInspectorDirty(false);
+  }
 
   async function refreshSessions() {
     setSessions(await listSessions());
@@ -143,6 +72,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTokenStats(tokens);
   }
 
+  async function openSession(sessionId: string) {
+    setCurrentSessionId(sessionId);
+    await refreshSessionDetails(sessionId);
+  }
+
+  async function clearActiveSession() {
+    setCurrentSessionId(null);
+    setMessages([]);
+    setTokenStats(null);
+  }
+
   async function createNewSession() {
     const created = await createSession();
     await refreshSessions();
@@ -152,8 +92,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   async function selectSession(sessionId: string) {
-    setCurrentSessionId(sessionId);
-    await refreshSessionDetails(sessionId);
+    await openSession(sessionId);
   }
 
   async function ensureSession() {
@@ -173,148 +112,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     const sessionId = await ensureSession();
-    const userMessage: Message = {
-      id: makeId(),
-      role: "user",
-      content: value.trim(),
-      toolCalls: [],
-      retrievals: [],
-      evidence: [],
-      plannerSteps: [],
-      notes: [],
-      citations: []
-    };
-    const assistantMessage: Message = {
-      id: makeId(),
-      role: "assistant",
-      content: "",
-      toolCalls: [],
-      retrievals: [],
-      evidence: [],
-      plannerSteps: [],
-      notes: [],
-      citations: [],
-      qaMode
-    };
+    const trimmedValue = value.trim();
+    const userMessage = createMessage("user", trimmedValue);
+    const assistantMessage = createMessage("assistant", "", qaMode);
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setIsStreaming(true);
 
     try {
       await streamChat({
-        message: value.trim(),
+        message: trimmedValue,
         session_id: sessionId,
         mode: qaMode,
         top_k: 12
       }, {
-        onEvent: (event, data) => {
+        onEvent: (streamEvent) => {
           setMessages((prev) =>
             prev.map((message) => {
               if (message.id !== assistantMessage.id) {
                 return message;
               }
-
-              if (event === "qa_mode") {
-                return {
-                  ...message,
-                  qaMode: data.mode === "deep" ? "deep" : "quick"
-                };
-              }
-
-              if (event === "tool_start") {
-                return {
-                  ...message,
-                  toolCalls: [
-                    ...message.toolCalls,
-                    {
-                      tool: String(data.tool ?? "tool"),
-                      input: String(data.input ?? ""),
-                      output: ""
-                    }
-                  ]
-                };
-              }
-
-              if (event === "tool_end") {
-                const meta = typeof data.meta === "object" && data.meta ? (data.meta as ToolCall["meta"]) : undefined;
-                const nextToolCalls = [...message.toolCalls];
-                if (nextToolCalls.length) {
-                  nextToolCalls[nextToolCalls.length - 1] = {
-                    ...nextToolCalls[nextToolCalls.length - 1],
-                    output: String(data.output ?? ""),
-                    meta
-                  };
-                }
-                return {
-                  ...message,
-                  toolCalls: nextToolCalls
-                };
-              }
-
-              if (event === "route") {
-                return {
-                  ...message,
-                  route: data as RouteEvent
-                };
-              }
-
-              if (event === "evidence") {
-                const nextItems = Array.isArray(data.items) ? (data.items as EvidenceItem[]) : [];
-                const merged = [...message.evidence, ...nextItems];
-                const deduped: EvidenceItem[] = [];
-                const seen = new Set<string>();
-                for (const item of merged) {
-                  const key = [item.source_type, item.source, item.snippet].join("::");
-                  if (seen.has(key)) {
-                    continue;
-                  }
-                  seen.add(key);
-                  deduped.push(item);
-                }
-                return {
-                  ...message,
-                  evidence: deduped
-                };
-              }
-
-              if (event === "planner_step") {
-                return {
-                  ...message,
-                  plannerSteps: typeof data.step === "object" && data.step
-                    ? [...message.plannerSteps, data.step as PlannerStep]
-                    : message.plannerSteps
-                };
-              }
-
-              if (event === "notes") {
-                return {
-                  ...message,
-                  notes: Array.isArray(data.items) ? data.items.map((item) => String(item)) : message.notes
-                };
-              }
-
-              if (event === "citations") {
-                return {
-                  ...message,
-                  citations: Array.isArray(data.items) ? data.items.map((item) => String(item)) : message.citations
-                };
-              }
-
-              if (event === "token") {
-                return {
-                  ...message,
-                  content: `${message.content}${String(data.content ?? "")}`
-                };
-              }
-
-              if (event === "done" && !message.content) {
-                return {
-                  ...message,
-                  content: String(data.content ?? "")
-                };
-              }
-
-              return message;
+              return applyChatStreamEvent(message, streamEvent);
             })
           );
         }
@@ -352,21 +170,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const nextSessions = await listSessions();
       setSessions(nextSessions);
       if (nextSessions.length) {
-        setCurrentSessionId(nextSessions[0].id);
-        await refreshSessionDetails(nextSessions[0].id);
+        await openSession(nextSessions[0].id);
       } else {
-        setCurrentSessionId(null);
-        setMessages([]);
-        setTokenStats(null);
+        await clearActiveSession();
       }
     }
   }
 
   async function loadInspectorFile(path: string) {
-    setInspectorPath(path);
-    const file = await loadFile(path);
-    setInspectorContent(file.content);
-    setInspectorDirty(false);
+    applyInspectorFile(await loadFile(path));
   }
 
   function updateInspectorContent(value: string) {
@@ -391,28 +203,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void (async () => {
-      const [initialSessions, rag, initialSkills] = await Promise.all([
-        listSessions(),
-        getRagMode(),
-        listSkills()
-      ]);
+      const initialState = await loadInitialAppState();
+      setSessions(initialState.sessions);
+      setRagModeState(initialState.ragMode);
+      setSkills(initialState.skills);
 
-      setSessions(initialSessions);
-      setRagModeState(rag.enabled);
-      setSkills(initialSkills);
-
-      if (initialSessions.length) {
-        setCurrentSessionId(initialSessions[0].id);
-        await refreshSessionDetails(initialSessions[0].id);
+      if (initialState.sessions.length) {
+        const initialSessionId = initialState.sessions[0].id;
+        setCurrentSessionId(initialSessionId);
+        await refreshSessionDetails(initialSessionId);
       } else {
         const created = await createSession();
         setCurrentSessionId(created.id);
         setSessions([created]);
       }
-
-      const file = await loadFile("memory/MEMORY.md");
-      setInspectorPath(file.path);
-      setInspectorContent(file.content);
+      applyInspectorFile(initialState.inspectorFile);
     })();
   }, []);
 

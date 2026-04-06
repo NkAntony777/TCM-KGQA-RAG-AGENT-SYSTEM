@@ -51,6 +51,8 @@ export function ChatPanel() {
               evidence={message.evidence}
               key={message.id}
               citations={message.citations}
+              deepTrace={message.deepTrace}
+              evidenceBundle={message.evidenceBundle}
               notes={message.notes}
               plannerSteps={message.plannerSteps}
               qaMode={message.qaMode}

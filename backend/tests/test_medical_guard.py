@@ -121,6 +121,11 @@ class TestSafePatterns(unittest.TestCase):
         self.assertFalse(result.should_refuse)
         self.assertEqual(result.risk_level, RiskLevel.SAFE)
 
+    def test_academic_dosage_threshold_query_is_not_refused(self) -> None:
+        result = assess_query("请从AQP分布差异分析五苓散发汗与利小便是否存在剂量或煎煮法阈值效应")
+        self.assertFalse(result.should_refuse)
+        self.assertEqual(result.risk_level, RiskLevel.SAFE)
+
 
 class TestAppendDisclaimer(unittest.TestCase):
     """append_disclaimer 工具函数行为验证。"""

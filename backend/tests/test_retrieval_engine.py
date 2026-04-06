@@ -170,6 +170,42 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["chunks"][0]["collection"], "tcm_shard_0")
             self.assertIn("逍遥散", result["chunks"][0]["answer"])
 
+    def test_search_hybrid_filters_docs_that_miss_query_anchor_entity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = RetrievalEngine(self._settings(Path(tmp)))
+            engine.embedding_client = FakeEmbeddingClient()
+            engine.milvus = FakeMilvusStore()
+            engine.local_store.save(
+                [
+                    {
+                        "chunk_id": "leaf-1",
+                        "text": "逍遥散用于肝郁脾虚。",
+                        "filename": "医方集解.txt",
+                        "page_number": 12,
+                        "file_type": "TXT",
+                        "chunk_idx": 1,
+                        "chunk_level": 3,
+                        "parent_chunk_id": "",
+                        "root_chunk_id": "root-1",
+                        "dense_embedding": [0.1, 0.2, 0.3],
+                        "sparse_embedding": {},
+                        "score": 0.88,
+                        "rrf_rank": 1,
+                    }
+                ]
+            )
+
+            result = engine.search_hybrid(
+                "请从AQP分布差异分析五苓散利小便与发汗是否存在阈值效应",
+                top_k=3,
+                candidate_k=6,
+                enable_rerank=False,
+            )
+
+            self.assertEqual(result["total"], 0)
+            self.assertEqual(result["chunks"], [])
+            self.assertIn("lexical_sanity_filtered_all", result["warnings"])
+
 
 if __name__ == "__main__":
     unittest.main()
