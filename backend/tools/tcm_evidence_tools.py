@@ -11,6 +11,18 @@ from langchain_core.callbacks.manager import AsyncCallbackManagerForToolRun, Cal
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
+from services.common.evidence_payloads import (
+    book_paths_from_route_payload as _book_paths_from_payload,
+    chapter_paths_from_route_payload as _chapter_paths_from_payload,
+    clean_text as _clean_text,
+    graph_path_items as _graph_path_items,
+    graph_relation_items as _graph_relation_items,
+    normalize_book_label as _shared_normalize_book_label,
+    retrieval_items as _retrieval_items,
+    safe_float as _safe_float,
+    section_items as _section_items,
+    syndrome_items as _syndrome_items,
+)
 from services.qa_service.alias_service import get_runtime_alias_service
 from tools.tcm_service_client import (
     call_graph_entity_lookup,
@@ -20,19 +32,6 @@ from tools.tcm_service_client import (
     call_retrieval_hybrid,
     call_retrieval_read_section,
 )
-
-
-def _clean_text(value: Any, *, limit: int = 300) -> str:
-    return str(value or "").strip()[:limit]
-
-
-def _safe_float(value: Any) -> float | None:
-    try:
-        if value is None or value == "":
-            return None
-        return float(value)
-    except Exception:
-        return None
 
 
 def _normalize_path(path: str) -> str:
@@ -57,9 +56,7 @@ HINT_STOPWORDS = {
 
 
 def _normalize_book_label(text: str) -> str:
-    label = str(text or "").strip()
-    label = re.sub(r"^\d+\s*[-_－—]\s*", "", label)
-    return label
+    return _shared_normalize_book_label(text)
 
 
 def _extract_hint_terms(*parts: str) -> list[str]:
@@ -77,64 +74,6 @@ def _extract_hint_terms(*parts: str) -> list[str]:
             seen.add(candidate)
             terms.append(candidate)
     return terms
-
-
-def _graph_relation_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    data = payload.get("data", {}) if isinstance(payload, dict) else {}
-    relations = data.get("relations", []) if isinstance(data, dict) else []
-    items: list[dict[str, Any]] = []
-    for relation in relations:
-        if not isinstance(relation, dict):
-            continue
-        source_book = str(relation.get("source_book", "")).strip()
-        source_chapter = str(relation.get("source_chapter", "")).strip()
-        items.append(
-            {
-                "evidence_type": "factual_grounding",
-                "source_type": "graph",
-                "source": f"{source_book}/{source_chapter}".strip("/") or "graph",
-                "snippet": _clean_text(
-                    relation.get("source_text")
-                    or f"{relation.get('predicate', '')}: {relation.get('target', '')}"
-                ),
-                "score": _safe_float(relation.get("score", relation.get("confidence"))),
-                "predicate": str(relation.get("predicate", "")).strip(),
-                "target": str(relation.get("target", "")).strip(),
-                "source_book": source_book or None,
-                "source_chapter": source_chapter or None,
-            }
-        )
-    return items
-
-
-def _graph_path_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    data = payload.get("data", {}) if isinstance(payload, dict) else {}
-    paths = data.get("paths", []) if isinstance(data, dict) else []
-    items: list[dict[str, Any]] = []
-    for path in paths:
-        if not isinstance(path, dict):
-            continue
-        nodes = [str(node) for node in path.get("nodes", [])] if isinstance(path.get("nodes"), list) else []
-        edges = [str(edge) for edge in path.get("edges", [])] if isinstance(path.get("edges"), list) else []
-        sources = path.get("sources", []) if isinstance(path.get("sources"), list) else []
-        source = "graph/path"
-        if sources:
-            first = sources[0]
-            if isinstance(first, dict):
-                source = f"{first.get('source_book', 'unknown')}/{first.get('source_chapter', '')}".strip("/")
-        items.append(
-            {
-                "evidence_type": "factual_grounding",
-                "source_type": "graph_path",
-                "source": source,
-                "snippet": " -> ".join(nodes)[:300],
-                "score": _safe_float(path.get("score")),
-                "path_nodes": nodes,
-                "path_edges": edges,
-                "path_sources": sources,
-            }
-        )
-    return items
 
 
 def _alias_items(entity_name: str) -> list[dict[str, Any]]:
@@ -159,135 +98,6 @@ def _alias_items(entity_name: str) -> list[dict[str, Any]]:
             }
         )
     return items
-
-
-def _syndrome_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    data = payload.get("data", {}) if isinstance(payload, dict) else {}
-    syndromes = data.get("syndromes", []) if isinstance(data, dict) else []
-    items: list[dict[str, Any]] = []
-    for syndrome in syndromes:
-        if not isinstance(syndrome, dict):
-            continue
-        formulas = syndrome.get("recommended_formulas", [])
-        formula_text = "、".join(str(item) for item in formulas[:6]) if isinstance(formulas, list) else ""
-        items.append(
-            {
-                "evidence_type": "factual_grounding",
-                "source_type": "graph",
-                "source": "graph/syndrome_chain",
-                "snippet": _clean_text(syndrome.get("source_text") or f"{syndrome.get('name', '')} -> {formula_text}"),
-                "score": _safe_float(syndrome.get("score", syndrome.get("confidence"))),
-                "predicate": "辨证链",
-                "target": str(syndrome.get("name", "")).strip(),
-            }
-        )
-    return items
-
-
-def _retrieval_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    data = payload.get("data", {}) if isinstance(payload, dict) else {}
-    chunks = data.get("chunks", []) if isinstance(data, dict) else []
-    items: list[dict[str, Any]] = []
-    for chunk in chunks:
-        if not isinstance(chunk, dict):
-            continue
-        source_file = str(chunk.get("source_file", chunk.get("filename", "unknown"))).strip()
-        source_page = chunk.get("source_page", chunk.get("page_number"))
-        source = f"{source_file}#{source_page}" if source_page not in (None, "") else source_file
-        source_book = _normalize_book_label(source_file.rsplit(".", 1)[0]) if source_file else ""
-        source_chapter = str(chunk.get("chapter_title", "")).strip() or (
-            f"第{source_page}页" if source_page not in (None, "") else ""
-        )
-        items.append(
-            {
-                "evidence_type": "factual_grounding",
-                "source_type": "doc",
-                "source": source,
-                "snippet": _clean_text(chunk.get("text")),
-                "match_snippet": _clean_text(chunk.get("match_snippet"), limit=220),
-                "score": _safe_float(chunk.get("rerank_score", chunk.get("score"))),
-                "source_file": source_file,
-                "source_book": source_book or None,
-                "source_chapter": source_chapter or None,
-            }
-        )
-    return items
-
-
-def _book_paths_from_payload(payload: dict[str, Any]) -> list[str]:
-    paths: list[str] = []
-    graph_data = payload.get("graph_result", {}).get("data", {}) if isinstance(payload.get("graph_result"), dict) else {}
-    retrieval_data = payload.get("retrieval_result", {}).get("data", {}) if isinstance(payload.get("retrieval_result"), dict) else {}
-
-    relations = graph_data.get("relations", []) if isinstance(graph_data, dict) else []
-    for relation in relations if isinstance(relations, list) else []:
-        if not isinstance(relation, dict):
-            continue
-        source_book = str(relation.get("source_book", "")).strip()
-        if source_book:
-            paths.append(f"book://{source_book}/*")
-
-    chunks = retrieval_data.get("chunks", []) if isinstance(retrieval_data, dict) else []
-    for chunk in chunks if isinstance(chunks, list) else []:
-        if not isinstance(chunk, dict):
-            continue
-        source_file = str(chunk.get("source_file", chunk.get("filename", ""))).strip()
-        if not source_file:
-            continue
-        source_name = _normalize_book_label(source_file.rsplit(".", 1)[0])
-        if source_name:
-            paths.append(f"book://{source_name}/*")
-
-    return list(dict.fromkeys(path for path in paths if path))
-
-
-def _chapter_paths_from_payload(payload: dict[str, Any]) -> list[str]:
-    paths: list[str] = []
-    graph_data = payload.get("graph_result", {}).get("data", {}) if isinstance(payload.get("graph_result"), dict) else {}
-    retrieval_data = payload.get("retrieval_result", {}).get("data", {}) if isinstance(payload.get("retrieval_result"), dict) else {}
-
-    relations = graph_data.get("relations", []) if isinstance(graph_data, dict) else []
-    for relation in relations if isinstance(relations, list) else []:
-        if not isinstance(relation, dict):
-            continue
-        source_book = str(relation.get("source_book", "")).strip()
-        source_chapter = str(relation.get("source_chapter", "")).strip()
-        if source_book and source_chapter:
-            paths.append(f"chapter://{source_book}/{source_chapter}")
-
-    chunks = retrieval_data.get("chunks", []) if isinstance(retrieval_data, dict) else []
-    for chunk in chunks if isinstance(chunks, list) else []:
-        if not isinstance(chunk, dict):
-            continue
-        source_file = str(chunk.get("source_file", chunk.get("filename", ""))).strip()
-        source_book = _normalize_book_label(source_file.rsplit(".", 1)[0]) if source_file else ""
-        source_chapter = str(chunk.get("chapter_title", "")).strip()
-        if source_book and source_chapter:
-            paths.append(f"chapter://{source_book}/{source_chapter}")
-
-    return list(dict.fromkeys(path for path in paths if path))
-
-
-def _section_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    data = payload.get("data", {}) if isinstance(payload, dict) else {}
-    section = data.get("section", {}) if isinstance(data, dict) else {}
-    if not isinstance(section, dict) or not section:
-        return []
-    book_name = str(section.get("book_name", "")).strip()
-    chapter_title = str(section.get("chapter_title", "")).strip()
-    return [
-        {
-            "evidence_type": "factual_grounding",
-            "source_type": "chapter",
-            "source": f"{book_name}/{chapter_title}".strip("/") or "chapter",
-            "snippet": _clean_text(section.get("text"), limit=600),
-            "score": 1.0,
-            "source_file": str(section.get("source_file", "")).strip() or None,
-            "source_book": book_name or None,
-            "source_chapter": chapter_title or None,
-        }
-    ]
-
 
 def _filter_items_by_book(items: list[dict[str, Any]], *, book_name: str) -> list[dict[str, Any]]:
     if not book_name:
