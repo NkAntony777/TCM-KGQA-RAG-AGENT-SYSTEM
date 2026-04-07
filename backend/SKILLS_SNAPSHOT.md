@@ -3,6 +3,9 @@
   <skill name="compare-formulas" path="skills/compare-formulas/SKILL.md">
     <description>当用户比较两个或多个方剂、证候方案、功效差异、适用边界时使用。分别读取各实体证据，再补充出处或教材对照信息，不要只用单一实体证据回答比较题。</description>
   </skill>
+  <skill name="expand-entity-alias" path="skills/expand-entity-alias/SKILL.md">
+    <description>当用户问题涉及古籍旧名、异名、别名切换，或 files-first 没有稳定命中时使用。先读取 alias:// 路径，把当前实体扩展成可检索的别名集合，再继续追出处或原文。</description>
+  </skill>
   <skill name="external-source-verification" path="skills/external-source-verification/SKILL.md">
     <description>只有在用户明确要求联网、核验外部事实、查询最新官方信息，或本地知识库没有覆盖该问题时使用。优先核验官方来源或一手来源，不要默认替代本地中医知识链路。</description>
   </skill>

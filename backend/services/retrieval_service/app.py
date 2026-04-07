@@ -12,6 +12,8 @@ class HybridSearchRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=20)
     candidate_k: int = Field(default=20, ge=1, le=100)
     enable_rerank: bool = True
+    search_mode: str = Field(default="files_first")
+    allowed_file_path_prefixes: list[str] = Field(default_factory=list)
 
 
 class RewriteRequest(BaseModel):
@@ -23,6 +25,11 @@ class CaseQASearchRequest(BaseModel):
     query: str = Field(..., min_length=1)
     top_k: int = Field(default=5, ge=1, le=20)
     candidate_k: int = Field(default=30, ge=1, le=200)
+
+
+class SectionReadRequest(BaseModel):
+    path: str = Field(..., min_length=1, description="chapter://<book>/<chapter>")
+    top_k: int = Field(default=12, ge=1, le=128)
 
 
 app = FastAPI(title="TCM Retrieval Service", version="0.1.0")
@@ -40,6 +47,8 @@ def search_hybrid(payload: HybridSearchRequest, x_trace_id: str | None = Header(
         top_k=payload.top_k,
         candidate_k=payload.candidate_k,
         enable_rerank=payload.enable_rerank,
+        search_mode=payload.search_mode,
+        allowed_file_path_prefixes=payload.allowed_file_path_prefixes,
     )
     if not data.get("chunks"):
         return error(30001, "RETRIEVE_EMPTY", trace_id=x_trace_id, data=data)
@@ -61,4 +70,12 @@ def search_case_qa(payload: CaseQASearchRequest, x_trace_id: str | None = Header
     )
     if not data.get("chunks"):
         return error(30002, "CASE_QA_EMPTY", trace_id=x_trace_id, data=data)
+    return success(data, trace_id=x_trace_id)
+
+
+@app.post("/api/v1/retrieval/read/section")
+def read_section(payload: SectionReadRequest, x_trace_id: str | None = Header(default=None, alias="X-Trace-Id")):
+    data = get_retrieval_engine().read_section(payload.path, top_k=payload.top_k)
+    if not data.get("section"):
+        return error(30003, "SECTION_EMPTY", trace_id=x_trace_id, data=data)
     return success(data, trace_id=x_trace_id)

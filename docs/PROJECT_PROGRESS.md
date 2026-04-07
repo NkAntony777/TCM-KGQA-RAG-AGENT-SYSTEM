@@ -1,6 +1,6 @@
 # 项目进展
 
-更新时间：2026-04-06
+更新时间：2026-04-07
 
 ## 当前状态
 
@@ -13,6 +13,75 @@
 - 发布到 runtime JSON
 - 发布到 NebulaGraph
 - 发布状态持久化与前端展示
+
+## 2026-04-07 非向量检索主链进展
+
+### 当前结论
+
+- 本项目已经**基本实现非向量化主检索骨架**，核心方向已经明确为：
+  - `graph + files-first + 结构化索引 + skill + planner`
+- 当前已经不是“只有向量库才能回答”的阶段。
+- 截至 2026-04-07 当前代码状态已经进一步收口为：
+  - `quick / deep` 默认 retrieval 主路径已切到 `files_first`
+  - `case QA` 默认主路径已切到结构化非向量索引
+  - 旧 `dense` 与旧 case 向量链路仅作为**显式兼容 fallback** 保留，默认不再参与主链
+
+### 当前已经落地的非向量能力
+
+- 经典古籍 files-first 索引已建成并可读回整节：
+  - `backend/storage/retrieval_local_index.fts.db`
+- HERB2 现代证据语料已转为可读文档并进入 files-first 索引。
+- `chapter://`、`book://`、`entity://`、`alias://` 路径体系已接入深度模式 follow-up retrieval。
+- 运行时别名系统已接入：
+  - `expand-entity-alias`
+  - 查询扩展
+  - 旧名/异名回溯
+- QA 结构化非向量索引已建成：
+  - `backend/storage/qa_structured_index.sqlite`
+  - 已支持 `jieba + alias + 规则重排`
+- 当前 `case QA` 默认已优先命中该结构化索引，返回 `structured_case_qa`。
+- deep 模式 planner 已开始从“整题泛搜”转为“按缺口拆解动作”：
+  - 比较题优先补未覆盖实体
+  - 路径题拆成链路证据与出处证据
+
+### 当前已修复的关键退化点
+
+- 已确认并修复一个关键架构问题：
+  - 之前 `graph/retrieval service` 端口不可达时，`tcm_service_client` 会错误退回 `mock_data`
+  - 现已改为优先退回**本地真实 graph engine / retrieval engine**
+- 这意味着：
+  - 即使 8101 / 8102 未启动，8002 主链也不再自动退回假数据
+  - deep follow-up retrieval 可以继续读取本地真实图谱与本地真实 files-first 检索层
+- 同时已新增保护：
+  - 当本地 retrieval 的 dense embedding 不可用时，会优先降级到 `files_first`
+  - 不再因为 embedding 接口不可用直接拖垮整个 deep 链路
+  - 当主链明确指定 `files_first` 时，默认**不再偷偷回退 dense**
+  - 当 `case QA` 结构化索引无结果时，默认**不再自动回退向量库**
+
+### 当前仍保留的过渡依赖
+
+- 当前系统**还没有完全去掉 dense**。
+- 现实状态应理解为：
+  - 非向量链路已经成为默认主链
+  - dense 已不再是默认主路径
+  - 但旧引擎内部仍保留 dense / case 向量兼容代码，尚未物理删除
+- 当前仍残留 dense 的位置主要有：
+  - `services/retrieval_service/engine.py` 的旧 `search_hybrid`
+  - `services/retrieval_service/chroma_case_store.py` 的旧 case 向量检索兼容层
+- 因此，当前准确表述应是：
+  - **项目已把 graph + files-first + structured index 落为默认主链；dense 与旧 case 向量链路仍作为兼容层保留，但默认关闭主导权。**
+
+### 当前最重要的下一步
+
+- 不再继续把工程重点放在“再补一个 planner 技巧”上。
+- 当前最重要的是把以下三层彻底收口：
+  - 图谱命中实体
+  - 稳定产出正确 `entity:// / book:// / chapter://`
+  - files-first 在正确范围内补原文
+- 下一阶段目标：
+  - 继续稳定 `entity:// / book:// / chapter://` 读回质量
+  - 做 8002 实际 HTTP 评测，确认运行进程与本地直调一致
+  - 让 deep 的 `why_this_step / new_evidence / coverage_after_step` 输出更稳定
 
 ## 2026-04-06 问答链路增量进展
 
@@ -29,6 +98,7 @@
   - 多数带实体的出处 / 原文 / 定义 / 文献类问题，默认评测期望改为 `hybrid`
 - 本轮详细记录见：
   - [问答路由与评测基线更新_20260406.md](./问答路由与评测基线更新_20260406.md)
+  - [无向量检索替代方案_20260407.md](./无向量检索替代方案_20260407.md)
 
 ## 本轮已落实的行为
 
@@ -158,9 +228,25 @@
 - 当前系统已经新增：
   - `/api/v1/retrieval/search/case-qa`
   - `tcm_case_qa_search`
-  - `qa_case_vector_db` source
+  - 旧 `qa_case_vector_db` 兼容 source（现已退居 fallback）
   - `caseqa://` evidence path 体系
 - 当前深度模式链路已经可以把该库作为“相似医案参考源”接入，而不是把它误当作古籍事实源。
+
+### 外部 QA 非向量替代链路已完成第一阶段
+
+- 当前项目已经完成 QA 结构化非向量索引的第一阶段建设：
+  - `backend/storage/qa_structured_index.sqlite`
+- 当前规模：
+  - `qa_records = 3162928`
+  - `case_records = 481894`
+- 当前已接入：
+  - alias 扩展
+  - `jieba` 中文切词增强
+  - origin / composition / indication / case 的规则重排
+- 当前作用：
+  - 用于与原向量式 case QA 做横向对比
+  - 当前已接管病例类问答的默认主路径
+  - 向量 case QA 现仅保留为可选兼容 fallback
 
 ### 外部 QA 向量库检索性能优化已落地
 
@@ -248,6 +334,16 @@
 - 当前关系簇聚合仍在 Python 层执行，输入是单实体的高阶邻接边集合。对于高出度实体，这会带来额外的内存与排序开销。
 - 从测试表现看，`graph_engine` 全量测试在真实 runtime 图上耗时仍偏高，说明查询期聚合和排序还存在优化空间。
 - 后续应优先评估把“关系簇聚合”和“覆盖统计”下推到 SQLite 聚合查询层，减少 Python 层处理的候选边数量。
+- 当前 deep 模式的主要瓶颈已不再只是 planner，而是：
+  - `entity://` 路径命中后的读取稳定性
+  - `route.final_route` 是否稳定维持在 `hybrid`
+  - alias 扩展是否会把出处题带到错误书目范围
+- 当前真实评测已经证明：
+  - 如果图谱命中、路径生成、files-first 读段三者没有接牢，deep 会退化成“带一点图谱提示的 retrieval”
+- 因此后续优化优先级应调整为：
+  - 先修证据层
+  - 再修路由稳定性
+  - 最后再继续增强 planner
 - 当前意图分类器仍是“轻量词典 + 规则”版本，覆盖度足够支撑当前快速/深度双模式骨架，但还未接入完整实体词表和外部问答向量库的语义反馈信号。
 - 后续如果要覆盖更大的古籍实体空间，应优先补齐实体词典自动构建，而不是继续堆更多正则。
 - 外部 QA 向量库虽然已经完成第一阶段接入，但首次冷启动的 HNSW shard 加载依然昂贵，深度模式必须接受高于快速模式的检索延迟。

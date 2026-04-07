@@ -49,6 +49,21 @@ def _append_degradation(output: dict[str, object], *, source_route: str, target_
         degradation.append({"from": source_route, "to": target_route, "reason": reason})
 
 
+def _case_qa_enabled(strategy) -> bool:
+    sources = {str(item).strip() for item in getattr(strategy, "sources", []) if str(item).strip()}
+    return bool({"qa_case_structured_index", "qa_case_vector_db"} & sources)
+
+
+def _allowed_retrieval_prefixes(strategy) -> list[str]:
+    sources = {str(item).strip() for item in getattr(strategy, "sources", []) if str(item).strip()}
+    prefixes: list[str] = []
+    if "classic_docs" in sources or "qa_structured_index" in sources:
+        prefixes.extend(["classic://", "sample://"])
+    if "modern_herb_evidence" in sources:
+        prefixes.append("herb2://")
+    return list(dict.fromkeys(prefixes))
+
+
 class TCMRouteSearchTool(BaseTool):
     name: str = "tcm_route_search"
     description: str = (
@@ -137,11 +152,17 @@ class TCMRouteSearchTool(BaseTool):
             return primary
 
         def retrieval_search() -> dict[str, object]:
+            expanded_query = _expand_retrieval_query(query=query, strategy=strategy)
+            if expanded_query != query:
+                output["retrieval_expanded_query"] = expanded_query
+            allowed_prefixes = _allowed_retrieval_prefixes(strategy)
             return call_retrieval_hybrid(
-                query=query,
+                query=expanded_query,
                 top_k=top_k,
                 candidate_k=max(strategy.vector_candidate_k, top_k * 3, 9),
                 enable_rerank=False,
+                search_mode="files_first",
+                allowed_file_path_prefixes=allowed_prefixes,
             )
 
         def case_qa_search() -> dict[str, object]:
@@ -152,7 +173,7 @@ class TCMRouteSearchTool(BaseTool):
             )
 
         def maybe_run_case_qa(source_route: str) -> dict[str, object] | None:
-            if "qa_case_vector_db" not in strategy.sources:
+            if not _case_qa_enabled(strategy):
                 return None
             output["executed_routes"] = list(dict.fromkeys([*output["executed_routes"], "case_qa"]))
             result = case_qa_search()
@@ -259,3 +280,13 @@ class TCMRouteSearchTool(BaseTool):
         run_manager: AsyncCallbackManagerForToolRun | None = None,
     ) -> str:
         return await asyncio.to_thread(self._run, query, top_k, None)
+
+
+def _expand_retrieval_query(*, query: str, strategy) -> str:
+    alias_terms = list(getattr(strategy, "entity_aliases", []) or [])
+    if not alias_terms:
+        return query
+    extras = [term for term in alias_terms if term and term not in query]
+    if not extras:
+        return query
+    return " ".join([query, *extras[:6]]).strip()

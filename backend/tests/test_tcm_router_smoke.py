@@ -10,6 +10,13 @@ from router.retrieval_strategy import derive_retrieval_strategy
 from tools.tcm_route_tool import TCMRouteSearchTool
 
 
+class FakeAliasService:
+    def aliases_for_entity(self, entity_name: str, *, max_aliases: int = 6, max_depth: int = 2) -> list[str]:
+        if entity_name == "六味地黄丸":
+            return ["地黄丸", "六味丸"]
+        return []
+
+
 class QueryRouterDecisionTests(unittest.TestCase):
     def test_graph_route_keywords(self) -> None:
         decision = decide_route("逍遥散的证候和配伍关系是什么")
@@ -43,14 +50,21 @@ class QueryRouterDecisionTests(unittest.TestCase):
         self.assertEqual(strategy.preferred_route, "hybrid")
         self.assertEqual(strategy.predicate_allowlist, [])
         self.assertIn("classic_docs", strategy.sources)
-        self.assertIn("qa_vector_db", strategy.sources)
+        self.assertIn("qa_structured_index", strategy.sources)
         self.assertIn("entity://逍遥散/*", strategy.evidence_paths)
         self.assertIn("qa://逍遥散/similar", strategy.evidence_paths)
+
+    def test_strategy_includes_alias_paths_and_alias_terms(self) -> None:
+        with patch("router.retrieval_strategy.get_runtime_alias_service", return_value=FakeAliasService()):
+            strategy = derive_retrieval_strategy("六味地黄丸出自哪本古籍", requested_top_k=12, route_hint="retrieval")
+
+        self.assertIn("alias://六味地黄丸", strategy.evidence_paths)
+        self.assertEqual(strategy.entity_aliases, ["地黄丸", "六味丸"])
 
     def test_case_style_query_enables_case_qa_source(self) -> None:
         query = "基本信息: 年龄:47 性别:女 主诉:胁肋胀痛 失眠 现病史:口苦 体格检查:舌淡红 脉弦"
         strategy = derive_retrieval_strategy(query, requested_top_k=12, route_hint="hybrid")
-        self.assertIn("qa_case_vector_db", strategy.sources)
+        self.assertIn("qa_case_structured_index", strategy.sources)
         self.assertIn("caseqa://胁肋胀痛/similar", strategy.evidence_paths)
 
     def test_path_query_with_source_request_derives_hybrid_strategy(self) -> None:
@@ -64,7 +78,16 @@ class QueryRouterDecisionTests(unittest.TestCase):
     def test_symptom_rich_open_query_enables_case_qa_source(self) -> None:
         query = "如果见胁肋胀痛、食少乏力、口苦、失眠，常见什么证候，可参考什么方剂？"
         strategy = derive_retrieval_strategy(query, requested_top_k=12, route_hint="graph")
-        self.assertIn("qa_case_vector_db", strategy.sources)
+        self.assertIn("qa_case_structured_index", strategy.sources)
+
+    def test_modern_research_query_enables_modern_sources(self) -> None:
+        query = "请从 AQP 与 TRPM8 通路角度分析五苓散和冰片的现代机制证据"
+        strategy = derive_retrieval_strategy(query, requested_top_k=12, route_hint="hybrid")
+        self.assertIn("modern_graph", strategy.sources)
+        self.assertIn("modern_herb_evidence", strategy.sources)
+        self.assertIn("book://TCM-MKG/*", strategy.evidence_paths)
+        self.assertIn("book://HERB2/*", strategy.evidence_paths)
+        self.assertIn("modern_evidence_sources_enabled", strategy.notes)
 
 
 class RouteToolDegradationTests(unittest.TestCase):
@@ -144,6 +167,7 @@ class RouteToolDegradationTests(unittest.TestCase):
 
     def test_origin_query_with_entity_forces_hybrid_execution(self) -> None:
         with (
+            patch("router.retrieval_strategy.get_runtime_alias_service", return_value=FakeAliasService()),
             patch("tools.tcm_route_tool.service_health_snapshot", return_value={}),
             patch(
                 "tools.tcm_route_tool.call_graph_entity_lookup",
@@ -163,6 +187,11 @@ class RouteToolDegradationTests(unittest.TestCase):
         self.assertEqual(payload["executed_routes"], ["graph", "retrieval"])
         graph_mock.assert_called()
         retrieval_mock.assert_called()
+        self.assertIn("地黄丸", retrieval_mock.call_args.kwargs["query"])
+        self.assertIn("六味丸", retrieval_mock.call_args.kwargs["query"])
+        self.assertEqual(retrieval_mock.call_args.kwargs["search_mode"], "files_first")
+        self.assertEqual(retrieval_mock.call_args.kwargs["allowed_file_path_prefixes"], ["classic://", "sample://"])
+        self.assertIn("retrieval_expanded_query", payload)
 
     def test_double_failure_marks_evidence_insufficient(self) -> None:
         with (
@@ -276,7 +305,7 @@ class RouteToolDegradationTests(unittest.TestCase):
         ):
             payload = json.loads(self.tool._run(query, top_k=6))
 
-        self.assertIn("qa_case_vector_db", payload["retrieval_strategy"]["sources"])
+        self.assertIn("qa_case_structured_index", payload["retrieval_strategy"]["sources"])
         self.assertIn("case_qa", payload["executed_routes"])
         self.assertEqual(payload["service_trace_ids"]["case_qa"], "c1")
         self.assertEqual(payload["case_qa_result"]["data"]["chunks"][0]["collection"], "tcm_shard_0")

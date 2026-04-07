@@ -4,6 +4,8 @@ import json
 import unittest
 
 from services.qa_service.engine import QAService, _apply_origin_action_policy, _factual_evidence_from_payload, _identify_evidence_gaps, _plan_followup_actions
+from services.qa_service.evidence import _coverage_gaps_from_state, _init_coverage_state, _update_coverage_state
+from services.qa_service.prompts import _build_planner_user_prompt
 
 
 class FakeRouteTool:
@@ -42,22 +44,30 @@ class FakeSequentialAnswerGenerator:
 
 
 class FakeEvidenceNavigator:
-    def __init__(self, *, listed_paths: list[str] | None = None, read_results: dict[str, dict[str, object]] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        listed_paths: list[str] | None = None,
+        read_results: dict[str, dict[str, object]] | None = None,
+        search_results: dict[str, dict[str, object]] | None = None,
+    ) -> None:
         self.listed_paths = listed_paths or []
         self.read_results = read_results or {}
+        self.search_results = search_results or {}
         self.calls: list[dict[str, object]] = []
 
     def list_evidence_paths(self, *, query: str, route_payload: dict[str, object] | None = None) -> dict[str, object]:
         self.calls.append({"tool": "list_evidence_paths", "query": query})
         return {"tool": "list_evidence_paths", "paths": list(self.listed_paths), "count": len(self.listed_paths)}
 
-    def read_evidence_path(self, *, path: str, query: str = "", top_k: int | None = None) -> dict[str, object]:
-        self.calls.append({"tool": "read_evidence_path", "path": path, "query": query, "top_k": top_k})
+    def read_evidence_path(self, *, path: str, query: str = "", source_hint: str = "", top_k: int | None = None) -> dict[str, object]:
+        self.calls.append({"tool": "read_evidence_path", "path": path, "query": query, "source_hint": source_hint, "top_k": top_k})
         return dict(self.read_results.get(path, {"tool": "read_evidence_path", "path": path, "status": "empty", "items": [], "count": 0}))
 
-    def search_evidence_text(self, *, query: str, scope_paths: list[str] | None = None, top_k: int | None = None) -> dict[str, object]:
-        self.calls.append({"tool": "search_evidence_text", "query": query, "scope_paths": scope_paths or [], "top_k": top_k})
-        return {"tool": "search_evidence_text", "status": "empty", "items": [], "count": 0}
+    def search_evidence_text(self, *, query: str, source_hint: str = "", scope_paths: list[str] | None = None, top_k: int | None = None) -> dict[str, object]:
+        self.calls.append({"tool": "search_evidence_text", "query": query, "source_hint": source_hint, "scope_paths": scope_paths or [], "top_k": top_k})
+        key = json.dumps({"query": query, "scope_paths": scope_paths or []}, ensure_ascii=False, sort_keys=True)
+        return dict(self.search_results.get(key, {"tool": "search_evidence_text", "status": "empty", "items": [], "count": 0}))
 
 
 def _composition_payload() -> dict[str, object]:
@@ -236,6 +246,52 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(events.count("new_response"), 2)
         self.assertEqual(events[-1], "result")
 
+    async def test_execute_action_uses_request_scope_cache(self) -> None:
+        navigator = FakeEvidenceNavigator(
+            read_results={
+                "entity://六味地黄丸/*": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://六味地黄丸/*",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph",
+                            "source": "小儿药证直诀/卷下",
+                            "snippet": "使用药材: 熟地黄",
+                            "predicate": "使用药材",
+                            "target": "熟地黄",
+                            "source_book": "小儿药证直诀",
+                            "source_chapter": "卷下",
+                            "score": 0.91,
+                        }
+                    ],
+                }
+            },
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_deep_followup_payload()),
+            answer_generator=FakeAnswerGenerator("unused"),
+            evidence_navigator=navigator,
+        )
+        action = {
+            "skill": "read-formula-origin",
+            "tool": "read_evidence_path",
+            "path": "entity://六味地黄丸/*",
+            "query": "六味地黄丸 出处 原文",
+            "top_k": 6,
+        }
+        request_cache: dict[str, dict[str, object]] = {}
+
+        first = service._execute_action(action, request_cache=request_cache)
+        second = service._execute_action(action, request_cache=request_cache)
+
+        read_calls = [call for call in navigator.calls if call["tool"] == "read_evidence_path"]
+        self.assertEqual(len(read_calls), 1)
+        self.assertEqual(first["cache_hit"], False)
+        self.assertEqual(second["cache_hit"], True)
+
     async def test_guard_refuses_high_risk_query(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
 
@@ -319,6 +375,8 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
             executed_actions=set(),
         )
         self.assertEqual(second_actions[0]["path"], "book://小儿药证直诀/*")
+        self.assertIn("source_hint", second_actions[0])
+        self.assertIn("熟地黄", second_actions[0]["source_hint"])
 
     def test_single_entity_query_does_not_create_comparison_gap(self) -> None:
         payload = {
@@ -350,6 +408,36 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(gaps, [])
+
+    def test_incremental_coverage_state_matches_gap_identifier(self) -> None:
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_origin"},
+            "retrieval_strategy": {
+                "intent": "formula_origin",
+                "entity_name": "六味地黄丸",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+        }
+        factual_evidence = [
+            {
+                "source_type": "graph",
+                "source": "小儿药证直诀/卷下",
+                "snippet": "使用药材: 熟地黄",
+                "predicate": "使用药材",
+                "target": "熟地黄",
+                "source_book": "小儿药证直诀",
+                "source_chapter": "卷下",
+            }
+        ]
+        query = "六味地黄丸出自哪本书？请给出处原文。"
+
+        state = _init_coverage_state(query=query, payload=payload, evidence_paths=["entity://六味地黄丸/*"])
+        _update_coverage_state(state, new_factual_evidence=factual_evidence, new_case_references=[])
+
+        self.assertEqual(
+            _coverage_gaps_from_state(state),
+            _identify_evidence_gaps(query=query, payload=payload, factual_evidence=factual_evidence, case_references=[]),
+        )
 
     def test_origin_action_policy_overrides_wrong_book_plan(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
@@ -386,6 +474,113 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(corrected[0]["path"], "entity://六味地黄丸/*")
         self.assertEqual(len(corrected), 1)
+
+    def test_comparison_gap_prioritizes_uncovered_entities(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {
+                "dominant_intent": "formula_efficacy",
+                "compare_entities": ["柴胡桂枝干姜汤", "乌梅丸", "黄连汤"],
+            },
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "柴胡桂枝干姜汤",
+                "compare_entities": ["柴胡桂枝干姜汤", "乌梅丸", "黄连汤"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "_planner_factual_evidence": [
+                {
+                    "source_type": "graph",
+                    "source": "伤寒论/辨太阳病脉证并治",
+                    "snippet": "柴胡桂枝干姜汤主之",
+                    "predicate": "主方",
+                    "target": "柴胡桂枝干姜汤",
+                    "source_book": "伤寒论",
+                    "source_chapter": "辨太阳病脉证并治",
+                }
+            ],
+        }
+
+        actions = _plan_followup_actions(
+            planner_skills=service.planner_skills,
+            query="请比较柴胡桂枝干姜汤、乌梅丸、黄连汤在寒热错杂证中的结构异同。",
+            payload=payload,
+            evidence_paths=[
+                "entity://柴胡桂枝干姜汤/*",
+                "entity://乌梅丸/*",
+                "entity://黄连汤/*",
+                "book://伤寒论/*",
+            ],
+            gaps=["comparison"],
+            max_actions=2,
+            executed_actions=set(),
+        )
+
+        self.assertEqual([action["skill"] for action in actions], ["compare-formulas", "compare-formulas"])
+        self.assertEqual([action["path"] for action in actions], ["entity://乌梅丸/*", "entity://黄连汤/*"])
+        self.assertTrue(all("比较" in action["query"] for action in actions))
+        self.assertTrue(any("病机" in action["query"] for action in actions))
+
+    def test_path_reasoning_gap_builds_decomposed_queries(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_efficacy"},
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "柴胡桂枝干姜汤",
+                "compare_entities": ["柴胡桂枝干姜汤", "乌梅丸", "黄连汤"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+        }
+
+        actions = _plan_followup_actions(
+            planner_skills=service.planner_skills,
+            query=(
+                "《伤寒论》第147条柴胡桂枝干姜汤证，若从厥阴病上热下寒与胆热脾寒角度，"
+                "比较柴胡桂枝干姜汤、乌梅丸、黄连汤在寒热错杂证中的结构异同。"
+            ),
+            payload=payload,
+            evidence_paths=[
+                "entity://柴胡桂枝干姜汤/推荐方剂",
+                "book://伤寒论/*",
+            ],
+            gaps=["path_reasoning"],
+            max_actions=2,
+            executed_actions=set(),
+        )
+
+        self.assertEqual(actions[0]["skill"], "trace-graph-path")
+        self.assertEqual(actions[0]["path"], "entity://柴胡桂枝干姜汤/推荐方剂")
+        self.assertIn("《伤寒论》第147条柴胡桂枝干姜汤证", actions[0]["query"])
+        self.assertEqual(actions[1]["skill"], "trace-source-passage")
+        self.assertEqual(actions[1]["path"], "book://伤寒论/*")
+        self.assertIn("柴胡桂枝干姜汤 乌梅丸 黄连汤 病机 主治 比较", actions[1]["query"])
+
+    def test_planner_prompt_uses_summary_view_instead_of_full_long_snippets(self) -> None:
+        prompt = _build_planner_user_prompt(
+            query="六味地黄丸出自哪本书？请给出处原文。",
+            payload={"retrieval_strategy": {"intent": "formula_origin", "entity_name": "六味地黄丸"}},
+            evidence_paths=["entity://六味地黄丸/*", "book://小儿药证直诀/*"],
+            factual_evidence=[
+                {
+                    "source_type": "doc",
+                    "source": "小儿药证直诀.txt#42",
+                    "predicate": "",
+                    "target": "",
+                    "snippet": "六味地黄丸，治肾阴不足。" * 20,
+                }
+            ],
+            case_references=[],
+            deep_trace=[],
+            heuristic_gaps=["origin"],
+            max_actions=2,
+            executed_actions=["read_evidence_path::entity://六味地黄丸/*"],
+            coverage_summary={"gaps": ["origin"], "sufficient": False},
+        )
+
+        self.assertIn("factual_summary:", prompt)
+        self.assertNotIn("六味地黄丸，治肾阴不足。" * 5, prompt)
+        self.assertIn("executed_actions:", prompt)
 
     async def test_deep_mode_origin_policy_rewrites_wrong_planner_book_actions(self) -> None:
         payload = {
@@ -474,7 +669,101 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
 
         read_paths = [item["meta"]["path"] for item in result["tool_trace"] if item["tool"] == "read_evidence_path"]
         self.assertEqual(read_paths, ["entity://六味地黄丸/*", "book://小儿药证直诀/*"])
+        read_calls = [item for item in navigator.calls if item["tool"] == "read_evidence_path" and item["path"] == "book://小儿药证直诀/*"]
+        self.assertTrue(read_calls)
+        self.assertIn("熟地黄", str(read_calls[0].get("source_hint", "")))
         self.assertIn("《小儿药证直诀》", result["answer"])
+
+    async def test_deep_mode_keeps_distinct_tool_names_for_parallel_followup_actions(self) -> None:
+        payload = {
+            "route": "hybrid",
+            "route_reason": "compare_entities_forced_hybrid",
+            "status": "ok",
+            "final_route": "hybrid",
+            "executed_routes": ["graph", "retrieval"],
+            "query_analysis": {
+                "dominant_intent": "formula_efficacy",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+            },
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "逍遥散",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "evidence_paths": ["entity://逍遥散/*", "book://医方集解/*"],
+            "graph_result": {"code": 0, "message": "ok", "data": {"relations": []}},
+            "retrieval_result": {"code": 0, "message": "ok", "data": {"chunks": []}},
+        }
+        search_key = json.dumps(
+            {"query": "逍遥散 教材佐证", "scope_paths": ["book://医方集解/*"]},
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        navigator = FakeEvidenceNavigator(
+            listed_paths=["entity://逍遥散/*", "book://医方集解/*"],
+            read_results={
+                "entity://逍遥散/*": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://逍遥散/*",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph",
+                            "source": "医方集解/卷三",
+                            "snippet": "功效: 疏肝解郁",
+                            "predicate": "功效",
+                            "target": "疏肝解郁",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷三",
+                            "score": 0.91,
+                        }
+                    ],
+                }
+            },
+            search_results={
+                search_key: {
+                    "tool": "search_evidence_text",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "doc",
+                            "source": "医方集解.txt#12",
+                            "snippet": "逍遥散治肝郁血虚，脾失健运。",
+                            "source_book": "医方集解",
+                            "source_chapter": "第12页",
+                            "score": 0.88,
+                        }
+                    ],
+                }
+            },
+        )
+        answer_generator = FakeSequentialAnswerGenerator(
+            [
+                (
+                    "{\"gaps\":[\"comparison\",\"source_trace\"],\"next_actions\":["
+                    "{\"skill\":\"compare-formulas\",\"path\":\"entity://逍遥散/*\",\"query\":\"比较逍遥散与柴胡疏肝散\"},"
+                    "{\"skill\":\"search-source-text\",\"query\":\"逍遥散 教材佐证\",\"scope_paths\":[\"book://医方集解/*\"]}"
+                    "],\"stop_reason\":\"\"}"
+                ),
+                "Deep 2.0回答：逍遥散可见功效证据，并可补充教材佐证。",
+            ]
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(payload),
+            answer_generator=answer_generator,
+            evidence_navigator=navigator,
+        )
+
+        result = await service.answer("请比较逍遥散和柴胡疏肝散的功效。", mode="deep", top_k=12)
+
+        deep_tools = [item["tool"] for item in result["tool_trace"] if item["tool"] not in {"tcm_route_search", "list_evidence_paths"}]
+        self.assertIn("read_evidence_path", deep_tools)
+        self.assertIn("search_evidence_text", deep_tools)
 
 
 if __name__ == "__main__":

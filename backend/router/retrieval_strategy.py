@@ -4,6 +4,38 @@ from dataclasses import asdict, dataclass, field
 from typing import Literal
 
 from router.tcm_intent_classifier import GraphQueryKind, QueryAnalysis, RouteName, analyze_tcm_query
+from services.qa_service.alias_service import get_runtime_alias_service
+
+MODERN_RESEARCH_KEYWORDS = (
+    "靶点",
+    "通路",
+    "机制",
+    "分子",
+    "蛋白",
+    "基因",
+    "临床试验",
+    "随机对照",
+    "meta",
+    "meta分析",
+    "系统评价",
+    "pubmed",
+    "doi",
+    "mesh",
+    "icd",
+    "doid",
+    "cui",
+    "entrez",
+    "inchikey",
+    "药理",
+    "实验",
+    "现代研究",
+    "copd",
+    "aqp",
+    "trpm8",
+    "hif",
+    "mmp",
+    "fMRI",
+)
 
 
 @dataclass
@@ -17,6 +49,7 @@ class RetrievalStrategy:
     path_start: str = ""
     path_end: str = ""
     compare_entities: list[str] = field(default_factory=list)
+    entity_aliases: list[str] = field(default_factory=list)
     predicate_allowlist: list[str] = field(default_factory=list)
     predicate_blocklist: list[str] = field(default_factory=list)
     graph_candidate_k: int = 24
@@ -54,7 +87,7 @@ def derive_retrieval_strategy(
             graph_candidate_k=max(final_k * 3, 12),
             graph_final_k=min(final_k, 5),
             vector_candidate_k=max(final_k * 2, 8),
-            sources=["graph_sqlite", "graph_nebula"] if preferred_route == "graph" else ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"],
+            sources=["graph_sqlite", "graph_nebula"] if preferred_route == "graph" else ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"],
             notes=resolved.notes + ["path query detected from classifier"],
         )
         strategy.evidence_paths = [
@@ -72,6 +105,13 @@ def derive_retrieval_strategy(
     entity_name = resolved.primary_entity if graph_query_kind == "entity" else ""
     symptom_name = resolved.symptom_name if graph_query_kind == "syndrome" else ""
     compare_entities = resolved.compare_entities()
+    alias_service = get_runtime_alias_service()
+    alias_focus_entities = compare_entities or ([entity_name] if entity_name else [])
+    entity_aliases: list[str] = []
+    for alias_entity in alias_focus_entities[:2]:
+        for alias_name in alias_service.aliases_for_entity(alias_entity, max_aliases=4):
+            if alias_name not in entity_aliases:
+                entity_aliases.append(alias_name)
     predicate_allowlist: list[str] = []
     predicate_blocklist: list[str] = []
     sources = _default_sources(route_hint)
@@ -92,11 +132,11 @@ def derive_retrieval_strategy(
     elif intent == "formula_origin":
         preferred_route = "hybrid"
         predicate_allowlist = []
-        sources = ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"]
+        sources = ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"]
         notes.append("origin queries keep graph lookup broad to expose source-book clues")
     elif intent == "compare_entities":
         preferred_route = "hybrid"
-        sources = ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"]
+        sources = ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"]
     elif intent == "syndrome_to_formula":
         preferred_route = "graph"
         if graph_query_kind == "entity":
@@ -105,12 +145,12 @@ def derive_retrieval_strategy(
             predicate_allowlist = ["推荐方剂"]
         sources = ["graph_sqlite", "graph_nebula"]
     elif route_hint == "retrieval":
-        sources = ["qa_vector_db", "classic_docs"]
+        sources = ["qa_structured_index", "classic_docs"]
 
     if _should_use_case_qa(text=text, intent=intent, analysis=resolved):
-        if "qa_case_vector_db" not in sources:
-            sources.append("qa_case_vector_db")
-        notes.append("case qa vector source enabled")
+        if "qa_case_structured_index" not in sources:
+            sources.append("qa_case_structured_index")
+        notes.append("case qa structured source enabled")
 
     graph_candidate_k, graph_final_k, vector_candidate_k = _tune_k(
         intent=intent,
@@ -127,6 +167,7 @@ def derive_retrieval_strategy(
         entity_name=entity_name,
         symptom_name=symptom_name,
         compare_entities=compare_entities,
+        entity_aliases=entity_aliases,
         predicate_allowlist=predicate_allowlist,
         predicate_blocklist=predicate_blocklist,
         graph_candidate_k=graph_candidate_k,
@@ -136,6 +177,14 @@ def derive_retrieval_strategy(
         notes=notes + [f"classifier_dominant_intent={intent}"],
     )
     strategy.evidence_paths = _build_evidence_paths(strategy, resolved)
+    if _looks_modern_research_query(text):
+        for source in ("modern_graph", "modern_herb_evidence"):
+            if source not in strategy.sources:
+                strategy.sources.append(source)
+        for path in ("book://TCM-MKG/*", "book://HERB2/*"):
+            if path not in strategy.evidence_paths:
+                strategy.evidence_paths.append(path)
+        strategy.notes.append("modern_evidence_sources_enabled")
     return strategy
 
 
@@ -143,8 +192,8 @@ def _default_sources(route: RouteName) -> list[str]:
     if route == "graph":
         return ["graph_sqlite", "graph_nebula"]
     if route == "retrieval":
-        return ["qa_vector_db", "classic_docs"]
-    return ["graph_sqlite", "graph_nebula", "qa_vector_db", "classic_docs"]
+        return ["qa_structured_index", "classic_docs"]
+    return ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"]
 
 
 def _tune_k(*, intent: str, final_k: int, route: RouteName) -> tuple[int, int, int]:
@@ -174,6 +223,7 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
     for entity in entity_paths:
         if not entity:
             continue
+        paths.append(f"alias://{entity}")
         if strategy.predicate_allowlist:
             paths.extend([f"entity://{entity}/{predicate}" for predicate in strategy.predicate_allowlist])
         else:
@@ -186,9 +236,9 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
         if "source_book" in entity.types:
             paths.append(f"book://{entity.name}/*")
 
-    if "qa_vector_db" in strategy.sources and strategy.graph_query_text:
+    if "qa_structured_index" in strategy.sources and strategy.graph_query_text:
         paths.append(f"qa://{strategy.graph_query_text}/similar")
-    if "qa_case_vector_db" in strategy.sources and strategy.graph_query_text:
+    if "qa_case_structured_index" in strategy.sources and strategy.graph_query_text:
         paths.append(f"caseqa://{strategy.graph_query_text}/similar")
 
     return list(dict.fromkeys(paths))
@@ -226,3 +276,8 @@ def _should_use_case_qa(*, text: str, intent: str, analysis: QueryAnalysis) -> b
     if symptom_separator_count >= 3 and any(marker in text for marker in ("什么证候", "什么方剂", "推荐什么方剂", "可参考什么方剂")):
         return True
     return False
+
+
+def _looks_modern_research_query(text: str) -> bool:
+    normalized = (text or "").lower()
+    return any(keyword.lower() in normalized for keyword in MODERN_RESEARCH_KEYWORDS)

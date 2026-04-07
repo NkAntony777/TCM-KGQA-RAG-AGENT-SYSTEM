@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from typing import Any, AsyncIterator
 
 from services.common.medical_guard import assess_query
@@ -7,10 +9,15 @@ from services.qa_service.evidence import (
     _build_book_citations,
     _build_citations,
     _case_reference_from_payload,
+    _coverage_gaps_from_state,
+    _coverage_summary_from_state,
     _coverage_summary,
     _factual_evidence_from_payload,
     _identify_evidence_gaps,
+    _init_coverage_state,
     _merge_evidence_items,
+    _new_unique_evidence,
+    _update_coverage_state,
 )
 from services.qa_service.helpers import (
     _compact_json,
@@ -185,6 +192,7 @@ class QAService:
 
     async def _stream_deep(self, query: str, *, top_k: int, guard) -> AsyncIterator[dict[str, Any]]:
         yield {"type": "qa_mode", "mode": "deep"}
+        request_cache: dict[str, dict[str, Any]] = {}
 
         payload = self._load_route_payload(query=query, top_k=top_k)
         if payload.get("notes") == ["route_output_unparseable"]:
@@ -226,21 +234,30 @@ class QAService:
         planner_steps.append(list_step)
         yield {"type": "planner_step", "step": list_step}
         yield {"type": "tool_start", "tool": "list_evidence_paths", "input": _compact_json({"query": query})}
-        list_result = self.evidence_navigator.list_evidence_paths(query=query, route_payload=payload)
+        list_cache_key = self._cache_key(
+            "list_evidence_paths",
+            {"query": query, "route_signature": payload.get("final_route", payload.get("route")), "evidence_paths": payload.get("evidence_paths", [])},
+        )
+        list_result = request_cache.get(list_cache_key)
+        list_cache_hit = list_result is not None
+        if list_result is None:
+            list_result = self.evidence_navigator.list_evidence_paths(query=query, route_payload=payload)
+            request_cache[list_cache_key] = dict(list_result)
         evidence_paths = list(list_result.get("paths", [])) if isinstance(list_result.get("paths"), list) else []
-        list_meta = {"count": len(evidence_paths), "query": query}
+        coverage_state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
+        _update_coverage_state(
+            coverage_state,
+            new_factual_evidence=factual_evidence,
+            new_case_references=case_references,
+        )
+        list_meta = {"count": len(evidence_paths), "query": query, "cache_hit": list_cache_hit}
         yield {"type": "tool_end", "tool": "list_evidence_paths", "output": _compact_json(list_meta), "meta": list_meta}
         tool_trace.append({"tool": "list_evidence_paths", "meta": list_meta})
         yield {"type": "new_response"}
 
         executed_actions: set[str] = set()
         for round_index in range(1, self.settings.max_deep_rounds + 1):
-            heuristic_gaps = _identify_evidence_gaps(
-                query=query,
-                payload=payload,
-                factual_evidence=factual_evidence,
-                case_references=case_references,
-            )
+            heuristic_gaps = _coverage_gaps_from_state(coverage_state)
             gap_step = _planner_step(stage="gap_check", label="分析证据缺口", detail=f"round={round_index}; gaps={','.join(heuristic_gaps) or 'none'}")
             planner_steps.append(gap_step)
             yield {"type": "planner_step", "step": gap_step}
@@ -259,6 +276,7 @@ class QAService:
                 case_references=case_references,
                 deep_trace=deep_trace,
                 heuristic_gaps=heuristic_gaps,
+                coverage_summary=_coverage_summary_from_state(coverage_state),
                 executed_actions=executed_actions,
             )
             if planner_note:
@@ -292,17 +310,15 @@ class QAService:
                 step = _planner_step_for_action(action=action, round_index=round_index, action_index=action_index)
                 planner_steps.append(step)
                 yield {"type": "planner_step", "step": step}
-                coverage_before = _coverage_summary(
-                    query=query,
-                    payload=payload,
-                    evidence_paths=evidence_paths,
-                    factual_evidence=factual_evidence,
-                    case_references=case_references,
-                )
-
                 tool_name = str(action.get("tool", "followup"))
                 yield {"type": "tool_start", "tool": tool_name, "input": _tool_input_for_action(action)}
-                result = self._execute_action(action)
+            action_batch_results = await self._execute_actions_for_round(
+                actions=actions,
+                request_cache=request_cache,
+            )
+            for action_index, (action, result) in enumerate(action_batch_results, start=1):
+                coverage_before = _coverage_summary_from_state(coverage_state)
+                tool_name = str(action.get("tool", "followup"))
                 action_status = str(result.get("status", "ok") or "ok")
                 meta = {
                     "status": action_status,
@@ -311,6 +327,7 @@ class QAService:
                     "path": action.get("path"),
                     "query": action.get("query"),
                     "skill": action.get("skill"),
+                    "cache_hit": bool(result.get("cache_hit")),
                 }
                 yield {"type": "tool_end", "tool": tool_name, "output": _compact_json(meta), "meta": meta}
                 tool_trace.append({"tool": tool_name, "meta": meta})
@@ -325,13 +342,7 @@ class QAService:
                         status=action_status,
                         new_evidence=[],
                         coverage_before_step=coverage_before,
-                        coverage_after_step=_coverage_summary(
-                            query=query,
-                            payload=payload,
-                            evidence_paths=evidence_paths,
-                            factual_evidence=factual_evidence,
-                            case_references=case_references,
-                        ),
+                        coverage_after_step=_coverage_summary_from_state(coverage_state),
                     )
                     deep_trace.append(trace_step)
                     yield {"type": "deep_trace_step", "step": trace_step}
@@ -343,6 +354,7 @@ class QAService:
                             evidence_paths=evidence_paths,
                             factual_evidence=factual_evidence,
                             case_references=case_references,
+                            coverage_summary=_coverage_summary_from_state(coverage_state),
                             planner_steps=planner_steps,
                             deep_trace=deep_trace,
                         ),
@@ -352,17 +364,22 @@ class QAService:
 
                 new_factual = [item for item in items if str(item.get("evidence_type", "")).strip() != "case_reference"]
                 new_cases = [item for item in items if str(item.get("evidence_type", "")).strip() == "case_reference"]
-                merged_new_items: list[dict[str, Any]] = []
+                added_factual: list[dict[str, Any]] = []
+                added_cases: list[dict[str, Any]] = []
                 if new_factual:
-                    before = len(factual_evidence)
+                    added_factual = _new_unique_evidence(primary=new_factual, existing=factual_evidence)
                     factual_evidence = _merge_evidence_items(primary=new_factual, fallback=factual_evidence)
-                    merged_new_items.extend(new_factual)
-                    new_items_this_round += max(0, len(factual_evidence) - before)
+                    new_items_this_round += len(added_factual)
                 if new_cases:
-                    before = len(case_references)
+                    added_cases = _new_unique_evidence(primary=new_cases, existing=case_references)
                     case_references = _merge_evidence_items(primary=new_cases, fallback=case_references)
-                    merged_new_items.extend(new_cases)
-                    new_items_this_round += max(0, len(case_references) - before)
+                    new_items_this_round += len(added_cases)
+                merged_new_items = added_factual + added_cases
+                _update_coverage_state(
+                    coverage_state,
+                    new_factual_evidence=added_factual,
+                    new_case_references=added_cases,
+                )
                 if merged_new_items:
                     yield {"type": "evidence", "items": merged_new_items}
                 trace_step = _trace_step(
@@ -373,13 +390,7 @@ class QAService:
                     status=action_status,
                     new_evidence=merged_new_items[: self.settings.max_trace_evidence_per_step],
                     coverage_before_step=coverage_before,
-                    coverage_after_step=_coverage_summary(
-                        query=query,
-                        payload=payload,
-                        evidence_paths=evidence_paths,
-                        factual_evidence=factual_evidence,
-                        case_references=case_references,
-                    ),
+                    coverage_after_step=_coverage_summary_from_state(coverage_state),
                 )
                 deep_trace.append(trace_step)
                 yield {"type": "deep_trace_step", "step": trace_step}
@@ -391,6 +402,7 @@ class QAService:
                         evidence_paths=evidence_paths,
                         factual_evidence=factual_evidence,
                         case_references=case_references,
+                        coverage_summary=_coverage_summary_from_state(coverage_state),
                         planner_steps=planner_steps,
                         deep_trace=deep_trace,
                     ),
@@ -535,6 +547,7 @@ class QAService:
         case_references: list[dict[str, Any]],
         deep_trace: list[dict[str, Any]],
         heuristic_gaps: list[str],
+        coverage_summary: dict[str, Any],
         executed_actions: set[str],
     ) -> tuple[dict[str, Any], str, str | None]:
         fallback_plan = {
@@ -563,13 +576,7 @@ class QAService:
                     heuristic_gaps=heuristic_gaps,
                     max_actions=self.settings.max_actions_per_round,
                     executed_actions=sorted(executed_actions),
-                    coverage_summary=_coverage_summary(
-                        query=query,
-                        payload=payload,
-                        evidence_paths=evidence_paths,
-                        factual_evidence=factual_evidence,
-                        case_references=case_references,
-                    ),
+                    coverage_summary=coverage_summary,
                 ),
             )
             parsed = _extract_json_object(content)
@@ -582,22 +589,46 @@ class QAService:
         except Exception as exc:
             return fallback_plan, "heuristic_planner", f"planner_llm_fallback:{exc}"
 
-    def _execute_action(self, action: dict[str, Any]) -> dict[str, Any]:
+    def _execute_action(self, action: dict[str, Any], *, request_cache: dict[str, dict[str, Any]]) -> dict[str, Any]:
         tool = str(action.get("tool", "")).strip()
+        cache_key = self._cache_key(
+            tool,
+            {
+                "path": action.get("path", ""),
+                "query": action.get("query", ""),
+                "source_hint": action.get("source_hint", ""),
+                "scope_paths": action.get("scope_paths", []),
+                "top_k": int(action.get("top_k", self.settings.deep_read_top_k) or self.settings.deep_read_top_k),
+            },
+        )
+        cached = request_cache.get(cache_key)
+        if cached is not None:
+            return {**cached, "cache_hit": True}
+
         if tool == "read_evidence_path":
-            return self.evidence_navigator.read_evidence_path(
+            result = self.evidence_navigator.read_evidence_path(
                 path=str(action.get("path", "")),
                 query=str(action.get("query", "")),
+                source_hint=str(action.get("source_hint", "")),
                 top_k=int(action.get("top_k", self.settings.deep_read_top_k) or self.settings.deep_read_top_k),
             )
+            request_cache[cache_key] = dict(result)
+            return {**result, "cache_hit": False}
         if tool == "search_evidence_text":
             scopes = action.get("scope_paths", [])
-            return self.evidence_navigator.search_evidence_text(
+            result = self.evidence_navigator.search_evidence_text(
                 query=str(action.get("query", "")),
+                source_hint=str(action.get("source_hint", "")),
                 scope_paths=scopes if isinstance(scopes, list) else [],
                 top_k=int(action.get("top_k", self.settings.deep_read_top_k) or self.settings.deep_read_top_k),
             )
-        return {"tool": tool or "unknown", "status": "error", "count": 0, "items": []}
+            request_cache[cache_key] = dict(result)
+            return {**result, "cache_hit": False}
+        return {"tool": tool or "unknown", "status": "error", "count": 0, "items": [], "cache_hit": False}
+
+    @staticmethod
+    def _cache_key(tool: str, payload: dict[str, Any]) -> str:
+        return f"{tool}::{json.dumps(payload, ensure_ascii=False, sort_keys=True)}"
 
     async def _build_response(
         self,
@@ -680,6 +711,7 @@ class QAService:
         evidence_paths: list[str],
         factual_evidence: list[dict[str, Any]],
         case_references: list[dict[str, Any]],
+        coverage_summary: dict[str, Any] | None,
         planner_steps: list[dict[str, str]],
         deep_trace: list[dict[str, Any]],
     ) -> dict[str, Any]:
@@ -690,7 +722,8 @@ class QAService:
             "factual_evidence": selected_factual,
             "case_references": selected_cases,
             "book_citations": _build_book_citations(factual_evidence=factual_evidence),
-            "coverage": _coverage_summary(
+            "coverage": coverage_summary
+            or _coverage_summary(
                 query=query,
                 payload=payload,
                 evidence_paths=evidence_paths,
@@ -700,6 +733,50 @@ class QAService:
             "planner_steps": planner_steps,
             "deep_trace": deep_trace,
         }
+
+    async def _execute_actions_for_round(
+        self,
+        *,
+        actions: list[dict[str, Any]],
+        request_cache: dict[str, dict[str, Any]],
+    ) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+        if self._can_parallelize_actions(actions):
+            tasks = [
+                asyncio.to_thread(self._execute_action, action, request_cache=request_cache)
+                for action in actions
+            ]
+            results = await asyncio.gather(*tasks)
+            return list(zip(actions, results))
+        return [
+            (action, self._execute_action(action, request_cache=request_cache))
+            for action in actions
+        ]
+
+    @staticmethod
+    def _can_parallelize_actions(actions: list[dict[str, Any]]) -> bool:
+        if len(actions) < 2:
+            return False
+        parallel_safe_skills = {
+            "search-source-text",
+            "find-case-reference",
+            "read-syndrome-treatment",
+            "compare-formulas",
+            "trace-source-passage",
+        }
+        if any(str(action.get("skill", "")).strip() not in parallel_safe_skills for action in actions):
+            return False
+        keys = {
+            (
+                str(action.get("tool", "")).strip(),
+                str(action.get("path", "")).strip(),
+                str(action.get("query", "")).strip(),
+                tuple(str(item).strip() for item in action.get("scope_paths", []) if str(item).strip())
+                if isinstance(action.get("scope_paths"), list)
+                else (),
+            )
+            for action in actions
+        }
+        return len(keys) == len(actions)
 
     async def _generate_grounded_answer(
         self,

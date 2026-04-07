@@ -2,6 +2,203 @@ from __future__ import annotations
 
 from typing import Any
 
+
+def _evidence_identity(item: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(item.get("source_type", "")).strip(),
+        str(item.get("source", "")).strip(),
+        str(item.get("snippet", "")).strip(),
+    )
+
+
+def _init_coverage_state(*, query: str, payload: dict[str, Any], evidence_paths: list[str]) -> dict[str, Any]:
+    strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
+    analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
+    compare_entities = strategy.get("compare_entities", analysis.get("compare_entities", []))
+    compare_entities = [str(item).strip() for item in compare_entities if str(item).strip()] if isinstance(compare_entities, list) else []
+    sources = {str(item).strip() for item in strategy.get("sources", []) if str(item).strip()} if isinstance(strategy.get("sources", []), list) else set()
+    return {
+        "query": query,
+        "intent": str(strategy.get("intent", analysis.get("dominant_intent", "")) or "").strip(),
+        "entity_name": str(strategy.get("entity_name", "")).strip(),
+        "compare_entities": compare_entities,
+        "sources": sources,
+        "evidence_path_count": len(evidence_paths),
+        "factual_count": 0,
+        "case_count": 0,
+        "predicates": set(),
+        "source_types": set(),
+        "graph_source_books": set(),
+        "doc_source_books": set(),
+        "has_origin_doc_support": False,
+        "has_origin_text_support": False,
+        "has_source_trace_support": False,
+        "has_source_trace_text": False,
+        "has_doc_origin_support": False,
+        "has_doc_origin_text": False,
+        "has_doc_source_trace_support": False,
+        "has_doc_source_trace_text": False,
+        "has_path_reasoning": False,
+        "compare_covered": set(),
+    }
+
+
+def _update_coverage_state(
+    state: dict[str, Any],
+    *,
+    new_factual_evidence: list[dict[str, Any]] | None = None,
+    new_case_references: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    factual = new_factual_evidence or []
+    cases = new_case_references or []
+    entity_name = str(state.get("entity_name", "")).strip()
+
+    for item in factual:
+        source_type = str(item.get("source_type", "")).strip()
+        predicate = str(item.get("predicate", "")).strip()
+        snippet = str(item.get("snippet", "")).strip()
+        source_book = str(item.get("source_book", "")).strip()
+        target = str(item.get("target", "")).strip()
+        state["factual_count"] += 1
+        if source_type:
+            state["source_types"].add(source_type)
+        if predicate:
+            state["predicates"].add(predicate)
+        if source_book and source_type == "graph":
+            state["graph_source_books"].add(source_book)
+        if source_book and source_type == "doc":
+            state["doc_source_books"].add(source_book)
+        if source_book or source_type in {"doc", "graph", "graph_path"}:
+            state["has_source_trace_support"] = True
+        if len(snippet) >= 16 and (source_book or source_type in {"doc", "graph", "graph_path"}):
+            state["has_source_trace_text"] = True
+        if source_type == "doc" and source_book:
+            state["has_doc_source_trace_support"] = True
+        if source_type == "doc" and len(snippet) >= 16:
+            state["has_doc_source_trace_text"] = True
+        if entity_name:
+            haystack = " ".join(
+                [
+                    str(item.get("source", "")).strip(),
+                    snippet,
+                    target,
+                    str(item.get("source_text", "")).strip(),
+                ]
+            )
+            if entity_name in haystack:
+                state["has_origin_doc_support"] = True
+                if source_type == "doc":
+                    state["has_doc_origin_support"] = True
+            if source_book and len(snippet) >= 12 and entity_name in snippet:
+                state["has_origin_text_support"] = True
+                if source_type == "doc":
+                    state["has_doc_origin_text"] = True
+        elif snippet:
+            state["has_origin_doc_support"] = True
+            if len(snippet) >= 12:
+                state["has_origin_text_support"] = True
+            if source_type == "doc":
+                state["has_doc_origin_support"] = True
+                if len(snippet) >= 12:
+                    state["has_doc_origin_text"] = True
+        if (
+            source_type == "graph_path"
+            or predicate == "辨证链"
+            or (
+                isinstance(item.get("path_nodes"), list)
+                and len([str(node).strip() for node in item.get("path_nodes", []) if str(node).strip()]) >= 2
+            )
+        ):
+            state["has_path_reasoning"] = True
+        for entity in state.get("compare_entities", []):
+            if entity and entity in " ".join([str(item.get("source", "")), snippet, predicate, target]):
+                state["compare_covered"].add(entity)
+
+    for item in cases:
+        state["case_count"] += 1
+    return state
+
+
+def _coverage_gaps_from_state(state: dict[str, Any]) -> list[str]:
+    query = str(state.get("query", "")).strip()
+    intent = str(state.get("intent", "")).strip()
+    entity_name = str(state.get("entity_name", "")).strip()
+    predicates = set(state.get("predicates", set()))
+    source_types = set(state.get("source_types", set()))
+    compare_entities = list(state.get("compare_entities", []))
+    sources = set(state.get("sources", set()))
+
+    wants_source_text = any(marker in query for marker in ("原文", "原句", "原话"))
+    wants_origin_book = any(marker in query for marker in ("出自", "哪本书", "出处"))
+
+    gaps: list[str] = []
+    if intent == "formula_composition" and "使用药材" not in predicates:
+        gaps.append("composition")
+    if intent == "formula_efficacy" and not predicates.intersection({"功效", "治法", "归经"}):
+        gaps.append("efficacy")
+    if intent == "formula_indication" and not predicates.intersection({"治疗证候", "治疗症状", "治疗疾病"}):
+        gaps.append("indication")
+    if intent == "syndrome_to_formula" and not predicates.intersection({"推荐方剂", "辨证链"}):
+        gaps.append("syndrome_formula")
+
+    if _needs_origin_support(query=query, intent=intent):
+        has_graph_book = bool(state.get("graph_source_books"))
+        has_doc_book = bool(state.get("doc_source_books"))
+        has_entity_linked_passage = bool(state.get("has_origin_doc_support"))
+        has_doc_entity_linked_passage = bool(state.get("has_doc_origin_support"))
+        has_origin_text = bool(state.get("has_origin_text_support"))
+        has_doc_origin_text = bool(state.get("has_doc_origin_text"))
+        if entity_name:
+            if wants_source_text:
+                if not has_doc_origin_text:
+                    gaps.append("origin")
+            elif wants_origin_book:
+                if has_graph_book and not has_doc_book:
+                    gaps.append("origin")
+                elif not has_graph_book and not has_doc_entity_linked_passage:
+                    gaps.append("origin")
+            elif has_graph_book and not (has_doc_book or has_doc_entity_linked_passage):
+                gaps.append("origin")
+            elif not has_graph_book and not has_entity_linked_passage:
+                gaps.append("origin")
+        else:
+            if wants_source_text:
+                if not has_doc_origin_text:
+                    gaps.append("origin")
+            elif has_graph_book and not has_doc_book:
+                gaps.append("origin")
+            elif not source_types.intersection({"doc", "graph"}):
+                gaps.append("origin")
+
+    if _needs_source_trace(query=query):
+        has_graph_book = bool(state.get("graph_source_books"))
+        if has_graph_book and not state.get("has_doc_source_trace_support"):
+            gaps.append("source_trace")
+        elif not state.get("has_source_trace_support"):
+            gaps.append("source_trace")
+        elif wants_source_text and not state.get("has_doc_source_trace_text"):
+            gaps.append("source_trace")
+
+    if _needs_path_reasoning(query=query) and not state.get("has_path_reasoning"):
+        gaps.append("path_reasoning")
+    if compare_entities and len(state.get("compare_covered", set())) < len(compare_entities):
+        gaps.append("comparison")
+    if ("qa_case_structured_index" in sources or "qa_case_vector_db" in sources or intent == "syndrome_to_formula") and int(state.get("case_count", 0)) <= 0 and _query_benefits_from_case_reference(query=query):
+        gaps.append("case_reference")
+    return list(dict.fromkeys(gaps))
+
+
+def _coverage_summary_from_state(state: dict[str, Any]) -> dict[str, Any]:
+    gaps = _coverage_gaps_from_state(state)
+    return {
+        "gaps": gaps,
+        "factual_count": int(state.get("factual_count", 0)),
+        "case_count": int(state.get("case_count", 0)),
+        "evidence_path_count": int(state.get("evidence_path_count", 0)),
+        "sufficient": not gaps,
+    }
+
+
 def _extract_data(payload: Any) -> dict[str, Any]:
     if isinstance(payload, dict):
         data = payload.get("data")
@@ -144,12 +341,17 @@ def _dedupe_evidence(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen = set()
     deduped: list[dict[str, Any]] = []
     for item in sorted(items, key=lambda current: float(current.get("score", 0.0) or 0.0), reverse=True):
-        key = (str(item.get("source_type", "")).strip(), str(item.get("source", "")).strip(), str(item.get("snippet", "")).strip())
+        key = _evidence_identity(item)
         if key in seen:
             continue
         seen.add(key)
         deduped.append(item)
     return deduped
+
+
+def _new_unique_evidence(*, primary: list[dict[str, Any]], existing: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    existing_keys = {_evidence_identity(item) for item in existing}
+    return [item for item in _dedupe_evidence(primary) if _evidence_identity(item) not in existing_keys]
 
 
 def _merge_evidence_items(*, primary: list[dict[str, Any]], fallback: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -219,7 +421,7 @@ def _identify_evidence_gaps(*, query: str, payload: dict[str, Any], factual_evid
         gaps.append("path_reasoning")
     if compare_entities and not _compare_entities_covered(compare_entities=compare_entities, factual_evidence=factual_evidence):
         gaps.append("comparison")
-    if ("qa_case_vector_db" in sources or intent == "syndrome_to_formula") and not case_references and _query_benefits_from_case_reference(query=query):
+    if ("qa_case_structured_index" in sources or "qa_case_vector_db" in sources or intent == "syndrome_to_formula") and not case_references and _query_benefits_from_case_reference(query=query):
         gaps.append("case_reference")
     return list(dict.fromkeys(gaps))
 
@@ -257,6 +459,10 @@ def _origin_support_sufficient(*, query: str, entity_name: str, factual_evidence
         str(item.get("source_type", "")).strip() == "graph" and str(item.get("source_book", "")).strip()
         for item in factual_evidence
     )
+    has_doc_book = any(
+        str(item.get("source_type", "")).strip() == "doc" and str(item.get("source_book", "")).strip()
+        for item in factual_evidence
+    )
     if entity_name:
         has_entity_linked_passage = any(
             entity_name in " ".join(
@@ -269,33 +475,68 @@ def _origin_support_sufficient(*, query: str, entity_name: str, factual_evidence
             )
             for item in factual_evidence
         )
+        has_doc_entity_linked_passage = any(
+            str(item.get("source_type", "")).strip() == "doc"
+            and entity_name in " ".join(
+                [
+                    str(item.get("source", "")).strip(),
+                    str(item.get("snippet", "")).strip(),
+                    str(item.get("target", "")).strip(),
+                    str(item.get("source_text", "")).strip(),
+                ]
+            )
+            for item in factual_evidence
+        )
         if wants_source_text:
             return any(
-                str(item.get("source_book", "")).strip()
+                str(item.get("source_type", "")).strip() == "doc"
+                and str(item.get("source_book", "")).strip()
                 and len(str(item.get("snippet", "")).strip()) >= 12
                 and entity_name in str(item.get("snippet", "")).strip()
                 for item in factual_evidence
             )
-        if wants_origin_book and not has_graph_book:
-            return False
-        return has_graph_book or has_entity_linked_passage
+        if wants_origin_book:
+            if has_graph_book:
+                return has_doc_book
+            return has_doc_entity_linked_passage
+        if has_graph_book:
+            return has_doc_book or has_doc_entity_linked_passage
+        return has_entity_linked_passage
 
     if wants_source_text:
-        return any(str(item.get("snippet", "")).strip() for item in factual_evidence)
+        return any(
+            str(item.get("source_type", "")).strip() == "doc"
+            and str(item.get("source_book", "")).strip()
+            and len(str(item.get("snippet", "")).strip()) >= 12
+            and str(item.get("snippet", "")).strip()
+            for item in factual_evidence
+        )
+    if has_graph_book:
+        return has_doc_book
     return any(source_type in {"doc", "graph"} for source_type in source_types)
 
 
 def _source_trace_sufficient(*, query: str, factual_evidence: list[dict[str, Any]]) -> bool:
     wants_source_text = any(marker in query for marker in ("原文", "原句", "原话"))
+    has_graph_book = any(
+        str(item.get("source_type", "")).strip() == "graph" and str(item.get("source_book", "")).strip()
+        for item in factual_evidence
+    )
+    doc_backed_items = [
+        item for item in factual_evidence
+        if str(item.get("source_type", "")).strip() == "doc" and str(item.get("source_book", "")).strip()
+    ]
     backed_items = [
         item for item in factual_evidence
         if str(item.get("source_book", "")).strip() or str(item.get("source_type", "")).strip() in {"doc", "graph", "graph_path"}
     ]
     if not backed_items:
         return False
+    if has_graph_book and not doc_backed_items:
+        return False
     if wants_source_text:
-        return any(len(str(item.get("snippet", "")).strip()) >= 16 for item in backed_items)
-    return len(backed_items) >= 1
+        return any(len(str(item.get("snippet", "")).strip()) >= 16 for item in doc_backed_items)
+    return len(doc_backed_items) >= 1 or (not has_graph_book and len(backed_items) >= 1)
 
 
 def _path_reasoning_sufficient(*, factual_evidence: list[dict[str, Any]]) -> bool:

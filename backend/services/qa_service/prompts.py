@@ -5,6 +5,54 @@ from typing import Any
 from services.qa_service.models import ALLOWED_PLANNER_GAPS, AnswerMode
 from services.qa_service.skill_registry import RuntimeSkill
 
+
+def _planner_factual_summary(items: list[dict[str, Any]], *, limit: int = 4) -> list[str]:
+    summary: list[str] = []
+    for item in items[:limit]:
+        source_type = str(item.get("source_type", "")).strip() or "unknown"
+        source = str(item.get("source", "")).strip() or "unknown"
+        predicate = str(item.get("predicate", "")).strip()
+        target = str(item.get("target", "")).strip()
+        snippet = str(item.get("snippet", "")).strip()
+        parts = [source_type, source]
+        if predicate or target:
+            parts.append(f"{predicate}:{target}".strip(":"))
+        elif snippet:
+            parts.append(snippet[:48])
+        summary.append(" | ".join(part for part in parts if part))
+    return summary
+
+
+def _planner_case_summary(items: list[dict[str, Any]], *, limit: int = 2) -> list[str]:
+    summary: list[str] = []
+    for item in items[:limit]:
+        source = str(item.get("source", "")).strip() or "caseqa"
+        document = str(item.get("document", "")).strip()
+        snippet = str(item.get("snippet", "")).strip()
+        parts = [source]
+        if document:
+            parts.append(document[:40])
+        elif snippet:
+            parts.append(snippet[:40])
+        summary.append(" | ".join(parts))
+    return summary
+
+
+def _planner_trace_summary(steps: list[dict[str, Any]], *, limit: int = 2) -> list[str]:
+    summary: list[str] = []
+    for item in steps[-limit:]:
+        summary.append(
+            " | ".join(
+                [
+                    f"step={item.get('step')}",
+                    f"skill={item.get('skill')}",
+                    f"status={item.get('status')}",
+                    f"remaining={','.join(item.get('coverage_after_step', {}).get('gaps', []))}",
+                ]
+            )
+        )
+    return summary
+
 def _build_grounded_system_prompt(*, mode: AnswerMode) -> str:
     mode_text = "快速模式" if mode == "quick" else "深度模式"
     return (
@@ -95,6 +143,9 @@ def _build_planner_system_prompt(planner_skills: dict[str, RuntimeSkill]) -> str
 
 def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_paths: list[str], factual_evidence: list[dict[str, Any]], case_references: list[dict[str, Any]], deep_trace: list[dict[str, Any]], heuristic_gaps: list[str], max_actions: int, executed_actions: list[str], coverage_summary: dict[str, Any]) -> str:
     strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
+    factual_summary = _planner_factual_summary(factual_evidence)
+    case_summary = _planner_case_summary(case_references)
+    trace_summary = _planner_trace_summary(deep_trace)
     lines = [
         f"query: {query}",
         f"intent: {strategy.get('intent', '')}",
@@ -103,25 +154,18 @@ def _build_planner_user_prompt(*, query: str, payload: dict[str, Any], evidence_
         f"compare_entities: {strategy.get('compare_entities', [])}",
         f"heuristic_gaps: {heuristic_gaps}",
         f"coverage_summary: {coverage_summary}",
-        f"evidence_paths: {evidence_paths[:10]}",
-        f"executed_actions: {executed_actions[:8]}",
+        f"evidence_paths: {evidence_paths[:6]}",
+        f"executed_actions: {executed_actions[:6]}",
         f"max_actions: {max_actions}",
-        "factual_evidence:",
+        "factual_summary:",
     ]
-    for item in factual_evidence[:6]:
-        lines.append(f"- {item.get('source_type')} | {item.get('source')} | {item.get('predicate', '')}:{item.get('target', '')} | {item.get('snippet', '')[:120]}")
-    if case_references:
-        lines.append("case_references:")
-        for item in case_references[:3]:
-            lines.append(f"- {item.get('source')} | {item.get('document', '')[:60]} | {item.get('snippet', '')[:100]}")
-    if deep_trace:
+    lines.extend(f"- {item}" for item in factual_summary) if factual_summary else lines.append("- none")
+    if case_summary:
+        lines.append("case_summary:")
+        lines.extend(f"- {item}" for item in case_summary)
+    if trace_summary:
         lines.append("previous_steps:")
-        for item in deep_trace[-4:]:
-            lines.append(
-                f"- step={item.get('step')} round={item.get('round')} skill={item.get('skill')} "
-                f"status={item.get('status')} why={item.get('why_this_step')} "
-                f"remaining={item.get('coverage_after_step', {}).get('gaps', [])}"
-            )
+        lines.extend(f"- {item}" for item in trace_summary)
     lines.append("规划原则：先补最关键缺口；优先使用已有 evidence_path；不要重复 executed_actions；不要规划超过 2 个动作。")
     lines.append("请只输出 JSON。")
     return "\n".join(lines)

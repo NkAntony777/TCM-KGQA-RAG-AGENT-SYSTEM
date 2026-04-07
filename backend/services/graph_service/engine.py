@@ -79,6 +79,8 @@ class GraphServiceSettings:
     sample_evidence_path: Path | None = None
     runtime_evidence_path: Path | None = None
     runtime_db_path: Path | None = None
+    modern_graph_path: Path | None = None
+    modern_evidence_path: Path | None = None
 
 
 def load_settings() -> GraphServiceSettings:
@@ -90,6 +92,8 @@ def load_settings() -> GraphServiceSettings:
         runtime_graph_path=runtime_graph_path,
         runtime_evidence_path=backend_dir / "services" / "graph_service" / "data" / "graph_runtime.evidence.jsonl",
         runtime_db_path=runtime_graph_path.with_suffix(".db"),
+        modern_graph_path=backend_dir / "services" / "graph_service" / "data" / "modern_graph_runtime.jsonl",
+        modern_evidence_path=backend_dir / "services" / "graph_service" / "data" / "modern_graph_runtime.evidence.jsonl",
     )
 
 
@@ -104,18 +108,25 @@ class GraphQueryEngine:
             evidence_path=runtime_evidence_path,
             sample_graph_path=self.settings.sample_graph_path,
             sample_evidence_path=self.settings.sample_evidence_path,
+            modern_graph_path=self.settings.modern_graph_path,
+            modern_evidence_path=self.settings.modern_evidence_path,
         )
 
     def health(self) -> dict[str, Any]:
         stats = self.store.stats()
         runtime_triples = int(stats.get("runtime_triples", 0) or 0)
         sample_triples = int(stats.get("sample_triples", 0) or 0)
-        if runtime_triples > 0:
+        modern_graph_triples = int(stats.get("modern_graph_triples", 0) or 0)
+        if runtime_triples > 0 or modern_graph_triples > 0:
             backend = "sqlite_runtime_graph"
         elif sample_triples > 0:
             backend = "sqlite_sample_graph"
         else:
             backend = "sqlite_empty_graph"
+        evidence_paths = []
+        for item in [self.settings.runtime_evidence_path, self.settings.modern_evidence_path]:
+            if item:
+                evidence_paths.append(str(item))
         return {
             "status": "ok" if stats["exists"] else "empty",
             "backend": backend,
@@ -123,10 +134,12 @@ class GraphQueryEngine:
             "graph_loaded": bool(stats["exists"]),
             "graph_path": str(stats.get("db_path") or self.settings.runtime_db_path or self.settings.runtime_graph_path.with_suffix(".db")),
             "evidence_path": str(self.settings.runtime_evidence_path or ""),
-            "evidence_paths": [str(self.settings.runtime_evidence_path)] if self.settings.runtime_evidence_path else [],
+            "evidence_paths": evidence_paths,
             "evidence_count": stats["evidence_count"],
             "seed_graph_loaded": sample_triples > 0,
             "runtime_graph_loaded": runtime_triples > 0,
+            "modern_graph_loaded": modern_graph_triples > 0,
+            "modern_graph_triples": modern_graph_triples,
             "node_count": stats["node_count"],
             "edge_count": stats["total_triples"],
         }

@@ -6,7 +6,8 @@ from uuid import uuid4
 
 import httpx
 
-from services.common.mock_data import case_qa_search, hybrid_search, lookup_entity, query_path, rewrite_query, syndrome_chain
+from services.graph_service.engine import get_graph_engine
+from services.retrieval_service.engine import get_retrieval_engine
 
 
 GRAPH_SERVICE_BASE_URL = os.getenv("GRAPH_SERVICE_BASE_URL", "http://127.0.0.1:8101")
@@ -36,6 +37,42 @@ def _health(url: str) -> bool:
     return True
 
 
+def _local_hybrid_search(
+    *,
+    query: str,
+    top_k: int,
+    candidate_k: int,
+    enable_rerank: bool,
+    allowed_file_path_prefixes: list[str] | None,
+    search_mode: str,
+) -> dict[str, Any]:
+    engine = get_retrieval_engine()
+    try:
+        return engine.search_hybrid(
+            query=query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            enable_rerank=enable_rerank,
+            allowed_file_path_prefixes=allowed_file_path_prefixes,
+            search_mode=search_mode,
+        )
+    except Exception as primary_exc:
+        if (search_mode or "").strip().lower() == "files_first":
+            raise primary_exc
+        fallback = engine.search_hybrid(
+            query=query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            enable_rerank=False,
+            allowed_file_path_prefixes=allowed_file_path_prefixes,
+            search_mode="files_first",
+        )
+        warnings = list(fallback.get("warnings", [])) if isinstance(fallback.get("warnings"), list) else []
+        warnings.append(f"local_dense_fallback_failed:{primary_exc}")
+        fallback["warnings"] = warnings
+        return fallback
+
+
 def call_graph_entity_lookup(
     name: str,
     top_k: int = 12,
@@ -54,16 +91,17 @@ def call_graph_entity_lookup(
         )
         return {"backend": "graph-service", **payload}
     except Exception as exc:
-        mock = lookup_entity(
+        mock = get_graph_engine().entity_lookup(
             name,
             top_k=top_k,
             predicate_allowlist=predicate_allowlist,
             predicate_blocklist=predicate_blocklist,
         )
+        has_relations = bool((mock or {}).get("relations"))
         return {
             "backend": "local-fallback",
-            "code": 0 if mock else 20001,
-            "message": "ok" if mock else "KG_ENTITY_NOT_FOUND",
+            "code": 0 if has_relations else 20001,
+            "message": "ok" if has_relations else "KG_ENTITY_NOT_FOUND",
             "data": mock,
             "trace_id": str(uuid4()),
             "warning": f"graph-service unavailable: {exc}",
@@ -83,7 +121,7 @@ def call_graph_path_query(start: str, end: str, max_hops: int = 3, path_limit: i
         )
         return {"backend": "graph-service", **payload}
     except Exception as exc:
-        mock = query_path(start, end, max_hops=max_hops, path_limit=path_limit)
+        mock = get_graph_engine().path_query(start, end, max_hops=max_hops, path_limit=path_limit)
         return {
             "backend": "local-fallback",
             "code": 0 if mock.get("paths") else 20002,
@@ -102,7 +140,7 @@ def call_graph_syndrome_chain(symptom: str, top_k: int = 5) -> dict[str, Any]:
         )
         return {"backend": "graph-service", **payload}
     except Exception as exc:
-        mock = syndrome_chain(symptom, top_k=top_k)
+        mock = get_graph_engine().syndrome_chain(symptom, top_k=top_k)
         return {
             "backend": "local-fallback",
             "code": 0 if mock.get("syndromes") else 20001,
@@ -118,6 +156,8 @@ def call_retrieval_hybrid(
     top_k: int = 5,
     candidate_k: int = 20,
     enable_rerank: bool = True,
+    search_mode: str = "files_first",
+    allowed_file_path_prefixes: list[str] | None = None,
 ) -> dict[str, Any]:
     try:
         payload = _post(
@@ -127,15 +167,19 @@ def call_retrieval_hybrid(
                 "top_k": top_k,
                 "candidate_k": candidate_k,
                 "enable_rerank": enable_rerank,
+                "search_mode": search_mode,
+                "allowed_file_path_prefixes": allowed_file_path_prefixes or [],
             },
         )
         return {"backend": "retrieval-service", **payload}
     except Exception as exc:
-        mock = hybrid_search(
-            query,
+        mock = _local_hybrid_search(
+            query=query,
             top_k=top_k,
             candidate_k=candidate_k,
             enable_rerank=enable_rerank,
+            allowed_file_path_prefixes=allowed_file_path_prefixes,
+            search_mode=search_mode,
         )
         return {
             "backend": "local-fallback",
@@ -155,7 +199,7 @@ def call_retrieval_rewrite(query: str, strategy: str = "complex") -> dict[str, A
         )
         return {"backend": "retrieval-service", **payload}
     except Exception as exc:
-        mock = rewrite_query(query, strategy=strategy)
+        mock = get_retrieval_engine().rewrite_query(query, strategy=strategy)
         return {
             "backend": "local-fallback",
             "code": 0,
@@ -182,16 +226,50 @@ def call_retrieval_case_qa(
         )
         return {"backend": "retrieval-service", **payload}
     except Exception as exc:
-        mock = case_qa_search(
-            query,
-            top_k=top_k,
-            candidate_k=candidate_k,
-        )
+        try:
+            mock = get_retrieval_engine().search_case_qa(
+                query=query,
+                top_k=top_k,
+                candidate_k=candidate_k,
+            )
+        except Exception as local_exc:
+            mock = {
+                "retrieval_mode": "case_qa_local_error",
+                "chunks": [],
+                "total": 0,
+                "warnings": [f"local_case_qa_failed:{local_exc}"],
+            }
         return {
             "backend": "local-fallback",
             "code": 0 if mock.get("chunks") else 30002,
             "message": "ok" if mock.get("chunks") else "CASE_QA_EMPTY",
             "data": mock,
+            "trace_id": str(uuid4()),
+            "warning": f"retrieval-service unavailable: {exc}",
+        }
+
+
+def call_retrieval_read_section(
+    path: str,
+    top_k: int = 12,
+) -> dict[str, Any]:
+    try:
+        payload = _post(
+            f"{RETRIEVAL_SERVICE_BASE_URL}/api/v1/retrieval/read/section",
+            {
+                "path": path,
+                "top_k": top_k,
+            },
+        )
+        return {"backend": "retrieval-service", **payload}
+    except Exception as exc:
+        local = get_retrieval_engine().read_section(path, top_k=top_k)
+        has_section = bool(local.get("section"))
+        return {
+            "backend": "local-fallback",
+            "code": 0 if has_section else 30003,
+            "message": "ok" if has_section else "SECTION_EMPTY",
+            "data": local,
             "trace_id": str(uuid4()),
             "warning": f"retrieval-service unavailable: {exc}",
         }

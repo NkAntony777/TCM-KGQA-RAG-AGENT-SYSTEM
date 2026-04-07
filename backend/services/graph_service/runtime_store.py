@@ -126,6 +126,15 @@ class RuntimeGraphStoreSettings:
     db_path: Path
     sample_graph_path: Path | None = None
     sample_evidence_path: Path | None = None
+    modern_graph_path: Path | None = None
+    modern_evidence_path: Path | None = None
+
+
+def _iter_graph_rows(path: Path) -> Iterator[dict[str, Any]]:
+    if path.suffix.lower() == ".jsonl":
+        yield from _iter_jsonl_rows(path)
+        return
+    yield from _iter_json_array_rows(path)
 
 
 class RuntimeGraphStore:
@@ -140,6 +149,8 @@ class RuntimeGraphStore:
         evidence_path: Path,
         sample_graph_path: Path | None = None,
         sample_evidence_path: Path | None = None,
+        modern_graph_path: Path | None = None,
+        modern_evidence_path: Path | None = None,
     ) -> "RuntimeGraphStore":
         return cls(
             RuntimeGraphStoreSettings(
@@ -148,6 +159,8 @@ class RuntimeGraphStore:
                 db_path=graph_path.with_suffix(".db"),
                 sample_graph_path=sample_graph_path,
                 sample_evidence_path=sample_evidence_path,
+                modern_graph_path=modern_graph_path,
+                modern_evidence_path=modern_evidence_path,
             )
         )
 
@@ -166,6 +179,23 @@ class RuntimeGraphStore:
                 self._ensure_schema(conn)
                 facts_count = int(conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0])
                 if facts_count > 0:
+                    modern_graph_count = int(
+                        conn.execute("SELECT COUNT(*) FROM facts WHERE dataset_scope = 'modern_graph'").fetchone()[0]
+                    )
+                    if modern_graph_count <= 0 and self.settings.modern_graph_path and self.settings.modern_graph_path.exists():
+                        changed_signatures: set[str] = set()
+                        if self.settings.modern_evidence_path and self.settings.modern_evidence_path.exists():
+                            self._import_evidence_rows(conn, _iter_jsonl_rows(self.settings.modern_evidence_path))
+                        changed_signatures.update(
+                            self._import_fact_rows(
+                                conn,
+                                _iter_graph_rows(self.settings.modern_graph_path),
+                                dataset_scope="modern_graph",
+                            )
+                        )
+                        self._refresh_fact_metadata(conn, changed_signatures)
+                        self._upsert_entities_for_signatures(conn, changed_signatures)
+                        conn.commit()
                     return
                 self._import_legacy_sources(conn)
 
@@ -218,6 +248,7 @@ class RuntimeGraphStore:
         sources: list[tuple[Path | None, Path | None, str]] = [
             (self.settings.sample_graph_path, self.settings.sample_evidence_path, "sample"),
             (self.settings.graph_path, self.settings.evidence_path, "runtime"),
+            (self.settings.modern_graph_path, self.settings.modern_evidence_path, "modern_graph"),
         ]
         changed_signatures: set[str] = set()
         for graph_path, evidence_path, scope in sources:
@@ -225,7 +256,7 @@ class RuntimeGraphStore:
                 self._import_evidence_rows(conn, _iter_jsonl_rows(evidence_path))
             if graph_path and graph_path.exists():
                 changed_signatures.update(
-                    self._import_fact_rows(conn, _iter_json_array_rows(graph_path), dataset_scope=scope)
+                    self._import_fact_rows(conn, _iter_graph_rows(graph_path), dataset_scope=scope)
                 )
         self._refresh_fact_metadata(conn, changed_signatures)
         self._rebuild_entities(conn)
@@ -236,16 +267,14 @@ class RuntimeGraphStore:
         *,
         graph_path: Path,
         evidence_path: Path | None = None,
+        dataset_scope: str = "runtime",
     ) -> dict[str, Any]:
         self.ensure_ready()
         with _RUNTIME_STORE_LOCK:
             with closing(self._connect()) as conn:
                 if evidence_path and evidence_path.exists():
                     self._import_evidence_rows(conn, _iter_jsonl_rows(evidence_path))
-                if graph_path.suffix.lower() == ".jsonl":
-                    changed = self._import_fact_rows(conn, _iter_jsonl_rows(graph_path), dataset_scope="runtime")
-                else:
-                    changed = self._import_fact_rows(conn, _iter_json_array_rows(graph_path), dataset_scope="runtime")
+                changed = self._import_fact_rows(conn, _iter_graph_rows(graph_path), dataset_scope=dataset_scope)
                 self._refresh_fact_metadata(conn, changed)
                 self._upsert_entities_for_signatures(conn, changed)
                 conn.commit()
@@ -308,6 +337,9 @@ class RuntimeGraphStore:
             sample_triples = int(
                 conn.execute("SELECT COUNT(*) FROM facts WHERE dataset_scope = 'sample'").fetchone()[0]
             )
+            modern_graph_triples = int(
+                conn.execute("SELECT COUNT(*) FROM facts WHERE dataset_scope = 'modern_graph'").fetchone()[0]
+            )
             evidence_count = int(conn.execute("SELECT COUNT(*) FROM evidence").fetchone()[0])
             node_count = int(conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0])
             predicate_dist = [
@@ -330,6 +362,7 @@ class RuntimeGraphStore:
                 "total_triples": total_triples,
                 "runtime_triples": runtime_triples,
                 "sample_triples": sample_triples,
+                "modern_graph_triples": modern_graph_triples,
                 "evidence_count": evidence_count,
                 "node_count": node_count,
                 "predicate_dist": predicate_dist,

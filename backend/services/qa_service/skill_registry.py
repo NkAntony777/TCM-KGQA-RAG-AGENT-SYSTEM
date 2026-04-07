@@ -16,6 +16,7 @@ CODE_PATTERN = re.compile(r"`([^`]+)`")
 
 DEFAULT_SKILL_TOOL_MAP: dict[str, str] = {
     "route-tcm-query": "tcm_route_search",
+    "expand-entity-alias": "read_evidence_path",
     "read-formula-composition": "read_evidence_path",
     "read-formula-origin": "read_evidence_path",
     "read-syndrome-treatment": "read_evidence_path",

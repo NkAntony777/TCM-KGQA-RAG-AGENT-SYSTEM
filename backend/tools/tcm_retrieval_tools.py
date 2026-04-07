@@ -50,6 +50,7 @@ class TCMHybridSearchTool(BaseTool):
             top_k=top_k,
             candidate_k=candidate_k,
             enable_rerank=enable_rerank,
+            search_mode="files_first",
         )
         return json.dumps(result, ensure_ascii=False, indent=2)[:8000]
 
@@ -93,7 +94,7 @@ class TCMRewriteTool(BaseTool):
 class TCMCaseQASearchTool(BaseTool):
     name: str = "tcm_case_qa_search"
     description: str = (
-        "Search the local Chroma case QA database for similar TCM cases and return structured case-reference evidence. "
+        "Search the local structured case QA index for similar TCM cases and return structured case-reference evidence. "
         "Use for long case descriptions, syndrome-to-formula reasoning, and similar-case lookup."
     )
     args_schema: Type[BaseModel] = TCMCaseQASearchInput
