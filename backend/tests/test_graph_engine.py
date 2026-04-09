@@ -18,6 +18,7 @@ from pathlib import Path
 
 from services.graph_service.engine import GraphQueryEngine
 from services.graph_service.engine import GraphServiceSettings
+from services.graph_service.engine import _ordered_path_neighbors, _search_ranked_paths
 from services.graph_service.engine import get_graph_engine
 
 
@@ -184,6 +185,53 @@ class TestPathQuery(unittest.TestCase):
         result = self.engine.path_query("不存在A", "不存在B", max_hops=3)
         self.assertEqual(result["total"], 0)
         self.assertEqual(result["paths"], [])
+
+
+class TestPathGuardrails(unittest.TestCase):
+    def test_ordered_path_neighbors_prefers_targets_and_caps_fanout(self) -> None:
+        rows = [
+            {"predicate": "属于范畴", "target": "噪声A", "confidence": 0.2},
+            {"predicate": "推荐方剂", "target": "目标节点", "confidence": 0.1},
+            {"predicate": "治疗证候", "target": "桥节点", "confidence": 0.8},
+            {"predicate": "常见症状", "target": "噪声B", "confidence": 0.9},
+        ]
+
+        ordered = _ordered_path_neighbors(rows, target_set={"目标节点"}, fanout_cap=2)
+
+        self.assertEqual(ordered[0], "目标节点")
+        self.assertEqual(len(ordered), 2)
+        self.assertIn("桥节点", ordered)
+
+    def test_search_ranked_paths_reuses_best_depth_frontier(self) -> None:
+        adjacency = {
+            "起点": [
+                {"predicate": "推荐方剂", "target": "甲", "confidence": 1.0},
+                {"predicate": "推荐方剂", "target": "乙", "confidence": 1.0},
+            ],
+            "甲": [{"predicate": "治疗证候", "target": "公共节点", "confidence": 1.0}],
+            "乙": [{"predicate": "治疗证候", "target": "公共节点", "confidence": 1.0}],
+            "公共节点": [{"predicate": "功效", "target": "终点", "confidence": 1.0}],
+        }
+        calls: dict[str, int] = {}
+
+        def relation_rows(node: str) -> list[dict]:
+            calls[node] = calls.get(node, 0) + 1
+            return adjacency.get(node, [])
+
+        def build_path_payload(nodes: list[str]) -> dict:
+            return {"nodes": nodes, "score": 1.0 / len(nodes)}
+
+        result = _search_ranked_paths(
+            start_candidates=["起点"],
+            target_set={"终点"},
+            max_hops=4,
+            path_limit=5,
+            relation_rows=relation_rows,
+            build_path_payload=build_path_payload,
+        )
+
+        self.assertGreaterEqual(result["total"], 1)
+        self.assertEqual(calls.get("公共节点"), 1, f"frontier guard should prevent duplicate expansion: {calls}")
 
 
 class TestSyndromeChain(unittest.TestCase):

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import os
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from services.graph_service.nebulagraph_store import NebulaGraphStore
 from services.graph_service.runtime_store import RuntimeGraphStore
@@ -69,6 +69,98 @@ PREDICATE_BASE_PRIORITY: dict[str, float] = {
 }
 
 RRF_RANK_CONSTANT = 20
+PATH_QUERY_FANOUT_CAP = 24
+PATH_QUERY_PREDICATE_BOOST: dict[str, float] = {
+    "推荐方剂": 0.14,
+    "治疗证候": 0.14,
+    "常见症状": 0.12,
+    "治疗症状": 0.1,
+    "功效": 0.09,
+    "使用药材": 0.08,
+}
+
+
+def _path_query_predicate_priority(predicate: str) -> float:
+    normalized = _normalize_relation_name(predicate)
+    return float(PREDICATE_BASE_PRIORITY.get(normalized, 0.6)) + float(PATH_QUERY_PREDICATE_BOOST.get(normalized, 0.0))
+
+
+def _ordered_path_neighbors(
+    rows: list[dict[str, Any]],
+    *,
+    target_set: set[str],
+    fanout_cap: int = PATH_QUERY_FANOUT_CAP,
+) -> list[str]:
+    best_by_neighbor: dict[str, tuple[int, float, float, str]] = {}
+    for row in rows:
+        neighbor = str(row.get("target") or row.get("neighbor_name") or "").strip()
+        if not neighbor:
+            continue
+        score = (
+            1 if neighbor in target_set else 0,
+            _path_query_predicate_priority(str(row.get("predicate", "")).strip()),
+            float(row.get("confidence", 0.0) or 0.0),
+            neighbor,
+        )
+        existing = best_by_neighbor.get(neighbor)
+        if existing is None or score > existing:
+            best_by_neighbor[neighbor] = score
+    ordered = sorted(
+        best_by_neighbor.items(),
+        key=lambda item: (-item[1][0], -item[1][1], -item[1][2], item[0]),
+    )
+    return [neighbor for neighbor, _ in ordered[: max(1, fanout_cap)]]
+
+
+def _search_ranked_paths(
+    *,
+    start_candidates: list[str],
+    target_set: set[str],
+    max_hops: int,
+    path_limit: int,
+    relation_rows: Callable[[str], list[dict[str, Any]]],
+    build_path_payload: Callable[[list[str]], dict[str, Any] | None],
+) -> dict[str, Any]:
+    if not start_candidates or not target_set:
+        return {"paths": [], "total": 0}
+
+    built_paths: list[dict[str, Any]] = []
+    seen_signatures: set[tuple[str, ...]] = set()
+
+    for start_node in start_candidates[:3]:
+        queue: deque[list[str]] = deque([[start_node]])
+        best_depth_by_node: dict[str, int] = {start_node: 0}
+        while queue and len(built_paths) < path_limit:
+            current_path = queue.popleft()
+            current_node = current_path[-1]
+            current_depth = len(current_path) - 1
+            if current_depth >= max_hops:
+                continue
+            for next_node in _ordered_path_neighbors(relation_rows(current_node), target_set=target_set):
+                if next_node in current_path:
+                    continue
+                new_path = current_path + [next_node]
+                signature = tuple(new_path)
+                if signature in seen_signatures:
+                    continue
+                new_depth = current_depth + 1
+                if next_node not in target_set:
+                    best_depth = best_depth_by_node.get(next_node)
+                    if best_depth is not None and new_depth >= best_depth:
+                        continue
+                    best_depth_by_node[next_node] = new_depth
+                seen_signatures.add(signature)
+                if next_node in target_set:
+                    payload = build_path_payload(new_path)
+                    if payload:
+                        built_paths.append(payload)
+                        if len(built_paths) >= path_limit:
+                            break
+                if new_depth < max_hops:
+                    queue.append(new_path)
+
+    built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+    return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
 
 
 @dataclass(frozen=True)
@@ -178,39 +270,14 @@ class GraphQueryEngine:
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
         start_candidates = self._resolve_entities(start)
         end_candidates = self._resolve_entities(end)
-        if not start_candidates or not end_candidates:
-            return {"paths": [], "total": 0}
-
-        target_set = set(end_candidates[:3])
-        built_paths: list[dict[str, Any]] = []
-        seen_signatures: set[tuple[str, ...]] = set()
-
-        for start_node in start_candidates[:3]:
-            queue: list[list[str]] = [[start_node]]
-            while queue and len(built_paths) < path_limit:
-                current_path = queue.pop(0)
-                current_node = current_path[-1]
-                if len(current_path) - 1 >= max_hops:
-                    continue
-                for next_node in self._adjacent_names(current_node):
-                    if next_node in current_path:
-                        continue
-                    new_path = current_path + [next_node]
-                    signature = tuple(new_path)
-                    if signature in seen_signatures:
-                        continue
-                    seen_signatures.add(signature)
-                    if next_node in target_set:
-                        payload = self._build_path_payload(new_path)
-                        if payload:
-                            built_paths.append(payload)
-                            if len(built_paths) >= path_limit:
-                                break
-                    if len(new_path) - 1 < max_hops:
-                        queue.append(new_path)
-
-        built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
-        return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
+        return _search_ranked_paths(
+            start_candidates=start_candidates,
+            target_set=set(end_candidates[:3]),
+            max_hops=max_hops,
+            path_limit=path_limit,
+            relation_rows=self._path_query_relation_rows,
+            build_path_payload=self._build_path_payload,
+        )
 
     def syndrome_chain(self, symptom: str, top_k: int = 5) -> dict[str, Any]:
         symptom_candidates = self._resolve_entities(symptom, preferred_types={"symptom"})
@@ -493,6 +560,9 @@ class GraphQueryEngine:
     def _adjacent_names(self, entity_name: str) -> list[str]:
         return self.store.adjacent_names(entity_name)
 
+    def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
+        return self.store.collect_relations(entity_name)
+
     def _build_path_payload(self, nodes: list[str]) -> dict[str, Any] | None:
         edges: list[str] = []
         sources: list[dict[str, Any]] = []
@@ -625,39 +695,14 @@ class NebulaPrimaryGraphEngine:
         try:
             start_candidates = self.fallback_engine._resolve_entities(start)[:3]
             end_candidates = self.fallback_engine._resolve_entities(end)[:3]
-            if not start_candidates or not end_candidates:
-                return {"paths": [], "total": 0}
-
-            target_set = set(end_candidates)
-            built_paths: list[dict[str, Any]] = []
-            seen_signatures: set[tuple[str, ...]] = set()
-
-            for start_node in start_candidates:
-                queue: list[list[str]] = [[start_node]]
-                while queue and len(built_paths) < path_limit:
-                    current_path = queue.pop(0)
-                    current_node = current_path[-1]
-                    if len(current_path) - 1 >= max_hops:
-                        continue
-                    for next_node in self._adjacent_names(current_node):
-                        if next_node in current_path:
-                            continue
-                        new_path = current_path + [next_node]
-                        signature = tuple(new_path)
-                        if signature in seen_signatures:
-                            continue
-                        seen_signatures.add(signature)
-                        if next_node in target_set:
-                            payload = self.fallback_engine._build_path_payload(new_path)
-                            if payload:
-                                built_paths.append(payload)
-                                if len(built_paths) >= path_limit:
-                                    break
-                        if len(new_path) - 1 < max_hops:
-                            queue.append(new_path)
-
-            built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
-            return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
+            return _search_ranked_paths(
+                start_candidates=start_candidates,
+                target_set=set(end_candidates),
+                max_hops=max_hops,
+                path_limit=path_limit,
+                relation_rows=self._path_query_relation_rows,
+                build_path_payload=self.fallback_engine._build_path_payload,
+            )
         except Exception:
             return self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
 
@@ -736,6 +781,9 @@ class NebulaPrimaryGraphEngine:
             if name:
                 names.add(name)
         return sorted(names)
+
+    def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
+        return self._collect_nebula_relations(entity_name)
 
     def _evidence_payload_from_row(self, row: dict[str, Any]) -> dict[str, Any]:
         payload: dict[str, Any] = {}
