@@ -1,0 +1,34 @@
+[
+  {
+    "id": "origin_001",
+    "category": "origin_source",
+    "query": "六味地黄丸出自哪本书？请给出处原文。",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["小儿药证直诀", "六味地黄丸", "地黄丸"],
+    "evidence_source_books_any": ["小儿药证直诀", "保婴撮要", "医方论"]
+  },
+  {
+    "id": "origin_002",
+    "category": "origin_clause",
+    "query": "《伤寒论》五苓散方后注“多饮暖水，汗出愈”是什么意思？",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["五苓散", "多饮暖水", "汗出愈"],
+    "evidence_source_books_any": ["伤寒论"]
+  },
+  {
+    "id": "origin_003",
+    "category": "origin_clause",
+    "query": "《伤寒论》第96条小柴胡汤方后注“若咳者，去人参、大枣、生姜，加五味子半升、干姜二两”是什么意思？",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["小柴胡汤", "五味子", "干姜", "若咳者"],
+    "evidence_source_books_any": ["伤寒论"]
+  },
+  {
+    "id": "origin_004",
+    "category": "origin_clause",
+    "query": "《伤寒论》四逆散原条文主治是什么？请给接近原文的片段。",
+    "expected_route": "hybrid",
+    "answer_contains_any": ["四逆散", "少阴病", "四逆", "或咳"],
+    "evidence_source_books_any": ["伤寒论"]
+  }
+]
