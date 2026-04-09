@@ -66,11 +66,17 @@ def _action_cache_payload(*, action: dict[str, Any], settings: QAServiceSettings
             payload["query"] = str(action.get("query", "")).strip()
             payload["source_hint"] = str(action.get("source_hint", "")).strip()
         return payload
+    scopes = action.get("scope_paths", [])
+    normalized_scopes = scopes if isinstance(scopes, list) else []
+    if not normalized_scopes:
+        fallback_path = str(action.get("path", "")).strip()
+        if fallback_path.startswith(("chapter://", "book://", "qa://", "caseqa://")):
+            normalized_scopes = [fallback_path]
     return {
         "path": normalized_path,
         "query": str(action.get("query", "")).strip(),
         "source_hint": str(action.get("source_hint", "")).strip(),
-        "scope_paths": action.get("scope_paths", []),
+        "scope_paths": normalized_scopes,
         "top_k": resolved_top_k,
     }
 
@@ -249,10 +255,15 @@ def _execute_action(*, evidence_navigator, settings: QAServiceSettings, action: 
         return {**result, "cache_hit": False}
     if tool == "search_evidence_text":
         scopes = action.get("scope_paths", [])
+        normalized_scopes = scopes if isinstance(scopes, list) else []
+        if not normalized_scopes:
+            fallback_path = str(action.get("path", "")).strip()
+            if fallback_path.startswith(("chapter://", "book://", "qa://", "caseqa://")):
+                normalized_scopes = [fallback_path]
         result = evidence_navigator.search_evidence_text(
             query=str(action.get("query", "")),
             source_hint=str(action.get("source_hint", "")),
-            scope_paths=scopes if isinstance(scopes, list) else [],
+            scope_paths=normalized_scopes,
             top_k=int(action.get("top_k", settings.deep_read_top_k) or settings.deep_read_top_k),
         )
         request_cache[cache_key] = dict(result)
