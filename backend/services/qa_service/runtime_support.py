@@ -250,11 +250,15 @@ def _can_parallelize_actions(actions: list[dict[str, Any]]) -> bool:
     if len(actions) < 2:
         return False
     parallel_safe_skills = {
+        "expand-entity-alias",
+        "read-formula-composition",
+        "read-formula-origin",
         "search-source-text",
         "find-case-reference",
         "read-syndrome-treatment",
         "compare-formulas",
         "trace-source-passage",
+        "trace-graph-path",
     }
     if any(str(action.get("skill", "")).strip() not in parallel_safe_skills for action in actions):
         return False

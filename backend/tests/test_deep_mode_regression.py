@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from services.qa_service.engine import QAService
+from services.qa_service.prompts import _build_grounded_user_prompt
 from tools.tcm_route_tool import TCMRouteSearchTool
 
 
@@ -135,6 +136,63 @@ class QAServiceLargeOutputTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["route"]["final_route"], "hybrid")
         self.assertGreaterEqual(len(result["factual_evidence"]), 1)
         self.assertIn("Deep planner回答", result["answer"])
+
+
+class GroundedPromptCompactionTests(unittest.TestCase):
+    def test_grounded_prompt_compacts_non_source_query(self) -> None:
+        prompt = _build_grounded_user_prompt(
+            query="逍遥散的功效与主治是什么？",
+            payload={"retrieval_strategy": {"intent": "formula_efficacy", "entity_name": "逍遥散"}},
+            mode="quick",
+            factual_evidence=[
+                {
+                    "source_type": "graph",
+                    "source": "医方集解#12",
+                    "source_book": "医方集解",
+                    "source_chapter": "卷三",
+                    "anchor_entity": "逍遥散",
+                    "predicate": "功效",
+                    "target": "疏肝健脾",
+                    "snippet": "逍遥散用于肝郁血虚、脾失健运之证。" * 12,
+                }
+            ],
+            case_references=[],
+            citations=["医方集解/卷三"],
+            notes=[],
+            book_citations=["医方集解/卷三"],
+            deep_trace=[],
+            evidence_limit=4,
+        )
+
+        self.assertIn("事实证据摘要：", prompt)
+        self.assertIn("逍遥散 -> 功效:疏肝健脾", prompt)
+        self.assertNotIn("摘录:", prompt)
+        self.assertNotIn(("逍遥散用于肝郁血虚、脾失健运之证。" * 3), prompt)
+
+    def test_grounded_prompt_keeps_excerpt_for_source_query(self) -> None:
+        prompt = _build_grounded_user_prompt(
+            query="逍遥散出自哪本书？请给出处原文。",
+            payload={"retrieval_strategy": {"intent": "formula_origin", "entity_name": "逍遥散"}},
+            mode="deep",
+            factual_evidence=[
+                {
+                    "source_type": "chapter",
+                    "source": "医方集解/卷三",
+                    "source_book": "医方集解",
+                    "source_chapter": "卷三",
+                    "snippet": "逍遥散，治肝郁血虚，脾弱不运。" * 6,
+                }
+            ],
+            case_references=[],
+            citations=["医方集解/卷三"],
+            notes=[],
+            book_citations=["医方集解/卷三"],
+            deep_trace=[],
+            evidence_limit=6,
+        )
+
+        self.assertIn("摘录:", prompt)
+        self.assertIn("允许引用上面的出处摘录", prompt)
 
 
 if __name__ == "__main__":

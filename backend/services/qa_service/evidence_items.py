@@ -22,10 +22,17 @@ def _evidence_identity(item: dict[str, Any]) -> tuple[str, str, str]:
 def _factual_evidence_from_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
     graph_result = payload.get("graph_result", {}) if isinstance(payload, dict) else {}
     retrieval_result = payload.get("retrieval_result", {}) if isinstance(payload, dict) else {}
+    graph_data = _extract_data(graph_result)
+    graph_entity = graph_data.get("entity", {}) if isinstance(graph_data.get("entity"), dict) else {}
+    anchor_entity = str(graph_entity.get("canonical_name", "")).strip()
     evidence: list[dict[str, Any]] = []
-    evidence.extend(_graph_relation_items(graph_result))
-    evidence.extend(_syndrome_items(graph_result, formula_limit=4))
-    evidence.extend(_graph_path_items(graph_result, expand_edges=True))
+    graph_items = _graph_relation_items(graph_result)
+    graph_items.extend(_syndrome_items(graph_result, formula_limit=4))
+    graph_items.extend(_graph_path_items(graph_result, expand_edges=True))
+    if anchor_entity:
+        for item in graph_items:
+            item.setdefault("anchor_entity", anchor_entity)
+    evidence.extend(graph_items)
     evidence.extend(_retrieval_items(retrieval_result, source_book_normalizer=lambda value: str(value or "").strip()))
     return _dedupe_evidence(evidence)
 
