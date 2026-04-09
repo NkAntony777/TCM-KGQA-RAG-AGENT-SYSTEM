@@ -6,6 +6,12 @@
 
 一个本地运行、文件优先、可审计的 AI Agent 工作台。
 
+当前问答链路的工程方向已经明确收口为：
+
+- `graph + files-first + 结构化索引 + skill + planner`
+- `files_first` 已是 quick / deep 的默认主检索方向
+- 旧 dense / case 向量链路仍保留，但只作为兼容 fallback，不再是默认主路径
+
 
 - 对话会落盘到本地 `JSON`
 - 长期记忆保存在 `Markdown`
@@ -40,11 +46,18 @@ langchain-OpenClaw 反过来做了几个选择：
 - 流式聊天：基于 FastAPI SSE 返回 token、工具调用、分段回复
 - 会话持久化：每轮对话保存到 `backend/sessions/*.json`
 - 长期记忆：`backend/memory/MEMORY.md`
-- 本地知识库检索：`backend/knowledge/` + LlamaIndex
+- 图谱 + files-first + 结构化索引问答主链
 - 技能系统：Agent 先看技能快照，再按需读取 `SKILL.md`
 - 三栏工作台 UI：会话列表、聊天区、文件检查器
 - 文件在线编辑：可直接编辑 Memory / Skills / Workspace 文件
 - RAG 模式切换：可选择“直接拼接记忆”或“检索后注入”
+
+当前问答链路还额外具备以下 TCM 定制能力：
+
+- 图谱实体查询、关系路径查询、证候链查询
+- `entity://` / `book://` / `chapter://` / `alias://` / `caseqa://` 证据路径读回
+- deep 模式按证据缺口执行 follow-up retrieval，而不是单次泛搜
+- sidecar 不可用时优先回退到本地真实 graph / retrieval engine，而不是 mock demo 数据
 
 当前内置的技能包括：
 
@@ -52,6 +65,34 @@ langchain-OpenClaw 反过来做了几个选择：
 - `联网搜索`（Tavily）
 - `本地知识库检索`
 - `失败恢复经验沉淀`
+
+## 当前检索状态（2026-04）
+
+为避免把当前工程状态说得过满，这里明确区分：
+
+### 已经实现
+
+- `quick / deep` 默认主链已经切到 `files_first`
+- `case QA` 默认主链已经切到结构化非向量索引
+- graph 命中后已经可以继续走证据路径读回与局部 follow-up retrieval
+- sidecar 服务不可用时，主链可以回退到本地真实引擎
+
+### 默认主路径
+
+- `graph + files-first + 结构化索引 + skill + planner`
+- 证据层可靠性优先于继续堆 planner 技巧
+- deep 模式优先补“证据缺口”，而不是把整题重新做一次大检索
+
+### 仍然保留的兼容层
+
+- dense retrieval 仍保留在旧 retrieval engine 内部
+- case 向量检索兼容路径还没有被物理删除
+- 因此当前准确说法是：**项目已经基本实现非向量主链，但还没有“完全去向量化”**
+
+### 推荐阅读
+
+- [docs/PROJECT_PROGRESS.md](./docs/PROJECT_PROGRESS.md)
+- [docs/无向量检索替代方案_20260407.md](./docs/无向量检索替代方案_20260407.md)
 
 ## 界面结构
 
@@ -124,9 +165,7 @@ flowchart LR
 
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 copy .env.example .env
 ```
 
@@ -146,8 +185,10 @@ TAVILY_API_KEY=your_key
 然后启动：
 
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 8002 --reload
+uv run uvicorn app:app --host 0.0.0.0 --port 8002 --reload
 ```
+
+如果你在本地同时跑图谱 / 检索 sidecar，可额外启动对应服务；如果 sidecar 不可用，当前主链默认应该优先回退到本地真实引擎，而不是展示用 mock 数据。
 
 ### 3. 启动前端
 
