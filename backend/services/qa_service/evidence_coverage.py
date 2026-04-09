@@ -42,6 +42,9 @@ COMPARISON_NOISE_TERMS = {
     "咳者",
 }
 COMPARISON_NOISE_PREFIXES = ("请从", "请结合", "分析", "论述", "论证", "比较", "鉴别", "说明", "解释")
+SOURCE_TEXT_MARKERS = ("原文", "原句", "原话", "原段", "条文", "方后注")
+ORIGIN_BOOK_MARKERS = ("出处", "出自", "哪本书", "哪部书")
+SOURCE_TRACE_MARKERS = (*ORIGIN_BOOK_MARKERS, *SOURCE_TEXT_MARKERS, "佐证", "来源")
 
 
 def _init_coverage_state(*, query: str, payload: dict[str, Any], evidence_paths: list[str]) -> dict[str, Any]:
@@ -187,8 +190,8 @@ def _coverage_gaps_from_state(state: dict[str, Any]) -> list[str]:
     compare_entities = list(state.get("compare_entities", []))
     sources = set(state.get("sources", set()))
 
-    wants_source_text = any(marker in query for marker in ("原文", "原句", "原话"))
-    wants_origin_book = any(marker in query for marker in ("出自", "哪本书", "出处"))
+    wants_source_text = any(marker in query for marker in SOURCE_TEXT_MARKERS)
+    wants_origin_book = any(marker in query for marker in ORIGIN_BOOK_MARKERS)
     requires_formula_anchor = bool(entity_name) and entity_name.endswith(("汤", "散", "丸", "饮", "膏", "丹", "方", "颗粒", "胶囊"))
 
     gaps: list[str] = []
@@ -272,11 +275,11 @@ def _coverage_summary_from_state(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def _needs_origin_support(*, query: str, intent: str) -> bool:
-    return intent == "formula_origin" or any(marker in query for marker in ("出处", "出自", "哪本书", "原文", "原句", "原话"))
+    return intent == "formula_origin" or any(marker in query for marker in (*ORIGIN_BOOK_MARKERS, *SOURCE_TEXT_MARKERS))
 
 
 def _needs_source_trace(*, query: str) -> bool:
-    return any(marker in query for marker in ("出处", "出自", "原文", "原句", "原话", "佐证", "来源"))
+    return any(marker in query for marker in SOURCE_TRACE_MARKERS)
 
 
 def _needs_path_reasoning(*, query: str) -> bool:
@@ -347,8 +350,8 @@ def _looks_like_primary_compare_target(entity: str) -> bool:
 
 
 def _origin_support_sufficient(*, query: str, entity_name: str, factual_evidence: list[dict[str, Any]], source_types: set[str]) -> bool:
-    wants_source_text = any(marker in query for marker in ("原文", "原句", "原话"))
-    wants_origin_book = any(marker in query for marker in ("出自", "哪本书", "出处"))
+    wants_source_text = any(marker in query for marker in SOURCE_TEXT_MARKERS)
+    wants_origin_book = any(marker in query for marker in ORIGIN_BOOK_MARKERS)
     has_graph_book = any(str(item.get("source_book", "")).strip() for item in factual_evidence if str(item.get("source_type", "")).strip() == "graph")
     has_doc_book = any(str(item.get("source_book", "")).strip() for item in factual_evidence if str(item.get("source_type", "")).strip() in DOC_LIKE_SOURCE_TYPES)
     has_entity_linked_passage = False
@@ -387,7 +390,7 @@ def _origin_support_sufficient(*, query: str, entity_name: str, factual_evidence
 
 
 def _source_trace_sufficient(*, query: str, factual_evidence: list[dict[str, Any]]) -> bool:
-    wants_source_text = any(marker in query for marker in ("原文", "原句", "原话"))
+    wants_source_text = any(marker in query for marker in SOURCE_TEXT_MARKERS)
     has_graph_book = any(str(item.get("source_book", "")).strip() for item in factual_evidence if str(item.get("source_type", "")).strip() == "graph")
     has_doc_source_trace_support = False
     has_source_trace_support = False

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import patch
 
 from services.qa_service.engine import QAService, _apply_origin_action_policy, _factual_evidence_from_payload, _identify_evidence_gaps, _plan_followup_actions
 from services.qa_service.evidence import _coverage_gaps_from_state, _init_coverage_state, _update_coverage_state
@@ -42,6 +43,16 @@ class FakeSequentialAnswerGenerator:
         if isinstance(response, Exception):
             raise response
         return response
+
+
+class FakePlannerAliasService:
+    def aliases_for_entity(self, entity_name: str, *, max_aliases: int = 8, max_depth: int = 2) -> list[str]:
+        mapping = {
+            "六味地黄丸": ["地黄丸", "六味丸"],
+            "地黄丸": ["六味地黄丸", "六味丸"],
+            "六味丸": ["六味地黄丸", "地黄丸"],
+        }
+        return mapping.get(entity_name, [])
 
 
 class FakeEvidenceNavigator:
@@ -578,6 +589,55 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first["cache_hit"], False)
         self.assertEqual(second["cache_hit"], True)
 
+    async def test_execute_action_uses_selected_source_path_as_search_scope(self) -> None:
+        search_key = json.dumps(
+            {"query": "六味地黄丸 出处 原文", "scope_paths": ["chapter://小儿药证直诀/卷下"]},
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        navigator = FakeEvidenceNavigator(
+            search_results={
+                search_key: {
+                    "tool": "search_evidence_text",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "chapter",
+                            "source": "小儿药证直诀/卷下",
+                            "snippet": "六味地黄丸，治肾怯失音，囟开不合，神不足。",
+                            "source_book": "小儿药证直诀",
+                            "source_chapter": "卷下",
+                            "score": 1.0,
+                        }
+                    ],
+                }
+            },
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_deep_followup_payload()),
+            answer_generator=FakeAnswerGenerator("unused"),
+            evidence_navigator=navigator,
+        )
+        request_cache: dict[str, dict[str, object]] = {}
+
+        result = service._execute_action(
+            {
+                "skill": "trace-source-passage",
+                "tool": "search_evidence_text",
+                "path": "chapter://小儿药证直诀/卷下",
+                "query": "六味地黄丸 出处 原文",
+                "top_k": 4,
+            },
+            request_cache=request_cache,
+        )
+
+        search_calls = [call for call in navigator.calls if call["tool"] == "search_evidence_text"]
+        self.assertEqual(len(search_calls), 1)
+        self.assertEqual(search_calls[0]["scope_paths"], ["chapter://小儿药证直诀/卷下"])
+        self.assertEqual(result["status"], "ok")
+
     async def test_guard_refuses_high_risk_query(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
 
@@ -704,6 +764,64 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(actions[0]["path"], "chapter://小儿药证直诀/卷下")
 
+    def test_clause_query_prefers_existing_chapter_path_for_direct_source_followup(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_efficacy"},
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "五苓散",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+        }
+
+        actions = _plan_followup_actions(
+            planner_skills=service.planner_skills,
+            query="《伤寒论》五苓散方后注“多饮暖水，汗出愈”是什么意思？",
+            payload={**payload, "_planner_factual_evidence": []},
+            evidence_paths=["entity://五苓散/*", "chapter://伤寒论/辨太阳病脉证并治", "book://伤寒论/*"],
+            gaps=["origin"],
+            max_actions=2,
+            executed_actions=set(),
+        )
+
+        self.assertEqual(actions[0]["path"], "chapter://伤寒论/辨太阳病脉证并治")
+
+    def test_clause_query_origin_policy_rewrites_to_existing_chapter_path(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_efficacy"},
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "五苓散",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "_planner_factual_evidence": [],
+        }
+        wrong_actions = [
+            {
+                "skill": "read-formula-origin",
+                "tool": "read_evidence_path",
+                "path": "entity://五苓散/*",
+                "query": "五苓散 出处 原文",
+                "top_k": 6,
+                "reason": "bad plan",
+            }
+        ]
+
+        corrected = _apply_origin_action_policy(
+            planner_skills=service.planner_skills,
+            query="《伤寒论》五苓散方后注“多饮暖水，汗出愈”是什么意思？",
+            payload=payload,
+            evidence_paths=["entity://五苓散/*", "chapter://伤寒论/辨太阳病脉证并治", "book://伤寒论/*"],
+            gaps=["origin"],
+            actions=wrong_actions,
+            max_actions=2,
+            executed_actions=set(),
+        )
+
+        self.assertEqual(corrected[0]["path"], "chapter://伤寒论/辨太阳病脉证并治")
+
     def test_origin_gap_normalizes_graph_book_path_for_followup_read(self) -> None:
         service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
         payload = {
@@ -737,6 +855,99 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(actions[0]["path"], "book://医方论/*")
+
+    def test_origin_gap_uses_alias_path_when_only_old_name_scope_is_available(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_origin"},
+            "retrieval_strategy": {
+                "intent": "formula_origin",
+                "entity_name": "六味地黄丸",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "_planner_factual_evidence": [],
+        }
+
+        with patch("services.qa_service.planner_support.get_runtime_alias_service", return_value=FakePlannerAliasService()):
+            actions = _plan_followup_actions(
+                planner_skills=service.planner_skills,
+                query="六味地黄丸出自哪本书？请给出处原文。",
+                payload=payload,
+                evidence_paths=["alias://地黄丸"],
+                gaps=["origin"],
+                max_actions=2,
+                executed_actions=set(),
+            )
+
+        self.assertEqual(actions[0]["skill"], "expand-entity-alias")
+        self.assertEqual(actions[0]["path"], "alias://地黄丸")
+        self.assertEqual(actions[1]["path"], "entity://六味地黄丸/*")
+
+    def test_origin_gap_reuses_alias_backed_entity_scope_for_canonical_entity(self) -> None:
+        service = QAService(route_tool=FakeRouteTool(_composition_payload()), answer_generator=FakeAnswerGenerator("unused"))
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_origin"},
+            "retrieval_strategy": {
+                "intent": "formula_origin",
+                "entity_name": "六味地黄丸",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "_planner_factual_evidence": [],
+        }
+
+        with patch("services.qa_service.planner_support.get_runtime_alias_service", return_value=FakePlannerAliasService()):
+            actions = _plan_followup_actions(
+                planner_skills=service.planner_skills,
+                query="六味地黄丸出自哪本书？请给出处原文。",
+                payload=payload,
+                evidence_paths=["entity://地黄丸/*"],
+                gaps=["origin"],
+                max_actions=2,
+                executed_actions=set(),
+            )
+
+        self.assertEqual(actions[0]["path"], "entity://地黄丸/*")
+
+    def test_pick_best_source_path_normalizes_prefixed_book_and_encoded_chapter_path(self) -> None:
+        self.assertEqual(
+            _pick_best_source_path(
+                ["book://089-医方论/*", "chapter://089-医方论/%E5%8D%B7%E4%B8%8A"],
+                preferred_books=["医方论"],
+            ),
+            "chapter://医方论/卷上",
+        )
+
+    def test_clause_query_triggers_origin_and_source_trace_gaps(self) -> None:
+        payload = {
+            "query_analysis": {"dominant_intent": "formula_efficacy"},
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "五苓散",
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+        }
+        factual_evidence = [
+            {
+                "source_type": "graph",
+                "source": "伤寒论/辨太阳病脉证并治",
+                "snippet": "功效: 利水渗湿，温阳化气。",
+                "predicate": "功效",
+                "target": "利水渗湿，温阳化气",
+                "source_book": "伤寒论",
+                "source_chapter": "辨太阳病脉证并治",
+                "anchor_entity": "五苓散",
+            }
+        ]
+
+        gaps = _identify_evidence_gaps(
+            query="《伤寒论》五苓散方后注“多饮暖水，汗出愈”是什么意思？",
+            payload=payload,
+            factual_evidence=factual_evidence,
+            case_references=[],
+        )
+
+        self.assertIn("origin", gaps)
+        self.assertIn("source_trace", gaps)
 
     def test_single_entity_query_does_not_create_comparison_gap(self) -> None:
         payload = {
@@ -1134,17 +1345,19 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
             ],
         }
 
-        actions = _plan_followup_actions(
-            planner_skills=service.planner_skills,
+        actions = service._resolve_followup_actions(
             query="六味地黄丸出处原文是什么？",
             payload=payload,
             evidence_paths=["entity://六味地黄丸/*", "book://小儿药证直诀/*", "chapter://小儿药证直诀/卷下"],
-            gaps=["source_trace"],
-            max_actions=2,
+            factual_evidence=payload["_planner_factual_evidence"],
+            plan={"gaps": ["source_trace"], "next_actions": []},
+            heuristic_gaps=["source_trace"],
+            plan_gaps=["source_trace"],
             executed_actions=set(),
         )
 
         self.assertEqual(actions[0]["path"], "chapter://小儿药证直诀/卷下")
+        self.assertEqual(actions[0]["scope_paths"], ["chapter://小儿药证直诀/卷下"])
 
     def test_pick_best_source_path_matches_normalized_book_name(self) -> None:
         self.assertEqual(

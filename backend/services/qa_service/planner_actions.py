@@ -17,6 +17,34 @@ from services.qa_service.planner_support import (
 )
 from services.qa_service.skill_registry import RuntimeSkill
 
+SOURCE_TEXT_QUERY_MARKERS = ("原文", "原句", "原话", "原段", "条文", "方后注")
+SOURCE_BOOK_QUERY_MARKERS = ("出处", "出自", "哪本书", "哪部书")
+CLAUSE_SOURCE_QUERY_MARKERS = ("条文", "方后注", "原段")
+
+
+def _query_prefers_direct_source_path(query: str) -> bool:
+    return any(marker in query for marker in (*SOURCE_TEXT_QUERY_MARKERS, *SOURCE_BOOK_QUERY_MARKERS))
+
+
+def _query_requests_source_text(query: str) -> bool:
+    return any(marker in query for marker in SOURCE_TEXT_QUERY_MARKERS)
+
+
+def _source_scope_paths(*, path: str, evidence_paths: list[str]) -> list[str]:
+    normalized = str(path or "").strip()
+    if normalized.startswith(("chapter://", "book://", "qa://")):
+        return [normalized]
+    return [item for item in evidence_paths if item.startswith(("chapter://", "book://", "qa://"))]
+
+
+def _can_direct_read_source_path(*, query: str, path: str) -> bool:
+    normalized = str(path or "").strip()
+    if not normalized.startswith(("chapter://", "book://")):
+        return False
+    if normalized.startswith("chapter://"):
+        return _query_prefers_direct_source_path(query)
+    return any(marker in query for marker in CLAUSE_SOURCE_QUERY_MARKERS)
+
 
 def _normalize_gap_names(raw_gaps: list[Any]) -> list[str]:
     allowed = set(ALLOWED_PLANNER_GAPS)
@@ -39,6 +67,13 @@ def _normalize_planner_actions(
     max_actions: int,
 ) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
+
+    def _source_scope_defaults(*, action_path: str) -> list[str]:
+        scoped_path = str(action_path or "").strip()
+        if scoped_path.startswith(("chapter://", "book://", "qa://")):
+            return [scoped_path]
+        return [path for path in evidence_paths if path.startswith(("chapter://", "book://", "qa://"))]
+
     for raw in raw_actions:
         if not isinstance(raw, dict):
             continue
@@ -70,11 +105,11 @@ def _normalize_planner_actions(
             action.setdefault("scope_paths", [path for path in evidence_paths if path.startswith("caseqa://")])
         if skill == "search-source-text":
             action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
-            action.setdefault("scope_paths", [path for path in evidence_paths if path.startswith(("chapter://", "book://", "qa://"))])
+            action.setdefault("scope_paths", _source_scope_defaults(action_path=str(action.get("path", ""))))
             action["query"] = str(action.get("query") or f"{query} 出处 古籍 原文")
         if skill == "trace-source-passage":
             action.setdefault("path", _preferred_path_for_skill(skill=skill, payload=payload, evidence_paths=evidence_paths))
-            action.setdefault("scope_paths", [path for path in evidence_paths if path.startswith(("chapter://", "book://", "qa://"))])
+            action.setdefault("scope_paths", _source_scope_defaults(action_path=str(action.get("path", ""))))
             action["query"] = str(action.get("query") or f"{query} 古籍出处 原文 佐证")
         if str(action.get("tool", "")).strip() == "read_evidence_path" and not str(action.get("path", "")).strip():
             continue
@@ -107,6 +142,8 @@ def _apply_origin_action_policy(
     graph_source_hints = _graph_source_hints_by_book(factual_evidence=payload.get("_planner_factual_evidence", []))
     corrected: list[dict[str, Any]] = []
     seen_keys: set[str] = set()
+    preferred_source_path = _pick_best_source_path(evidence_paths, preferred_books=graph_source_books)
+    direct_source_requested = _can_direct_read_source_path(query=query, path=preferred_source_path)
 
     def append_action(candidate: dict[str, Any]) -> None:
         if len(corrected) >= max_actions:
@@ -120,8 +157,27 @@ def _apply_origin_action_policy(
     def is_origin_book_action(candidate: dict[str, Any]) -> bool:
         return (
             str(candidate.get("skill", "")).strip() == "read-formula-origin"
-            and str(candidate.get("path", "")).strip().startswith("book://")
+            and str(candidate.get("path", "")).strip().startswith(("book://", "chapter://"))
         )
+
+    if direct_source_requested and preferred_source_path:
+        source_hint = graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""
+        append_action(
+            _build_skill_action(
+                planner_skills=planner_skills,
+                skill_name="read-formula-origin",
+                path=preferred_source_path,
+                query=f"{entity_name or query} 出处 原文",
+                top_k=4,
+                reason="已具备可读书目/章节路径，直接追出处原文或条文",
+                source_hint=source_hint,
+            )
+        )
+        for action in actions:
+            if is_origin_book_action(action) and str(action.get("path", "")).strip() != preferred_source_path:
+                continue
+            append_action(action)
+        return corrected[:max_actions]
 
     if entity_name and not graph_source_books:
         alias_path = _pick_first_matching_path(
@@ -271,21 +327,26 @@ def _plan_followup_actions(
         graph_source_hints = _graph_source_hints_by_book(factual_evidence=payload.get("_planner_factual_evidence", []))
         entity_origin_path = _pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="*") if entity_name else ""
         alias_path = _pick_first_matching_path(evidence_paths, prefixes=(f"alias://{entity_name}",), allow_prefix_only=True) if entity_name else ""
+        preferred_source_path = _pick_best_source_path(evidence_paths, preferred_books=graph_source_books)
+        direct_source_path_available = _can_direct_read_source_path(query=query, path=preferred_source_path)
+        if direct_source_path_available:
+            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="read-formula-origin", path=preferred_source_path, query=f"{entity_name or query} 出处 原文", top_k=4, reason="已存在可读书目/章节路径，直接补出处原文或条文", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
         if entity_name and not graph_source_books and alias_path:
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="expand-entity-alias", path=alias_path, query=f"{entity_name} 别名 异名", top_k=4, reason="先扩展古籍旧名和别名，避免出处检索漏召回"))
-        if entity_name and not graph_source_books and len(actions) < max_actions:
+        if entity_name and not graph_source_books and len(actions) < max_actions and not direct_source_path_available:
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="read-formula-origin", path=entity_origin_path or f"entity://{entity_name}/*", query=f"{entity_name} 出处 原文", top_k=6, reason="先从实体级证据锁定来源书名与篇章"))
-        elif graph_source_books:
+        elif graph_source_books and len(actions) < max_actions and not direct_source_path_available:
             for source_book in graph_source_books[:2]:
                 add_action(_build_skill_action(planner_skills=planner_skills, skill_name="read-formula-origin", path=_pick_best_source_path(evidence_paths, preferred_books=[source_book, _book_path_fallback(source_book).removeprefix("book://").removesuffix("/*")]) or _book_path_fallback(source_book), query=f"{entity_name or query} 出处 原文", top_k=4, reason=f"根据实体证据已定位来源书目，继续追 {source_book} 的原文片段", source_hint=graph_source_hints.get(source_book, "")))
-        else:
+        elif len(actions) < max_actions:
             origin_path = _pick_best_source_path(evidence_paths)
             if origin_path:
                 add_action(_build_skill_action(planner_skills=planner_skills, skill_name="read-formula-origin", path=origin_path, query=f"{query} 出处 原文", top_k=4, reason="补充出处或原文证据"))
             else:
-                add_action(_build_skill_action(planner_skills=planner_skills, skill_name="search-source-text", query=f"{query} 出处 古籍 原文 教材", scope_paths=[path for path in evidence_paths if path.startswith(("chapter://", "book://", "qa://"))], top_k=4, reason="补充出处或原文证据"))
-        if len(actions) < max_actions and any(marker in query for marker in ("原文", "原句", "原话", "佐证")):
-            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="trace-source-passage", path=_pick_best_source_path(evidence_paths, preferred_books=graph_source_books), query=f"{query} 古籍出处 原文 佐证", top_k=4, reason="补充更适合展示给用户的出处片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
+                add_action(_build_skill_action(planner_skills=planner_skills, skill_name="search-source-text", query=f"{query} 出处 古籍 原文 教材", scope_paths=_source_scope_paths(path="", evidence_paths=evidence_paths), top_k=4, reason="补充出处或原文证据"))
+        if len(actions) < max_actions and (_query_requests_source_text(query) or "佐证" in query):
+            trace_path = _pick_best_source_path(evidence_paths, preferred_books=graph_source_books)
+            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="trace-source-passage", path=trace_path, scope_paths=_source_scope_paths(path=trace_path, evidence_paths=evidence_paths), query=f"{query} 古籍出处 原文 佐证", top_k=4, reason="补充更适合展示给用户的出处片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
     if "source_trace" in gaps:
         trace_path = _pick_best_source_path(evidence_paths, preferred_books=_top_graph_source_books(factual_evidence=payload.get("_planner_factual_evidence", [])))
         graph_source_books = _top_graph_source_books(factual_evidence=payload.get("_planner_factual_evidence", []))
@@ -294,9 +355,9 @@ def _plan_followup_actions(
         if alias_path and len(actions) < max_actions:
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="expand-entity-alias", path=alias_path, query=f"{entity_name} 别名 异名", top_k=4, reason="先确认可用别名，再追原文片段"))
         if trace_path:
-            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="trace-source-passage", path=trace_path, query=f"{query} 古籍出处 原文 佐证", top_k=4, reason="补充书名、篇章和可引用片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
+            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="trace-source-passage", path=trace_path, scope_paths=_source_scope_paths(path=trace_path, evidence_paths=evidence_paths), query=f"{query} 古籍出处 原文 佐证", top_k=4, reason="补充书名、篇章和可引用片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
         else:
-            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="search-source-text", query=f"{query} 古籍出处 原文 佐证", scope_paths=[path for path in evidence_paths if path.startswith(("chapter://", "book://", "qa://"))], top_k=4, reason="补充书名、篇章和可引用片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
+            add_action(_build_skill_action(planner_skills=planner_skills, skill_name="search-source-text", query=f"{query} 古籍出处 原文 佐证", scope_paths=_source_scope_paths(path="", evidence_paths=evidence_paths), top_k=4, reason="补充书名、篇章和可引用片段", source_hint=graph_source_hints.get(graph_source_books[0], "") if graph_source_books else ""))
     if "case_reference" in gaps:
         case_path = _pick_first_matching_path(evidence_paths, prefixes=("caseqa://",))
         if case_path:
