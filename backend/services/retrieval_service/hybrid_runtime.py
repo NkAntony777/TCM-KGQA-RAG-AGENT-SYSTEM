@@ -61,6 +61,17 @@ def run_hybrid_search(
     if not docs:
         if normalized_search_mode == "files_first" and not sparse_vector:
             warnings.append("files_first_sparse_query_empty")
+        if not settings.vector_compatibility_enabled:
+            warnings.append("vector_compatibility_disabled")
+            return {
+                "backend": "supermew_hybrid",
+                "retrieval_mode": retrieval_mode if retrieval_mode != "hybrid" else ("files_first_empty" if normalized_search_mode == "files_first" else "vector_compatibility_disabled"),
+                "rerank_applied": False,
+                "candidate_k": max(candidate_k, top_k),
+                "chunks": [],
+                "total": 0,
+                "warnings": warnings,
+            }
         if normalized_search_mode == "files_first" and not settings.files_first_dense_fallback_enabled:
             warnings.append("files_first_dense_fallback_disabled")
             return {

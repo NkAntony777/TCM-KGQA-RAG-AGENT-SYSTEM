@@ -91,6 +91,7 @@ class TCMRouteSearchTool(BaseTool):
             "route": execution_route,
             "route_reason": route_reason,
             "classifier_route": decision.route,
+            "execution_mode": health.get("execution_mode"),
             "query_analysis": analysis.to_dict(),
             "retrieval_strategy": strategy.to_dict(),
             "evidence_paths": strategy.evidence_paths,

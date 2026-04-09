@@ -31,6 +31,25 @@ DEFINITION_KEYWORDS = ("定义", "是什么", "什么意思", "何谓", "概念"
 SYNDROME_TO_FORMULA_KEYWORDS = ("推荐什么方剂", "推荐方剂", "对应什么方剂", "用什么方", "哪首方", "什么方剂")
 MIXED_CONNECTORS = ("并", "以及", "同时", "结合", "并且", "并说明", "并给出", "并附", "和", "与")
 QUESTION_PREFIXES = ("请问", "请解释", "请给我", "请告诉我", "想知道", "帮我看看", "麻烦问下")
+ENTITY_NOISE_PREFIXES = (
+    "请从",
+    "请结合",
+    "请据",
+    "请用",
+    "请按",
+    "分析",
+    "论述",
+    "论证",
+    "辨析",
+    "比较",
+    "鉴别",
+    "说明",
+    "解释",
+    "讨论",
+    "试述",
+    "从",
+    "就",
+)
 FORMULA_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "方", "颗粒", "胶囊")
 FORMULA_PATTERN_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "颗粒", "胶囊")
 FORMULA_ENTITY_PATTERN = re.compile(
@@ -582,7 +601,7 @@ def _extract_jieba_entities(text: str) -> list[EntityMatch]:
 def _extract_formula_regex_entities(text: str) -> list[EntityMatch]:
     candidates: list[EntityMatch] = []
     for match in FORMULA_ENTITY_PATTERN.finditer(text):
-        entity = str(match.group(1) or "").strip()
+        entity = _normalize_formula_like_entity(str(match.group(1) or "").strip())
         if not entity:
             continue
         candidates.append(
@@ -654,7 +673,20 @@ def _clean_candidate(raw: str) -> str:
     for suffix in ("一般", "常见", "通常", "可参考", "可能"):
         if value.endswith(suffix):
             value = value[: -len(suffix)].strip(" ，。？?：:")
-    return value
+    return _normalize_formula_like_entity(value)
+
+
+def _normalize_formula_like_entity(value: str) -> str:
+    normalized = str(value or "").strip(" ，。？?：:")
+    if not normalized:
+        return ""
+    for prefix in ENTITY_NOISE_PREFIXES:
+        if normalized.startswith(prefix) and len(normalized) > len(prefix) + 1:
+            candidate = normalized[len(prefix) :].strip(" ，。？?：:")
+            if candidate.endswith(FORMULA_SUFFIXES):
+                normalized = candidate
+                break
+    return normalized
 
 
 def _guess_entity_types(entity: str) -> list[str]:

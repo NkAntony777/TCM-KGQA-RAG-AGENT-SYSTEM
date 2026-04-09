@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Literal
 
+from router.compare_entity_refiner import CompareEntityRefiner
 from router.tcm_intent_classifier import GraphQueryKind, QueryAnalysis, RouteName, analyze_tcm_query
 from services.qa_service.alias_service import get_runtime_alias_service
 
@@ -105,6 +106,18 @@ def derive_retrieval_strategy(
     entity_name = resolved.primary_entity if graph_query_kind == "entity" else ""
     symptom_name = resolved.symptom_name if graph_query_kind == "syndrome" else ""
     compare_entities = resolved.compare_entities()
+    notes = list(resolved.notes)
+    if intent == "compare_entities" and compare_entities:
+        refine_result = CompareEntityRefiner().refine(
+            query=text,
+            compare_entities=compare_entities,
+            primary_entity=entity_name or resolved.primary_entity,
+        )
+        compare_entities = refine_result.compare_entities
+        if graph_query_kind == "entity" and refine_result.primary_entity:
+            entity_name = refine_result.primary_entity
+        notes.append(f"compare_entities_refiner={refine_result.backend}")
+        notes.extend(refine_result.notes)
     alias_service = get_runtime_alias_service()
     alias_focus_entities = compare_entities or ([entity_name] if entity_name else [])
     entity_aliases: list[str] = []
@@ -115,7 +128,6 @@ def derive_retrieval_strategy(
     predicate_allowlist: list[str] = []
     predicate_blocklist: list[str] = []
     sources = _default_sources(route_hint)
-    notes = list(resolved.notes)
 
     if intent == "formula_composition":
         preferred_route = "graph"

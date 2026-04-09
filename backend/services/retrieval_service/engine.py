@@ -6,6 +6,7 @@ import os
 import re
 import socket
 import sqlite3
+import threading
 from collections import Counter, defaultdict
 from contextlib import closing
 from dataclasses import dataclass
@@ -23,31 +24,18 @@ from services.retrieval_service.files_first_support import (
     ParentChunkStore,
 )
 from services.retrieval_service.hybrid_runtime import run_hybrid_search
-from services.retrieval_service.chroma_case_store import ChromaCaseQASettings, ChromaCaseQAStore
 from services.retrieval_service.qa_structured_store import StructuredQAIndex, StructuredQAIndexSettings
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-_raw_milvus_uri = os.getenv("MILVUS_URI", "").strip()
-_use_pymilvus = not _raw_milvus_uri or _raw_milvus_uri.startswith(("http://", "https://"))
-if _use_pymilvus:
-    try:  # pragma: no cover - optional at import time, required in deployed S2 env
-        from pymilvus import AnnSearchRequest, DataType, MilvusClient, RRFRanker
-    except Exception:  # pragma: no cover
-        AnnSearchRequest = None
-        DataType = None
-        MilvusClient = None
-        RRFRanker = None
-else:  # pragma: no cover - local index mode on unsupported platforms
-    AnnSearchRequest = None
-    DataType = None
-    MilvusClient = None
-    RRFRanker = None
 
 try:
     import jieba  # type: ignore
 except Exception:  # pragma: no cover - optional lexical enhancement only
     jieba = None
+
+
+_PYMILVUS_LOCK = threading.Lock()
+_PYMILVUS_SDK: tuple[Any, Any, Any, Any] | None = None
 
 
 
@@ -59,9 +47,35 @@ def _first_env(*names: str, default: str = "") -> str:
     return default
 
 
+def _vector_compatibility_enabled_from_env() -> bool:
+    return _first_env("RETRIEVAL_VECTOR_COMPATIBILITY_ENABLED", default="false").lower() == "true"
+
+
+def _load_pymilvus_sdk() -> tuple[Any, Any, Any, Any]:
+    global _PYMILVUS_SDK
+    if _PYMILVUS_SDK is not None:
+        return _PYMILVUS_SDK
+    with _PYMILVUS_LOCK:
+        if _PYMILVUS_SDK is not None:
+            return _PYMILVUS_SDK
+        raw_uri = os.getenv("MILVUS_URI", "").strip()
+        use_pymilvus = not raw_uri or raw_uri.startswith(("http://", "https://"))
+        if not use_pymilvus:
+            _PYMILVUS_SDK = (None, None, None, None)
+            return _PYMILVUS_SDK
+        try:  # pragma: no cover - optional dependency in local dev
+            from pymilvus import AnnSearchRequest, DataType, MilvusClient, RRFRanker
+        except Exception:  # pragma: no cover
+            _PYMILVUS_SDK = (None, None, None, None)
+        else:
+            _PYMILVUS_SDK = (AnnSearchRequest, DataType, MilvusClient, RRFRanker)
+    return _PYMILVUS_SDK
+
+
 @dataclass(frozen=True)
 class RetrievalServiceSettings:
     project_backend_dir: Path
+    vector_compatibility_enabled: bool
     milvus_uri: str
     milvus_host: str
     milvus_port: str
@@ -101,6 +115,7 @@ class RetrievalServiceSettings:
 
 def load_settings() -> RetrievalServiceSettings:
     backend_dir = Path(__file__).resolve().parents[2]
+    vector_compatibility_enabled = _vector_compatibility_enabled_from_env()
     base_url = _first_env("EMBEDDING_BASE_URL", "LLM_BASE_URL", "BASE_URL", "OPENAI_BASE_URL")
     api_key = _first_env("EMBEDDING_API_KEY", "LLM_API_KEY", "ARK_API_KEY", "OPENAI_API_KEY")
     rewrite_base_url = _first_env("LLM_BASE_URL", "BASE_URL", "OPENAI_BASE_URL", default=base_url)
@@ -111,6 +126,7 @@ def load_settings() -> RetrievalServiceSettings:
 
     return RetrievalServiceSettings(
         project_backend_dir=backend_dir,
+        vector_compatibility_enabled=vector_compatibility_enabled,
         milvus_uri=_first_env("MILVUS_URI"),
         milvus_host=_first_env("MILVUS_HOST", default="127.0.0.1"),
         milvus_port=_first_env("MILVUS_PORT", default="19530"),
@@ -134,11 +150,13 @@ def load_settings() -> RetrievalServiceSettings:
         chroma_case_db_path=Path(_first_env("CHROMA_CASE_DB_PATH", default="E:/tcm_vector_db")),
         chroma_case_mirror_path=backend_dir / "storage" / "chroma_case_query_mirror",
         chroma_case_collection_prefix=_first_env("CHROMA_CASE_COLLECTION_PREFIX", default="tcm_shard_"),
-        case_qa_vector_fallback_enabled=_first_env("CASE_QA_VECTOR_FALLBACK_ENABLED", default="false").lower() == "true",
+        case_qa_vector_fallback_enabled=vector_compatibility_enabled
+        and _first_env("CASE_QA_VECTOR_FALLBACK_ENABLED", default="false").lower() == "true",
         structured_qa_index_path=backend_dir / "storage" / "qa_structured_index.sqlite",
         structured_qa_input_path=backend_dir / "services" / "retrieval_service" / "data" / "case_qa_clean" / "qa_fts_ready.jsonl",
         structured_case_input_path=backend_dir / "services" / "retrieval_service" / "data" / "case_qa_clean" / "case_fts_ready.jsonl",
-        files_first_dense_fallback_enabled=_first_env("FILES_FIRST_DENSE_FALLBACK_ENABLED", default="false").lower() == "true",
+        files_first_dense_fallback_enabled=vector_compatibility_enabled
+        and _first_env("FILES_FIRST_DENSE_FALLBACK_ENABLED", default="false").lower() == "true",
         sparse_lexicon_path=backend_dir / "storage" / "retrieval_sparse_lexicon.json",
         parent_chunk_store_path=backend_dir / "storage" / "retrieval_parent_chunks.json",
         local_index_path=backend_dir / "storage" / "retrieval_local_index.json",
@@ -370,7 +388,16 @@ class MilvusHybridStore:
         self.settings = settings
         self._client = None
 
+    def _is_enabled(self) -> bool:
+        return bool(self.settings.vector_compatibility_enabled)
+
+    def _sdk(self) -> tuple[Any, Any, Any, Any]:
+        return _load_pymilvus_sdk()
+
     def _get_client(self):
+        _, _, MilvusClient, _ = self._sdk()
+        if not self._is_enabled():
+            return None
         if self._client is None and MilvusClient is not None:
             uri = self.settings.milvus_uri.strip()
             if uri:
@@ -384,6 +411,8 @@ class MilvusHybridStore:
         return self._client
 
     def _is_reachable(self) -> bool:
+        if not self._is_enabled():
+            return False
         if self.settings.milvus_uri.strip():
             return True
         try:
@@ -407,6 +436,8 @@ class MilvusHybridStore:
         return client.has_collection(self.settings.milvus_collection)
 
     def health(self) -> dict[str, Any]:
+        if not self._is_enabled():
+            return {"milvus_available": False, "collection_exists": False, "vector_compatibility_enabled": False}
         try:
             if not self._is_reachable():
                 return {"milvus_available": False, "collection_exists": False, "error": "milvus_unreachable"}
@@ -437,6 +468,7 @@ class MilvusHybridStore:
         client = self._get_client()
         if not client:
             raise RuntimeError("pymilvus_not_installed")
+        _, DataType, _, _ = self._sdk()
         if client.has_collection(self.settings.milvus_collection):
             return
         schema = client.create_schema(auto_id=True, enable_dynamic_field=True)
@@ -496,6 +528,7 @@ class MilvusHybridStore:
         client = self._get_client()
         if not client:
             raise RuntimeError("pymilvus_not_installed")
+        AnnSearchRequest, _, _, RRFRanker = self._sdk()
         expr = f"chunk_level == {leaf_level}"
         dense_search = AnnSearchRequest(
             data=[dense_embedding],
@@ -783,31 +816,64 @@ class RetrievalEngine:
                 case_input_path=self.settings.structured_case_input_path,
             )
         )
-        self.case_qa = ChromaCaseQAStore(
-            ChromaCaseQASettings(
-                db_path=self.settings.chroma_case_db_path,
-                mirror_path=self.settings.chroma_case_mirror_path,
-                collection_prefix=self.settings.chroma_case_collection_prefix,
-            )
-        )
+        self._case_qa = None
+        self._case_qa_error = ""
         self.rewrite_client = OpenAICompatibleClient(
             base_url=self.settings.rewrite_base_url,
             api_key=self.settings.rewrite_api_key,
         )
         self.milvus = MilvusHybridStore(self.settings)
 
+    @property
+    def case_qa(self):
+        if self._case_qa is None and self.settings.vector_compatibility_enabled:
+            try:
+                from services.retrieval_service.chroma_case_store import ChromaCaseQASettings, ChromaCaseQAStore
+
+                self._case_qa = ChromaCaseQAStore(
+                    ChromaCaseQASettings(
+                        db_path=self.settings.chroma_case_db_path,
+                        mirror_path=self.settings.chroma_case_mirror_path,
+                        collection_prefix=self.settings.chroma_case_collection_prefix,
+                    )
+                )
+            except Exception as exc:
+                self._case_qa_error = str(exc)
+                self._case_qa = None
+        return self._case_qa
+
+    @case_qa.setter
+    def case_qa(self, value) -> None:
+        self._case_qa = value
+
     def health(self) -> dict[str, Any]:
         milvus_health = self.milvus.health()
         local_health = self.local_store.health()
         files_first_health = self.files_first_store.health()
         structured_qa_health = self.structured_qa.health()
+        if self.settings.vector_compatibility_enabled:
+            case_qa_health = self.case_qa.health() if self.case_qa is not None else {
+                "case_qa_configured": False,
+                "case_qa_client_available": False,
+            }
+        else:
+            case_qa_health = {
+                "case_qa_configured": False,
+                "case_qa_client_available": False,
+                "case_qa_collection_count": 0,
+                "case_qa_collections": [],
+                "case_qa_vector_hot_path_disabled": True,
+            }
+        if self._case_qa_error:
+            case_qa_health["case_qa_error"] = self._case_qa_error
         milvus_collection_exists = bool(milvus_health.get("collection_exists"))
         local_index_available = bool(local_health.get("local_index_available"))
         files_first_index_available = bool(files_first_health.get("files_first_index_available"))
-        hybrid_enabled = self.embedding_client.is_ready() and self.lexicon.is_ready() and (milvus_collection_exists or local_index_available)
+        hybrid_enabled = self.lexicon.is_ready() and files_first_index_available
         return {
             "status": "ok",
-            "vector_store": "milvus" if milvus_collection_exists else "local_hybrid_index",
+            "vector_compatibility_enabled": self.settings.vector_compatibility_enabled,
+            "vector_store": "milvus" if milvus_collection_exists else ("disabled" if not self.settings.vector_compatibility_enabled else "local_hybrid_index"),
             "hybrid_enabled": hybrid_enabled,
             "files_first_enabled": self.lexicon.is_ready() and files_first_index_available,
             "embedding_configured": self.embedding_client.is_ready(),
@@ -822,7 +888,7 @@ class RetrievalEngine:
             "files_first_dense_fallback_enabled": self.settings.files_first_dense_fallback_enabled,
             "runtime_entity_lexicon_loaded": bool(_runtime_entity_words(self.settings.runtime_graph_db_path)),
             **structured_qa_health,
-            **self.case_qa.health(),
+            **case_qa_health,
             **milvus_health,
             **local_health,
             **files_first_health,
@@ -872,7 +938,17 @@ class RetrievalEngine:
             self.settings.case_qa_embedding_model,
             dimensions=self.settings.case_qa_embedding_dimensions,
         )[0]
-        data = self.case_qa.search(
+        case_qa_store = self.case_qa
+        if case_qa_store is None:
+            return {
+                "backend": "case-qa",
+                "retrieval_mode": "vector_compatibility_disabled",
+                "candidate_k": candidate_k,
+                "chunks": [],
+                "total": 0,
+                "warnings": ["case_qa_vector_hot_path_disabled"],
+            }
+        data = case_qa_store.search(
             query=query,
             query_embedding=dense_vector,
             top_k=top_k,

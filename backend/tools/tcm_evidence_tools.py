@@ -59,6 +59,30 @@ def _normalize_book_label(text: str) -> str:
     return _shared_normalize_book_label(text)
 
 
+def _path_priority(path: str) -> tuple[int, str]:
+    normalized = _normalize_path(path)
+    if normalized.startswith("entity://"):
+        return (0, normalized)
+    if normalized.startswith("alias://"):
+        return (1, normalized)
+    if normalized.startswith("chapter://"):
+        return (2, normalized)
+    if normalized.startswith("book://"):
+        return (3, normalized)
+    if normalized.startswith("symptom://"):
+        return (4, normalized)
+    if normalized.startswith("qa://"):
+        return (5, normalized)
+    if normalized.startswith("caseqa://"):
+        return (6, normalized)
+    return (7, normalized)
+
+
+def _ordered_unique_paths(paths: list[str]) -> list[str]:
+    deduped = list(dict.fromkeys(path for path in (_normalize_path(item) for item in paths) if path))
+    return sorted(deduped, key=_path_priority)
+
+
 def _extract_hint_terms(*parts: str) -> list[str]:
     terms: list[str] = []
     seen = set()
@@ -165,6 +189,31 @@ def _source_scope_specs(paths: list[str]) -> list[tuple[str, str]]:
             continue
         seen.add(spec)
         deduped.append(spec)
+    return deduped
+
+
+def _dedupe_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+    deduped: list[dict[str, Any]] = []
+    seen = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        key = (
+            str(item.get("evidence_type", "")).strip(),
+            str(item.get("source_type", "")).strip(),
+            str(item.get("source", "")).strip(),
+            str(item.get("source_book", "")).strip(),
+            str(item.get("source_chapter", "")).strip(),
+            str(item.get("predicate", "")).strip(),
+            str(item.get("target", "")).strip(),
+            str(item.get("snippet", "")).strip()[:160],
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+        if len(deduped) >= limit:
+            break
     return deduped
 
 
@@ -303,8 +352,8 @@ class EvidenceNavigator:
         return {
             "tool": "list_evidence_paths",
             "query": query,
-            "paths": list(dict.fromkeys(path for path in paths if path)),
-            "count": len(list(dict.fromkeys(path for path in paths if path))),
+            "paths": _ordered_unique_paths(paths),
+            "count": len(_ordered_unique_paths(paths)),
         }
 
     def read_evidence_path(
@@ -327,11 +376,15 @@ class EvidenceNavigator:
                 top_k=resolved_top_k,
                 predicate_allowlist=allowlist,
             )
+            items = _graph_relation_items(raw)
+            if entity_name:
+                for item in items:
+                    item.setdefault("anchor_entity", entity_name)
             return _response_payload(
                 tool="read_evidence_path",
                 path=normalized,
                 raw=raw,
-                items=_graph_relation_items(raw),
+                items=items,
             )
 
         if normalized.startswith("symptom://"):
@@ -513,7 +566,7 @@ class EvidenceNavigator:
             query=query,
             scope_paths=normalized_scopes,
             raw=raw_payload,
-            items=items[: max(resolved_top_k * 2, resolved_top_k)],
+            items=_dedupe_items(items, limit=max(resolved_top_k * 2, resolved_top_k)),
         )
 
 
