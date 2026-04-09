@@ -343,6 +343,76 @@ class EvidenceNavigatorSourceLiteTests(unittest.TestCase):
         self.assertNotIn("book://089-医方论/*", result["paths"])
         self.assertFalse(any(path.startswith("chapter://医方论/089-医方论_正文") for path in result["paths"]))
 
+    def test_list_evidence_paths_orders_paths_by_logical_priority(self) -> None:
+        payload = {
+            "evidence_paths": [
+                "qa://六味地黄丸/similar",
+                "book://小儿药证直诀/*",
+                "alias://六味地黄丸",
+                "entity://六味地黄丸/*",
+                "chapter://小儿药证直诀/%E5%8D%B7%E4%B8%8A",
+                "caseqa://六味地黄丸/similar",
+                "entity://六味地黄丸/*",
+            ],
+            "retrieval_strategy": {"entity_name": "六味地黄丸"},
+        }
+
+        result = EvidenceNavigator().list_evidence_paths(
+            query="六味地黄丸出自哪本书？请给出处原文。",
+            route_payload=payload,
+        )
+
+        self.assertEqual(
+            result["paths"],
+            [
+                "entity://六味地黄丸/*",
+                "alias://六味地黄丸",
+                "chapter://小儿药证直诀/卷上",
+                "book://小儿药证直诀/*",
+                "qa://六味地黄丸/similar",
+                "caseqa://六味地黄丸/similar",
+            ],
+        )
+
+    def test_search_evidence_text_dedupes_duplicate_doc_items(self) -> None:
+        payload = {
+            "code": 0,
+            "message": "ok",
+            "backend": "retrieval-service",
+            "data": {
+                "chunks": [
+                    {
+                        "source_file": "133-小儿药证直诀.txt",
+                        "source_page": 42,
+                        "text": "六味地黄丸，治肾阴不足。",
+                        "score": 0.92,
+                    },
+                    {
+                        "source_file": "133-小儿药证直诀.txt",
+                        "source_page": 42,
+                        "text": "六味地黄丸，治肾阴不足。",
+                        "score": 0.91,
+                    },
+                ]
+            },
+        }
+
+        with (
+            patch("tools.tcm_evidence_tools.call_retrieval_hybrid", return_value=payload),
+            patch(
+                "tools.tcm_evidence_tools.call_retrieval_case_qa",
+                return_value={"code": 0, "message": "ok", "backend": "retrieval-service", "data": {"chunks": []}},
+            ),
+        ):
+            result = EvidenceNavigator().search_evidence_text(
+                query="六味地黄丸 出处 原文",
+                top_k=2,
+            )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["items"][0]["source"], "133-小儿药证直诀.txt#42")
+
     def test_herb2_book_scope_uses_herb2_prefix_filter(self) -> None:
         payload = {
             "code": 0,
