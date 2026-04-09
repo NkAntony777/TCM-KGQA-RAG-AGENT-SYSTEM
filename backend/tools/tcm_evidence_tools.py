@@ -53,6 +53,18 @@ HINT_STOPWORDS = {
     "哪本书",
     "什么书",
 }
+SOURCE_TRACE_QUERY_MARKERS = (
+    "出处",
+    "出自",
+    "原文",
+    "原句",
+    "原话",
+    "佐证",
+    "来源",
+    "条文",
+    "方后注",
+    "哪本书",
+)
 
 
 def _normalize_book_label(text: str) -> str:
@@ -215,6 +227,23 @@ def _dedupe_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, 
         if len(deduped) >= limit:
             break
     return deduped
+
+
+def _prefers_scoped_source_trace(query: str) -> bool:
+    text = str(query or "").strip()
+    return any(marker in text for marker in SOURCE_TRACE_QUERY_MARKERS)
+
+
+def _has_citation_ready_items(items: list[dict[str, Any]]) -> bool:
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        source_type = str(item.get("source_type", "")).strip()
+        if source_type in {"doc", "chapter"}:
+            return True
+        if str(item.get("source_book", "")).strip() and str(item.get("snippet", "")).strip():
+            return True
+    return False
 
 
 def _source_lite_search(*, book_name: str, hint: str, query: str, source_hint: str = "", top_k: int) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -516,6 +545,7 @@ class EvidenceNavigator:
         expanded_query = alias_service.expand_query_with_aliases(query)
 
         items: list[dict[str, Any]] = []
+        scoped_items: list[dict[str, Any]] = []
         raw_payload: dict[str, Any] | None = None
         book_scopes = _source_scope_specs(normalized_scopes)
         chapter_scopes = [path for path in normalized_scopes if path.startswith("chapter://")]
@@ -526,8 +556,10 @@ class EvidenceNavigator:
                     path=chapter_path,
                     top_k=max(resolved_top_k * 4, 16),
                 )
+                chapter_items = _section_items(chapter_payload)
                 raw_payload = raw_payload or chapter_payload
-                items.extend(_section_items(chapter_payload))
+                items.extend(chapter_items)
+                scoped_items.extend(chapter_items)
 
         if book_scopes:
             for book_name, hint in book_scopes[:2]:
@@ -540,6 +572,16 @@ class EvidenceNavigator:
                 )
                 raw_payload = raw_payload or book_raw
                 items.extend(book_items)
+                scoped_items.extend(book_items)
+
+        if _prefers_scoped_source_trace(query) and _has_citation_ready_items(scoped_items):
+            return _response_payload(
+                tool="search_evidence_text",
+                query=query,
+                scope_paths=normalized_scopes,
+                raw=raw_payload,
+                items=_dedupe_items(scoped_items, limit=max(resolved_top_k * 2, resolved_top_k)),
+            )
 
         if not schemes or "qa" in schemes or (not book_scopes and "book" in schemes):
             raw_payload = call_retrieval_hybrid(

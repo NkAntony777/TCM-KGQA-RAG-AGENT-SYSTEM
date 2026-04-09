@@ -186,6 +186,77 @@ class EvidenceNavigatorSourceLiteTests(unittest.TestCase):
         self.assertEqual(mock_hybrid.call_args.kwargs["enable_rerank"], False)
         mock_case_qa.assert_not_called()
 
+    def test_search_evidence_text_keeps_chapter_scoped_source_trace_bounded(self) -> None:
+        payload = {
+            "code": 0,
+            "message": "ok",
+            "backend": "retrieval-service",
+            "data": {
+                "section": {
+                    "book_name": "小儿药证直诀",
+                    "chapter_title": "卷下",
+                    "text": "古籍：小儿药证直诀\n篇名：卷下\n六味地黄丸，治肾怯失音，囟开不合，神不足。",
+                    "source_file": "133-小儿药证直诀.txt",
+                    "page_number": 42,
+                },
+                "items": [],
+                "count": 1,
+            },
+        }
+
+        with (
+            patch("tools.tcm_evidence_tools.call_retrieval_read_section", return_value=payload) as mock_read,
+            patch("tools.tcm_evidence_tools.call_retrieval_hybrid") as mock_hybrid,
+            patch("tools.tcm_evidence_tools.call_retrieval_case_qa") as mock_case_qa,
+        ):
+            result = EvidenceNavigator().search_evidence_text(
+                query="六味地黄丸 出处 原文",
+                scope_paths=["chapter://小儿药证直诀/卷下", "qa://六味地黄丸/similar"],
+                top_k=3,
+            )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["items"][0]["source_type"], "chapter")
+        self.assertEqual(mock_read.call_count, 1)
+        mock_hybrid.assert_not_called()
+        mock_case_qa.assert_not_called()
+
+    def test_search_evidence_text_does_not_fan_out_after_book_scoped_source_trace_hit(self) -> None:
+        payload = {
+            "code": 0,
+            "message": "ok",
+            "backend": "retrieval-service",
+            "data": {
+                "chunks": [
+                    {
+                        "source_file": "小儿药证直诀.txt",
+                        "source_page": 42,
+                        "chapter_title": "卷下",
+                        "text": "六味地黄丸，治肾阴不足。",
+                        "score": 0.92,
+                    }
+                ]
+            },
+        }
+
+        with (
+            patch("tools.tcm_evidence_tools.call_retrieval_hybrid", return_value=payload) as mock_hybrid,
+            patch("tools.tcm_evidence_tools.call_retrieval_case_qa") as mock_case_qa,
+        ):
+            result = EvidenceNavigator().search_evidence_text(
+                query="六味地黄丸 出处 原文",
+                scope_paths=["book://小儿药证直诀/*", "qa://六味地黄丸/similar"],
+                top_k=3,
+            )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["items"][0]["source_book"], "小儿药证直诀")
+        self.assertEqual(mock_hybrid.call_count, 1)
+        self.assertEqual(mock_hybrid.call_args.kwargs["enable_rerank"], False)
+        mock_case_qa.assert_not_called()
+
     def test_alias_path_returns_graph_alias_items(self) -> None:
         with patch("tools.tcm_evidence_tools.get_runtime_alias_service", return_value=FakeAliasService()):
             result = EvidenceNavigator().read_evidence_path(
