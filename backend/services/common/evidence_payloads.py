@@ -30,8 +30,43 @@ def normalize_book_label(text: str) -> str:
     return re.sub(r"^\d+\s*[-_－—]\s*", "", label)
 
 
+def _normalized_source_book(
+    value: Any,
+    *,
+    normalizer: Callable[[str], str] | None,
+) -> str:
+    source_book = str(value or "").strip()
+    if not source_book:
+        return ""
+    return normalizer(source_book) if normalizer is not None else source_book
+
+
+def _is_readable_chapter_label(*, source_book: str, chapter_title: str) -> bool:
+    normalized_book = normalize_book_label(source_book)
+    normalized_chapter = str(chapter_title or "").strip()
+    if not normalized_chapter:
+        return False
+    if normalized_chapter in {source_book, normalized_book}:
+        return False
+    if normalized_chapter.endswith("_正文") or normalized_chapter.endswith("-正文"):
+        return False
+    if normalized_chapter.startswith(f"{source_book}_") or normalized_chapter.startswith(f"{normalized_book}_"):
+        return False
+    if re.match(r"^\d+\s*[-_－—]", normalized_chapter):
+        return False
+    return True
+
+
 def normalize_path_predicate(value: Any) -> str:
     return str(value or "").strip().replace("(逆向)", "").replace("（逆向）", "").strip()
+
+
+def _logical_source_paths(*, source_book: str, source_chapter: str) -> tuple[str | None, str | None]:
+    normalized_book = normalize_book_label(source_book)
+    scope_path = f"book://{normalized_book}/*" if normalized_book else None
+    if normalized_book and source_chapter:
+        return f"chapter://{normalized_book}/{source_chapter}", scope_path
+    return scope_path, scope_path
 
 
 def graph_relation_items(payload: dict[str, Any], *, snippet_limit: int = 300) -> list[dict[str, Any]]:
@@ -43,6 +78,10 @@ def graph_relation_items(payload: dict[str, Any], *, snippet_limit: int = 300) -
             continue
         source_book = str(relation.get("source_book", "")).strip()
         source_chapter = str(relation.get("source_chapter", "")).strip()
+        evidence_path, source_scope_path = _logical_source_paths(
+            source_book=source_book,
+            source_chapter=source_chapter,
+        )
         items.append(
             {
                 "evidence_type": "factual_grounding",
@@ -57,6 +96,8 @@ def graph_relation_items(payload: dict[str, Any], *, snippet_limit: int = 300) -
                 "target": str(relation.get("target", "")).strip(),
                 "source_book": source_book or None,
                 "source_chapter": source_chapter or None,
+                "evidence_path": evidence_path,
+                "source_scope_path": source_scope_path,
             }
         )
     return items
@@ -81,6 +122,10 @@ def graph_path_items(
         source_book = str(first_source.get("source_book", "")).strip()
         source_chapter = str(first_source.get("source_chapter", "")).strip()
         source = f"{source_book}/{source_chapter}".strip("/") or "graph/path"
+        evidence_path, source_scope_path = _logical_source_paths(
+            source_book=source_book,
+            source_chapter=source_chapter,
+        )
         path_score = safe_float(path.get("score")) or 0.0
 
         if expand_edges and len(nodes) >= 2 and edges:
@@ -98,6 +143,8 @@ def graph_path_items(
                         "target": nodes[index + 1],
                         "source_book": source_book or None,
                         "source_chapter": source_chapter or None,
+                        "evidence_path": evidence_path,
+                        "source_scope_path": source_scope_path,
                         "path_nodes": nodes,
                         "path_edges": edges,
                         "path_sources": sources,
@@ -117,6 +164,8 @@ def graph_path_items(
                 "target": nodes[-1] if nodes else "",
                 "source_book": source_book or None,
                 "source_chapter": source_chapter or None,
+                "evidence_path": evidence_path,
+                "source_scope_path": source_scope_path,
                 "path_nodes": nodes,
                 "path_edges": edges,
                 "path_sources": sources,
@@ -138,6 +187,12 @@ def syndrome_items(
         if not isinstance(syndrome, dict):
             continue
         formulas = syndrome.get("recommended_formulas", [])
+        source_book = str(syndrome.get("source_book", "")).strip()
+        source_chapter = str(syndrome.get("source_chapter", "")).strip()
+        evidence_path, source_scope_path = _logical_source_paths(
+            source_book=source_book,
+            source_chapter=source_chapter,
+        )
         formula_text = "、".join(str(item) for item in formulas[:formula_limit]) if isinstance(formulas, list) else ""
         items.append(
             {
@@ -151,8 +206,10 @@ def syndrome_items(
                 "score": safe_float(syndrome.get("score", syndrome.get("confidence"))) or 0.0,
                 "predicate": "辨证链",
                 "target": str(syndrome.get("name", "")).strip(),
-                "source_book": str(syndrome.get("source_book", "")).strip() or None,
-                "source_chapter": str(syndrome.get("source_chapter", "")).strip() or None,
+                "source_book": source_book or None,
+                "source_chapter": source_chapter or None,
+                "evidence_path": evidence_path,
+                "source_scope_path": source_scope_path,
             }
         )
     return items
@@ -180,6 +237,10 @@ def retrieval_items(
         if not source_chapter and fallback_page_to_chapter and source_page not in (None, ""):
             source_chapter = f"第{source_page}页"
         source = f"{source_file}#{source_page}" if source_page not in (None, "") else source_file
+        evidence_path, source_scope_path = _logical_source_paths(
+            source_book=source_book,
+            source_chapter=source_chapter,
+        )
         items.append(
             {
                 "evidence_type": "factual_grounding",
@@ -189,8 +250,12 @@ def retrieval_items(
                 "match_snippet": clean_text(chunk.get("match_snippet"), limit=match_snippet_limit),
                 "score": safe_float(chunk.get("rerank_score", chunk.get("score"))),
                 "source_file": source_file,
+                "source_page": source_page,
+                "file_path": str(chunk.get("file_path", "")).strip() or None,
                 "source_book": source_book or None,
                 "source_chapter": source_chapter or None,
+                "evidence_path": evidence_path,
+                "source_scope_path": source_scope_path,
             }
         )
     return items
@@ -203,6 +268,10 @@ def section_items(payload: dict[str, Any], *, snippet_limit: int = 600) -> list[
         return []
     book_name = str(section.get("book_name", "")).strip()
     chapter_title = str(section.get("chapter_title", "")).strip()
+    evidence_path, source_scope_path = _logical_source_paths(
+        source_book=book_name,
+        source_chapter=chapter_title,
+    )
     return [
         {
             "evidence_type": "factual_grounding",
@@ -213,6 +282,8 @@ def section_items(payload: dict[str, Any], *, snippet_limit: int = 600) -> list[
             "source_file": str(section.get("source_file", "")).strip() or None,
             "source_book": book_name or None,
             "source_chapter": chapter_title or None,
+            "evidence_path": evidence_path,
+            "source_scope_path": source_scope_path,
         }
     ]
 
@@ -227,7 +298,7 @@ def book_paths_from_route_payload(
     retrieval_result = payload.get("retrieval_result", {}) if isinstance(payload, dict) else {}
 
     for item in graph_relation_items(graph_result):
-        source_book = str(item.get("source_book", "")).strip()
+        source_book = _normalized_source_book(item.get("source_book", ""), normalizer=source_book_normalizer)
         if source_book:
             paths.append(f"book://{source_book}/*")
 
@@ -249,9 +320,10 @@ def chapter_paths_from_route_payload(
     retrieval_result = payload.get("retrieval_result", {}) if isinstance(payload, dict) else {}
 
     for item in graph_relation_items(graph_result):
-        source_book = str(item.get("source_book", "")).strip()
+        source_book_raw = str(item.get("source_book", "")).strip()
+        source_book = _normalized_source_book(source_book_raw, normalizer=source_book_normalizer)
         source_chapter = str(item.get("source_chapter", "")).strip()
-        if source_book and source_chapter:
+        if source_book and source_chapter and _is_readable_chapter_label(source_book=source_book_raw, chapter_title=source_chapter):
             paths.append(f"chapter://{source_book}/{source_chapter}")
 
     for item in retrieval_items(

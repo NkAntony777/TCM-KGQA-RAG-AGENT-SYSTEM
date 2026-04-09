@@ -228,7 +228,41 @@ class EvidenceNavigatorSourceLiteTests(unittest.TestCase):
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["items"][0]["source_type"], "chapter")
         self.assertEqual(result["items"][0]["source_chapter"], "卷上")
+        self.assertEqual(result["items"][0]["evidence_path"], "chapter://小儿药证直诀/卷上")
+        self.assertEqual(result["items"][0]["source_scope_path"], "book://小儿药证直诀/*")
         self.assertEqual(mock_read.call_args.kwargs["path"], "chapter://小儿药证直诀/卷上")
+
+    def test_book_read_exposes_logical_source_trace_metadata(self) -> None:
+        payload = {
+            "code": 0,
+            "message": "ok",
+            "backend": "retrieval-service",
+            "data": {
+                "chunks": [
+                    {
+                        "source_file": "133-小儿药证直诀.txt",
+                        "source_page": 42,
+                        "chapter_title": "卷下",
+                        "file_path": "classic://小儿药证直诀/0042-00",
+                        "text": "六味地黄丸，治肾阴不足。",
+                        "score": 0.92,
+                    }
+                ]
+            },
+        }
+
+        with patch("tools.tcm_evidence_tools.call_retrieval_hybrid", return_value=payload):
+            result = EvidenceNavigator().read_evidence_path(
+                path="book://小儿药证直诀/*",
+                query="六味地黄丸 出处 原文",
+                top_k=4,
+            )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["items"][0]["evidence_path"], "chapter://小儿药证直诀/卷下")
+        self.assertEqual(result["items"][0]["source_scope_path"], "book://小儿药证直诀/*")
+        self.assertEqual(result["items"][0]["file_path"], "classic://小儿药证直诀/0042-00")
+        self.assertEqual(result["items"][0]["source_page"], 42)
 
     def test_list_evidence_paths_includes_chapter_path_from_retrieval_chunks(self) -> None:
         payload = {
@@ -253,6 +287,61 @@ class EvidenceNavigatorSourceLiteTests(unittest.TestCase):
         )
 
         self.assertIn("chapter://小儿药证直诀/卷上", result["paths"])
+
+    def test_list_evidence_paths_prioritizes_non_vector_source_paths_before_qa(self) -> None:
+        payload = {
+            "retrieval_strategy": {"entity_name": "六味地黄丸"},
+            "evidence_paths": ["qa://六味地黄丸/similar", "entity://六味地黄丸/*"],
+            "graph_result": {
+                "data": {
+                    "relations": [
+                        {
+                            "predicate": "出处",
+                            "target": "六味地黄丸",
+                            "source_book": "小儿药证直诀",
+                            "source_chapter": "卷下",
+                            "source_text": "六味地黄丸见卷下。",
+                        }
+                    ]
+                }
+            },
+        }
+
+        result = EvidenceNavigator().list_evidence_paths(
+            query="六味地黄丸出自哪本书？请给出处原文。",
+            route_payload=payload,
+        )
+
+        self.assertEqual(result["paths"][0], "entity://六味地黄丸/*")
+        self.assertIn("chapter://小儿药证直诀/卷下", result["paths"])
+        self.assertLess(result["paths"].index("chapter://小儿药证直诀/卷下"), result["paths"].index("qa://六味地黄丸/similar"))
+
+    def test_list_evidence_paths_normalizes_graph_book_label_and_skips_file_slug_chapter(self) -> None:
+        payload = {
+            "retrieval_strategy": {"entity_name": "六味地黄丸"},
+            "graph_result": {
+                "data": {
+                    "relations": [
+                        {
+                            "predicate": "别名",
+                            "target": "地黄丸",
+                            "source_book": "089-医方论",
+                            "source_chapter": "089-医方论_正文",
+                            "source_text": "（即六味地黄丸）",
+                        }
+                    ]
+                }
+            },
+        }
+
+        result = EvidenceNavigator().list_evidence_paths(
+            query="六味地黄丸出自哪本书？请给出处原文。",
+            route_payload=payload,
+        )
+
+        self.assertIn("book://医方论/*", result["paths"])
+        self.assertNotIn("book://089-医方论/*", result["paths"])
+        self.assertFalse(any(path.startswith("chapter://医方论/089-医方论_正文") for path in result["paths"]))
 
     def test_herb2_book_scope_uses_herb2_prefix_filter(self) -> None:
         payload = {

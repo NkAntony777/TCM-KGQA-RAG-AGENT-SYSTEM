@@ -145,6 +145,37 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(evidence[0]["predicate"], "推荐方剂")
         self.assertEqual(evidence[0]["target"], "逍遥散")
         self.assertEqual(evidence[0]["source_book"], "医宗金鉴")
+        self.assertEqual(evidence[0]["evidence_path"], "chapter://医宗金鉴/杂病心法")
+        self.assertEqual(evidence[0]["source_scope_path"], "book://医宗金鉴/*")
+
+    def test_retrieval_payload_keeps_logical_source_trace_metadata(self) -> None:
+        payload = {
+            "retrieval_result": {
+                "code": 0,
+                "message": "ok",
+                "data": {
+                    "chunks": [
+                        {
+                            "source_file": "133-小儿药证直诀.txt",
+                            "source_page": 42,
+                            "chapter_title": "卷下",
+                            "file_path": "classic://小儿药证直诀/0042-00",
+                            "text": "六味地黄丸，治肾阴不足。",
+                            "score": 0.92,
+                        }
+                    ]
+                },
+            }
+        }
+
+        evidence = _factual_evidence_from_payload(payload)
+
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence[0]["source_type"], "doc")
+        self.assertEqual(evidence[0]["evidence_path"], "chapter://小儿药证直诀/卷下")
+        self.assertEqual(evidence[0]["source_scope_path"], "book://小儿药证直诀/*")
+        self.assertEqual(evidence[0]["file_path"], "classic://小儿药证直诀/0042-00")
+        self.assertEqual(evidence[0]["source_page"], 42)
 
     async def test_quick_mode_uses_grounded_llm_answer(self) -> None:
         answer_generator = FakeAnswerGenerator("Quick 2.0回答：六味地黄丸由熟地黄、山茱萸组成。")
