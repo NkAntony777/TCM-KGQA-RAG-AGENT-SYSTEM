@@ -123,6 +123,24 @@ def _evaluate_case(case: dict[str, Any], *, mode: str, response_data: dict[str, 
     }
 
 
+def _request_failure_case(case: dict[str, Any], *, mode: str, latency_ms: float, issue: str) -> dict[str, Any]:
+    return {
+        "id": case.get("id", "unknown"),
+        "category": case.get("category", "unknown"),
+        "mode": mode,
+        "query": case.get("query", ""),
+        "latency_ms": round(latency_ms, 1),
+        "route": "",
+        "issues": [issue],
+        "answer": "",
+        "predicates": [],
+        "books": [],
+        "executed_routes": [],
+        "tool_count": 0,
+        "passed": False,
+    }
+
+
 def run_probe(*, dataset: list[dict[str, Any]], base_url: str, modes: list[str], top_k: int, timeout: float) -> dict[str, Any]:
     results: list[dict[str, Any]] = []
     with httpx.Client(base_url=base_url, timeout=timeout) as client:
@@ -132,14 +150,50 @@ def run_probe(*, dataset: list[dict[str, Any]], base_url: str, modes: list[str],
                 continue
             for mode in modes:
                 started = time.perf_counter()
-                response = client.post(
-                    f"/api/qa/answer?mode={mode}",
-                    json={"query": query, "mode": mode, "top_k": top_k},
-                )
-                latency_ms = (time.perf_counter() - started) * 1000
-                payload = response.json()
+                try:
+                    response = client.post(
+                        f"/api/qa/answer?mode={mode}",
+                        json={"query": query, "mode": mode, "top_k": top_k},
+                    )
+                    latency_ms = (time.perf_counter() - started) * 1000
+                except httpx.HTTPError as exc:
+                    latency_ms = (time.perf_counter() - started) * 1000
+                    results.append(
+                        _request_failure_case(
+                            case,
+                            mode=mode,
+                            latency_ms=latency_ms,
+                            issue=f"request_error:{exc.__class__.__name__}",
+                        )
+                    )
+                    continue
+
+                try:
+                    payload = response.json()
+                except ValueError:
+                    results.append(
+                        _request_failure_case(
+                            case,
+                            mode=mode,
+                            latency_ms=latency_ms,
+                            issue="response_error:invalid_json",
+                        )
+                    )
+                    continue
+
                 data = payload.get("data", {}) if isinstance(payload, dict) else {}
-                results.append(_evaluate_case(case, mode=mode, response_data=data if isinstance(data, dict) else {}, latency_ms=latency_ms))
+                if not isinstance(data, dict):
+                    results.append(
+                        _request_failure_case(
+                            case,
+                            mode=mode,
+                            latency_ms=latency_ms,
+                            issue="response_error:missing_data",
+                        )
+                    )
+                    continue
+
+                results.append(_evaluate_case(case, mode=mode, response_data=data, latency_ms=latency_ms))
 
     failures = [item for item in results if not item["passed"]]
     by_category: dict[str, dict[str, Any]] = {}
