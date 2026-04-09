@@ -1,0 +1,354 @@
+{
+  "frozen_at": "2026-04-09 13:59:58 +0800",
+  "source_eval_json": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\eval\\doctoral_hard_probe_quick_deep_20260408_rerun_v2.json",
+  "source_generated_at": "2026-04-08 14:07:13 +0800",
+  "backend_url": "http://127.0.0.1:8002",
+  "source": "live_http_eval",
+  "top_k": 12,
+  "question_count": 10,
+  "questions": [
+    {
+      "id": "q01",
+      "topic": "小柴胡汤少阳咳加减",
+      "question": "《伤寒论》第96条小柴胡汤方后注“若咳者，去人参、大枣、生姜，加五味子半升、干姜二两”。请从小柴胡汤“和解少阳”的基本结构出发，分析“去人参”与“加干姜、五味子”之间的药性矛盾与统一，并论述此加减法对后世治疗“少阳咳”的指导意义（如与柴胡桂枝干姜汤证的咳嗽如何鉴别）。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search"
+        ],
+        "fallback_detected": false,
+        "trace_id": "52eb7654-22d2-424d-adf6-1ae7bbde3f6e",
+        "latency_ms": 59506.5
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths"
+        ],
+        "fallback_detected": false,
+        "trace_id": "e93a4dc8-1feb-4284-b738-31ddf669aab2",
+        "latency_ms": 59251.0
+      }
+    },
+    {
+      "id": "q02",
+      "topic": "小建中汤寒热并治",
+      "question": "《金匮要略·血痹虚劳病脉证并治》云“虚劳里急，悸，衄，腹中痛，梦失精，四肢酸疼，手足烦热，咽干口燥，小建中汤主之”。小建中汤由桂枝汤倍芍药加饴糖组成，请从“酸甘化阴”与“辛甘化阳”两个相反的药性配伍角度，论证小建中汤何以同时治疗“里急腹痛”（寒象）与“手足烦热、咽干口燥”（热象），并辨析其与黄连阿胶汤在治疗“虚烦”上的病机界限。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "824256c8-65cf-41d9-ac2a-9fddbbb81738",
+        "latency_ms": 72754.6
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "f3d8e6e5-985f-4945-a478-926d32ce86dc",
+        "latency_ms": 125551.7
+      }
+    },
+    {
+      "id": "q03",
+      "topic": "升阳益胃汤风药与黄连",
+      "question": "李东垣《脾胃论》中“升阳益胃汤”由补中益气汤化裁而来，加入羌活、独活、防风、白芍、黄连、茯苓、泽泻等。请从“风药胜湿”与“升阳散火”两个学说，分析该方为何同时使用大量风药与苦寒之黄连，并论述其与“补中益气汤证”之间的虚实、燥湿转化关系。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search"
+        ],
+        "fallback_detected": false,
+        "trace_id": "d2075eee-9dd7-4ce6-828a-2f82bbf82317",
+        "latency_ms": 51818.0
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths"
+        ],
+        "fallback_detected": false,
+        "trace_id": "82e75654-22d2-4016-8283-d059599d9eef",
+        "latency_ms": 71943.2
+      }
+    },
+    {
+      "id": "q04",
+      "topic": "宣痹汤与白虎加桂枝汤",
+      "question": "《温病条辨》中“宣痹汤”（苦辛宣痹法）治疗湿温痹阻，方中多用杏仁、薏苡仁、滑石、通草等淡渗之品，但又加入防己、蚕砂、半夏等辛温或苦辛之药。请从“湿闭气分”与“热蕴经络”的病机交织，论述宣痹汤与白虎加桂枝汤在治疗“热痹”证中的方证鉴别要点，并说明为何湿温所致痹证不宜早用石膏、知母。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "10d83fad-697e-452c-98b1-281d8caade96",
+        "latency_ms": 70596.1
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "search_evidence_text",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "7dc74307-b223-4880-a267-6be2b69612e8",
+        "latency_ms": 193786.0
+      }
+    },
+    {
+      "id": "q05",
+      "topic": "久病入络与虫类药阶梯",
+      "question": "叶天士《临证指南医案》中提出“久病入络”理论，并善用虫类药（如水蛭、䗪虫、全蝎、地龙）治疗顽痹、积聚。请结合《素问·痹论》“病久入深，营卫之行涩，经络时疏，故不通”的经旨，论证虫类药“搜剔络邪”与草木活血化瘀药在作用层次上的本质差异，并举例说明在肿瘤、肝纤维化中如何根据“络瘀”程度选择用药阶梯。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "146689fe-79d7-4900-abcd-4789310ed21b",
+        "latency_ms": 73133.4
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "ec8cc468-99e2-4ddc-88ea-88996cb4abe9",
+        "latency_ms": 150129.1
+      }
+    },
+    {
+      "id": "q06",
+      "topic": "2024甲辰年五运六气",
+      "question": "五运六气中“客主加临”出现“顺化”、“逆化”、“小逆”、“不和”等格局。请以某一年（如2024甲辰年）为例，推演其司天、在泉、主气、客气之间的加临关系，分析可能出现的气候与疫病倾向，并论述“治以咸寒，佐以甘苦”等运气治则在该年流感防治中的具体方药设计思路。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "095059b3-52e2-4c7a-8d31-97084ed3622b",
+        "latency_ms": 81163.9
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "cf212249-ee3d-4c2a-a65d-4b036bf0797b",
+        "latency_ms": 111788.2
+      }
+    },
+    {
+      "id": "q07",
+      "topic": "黄芪托毒生肌与免疫",
+      "question": "《神农本草经》载黄芪“主痈疽久败疮，排脓止痛，大风癞疾”，而补中益气汤、玉屏风散等方多取其补气固表。请从“托毒生肌”与“益气升阳”两个看似不同的功效指向，论证黄芪作用的统一性（即“阳气充足则邪气自散”），并结合现代免疫学（如T细胞亚群、巨噬细胞极化）解释黄芪在慢性感染、难愈性溃疡中的应用机制。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "14ca4592-e5c9-46de-b1b9-b698e811d6a8",
+        "latency_ms": 64731.1
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "search_evidence_text",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "c4c75296-d840-4357-9052-54d90377f3b8",
+        "latency_ms": 175099.8
+      }
+    },
+    {
+      "id": "q08",
+      "topic": "半夏秫米汤与睡眠节律",
+      "question": "《灵枢·卫气行》论述卫气昼行于阳、夜行于阴的节律。失眠（不寐）病机多责之“阳不入阴”。请从卫气循行与跷脉的关系，分析半夏秫米汤“通阴阳”的配伍原理，并论述该方与现代治疗失眠的褪黑素、GABA受体激动剂在调节“睡眠-觉醒节律”上的可能对应机制。",
+      "quick": {
+        "status": "degraded",
+        "final_route": "graph",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "98196a02-6c5c-4808-9117-d1c8db58b122",
+        "latency_ms": 55557.1
+      },
+      "deep": {
+        "status": "degraded",
+        "final_route": "graph",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "search_evidence_text"
+        ],
+        "fallback_detected": false,
+        "trace_id": "3a2b1712-1066-4e8d-88bb-4b0fa2e57b88",
+        "latency_ms": 149671.7
+      }
+    },
+    {
+      "id": "q09",
+      "topic": "胸痹三方与冠心病分层",
+      "question": "张仲景《金匮要略·胸痹心痛短气病脉证治》中，栝楼薤白白酒汤、栝楼薤白半夏汤、枳实薤白桂枝汤三方均治胸痹，但用药有从“辛温通阳”到“理气化痰”再到“破气逐饮”的递进。请从“阳气不通—痰浊壅盛—饮邪结聚”的病机演变，论证三方证的阶梯性差异，并说明现代冠心病（稳定型心绞痛、不稳定型心绞痛、急性心肌梗死）可如何参照此辨证体系。",
+      "quick": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "02a007e1-f296-4dd9-a65e-3237a923a218",
+        "latency_ms": 92671.4
+      },
+      "deep": {
+        "status": "ok",
+        "final_route": "hybrid",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "search_evidence_text",
+          "read_evidence_path",
+          "read_evidence_path",
+          "search_evidence_text"
+        ],
+        "fallback_detected": false,
+        "trace_id": "d01f31ab-c8c4-4e8a-a031-b085d4051a6a",
+        "latency_ms": 190244.9
+      }
+    },
+    {
+      "id": "q10",
+      "topic": "四逆散与三类厥冷鉴别",
+      "question": "《伤寒论》四逆散（甘草、枳实、柴胡、芍药）被后世视为“疏肝理气之祖”，但其原条文主治“少阴病，四逆，其人或咳，或悸，或小便不利，或腹中痛，或泄利下重”。请从“阳郁于里”而非“阳虚”的角度，解释四逆散证“四逆”的病理机制，并论述其与四逆汤证、当归四逆汤证在手足逆冷上的鉴别要点，以及为何方中不用附子、干姜而用柴胡、枳实。",
+      "quick": {
+        "status": "degraded",
+        "final_route": "graph",
+        "generation_backend": "grounded_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "fe58bba7-371d-4ee0-9435-a4938d38451b",
+        "latency_ms": 60722.6
+      },
+      "deep": {
+        "status": "degraded",
+        "final_route": "graph",
+        "generation_backend": "planner_llm",
+        "tool_trace_tools": [
+          "tcm_route_search",
+          "list_evidence_paths",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path",
+          "read_evidence_path"
+        ],
+        "fallback_detected": false,
+        "trace_id": "edc1802b-be1b-4bf1-b663-76b152891ac6",
+        "latency_ms": 168218.6
+      }
+    }
+  ]
+}
