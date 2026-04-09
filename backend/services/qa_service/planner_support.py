@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from services.common.evidence_payloads import normalize_book_label
 from services.qa_service.skill_registry import RuntimeSkill
 
 
@@ -19,6 +20,41 @@ def _pick_first_matching_path(paths: list[str], *, prefixes: tuple[str, ...], al
         if allow_prefix_only and any(prefix.startswith(path) or path.startswith(prefix) for prefix in prefixes):
             return path
     return ""
+
+
+def _pick_best_source_path(
+    paths: list[str],
+    *,
+    preferred_books: list[str] | None = None,
+) -> str:
+    candidate_books: list[str] = []
+    for item in preferred_books or []:
+        book_name = str(item).strip()
+        if not book_name:
+            continue
+        normalized = normalize_book_label(book_name)
+        for candidate in (book_name, normalized):
+            if candidate and candidate not in candidate_books:
+                candidate_books.append(candidate)
+    for book_name in candidate_books:
+        for path in paths:
+            if path.startswith(f"chapter://{book_name}/"):
+                return path
+        for path in paths:
+            if path == f"book://{book_name}/*":
+                return path
+    if candidate_books:
+        return ""
+    for prefix in ("chapter://", "book://", "qa://"):
+        for path in paths:
+            if path.startswith(prefix):
+                return path
+    return ""
+
+
+def _book_path_fallback(book_name: str) -> str:
+    normalized = normalize_book_label(book_name)
+    return f"book://{normalized or book_name}/*" if (normalized or book_name) else ""
 
 
 def _action_key(action: dict[str, Any]) -> str:
@@ -78,7 +114,7 @@ def _preferred_path_for_skill(*, skill: str, payload: dict[str, Any], evidence_p
     if skill == "read-formula-composition" and entity_name:
         return _pick_existing_path(evidence_paths, prefix=f"entity://{entity_name}/", suffix="使用药材") or f"entity://{entity_name}/使用药材"
     if skill == "read-formula-origin":
-        return _pick_first_matching_path(evidence_paths, prefixes=("book://", "qa://")) or (f"book://{entity_name}/*" if entity_name else "")
+        return _pick_best_source_path(evidence_paths) or (f"book://{entity_name}/*" if entity_name else "")
     if skill == "compare-formulas" and compare_entities:
         entity = compare_entities[0]
         return _pick_existing_path(evidence_paths, prefix=f"entity://{entity}/", suffix="*") or f"entity://{entity}/*"
@@ -93,7 +129,7 @@ def _preferred_path_for_skill(*, skill: str, payload: dict[str, Any], evidence_p
     if skill == "find-case-reference":
         return _pick_first_matching_path(evidence_paths, prefixes=("caseqa://",))
     if skill in {"search-source-text", "trace-source-passage"}:
-        return _pick_first_matching_path(evidence_paths, prefixes=("book://", "qa://"))
+        return _pick_best_source_path(evidence_paths)
     if skill == "read-formula-origin" and symptom_name:
         return _pick_existing_path(evidence_paths, prefix=f"symptom://{symptom_name}/", suffix="syndrome_chain") or f"symptom://{symptom_name}/syndrome_chain"
     return ""
