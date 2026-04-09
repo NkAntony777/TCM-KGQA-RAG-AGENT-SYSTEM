@@ -35,7 +35,7 @@ class QAServiceSettings:
     max_case_references: int = 3
     max_citations: int = 6
     max_quick_prompt_evidence: int = 4
-    max_quick_followup_actions: int = 1
+    max_quick_followup_actions: int = 2
     max_deep_prompt_evidence: int = 6
     max_deep_rounds: int = 4
     max_actions_per_round: int = 2

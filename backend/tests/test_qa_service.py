@@ -276,6 +276,105 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(step["stage"] == "quick_followup" for step in result["planner_steps"]))
         self.assertIn("Quick对比回答", result["answer"])
 
+    async def test_quick_mode_uses_two_followups_for_comparison_and_reasoning_gaps(self) -> None:
+        payload = {
+            "route": "hybrid",
+            "route_reason": "compare_entities_forced_hybrid",
+            "status": "ok",
+            "final_route": "hybrid",
+            "executed_routes": ["graph", "retrieval"],
+            "query_analysis": {
+                "dominant_intent": "formula_efficacy",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+            },
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "逍遥散",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "evidence_paths": ["entity://逍遥散/*", "entity://柴胡疏肝散/*", "book://医方集解/*"],
+            "graph_result": {
+                "code": 0,
+                "message": "ok",
+                "data": {
+                    "relations": [
+                        {
+                            "predicate": "功效",
+                            "target": "疏肝健脾",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷三",
+                            "source_text": "逍遥散功效为疏肝健脾。",
+                            "score": 0.92,
+                        }
+                    ]
+                },
+            },
+        }
+        search_key = json.dumps(
+            {"query": "逍遥散 柴胡疏肝散 功效 病机 古籍 教材 出处", "scope_paths": ["book://医方集解/*"]},
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        navigator = FakeEvidenceNavigator(
+            listed_paths=["entity://逍遥散/*", "entity://柴胡疏肝散/*", "book://医方集解/*"],
+            read_results={
+                "entity://柴胡疏肝散/*": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://柴胡疏肝散/*",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph",
+                            "source": "医方集解/卷四",
+                            "snippet": "柴胡疏肝散功效为疏肝理气。",
+                            "predicate": "功效",
+                            "target": "疏肝理气",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷四",
+                            "anchor_entity": "柴胡疏肝散",
+                            "score": 0.91,
+                        }
+                    ],
+                }
+            },
+            search_results={
+                search_key: {
+                    "tool": "search_evidence_text",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "doc",
+                            "source": "医方集解.txt#13",
+                            "snippet": "逍遥散与柴胡疏肝散病机有别：前者重养血健脾，后者重疏肝理气止痛。",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷四",
+                            "score": 0.9,
+                        }
+                    ],
+                }
+            },
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(payload),
+            answer_generator=FakeAnswerGenerator("Quick增强回答：已补齐比较与病机证据。"),
+            evidence_navigator=navigator,
+        )
+
+        result = await service.answer("请比较逍遥散与柴胡疏肝散的功效与病机差异。", mode="quick", top_k=12)
+
+        self.assertEqual(
+            [call["tool"] for call in navigator.calls],
+            ["list_evidence_paths", "read_evidence_path", "search_evidence_text"],
+        )
+        self.assertTrue(any(item["tool"] == "search_evidence_text" for item in result["tool_trace"]))
+        self.assertFalse(any(str(note).startswith("quick_followup_remaining_gaps:") for note in result["notes"]))
+        self.assertIn("Quick增强回答", result["answer"])
+
     async def test_deep_mode_runs_followup_evidence_read_and_planner_llm(self) -> None:
         navigator = FakeEvidenceNavigator(
             listed_paths=["entity://六味地黄丸/使用药材"],
@@ -392,6 +491,87 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
 
         first = service._execute_action(action, request_cache=request_cache)
         second = service._execute_action(action, request_cache=request_cache)
+
+        read_calls = [call for call in navigator.calls if call["tool"] == "read_evidence_path"]
+        self.assertEqual(len(read_calls), 1)
+        self.assertEqual(first["cache_hit"], False)
+        self.assertEqual(second["cache_hit"], True)
+
+    async def test_list_evidence_paths_uses_request_scope_cache(self) -> None:
+        payload = _deep_followup_payload()
+        navigator = FakeEvidenceNavigator(listed_paths=["entity://六味地黄丸/使用药材", "alias://六味地黄丸"])
+        service = QAService(
+            route_tool=FakeRouteTool(payload),
+            answer_generator=FakeAnswerGenerator("unused"),
+            evidence_navigator=navigator,
+        )
+        request_cache: dict[str, dict[str, object]] = {}
+
+        first_paths, first_cache_hit = service._list_evidence_paths(
+            query="六味地黄丸的组成是什么",
+            payload=payload,
+            request_cache=request_cache,
+        )
+        second_paths, second_cache_hit = service._list_evidence_paths(
+            query="六味地黄丸的组成是什么",
+            payload=payload,
+            request_cache=request_cache,
+        )
+
+        list_calls = [call for call in navigator.calls if call["tool"] == "list_evidence_paths"]
+        self.assertEqual(len(list_calls), 1)
+        self.assertEqual(first_paths, second_paths)
+        self.assertFalse(first_cache_hit)
+        self.assertTrue(second_cache_hit)
+
+    async def test_execute_action_reuses_entity_reads_for_compare_queries(self) -> None:
+        navigator = FakeEvidenceNavigator(
+            read_results={
+                "entity://逍遥散/*": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://逍遥散/*",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph",
+                            "source": "医方集解/卷三",
+                            "snippet": "逍遥散功效为疏肝健脾。",
+                            "predicate": "功效",
+                            "target": "疏肝健脾",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷三",
+                            "anchor_entity": "逍遥散",
+                            "score": 0.92,
+                        }
+                    ],
+                }
+            },
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_deep_followup_payload()),
+            answer_generator=FakeAnswerGenerator("unused"),
+            evidence_navigator=navigator,
+        )
+        request_cache: dict[str, dict[str, object]] = {}
+        first_action = {
+            "skill": "compare-formulas",
+            "tool": "read_evidence_path",
+            "path": "entity://逍遥散/*",
+            "query": "逍遥散 功效 柴胡疏肝散 比较",
+            "top_k": 6,
+        }
+        second_action = {
+            "skill": "compare-formulas",
+            "tool": "read_evidence_path",
+            "path": "entity://逍遥散/*",
+            "query": "逍遥散 柴胡疏肝散 区别 共同点 适用边界",
+            "top_k": 6,
+        }
+
+        first = service._execute_action(first_action, request_cache=request_cache)
+        second = service._execute_action(second_action, request_cache=request_cache)
 
         read_calls = [call for call in navigator.calls if call["tool"] == "read_evidence_path"]
         self.assertEqual(len(read_calls), 1)
@@ -1183,6 +1363,71 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         deep_tools = [item["tool"] for item in result["tool_trace"] if item["tool"] not in {"tcm_route_search", "list_evidence_paths"}]
         self.assertIn("read_evidence_path", deep_tools)
         self.assertIn("search_evidence_text", deep_tools)
+
+    async def test_deep_mode_stops_after_round_when_coverage_becomes_sufficient(self) -> None:
+        payload = {
+            "route": "hybrid",
+            "route_reason": "compare_entities_forced_hybrid",
+            "status": "ok",
+            "final_route": "hybrid",
+            "executed_routes": ["graph", "retrieval"],
+            "query_analysis": {
+                "dominant_intent": "formula_efficacy",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+            },
+            "retrieval_strategy": {
+                "intent": "formula_efficacy",
+                "entity_name": "逍遥散",
+                "compare_entities": ["逍遥散", "柴胡疏肝散"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+            "evidence_paths": ["entity://逍遥散/*", "book://医方集解/*"],
+            "graph_result": {"code": 0, "message": "ok", "data": {"relations": []}},
+        }
+        navigator = FakeEvidenceNavigator(
+            listed_paths=["entity://逍遥散/*", "book://医方集解/*"],
+            read_results={
+                "entity://逍遥散/*": {
+                    "tool": "read_evidence_path",
+                    "path": "entity://逍遥散/*",
+                    "status": "ok",
+                    "count": 1,
+                    "items": [
+                        {
+                            "evidence_type": "factual_grounding",
+                            "source_type": "graph_path",
+                            "source": "医方集解/卷三",
+                            "snippet": "逍遥散与柴胡疏肝散病机不同：前者偏养血健脾，后者偏疏肝理气。",
+                            "predicate": "功效",
+                            "target": "疏肝健脾",
+                            "source_book": "医方集解",
+                            "source_chapter": "卷三",
+                            "anchor_entity": "逍遥散",
+                            "path_nodes": ["肝郁血虚", "逍遥散", "柴胡疏肝散"],
+                            "score": 0.93,
+                        }
+                    ],
+                }
+            },
+        )
+        answer_generator = FakeSequentialAnswerGenerator(
+            [
+                "{\"gaps\":[\"comparison\",\"path_reasoning\"],\"next_actions\":[{\"skill\":\"compare-formulas\",\"path\":\"entity://逍遥散/*\",\"query\":\"比较逍遥散与柴胡疏肝散的功效与病机\",\"reason\":\"补充比较证据\"}],\"stop_reason\":\"\"}",
+                "Deep增强回答：首轮补证据后已满足比较与病机覆盖。",
+            ]
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(payload),
+            answer_generator=answer_generator,
+            evidence_navigator=navigator,
+        )
+
+        result = await service.answer("请比较逍遥散与柴胡疏肝散的功效与病机差异。", mode="deep", top_k=12)
+
+        self.assertEqual(len(answer_generator.calls), 2)
+        self.assertTrue(any(step["stage"] == "coverage_ok" and step["detail"] == "round=1" for step in result["planner_steps"]))
+        self.assertFalse(any(step["stage"] == "gap_check" and step["detail"].startswith("round=2") for step in result["planner_steps"]))
+        self.assertIn("Deep增强回答", result["answer"])
 
 
 if __name__ == "__main__":

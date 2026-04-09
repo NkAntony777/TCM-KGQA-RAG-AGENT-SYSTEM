@@ -232,13 +232,27 @@ def _plan_followup_actions(
         if target_path:
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="trace-graph-path", path=target_path, query=query, top_k=6, reason="补充证候到方剂映射"))
     if "comparison" in gaps and compare_entities:
-        for subquery in _comparison_subqueries(query=query, compare_entities=compare_entities, factual_evidence=factual_evidence):
+        comparison_subqueries = _comparison_subqueries(query=query, compare_entities=compare_entities, factual_evidence=factual_evidence)
+        reserve_source_slot = "path_reasoning" in gaps or "source_trace" in gaps or "origin" in gaps
+        reserved_slots = 1 if reserve_source_slot else 0
+        comparison_budget = max(1, max_actions - reserved_slots) if comparison_subqueries else 0
+        used_subqueries = 0
+        for subquery in comparison_subqueries:
+            if used_subqueries >= comparison_budget:
+                break
             entity = subquery["entity"]
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="compare-formulas", path=_pick_existing_path(evidence_paths, prefix=f"entity://{entity}/", suffix="*") or f"entity://{entity}/*", query=subquery["query"], top_k=6, reason=subquery["reason"]))
+            used_subqueries += 1
             if len(actions) >= max_actions:
                 break
         if len(actions) < max_actions:
             add_action(_build_skill_action(planner_skills=planner_skills, skill_name="search-source-text", query=f"{' '.join(compare_entities[:3])} {' '.join(_comparison_dimensions(query)[:3])} 古籍 教材 出处", scope_paths=[path for path in evidence_paths if path.startswith(("qa://", "book://"))], top_k=4, reason="补充比较问题的文献出处"))
+        if len(actions) < max_actions:
+            for subquery in comparison_subqueries[used_subqueries:]:
+                entity = subquery["entity"]
+                add_action(_build_skill_action(planner_skills=planner_skills, skill_name="compare-formulas", path=_pick_existing_path(evidence_paths, prefix=f"entity://{entity}/", suffix="*") or f"entity://{entity}/*", query=subquery["query"], top_k=6, reason=subquery["reason"]))
+                if len(actions) >= max_actions:
+                    break
     if "path_reasoning" in gaps:
         reasoning_subqueries = _reasoning_subqueries(query=query, compare_entities=compare_entities, entity_name=entity_name)
         target_path = ""

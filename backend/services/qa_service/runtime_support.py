@@ -52,6 +52,29 @@ def _cache_key(tool: str, payload: dict[str, Any]) -> str:
     return f"{tool}::{json.dumps(payload, ensure_ascii=False, sort_keys=True)}"
 
 
+def _action_cache_payload(*, action: dict[str, Any], settings: QAServiceSettings) -> dict[str, Any]:
+    tool = str(action.get("tool", "")).strip()
+    normalized_path = str(action.get("path", "")).strip()
+    resolved_top_k = int(action.get("top_k", settings.deep_read_top_k) or settings.deep_read_top_k)
+    if tool == "read_evidence_path":
+        scheme = normalized_path.split("://", 1)[0] if "://" in normalized_path else ""
+        payload = {
+            "path": normalized_path,
+            "top_k": resolved_top_k,
+        }
+        if scheme in {"book", "qa", "caseqa"}:
+            payload["query"] = str(action.get("query", "")).strip()
+            payload["source_hint"] = str(action.get("source_hint", "")).strip()
+        return payload
+    return {
+        "path": normalized_path,
+        "query": str(action.get("query", "")).strip(),
+        "source_hint": str(action.get("source_hint", "")).strip(),
+        "scope_paths": action.get("scope_paths", []),
+        "top_k": resolved_top_k,
+    }
+
+
 async def _generate_grounded_answer(
     *,
     answer_generator,
@@ -210,16 +233,7 @@ def _build_live_evidence_bundle(
 
 def _execute_action(*, evidence_navigator, settings: QAServiceSettings, action: dict[str, Any], request_cache: dict[str, dict[str, Any]]) -> dict[str, Any]:
     tool = str(action.get("tool", "")).strip()
-    cache_key = _cache_key(
-        tool,
-        {
-            "path": action.get("path", ""),
-            "query": action.get("query", ""),
-            "source_hint": action.get("source_hint", ""),
-            "scope_paths": action.get("scope_paths", []),
-            "top_k": int(action.get("top_k", settings.deep_read_top_k) or settings.deep_read_top_k),
-        },
-    )
+    cache_key = _cache_key(tool, _action_cache_payload(action=action, settings=settings))
     cached = request_cache.get(cache_key)
     if cached is not None:
         return {**cached, "cache_hit": True}

@@ -174,8 +174,7 @@ class QAService:
             planner_steps.append(list_step)
             yield {"type": "planner_step", "step": list_step}
             yield {"type": "tool_start", "tool": "list_evidence_paths", "input": _compact_json({"query": query})}
-            list_result = self.evidence_navigator.list_evidence_paths(query=query, route_payload=payload)
-            listed_paths = list(list_result.get("paths", [])) if isinstance(list_result.get("paths"), list) else []
+            listed_paths, list_cache_hit = self._list_evidence_paths(query=query, payload=payload, request_cache=request_cache)
             if listed_paths:
                 evidence_paths = listed_paths
             coverage_state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
@@ -185,11 +184,11 @@ class QAService:
                 new_case_references=case_references,
             )
             heuristic_gaps = _coverage_gaps_from_state(coverage_state)
-            list_meta = {"count": len(evidence_paths), "query": query, "cache_hit": False}
+            list_meta = {"count": len(evidence_paths), "query": query, "cache_hit": list_cache_hit}
             yield {"type": "tool_end", "tool": "list_evidence_paths", "output": _compact_json(list_meta), "meta": list_meta}
             tool_trace.append({"tool": "list_evidence_paths", "meta": list_meta})
 
-            actions = self._resolve_followup_actions(
+            planned_actions = self._resolve_followup_actions(
                 query=query,
                 payload=payload,
                 evidence_paths=evidence_paths,
@@ -198,7 +197,8 @@ class QAService:
                 heuristic_gaps=heuristic_gaps,
                 plan_gaps=heuristic_gaps,
                 executed_actions=set(),
-            )[: self.settings.max_quick_followup_actions]
+            )
+            actions = planned_actions[: self._quick_followup_action_limit(heuristic_gaps=heuristic_gaps)]
 
             if actions:
                 follow_step = _planner_step(
@@ -323,16 +323,7 @@ class QAService:
         planner_steps.append(list_step)
         yield {"type": "planner_step", "step": list_step}
         yield {"type": "tool_start", "tool": "list_evidence_paths", "input": _compact_json({"query": query})}
-        list_cache_key = self._cache_key(
-            "list_evidence_paths",
-            {"query": query, "route_signature": payload.get("final_route", payload.get("route")), "evidence_paths": payload.get("evidence_paths", [])},
-        )
-        list_result = request_cache.get(list_cache_key)
-        list_cache_hit = list_result is not None
-        if list_result is None:
-            list_result = self.evidence_navigator.list_evidence_paths(query=query, route_payload=payload)
-            request_cache[list_cache_key] = dict(list_result)
-        evidence_paths = list(list_result.get("paths", [])) if isinstance(list_result.get("paths"), list) else []
+        evidence_paths, list_cache_hit = self._list_evidence_paths(query=query, payload=payload, request_cache=request_cache)
         coverage_state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
         _update_coverage_state(
             coverage_state,
@@ -504,6 +495,13 @@ class QAService:
                 planner_steps.append(stop_step)
                 yield {"type": "planner_step", "step": stop_step}
                 break
+            remaining_gaps = _coverage_gaps_from_state(coverage_state)
+            if not remaining_gaps:
+                notes.append(f"deep_round_{round_index}:coverage_sufficient")
+                stop_step = _planner_step(stage="coverage_ok", label="证据覆盖满足", detail=f"round={round_index}")
+                planner_steps.append(stop_step)
+                yield {"type": "planner_step", "step": stop_step}
+                break
         else:
             notes.append("deep_round_limit_reached")
             stop_step = _planner_step(stage="stop", label="达到轮次上限", detail=f"max_rounds={self.settings.max_deep_rounds}")
@@ -558,6 +556,33 @@ class QAService:
             payload=payload,
         )
 
+    def _list_evidence_paths(
+        self,
+        *,
+        query: str,
+        payload: dict[str, Any],
+        request_cache: dict[str, dict[str, Any]],
+    ) -> tuple[list[str], bool]:
+        strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
+        list_cache_key = self._cache_key(
+            "list_evidence_paths",
+            {
+                "query": query,
+                "route_signature": payload.get("final_route", payload.get("route")),
+                "evidence_paths": payload.get("evidence_paths", []),
+                "entity_name": strategy.get("entity_name"),
+                "compare_entities": strategy.get("compare_entities", []),
+                "symptom_name": strategy.get("symptom_name"),
+            },
+        )
+        list_result = request_cache.get(list_cache_key)
+        cache_hit = list_result is not None
+        if list_result is None:
+            list_result = self.evidence_navigator.list_evidence_paths(query=query, route_payload=payload)
+            request_cache[list_cache_key] = dict(list_result)
+        paths = list(list_result.get("paths", [])) if isinstance(list_result.get("paths"), list) else []
+        return paths, cache_hit
+
     def _should_run_quick_followup(self, *, payload: dict[str, Any], heuristic_gaps: list[str]) -> bool:
         if self.settings.max_quick_followup_actions <= 0 or not heuristic_gaps:
             return False
@@ -575,6 +600,17 @@ class QAService:
         if not any(gap in quick_followup_gaps for gap in heuristic_gaps):
             return False
         return str(payload.get("status", "ok") or "ok") in {"ok", "degraded"}
+
+    def _quick_followup_action_limit(self, *, heuristic_gaps: list[str]) -> int:
+        if self.settings.max_quick_followup_actions <= 0:
+            return 0
+        gap_set = {gap for gap in heuristic_gaps if gap}
+        preferred_limit = 1
+        if "comparison" in gap_set:
+            preferred_limit = 2
+        elif len(gap_set.intersection({"origin", "source_trace", "path_reasoning"})) >= 2:
+            preferred_limit = 2
+        return min(self.settings.max_quick_followup_actions, preferred_limit)
 
     def _resolve_followup_actions(
         self,
