@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
+from config import Settings
 from eval.runners.run_eval import DEFAULT_DATASET, evaluate_router, load_dataset
+from router.compare_entity_refiner import CompareEntityRefineResult, CompareEntityRefiner
 from router.query_router import decide_route
 from router.retrieval_strategy import derive_retrieval_strategy
+from router.tcm_intent_classifier import EntityMatch, QueryAnalysis, analyze_tcm_query
 from tools.tcm_route_tool import TCMRouteSearchTool
 
 
@@ -18,6 +22,33 @@ class FakeAliasService:
 
 
 class QueryRouterDecisionTests(unittest.TestCase):
+    def test_compare_entity_refiner_heuristic_normalizes_formula_suffix_noise(self) -> None:
+        refiner = CompareEntityRefiner(
+            settings=Settings(
+                backend_dir=Path("."),
+                project_root=Path("."),
+                llm_provider="openai",
+                llm_model="gpt-4.1-mini",
+                llm_api_key=None,
+                llm_base_url="https://api.openai.com/v1",
+                embedding_provider="openai",
+                embedding_model="text-embedding-3-small",
+                embedding_api_key=None,
+                embedding_base_url="https://api.openai.com/v1",
+            )
+        )
+
+        result = refiner.refine(
+            query="请从小柴胡汤和解少阳的结构出发，分析与柴胡桂枝干姜汤治疗咳嗽时的鉴别要点。",
+            compare_entities=["小柴胡汤方", "咳者", "人参", "加减法", "柴胡桂枝干姜汤"],
+            primary_entity="小柴胡汤方",
+        )
+
+        self.assertEqual(result.compare_entities, ["小柴胡汤", "柴胡桂枝干姜汤"])
+        self.assertEqual(result.primary_entity, "小柴胡汤")
+        self.assertEqual(result.backend, "heuristic")
+        self.assertEqual(result.notes, [])
+
     def test_graph_route_keywords(self) -> None:
         decision = decide_route("逍遥散的证候和配伍关系是什么")
         self.assertEqual(decision.route, "graph")
@@ -54,11 +85,27 @@ class QueryRouterDecisionTests(unittest.TestCase):
         self.assertIn("entity://逍遥散/*", strategy.evidence_paths)
         self.assertIn("qa://逍遥散/similar", strategy.evidence_paths)
 
+    def test_source_book_match_populates_preferred_books_and_normalized_paths(self) -> None:
+        analysis = analyze_tcm_query("《089-医方论》中六味地黄丸的出处依据是什么")
+        analysis.matched_entities.append(EntityMatch(name="089-医方论", types=["source_book"], source="test", start=1))
+        strategy = derive_retrieval_strategy(
+            "《089-医方论》中六味地黄丸的出处依据是什么",
+            requested_top_k=12,
+            route_hint="hybrid",
+            analysis=analysis,
+        )
+        self.assertIn("089-医方论", strategy.preferred_books)
+        self.assertIn("医方论", strategy.preferred_books)
+        self.assertIn("book://089-医方论/*", strategy.evidence_paths)
+        self.assertIn("book://医方论/*", strategy.evidence_paths)
+
     def test_strategy_includes_alias_paths_and_alias_terms(self) -> None:
         with patch("router.retrieval_strategy.get_runtime_alias_service", return_value=FakeAliasService()):
             strategy = derive_retrieval_strategy("六味地黄丸出自哪本古籍", requested_top_k=12, route_hint="retrieval")
 
         self.assertIn("alias://六味地黄丸", strategy.evidence_paths)
+        self.assertIn("entity://地黄丸/*", strategy.evidence_paths)
+        self.assertIn("entity://六味丸/*", strategy.evidence_paths)
         self.assertEqual(strategy.entity_aliases, ["地黄丸", "六味丸"])
 
     def test_case_style_query_enables_case_qa_source(self) -> None:
@@ -88,6 +135,44 @@ class QueryRouterDecisionTests(unittest.TestCase):
         self.assertIn("book://TCM-MKG/*", strategy.evidence_paths)
         self.assertIn("book://HERB2/*", strategy.evidence_paths)
         self.assertIn("modern_evidence_sources_enabled", strategy.notes)
+
+    def test_compare_strategy_uses_refined_entities_for_evidence_paths(self) -> None:
+        query = "请比较小柴胡汤方与柴胡桂枝干姜汤的咳嗽病机差异，并说明鉴别要点。"
+        analysis = QueryAnalysis(
+            query=query,
+            normalized_query=query,
+            dominant_intent="compare_entities",
+            intent_candidates=["compare_entities"],
+            matched_entities=[
+                EntityMatch(name="小柴胡汤方", types=["formula"], source="matcher", start=4),
+                EntityMatch(name="咳者", types=["symptom"], source="matcher", start=10),
+                EntityMatch(name="柴胡桂枝干姜汤", types=["formula"], source="matcher", start=13),
+            ],
+            graph_score=8,
+            retrieval_score=6,
+            route_hint="hybrid",
+            route_reason="compare_entities_forced_hybrid",
+            graph_query_kind="entity",
+            primary_entity="小柴胡汤方",
+        )
+
+        with patch(
+            "router.retrieval_strategy.CompareEntityRefiner.refine",
+            return_value=CompareEntityRefineResult(
+                compare_entities=["小柴胡汤", "柴胡桂枝干姜汤"],
+                primary_entity="小柴胡汤",
+                backend="heuristic",
+                notes=["compare_entities_normalized"],
+            ),
+        ):
+            strategy = derive_retrieval_strategy(query, requested_top_k=12, route_hint="hybrid", analysis=analysis)
+
+        self.assertEqual(strategy.compare_entities, ["小柴胡汤", "柴胡桂枝干姜汤"])
+        self.assertEqual(strategy.entity_name, "小柴胡汤")
+        self.assertIn("entity://小柴胡汤/*", strategy.evidence_paths)
+        self.assertIn("entity://柴胡桂枝干姜汤/*", strategy.evidence_paths)
+        self.assertIn("compare_entities_refiner=heuristic", strategy.notes)
+        self.assertIn("compare_entities_normalized", strategy.notes)
 
 
 class RouteToolDegradationTests(unittest.TestCase):

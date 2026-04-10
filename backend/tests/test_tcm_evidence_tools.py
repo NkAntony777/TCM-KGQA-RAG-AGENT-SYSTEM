@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from tools.tcm_evidence_tools import EvidenceNavigator
+from tools.tcm_evidence_tools import EvidenceNavigator, _filter_items_by_book, _source_scope_specs
 
 
 class FakeAliasService:
@@ -30,6 +30,20 @@ class FakeAliasService:
 
 
 class EvidenceNavigatorSourceLiteTests(unittest.TestCase):
+    def test_filter_items_by_book_matches_normalized_book_label(self) -> None:
+        items = [
+            {"source": "089-医方论/卷上", "source_book": "089-医方论", "snippet": "六味地黄丸"},
+            {"source": "168-保婴撮要/卷下", "source_book": "168-保婴撮要", "snippet": "地黄丸"},
+        ]
+        filtered = _filter_items_by_book(items, book_name="医方论")
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(filtered[0]["source_book"], "089-医方论")
+
+    def test_source_scope_specs_normalize_numeric_book_prefix(self) -> None:
+        specs = _source_scope_specs(["book://089-医方论/*", "book://医方论/*"])
+        self.assertEqual(specs[0][0], "医方论")
+        self.assertEqual(len(specs), 1)
+
     def test_book_read_uses_source_lite_retrieval_and_filters_book(self) -> None:
         payload = {
             "code": 0,

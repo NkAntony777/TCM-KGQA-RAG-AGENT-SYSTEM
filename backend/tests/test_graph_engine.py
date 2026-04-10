@@ -19,6 +19,8 @@ from pathlib import Path
 from services.graph_service.engine import GraphQueryEngine
 from services.graph_service.engine import GraphServiceSettings
 from services.graph_service.engine import _ordered_path_neighbors, _search_ranked_paths
+from services.graph_service.runtime_store import RuntimeGraphStore
+from services.graph_service.runtime_store import RuntimeGraphStoreSettings
 from services.graph_service.engine import get_graph_engine
 
 
@@ -232,6 +234,82 @@ class TestPathGuardrails(unittest.TestCase):
 
         self.assertGreaterEqual(result["total"], 1)
         self.assertEqual(calls.get("公共节点"), 1, f"frontier guard should prevent duplicate expansion: {calls}")
+
+    def test_search_ranked_paths_uses_two_hop_bridge_shortcut(self) -> None:
+        adjacency = {
+            "起点": [{"predicate": "推荐方剂", "target": "桥节点", "confidence": 1.0}],
+            "桥节点": [{"predicate": "治疗证候", "target": "终点", "confidence": 1.0}],
+            "终点": [{"predicate": "治疗证候", "target": "桥节点", "confidence": 1.0}],
+        }
+        calls: dict[str, int] = {}
+
+        def relation_rows(node: str) -> list[dict]:
+            calls[node] = calls.get(node, 0) + 1
+            return adjacency.get(node, [])
+
+        def build_path_payload(nodes: list[str]) -> dict | None:
+            if nodes == ["起点", "桥节点", "终点"]:
+                return {"nodes": nodes, "score": 1.0}
+            if nodes == ["起点", "终点"]:
+                return None
+            return None
+
+        result = _search_ranked_paths(
+            start_candidates=["起点"],
+            target_set={"终点"},
+            max_hops=3,
+            path_limit=3,
+            relation_rows=relation_rows,
+            build_path_payload=build_path_payload,
+        )
+
+        self.assertEqual(result["total"], 1)
+        self.assertEqual(result["paths"][0]["nodes"], ["起点", "桥节点", "终点"])
+        self.assertLessEqual(calls.get("起点", 0) + calls.get("终点", 0), 2)
+
+
+class TestRelationRankingSignals(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.engine = GraphQueryEngine()
+
+    def test_query_fragments_split_chinese_punctuation(self) -> None:
+        fragments = self.engine._query_fragments("《小儿药证直诀》中六味地黄丸的出处依据是什么，并说明其主治。")  # noqa: SLF001
+        self.assertIn("小儿药证直诀", fragments)
+        self.assertIn("六味地黄丸的出处依据", fragments)
+
+    def test_relation_score_boosts_matching_source_book(self) -> None:
+        base_relation = {
+            "predicate": "治疗证候",
+            "target": "真阴亏损",
+            "source_text": "六味地黄丸，治肾阴不足。",
+            "source_book": "小儿药证直诀",
+            "source_chapter": "卷下",
+            "source_book_count": 1,
+            "evidence_count": 1,
+            "direction": "out",
+        }
+        other_relation = dict(base_relation)
+        other_relation["source_book"] = "医方考"
+
+        matching_score = self.engine._relation_score(base_relation, "《小儿药证直诀》中六味地黄丸的出处依据是什么")  # noqa: SLF001
+        other_score = self.engine._relation_score(other_relation, "《小儿药证直诀》中六味地黄丸的出处依据是什么")  # noqa: SLF001
+
+        self.assertGreater(matching_score, other_score)
+
+
+class TestRuntimeEntityResolutionRanking(unittest.TestCase):
+    def test_longer_exact_formula_sort_key_stays_ahead_of_fragments(self) -> None:
+        store = RuntimeGraphStore(
+            RuntimeGraphStoreSettings(
+                graph_path=Path("graph_runtime.json"),
+                evidence_path=Path("graph_runtime.evidence.jsonl"),
+                db_path=Path("graph_runtime.db"),
+            )
+        )
+        candidates = ["六味", "黄丸", "地黄丸", "六味地黄丸"]
+        ranked = sorted(candidates, key=lambda item: store._entity_match_sort_key("六味地黄丸", item))  # noqa: SLF001
+        self.assertEqual(ranked[0], "六味地黄丸")
 
 
 class TestSyndromeChain(unittest.TestCase):

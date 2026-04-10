@@ -7,11 +7,13 @@ from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, TypeVar
+import math
 
 FACT_IDS_SEP = "\x1f"
 _RUNTIME_STORE_LOCK = threading.RLock()
 SQLITE_PARAM_BATCH = 800
 T = TypeVar("T")
+FORMULA_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "方", "颗粒", "胶囊")
 
 
 def _normalize_text(value: Any) -> str:
@@ -464,12 +466,66 @@ class RuntimeGraphStore:
             ).fetchall()
         ordered: list[str] = []
         seen: set[str] = set()
-        for name in exact + [row["name"] for row in contains_rows]:
+        merged_names = exact + [row["name"] for row in contains_rows]
+        scored_names = sorted(
+            merged_names,
+            key=lambda name: self._entity_match_sort_key(normalized, str(name)),
+        )
+        for name in scored_names:
             if name in seen:
                 continue
             seen.add(name)
             ordered.append(name)
         return ordered[: max(1, limit)]
+
+    def exact_entities(self, query: str, preferred_types: set[str] | None = None, *, limit: int = 20) -> list[str]:
+        self.ensure_ready()
+        normalized = _normalize_text(query)
+        if not normalized:
+            return []
+        params: list[Any] = [normalized]
+        type_filter = ""
+        if preferred_types:
+            placeholders = ",".join("?" for _ in preferred_types)
+            type_filter = f" AND entity_type IN ({placeholders})"
+            params.extend(sorted(preferred_types))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                f"SELECT name FROM entities WHERE name = ?{type_filter} ORDER BY name ASC LIMIT ?",
+                (*params, max(1, limit)),
+            ).fetchall()
+        return [row["name"] for row in rows if _normalize_text(row["name"])]
+
+    def _entity_match_sort_key(self, query: str, name: str) -> tuple[float, int, str]:
+        normalized_query = _normalize_text(query)
+        candidate = _normalize_text(name)
+        if not candidate:
+            return (float("inf"), 0, "")
+        exact = candidate == normalized_query
+        query_contains = candidate and candidate in normalized_query
+        candidate_contains = normalized_query and normalized_query in candidate
+        starts = normalized_query.startswith(candidate) or candidate.startswith(normalized_query)
+        formula_bonus = (
+            1
+            if any(candidate.endswith(suffix) and normalized_query.endswith(suffix) for suffix in FORMULA_SUFFIXES)
+            else 0
+        )
+        length_gap = abs(len(normalized_query) - len(candidate))
+        overlap = len(candidate) / max(1, len(normalized_query)) if query_contains else 0.0
+        score = 0.0
+        if exact:
+            score += 100.0
+        if query_contains:
+            score += 60.0 + overlap * 20.0
+        if candidate_contains:
+            score += 25.0 - min(length_gap, 12)
+        if starts:
+            score += 8.0
+        if formula_bonus:
+            score += 6.0
+        score += min(len(candidate), 24) * 0.4
+        score -= math.log1p(max(0, length_gap)) * 2.0
+        return (-score, -len(candidate), candidate)
 
     def entity_type(self, entity_name: str) -> str:
         self.ensure_ready()
@@ -512,6 +568,36 @@ class RuntimeGraphStore:
                 ORDER BY neighbor_name ASC
                 """,
                 (entity, entity),
+            ).fetchall()
+        return [row["neighbor_name"] for row in rows if _normalize_text(row["neighbor_name"])]
+
+    def two_hop_bridges(self, start: str, end: str, *, limit: int = 8) -> list[str]:
+        self.ensure_ready()
+        start_entity = _normalize_text(start)
+        end_entity = _normalize_text(end)
+        if not start_entity or not end_entity:
+            return []
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                """
+                WITH start_neighbors AS (
+                    SELECT object AS neighbor_name FROM facts WHERE subject = ?
+                    UNION
+                    SELECT subject AS neighbor_name FROM facts WHERE object = ?
+                ),
+                end_neighbors AS (
+                    SELECT object AS neighbor_name FROM facts WHERE subject = ?
+                    UNION
+                    SELECT subject AS neighbor_name FROM facts WHERE object = ?
+                )
+                SELECT s.neighbor_name
+                FROM start_neighbors s
+                INNER JOIN end_neighbors e ON s.neighbor_name = e.neighbor_name
+                WHERE s.neighbor_name <> '' AND s.neighbor_name <> ? AND s.neighbor_name <> ?
+                ORDER BY length(s.neighbor_name) DESC, s.neighbor_name ASC
+                LIMIT ?
+                """,
+                (start_entity, start_entity, end_entity, end_entity, start_entity, end_entity, max(1, limit)),
             ).fetchall()
         return [row["neighbor_name"] for row in rows if _normalize_text(row["neighbor_name"])]
 

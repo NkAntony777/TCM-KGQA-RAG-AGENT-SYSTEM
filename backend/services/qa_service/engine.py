@@ -6,6 +6,7 @@ from services.common.medical_guard import assess_query
 from services.qa_service.evidence import (
     _coverage_gaps_from_state,
     _coverage_summary_from_state,
+    _deep_quality_gaps_from_state,
     _factual_evidence_from_payload,
     _identify_evidence_gaps,
     _init_coverage_state,
@@ -338,10 +339,12 @@ class QAService:
         executed_actions: set[str] = set()
         for round_index in range(1, self.settings.max_deep_rounds + 1):
             heuristic_gaps = _coverage_gaps_from_state(coverage_state)
-            gap_step = _planner_step(stage="gap_check", label="分析证据缺口", detail=f"round={round_index}; gaps={','.join(heuristic_gaps) or 'none'}")
+            quality_gaps = _deep_quality_gaps_from_state(coverage_state)
+            active_gaps = list(dict.fromkeys([*heuristic_gaps, *quality_gaps]))
+            gap_step = _planner_step(stage="gap_check", label="分析证据缺口", detail=f"round={round_index}; gaps={','.join(active_gaps) or 'none'}")
             planner_steps.append(gap_step)
             yield {"type": "planner_step", "step": gap_step}
-            if not heuristic_gaps:
+            if not active_gaps:
                 notes.append(f"deep_round_{round_index}:coverage_sufficient")
                 stop_step = _planner_step(stage="coverage_ok", label="证据覆盖满足", detail=f"round={round_index}")
                 planner_steps.append(stop_step)
@@ -355,7 +358,7 @@ class QAService:
                 factual_evidence=factual_evidence,
                 case_references=case_references,
                 deep_trace=deep_trace,
-                heuristic_gaps=heuristic_gaps,
+                heuristic_gaps=active_gaps,
                 coverage_summary=_coverage_summary_from_state(coverage_state),
                 executed_actions=executed_actions,
             )
@@ -365,14 +368,14 @@ class QAService:
             planner_steps.append(plan_step)
             yield {"type": "planner_step", "step": plan_step}
 
-            plan_gaps = [str(item).strip() for item in plan.get("gaps", []) if str(item).strip()] if isinstance(plan.get("gaps"), list) else heuristic_gaps
+            plan_gaps = [str(item).strip() for item in plan.get("gaps", []) if str(item).strip()] if isinstance(plan.get("gaps"), list) else active_gaps
             actions = self._resolve_followup_actions(
                 query=query,
                 payload=payload,
                 evidence_paths=evidence_paths,
                 factual_evidence=factual_evidence,
                 plan=plan,
-                heuristic_gaps=heuristic_gaps,
+                heuristic_gaps=active_gaps,
                 plan_gaps=plan_gaps,
                 executed_actions=executed_actions,
             )
@@ -489,19 +492,23 @@ class QAService:
                 }
                 yield {"type": "new_response"}
 
-            if new_items_this_round <= 0:
+            remaining_gaps = _coverage_gaps_from_state(coverage_state)
+            remaining_quality_gaps = _deep_quality_gaps_from_state(coverage_state)
+            remaining_active_gaps = list(dict.fromkeys([*remaining_gaps, *remaining_quality_gaps]))
+            if new_items_this_round <= 0 and not remaining_quality_gaps:
                 notes.append(f"deep_round_{round_index}:no_new_evidence")
                 stop_step = _planner_step(stage="stop", label="未补到新证据", detail=f"round={round_index}")
                 planner_steps.append(stop_step)
                 yield {"type": "planner_step", "step": stop_step}
                 break
-            remaining_gaps = _coverage_gaps_from_state(coverage_state)
-            if not remaining_gaps:
+            if not remaining_active_gaps:
                 notes.append(f"deep_round_{round_index}:coverage_sufficient")
                 stop_step = _planner_step(stage="coverage_ok", label="证据覆盖满足", detail=f"round={round_index}")
                 planner_steps.append(stop_step)
                 yield {"type": "planner_step", "step": stop_step}
                 break
+            if new_items_this_round <= 0 and remaining_quality_gaps:
+                notes.append(f"deep_round_{round_index}:quality_gaps_persist:{','.join(remaining_quality_gaps)}")
         else:
             notes.append("deep_round_limit_reached")
             stop_step = _planner_step(stage="stop", label="达到轮次上限", detail=f"max_rounds={self.settings.max_deep_rounds}")

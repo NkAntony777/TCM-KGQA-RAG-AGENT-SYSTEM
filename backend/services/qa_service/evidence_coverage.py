@@ -45,6 +45,7 @@ COMPARISON_NOISE_PREFIXES = ("请从", "请结合", "分析", "论述", "论证"
 SOURCE_TEXT_MARKERS = ("原文", "原句", "原话", "原段", "条文", "方后注")
 ORIGIN_BOOK_MARKERS = ("出处", "出自", "哪本书", "哪部书")
 SOURCE_TRACE_MARKERS = (*ORIGIN_BOOK_MARKERS, *SOURCE_TEXT_MARKERS, "佐证", "来源")
+DEEP_FACET_QUERY_MARKERS = ("分析", "论述", "论证", "辨析", "鉴别", "为什么", "病机", "异同", "比较")
 
 
 def _init_coverage_state(*, query: str, payload: dict[str, Any], evidence_paths: list[str]) -> dict[str, Any]:
@@ -274,12 +275,58 @@ def _coverage_summary_from_state(state: dict[str, Any]) -> dict[str, Any]:
     return summary
 
 
+def _deep_quality_gaps_from_state(state: dict[str, Any]) -> list[str]:
+    query = str(state.get("query", "")).strip()
+    intent = str(state.get("intent", "")).strip()
+    compare_entities = list(state.get("compare_entities", []))
+    predicates = set(state.get("predicates", set()))
+    graph_books = set(state.get("graph_source_books", set()))
+    doc_books = set(state.get("doc_source_books", set()))
+    total_books = {str(item).strip() for item in graph_books.union(doc_books) if str(item).strip()}
+    reasoning_signal_count = int(state.get("reasoning_signal_count", 0) or 0)
+
+    gaps: list[str] = []
+    wants_multi_facet = intent in {"compare_entities", "formula_origin"} or any(marker in query for marker in DEEP_FACET_QUERY_MARKERS)
+    wants_strong_source = _needs_origin_support(query=query, intent=intent) or _needs_source_trace(query=query) or wants_multi_facet
+
+    has_direct_source_text = bool(state.get("has_source_trace_text")) or bool(state.get("has_doc_source_trace_text"))
+
+    if wants_multi_facet:
+        if compare_entities:
+            if not _comparison_state_sufficient(state):
+                gaps.append("comparison")
+            if reasoning_signal_count < (1 if state.get("compare_joint_signal") else 2):
+                gaps.append("path_reasoning")
+        elif _needs_path_reasoning(query=query) and not _path_reasoning_state_sufficient(state):
+            gaps.append("path_reasoning")
+        elif reasoning_signal_count < 2 and predicates.intersection(REASONING_PREDICATES):
+            gaps.append("path_reasoning")
+
+    if wants_strong_source:
+        has_chapter_support = "chapter" in set(state.get("source_types", set())) or has_direct_source_text
+        if len(total_books) < 2 and not has_chapter_support:
+            if compare_entities:
+                gaps.append("source_trace")
+            elif _needs_origin_support(query=query, intent=intent):
+                gaps.append("origin")
+            else:
+                gaps.append("source_trace")
+        elif _query_requests_direct_passage(query=query) and not has_chapter_support:
+            gaps.append("source_trace")
+
+    return list(dict.fromkeys(gaps))
+
+
 def _needs_origin_support(*, query: str, intent: str) -> bool:
     return intent == "formula_origin" or any(marker in query for marker in (*ORIGIN_BOOK_MARKERS, *SOURCE_TEXT_MARKERS))
 
 
 def _needs_source_trace(*, query: str) -> bool:
     return any(marker in query for marker in SOURCE_TRACE_MARKERS)
+
+
+def _query_requests_direct_passage(*, query: str) -> bool:
+    return any(marker in query for marker in SOURCE_TEXT_MARKERS)
 
 
 def _needs_path_reasoning(*, query: str) -> bool:

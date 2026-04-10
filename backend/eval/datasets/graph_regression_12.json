@@ -1,0 +1,119 @@
+[
+  {
+    "id": "graph_reg_001",
+    "kind": "resolve_entity",
+    "category": "entity_resolution",
+    "query": "六味地黄丸",
+    "preferred_types": ["formula"],
+    "expected_entities_any": ["六味地黄丸"]
+  },
+  {
+    "id": "graph_reg_002",
+    "kind": "resolve_entity",
+    "category": "entity_resolution",
+    "query": "熟地黄",
+    "preferred_types": ["herb"],
+    "expected_entities_any": ["熟地黄"]
+  },
+  {
+    "id": "graph_reg_003",
+    "kind": "entity_lookup",
+    "category": "relation_ranking",
+    "query": "六味地黄丸有哪些药材组成",
+    "entity": "六味地黄丸",
+    "predicate_allowlist": ["使用药材"],
+    "top_k": 6,
+    "expected_predicates_any": ["使用药材"],
+    "expected_targets_any": ["熟地黄", "山药", "山茱萸", "泽泻", "茯苓", "丹皮"]
+  },
+  {
+    "id": "graph_reg_004",
+    "kind": "entity_lookup",
+    "category": "relation_ranking",
+    "query": "六味地黄丸治疗什么证候",
+    "entity": "六味地黄丸",
+    "predicate_allowlist": ["治疗证候"],
+    "top_k": 5,
+    "expected_predicates_any": ["治疗证候"],
+    "expected_targets_any": ["真阴亏损", "肝肾不足"]
+  },
+  {
+    "id": "graph_reg_005",
+    "kind": "entity_lookup",
+    "category": "relation_ranking",
+    "query": "六君子汤治疗什么证候",
+    "entity": "六君子汤",
+    "predicate_allowlist": ["治疗证候", "治疗症状"],
+    "top_k": 5,
+    "expected_predicates_any": ["治疗证候", "治疗症状"]
+  },
+  {
+    "id": "graph_reg_006",
+    "kind": "entity_lookup",
+    "category": "source_aware_ranking",
+    "query": "《医方论》中六味地黄丸的出处依据是什么",
+    "entity": "六味地黄丸",
+    "top_k": 5,
+    "expected_source_books_any": ["医方论"]
+  },
+  {
+    "id": "graph_reg_007",
+    "kind": "entity_lookup",
+    "category": "source_aware_ranking",
+    "query": "《保婴撮要》中六味地黄丸的别名依据是什么",
+    "entity": "六味地黄丸",
+    "predicate_allowlist": ["别名", "治疗证候", "功效"],
+    "top_k": 5,
+    "expected_source_books_any": ["保婴撮要"]
+  },
+  {
+    "id": "graph_reg_008",
+    "kind": "path_query",
+    "category": "path_quality",
+    "lane": "heavy",
+    "start": "熟地黄",
+    "end": "真阴亏损",
+    "max_hops": 3,
+    "path_limit": 3,
+    "expected_path_nodes_any": ["六味地黄丸"]
+  },
+  {
+    "id": "graph_reg_009",
+    "kind": "path_query",
+    "category": "path_quality",
+    "lane": "heavy",
+    "start": "熟地黄",
+    "end": "六味地黄丸",
+    "max_hops": 2,
+    "path_limit": 3,
+    "expected_path_nodes_any": ["熟地黄", "六味地黄丸"]
+  },
+  {
+    "id": "graph_reg_010",
+    "kind": "syndrome_chain",
+    "category": "syndrome_chain",
+    "symptom": "脉微",
+    "top_k": 5,
+    "expected_syndromes_any": ["脏厥", "少阴病"]
+  },
+  {
+    "id": "graph_reg_011",
+    "kind": "entity_lookup",
+    "category": "relation_ranking",
+    "query": "升阳益胃汤使用哪些药材",
+    "entity": "升阳益胃汤",
+    "predicate_allowlist": ["使用药材"],
+    "top_k": 8,
+    "expected_predicates_any": ["使用药材"]
+  },
+  {
+    "id": "graph_reg_012",
+    "kind": "entity_lookup",
+    "category": "relation_ranking",
+    "query": "四君子汤的配伍药材",
+    "entity": "四君子汤",
+    "predicate_allowlist": ["使用药材"],
+    "top_k": 6,
+    "expected_targets_any": ["人参", "白术", "甘草"]
+  }
+]

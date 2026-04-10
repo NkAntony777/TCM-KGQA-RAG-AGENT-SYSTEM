@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
+
+from eval.runners.run_eval import DEFAULT_DATASET as ROUTER_DATASET
+from eval.runners.run_eval import evaluate_router, load_dataset as load_router_dataset
+from eval.runners.run_graph_regression import evaluate_graph_regression, load_dataset as load_graph_regression_dataset
+from eval.runners.run_graph_regression import select_cases as select_graph_regression_cases
+from eval.runners.run_qa_weakness_probe import load_dataset as load_probe_dataset
+from eval.runners.run_qa_weakness_probe import run_probe
+from eval.runners.run_smoke_suite import check_health
+
+
+DEFAULT_BASE_URL = "http://127.0.0.1:8002"
+DEFAULT_OUTPUT_JSON = BACKEND_ROOT / "eval" / "release_gate_20260409.json"
+DEFAULT_OUTPUT_MD = BACKEND_ROOT.parent.parent / "docs" / "Batch4_Release_Gate_20260409.md"
+DOC_QA_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_origin_source_probe_4.json"
+COMPLEX_QA_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_agent_hard_probe_10.json"
+GRAPH_REGRESSION_DATASET = BACKEND_ROOT / "eval" / "datasets" / "graph_regression_12.json"
+ROUTER_MIN_ACCURACY = 0.80
+
+
+def _utc_now_text() -> str:
+    return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
+
+
+def _render_failures(items: list[dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
+    for item in items[:20]:
+        lines.append(
+            f"- {item.get('id', '-')}"  # noqa: E501
+            f"[{item.get('mode', '-')}] route={item.get('route', '-')}"
+            f" issues={','.join(str(x) for x in item.get('issues', [])) or '-'}"
+        )
+    return lines or ["- none"]
+
+
+def render_markdown(summary: dict[str, Any]) -> str:
+    router = summary["router"]
+    docqa = summary["docqa"]
+    complexqa = summary["complexqa"]
+    graph_regression = summary["graph_regression"]
+    health = summary["health"]
+    probe_skipped = bool(summary.get("probe_skipped"))
+    lines = [
+        "# Batch 4 Release Gate Report",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| generated_at | {summary['generated_at']} |",
+        f"| base_url | {summary['base_url']} |",
+        f"| gate_passed | {'yes' if summary['gate_passed'] else 'no'} |",
+        f"| probe_skipped | {'yes' if probe_skipped else 'no'} |",
+        f"| block_reason | {summary.get('block_reason', '-')} |",
+        "",
+        "## Gate thresholds",
+        "",
+        f"- main backend health must be **OK**",
+        "- graph runtime is evaluated under the current SQLite-primary online architecture",
+        f"- router smoke accuracy must be **>= {summary.get('router_min_accuracy', ROUTER_MIN_ACCURACY):.2f}**",
+        "- fast graph regression failed count must be **0**",
+        "- Doc-QA probe failed count must be **0**",
+        "- Complex-QA probe failed count must be **0**",
+        "",
+        "## Health",
+        "",
+        "| Service | OK | Status |",
+        "| --- | --- | --- |",
+    ]
+    for name, item in health.items():
+        lines.append(f"| {name} | {'yes' if item.get('ok') else 'no'} | {item.get('status_code') or item.get('error') or '-'} |")
+
+    lines.extend(
+        [
+            "",
+            "## Router smoke",
+            "",
+            f"- accuracy: {router['correct']}/{router['total']} = {router['accuracy']:.2%}",
+            f"- mismatches: {len(router.get('mismatches', []))}",
+            "",
+            "## Fast Graph Regression",
+            "",
+            f"- passed: {graph_regression['passed']}/{graph_regression['total']}",
+            f"- failed: {graph_regression['failed']}",
+            f"- top issues: {graph_regression['top_issues'][:5]}",
+            "",
+            "## Doc-QA probe",
+            "",
+            f"- passed: {docqa['passed']}/{docqa['total']}",
+            f"- failed: {docqa['failed']}",
+            f"- top issues: {docqa['top_issues'][:5]}",
+            "",
+            "## Complex-QA probe",
+            "",
+            f"- passed: {complexqa['passed']}/{complexqa['total']}",
+            f"- failed: {complexqa['failed']}",
+            f"- top issues: {complexqa['top_issues'][:5]}",
+            "",
+            "## Failing Doc-QA cases",
+            "",
+            *_render_failures(docqa.get("failures", [])),
+            "",
+            "## Failing Complex-QA cases",
+            "",
+            *_render_failures(complexqa.get("failures", [])),
+            "",
+            "## Notes",
+            "",
+            f"- skip_reason: {summary.get('skip_reason', '-')}",
+            "- Graph backend baseline now assumes SQLite runtime graph as the primary online engine; Nebula is treated as fallback capacity.",
+            f"- This gate is a release-facing aggregation layer. A failed/blocked report is still a valid and useful artifact.",
+            "",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def run_release_gate(*, base_url: str, top_k: int, timeout: float) -> dict[str, Any]:
+    health = check_health({"main_backend": f"{base_url}/health"}, timeout)
+    router_summary = evaluate_router(load_router_dataset(ROUTER_DATASET))
+    graph_regression_summary = evaluate_graph_regression(
+        select_graph_regression_cases(load_graph_regression_dataset(GRAPH_REGRESSION_DATASET), include_heavy=False)
+    )
+    main_backend_ok = bool(health.get("main_backend", {}).get("ok"))
+    probe_skipped = not main_backend_ok
+    if probe_skipped:
+        docqa_summary = {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "top_issues": [("skipped:main_backend_unhealthy", 1)],
+            "by_category": {},
+            "failures": [],
+        }
+        complexqa_summary = {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "top_issues": [("skipped:main_backend_unhealthy", 1)],
+            "by_category": {},
+            "failures": [],
+        }
+    else:
+        docqa_summary = run_probe(
+            dataset=load_probe_dataset(DOC_QA_DATASET),
+            base_url=base_url,
+            modes=["quick", "deep"],
+            top_k=top_k,
+            timeout=timeout,
+        )
+        complexqa_summary = run_probe(
+            dataset=load_probe_dataset(COMPLEX_QA_DATASET),
+            base_url=base_url,
+            modes=["quick", "deep"],
+            top_k=top_k,
+            timeout=timeout,
+        )
+
+    gate_passed = (
+        main_backend_ok
+        and router_summary["accuracy"] >= ROUTER_MIN_ACCURACY
+        and graph_regression_summary["failed"] == 0
+        and docqa_summary["failed"] == 0
+        and complexqa_summary["failed"] == 0
+    )
+    skip_reason = "main_backend_unhealthy" if probe_skipped else ""
+    if not main_backend_ok:
+        block_reason = "main_backend_health_failed"
+    elif router_summary["accuracy"] < ROUTER_MIN_ACCURACY:
+        block_reason = "router_smoke_below_threshold"
+    elif graph_regression_summary["failed"] > 0:
+        block_reason = "graph_regression_failed"
+    elif docqa_summary["failed"] > 0:
+        block_reason = "docqa_probe_failed"
+    elif complexqa_summary["failed"] > 0:
+        block_reason = "complexqa_probe_failed"
+    else:
+        block_reason = ""
+    return {
+        "generated_at": _utc_now_text(),
+        "base_url": base_url,
+        "gate_passed": gate_passed,
+        "probe_skipped": probe_skipped,
+        "skip_reason": skip_reason,
+        "block_reason": block_reason or "-",
+        "router_min_accuracy": ROUTER_MIN_ACCURACY,
+        "health": health,
+        "router": router_summary,
+        "graph_regression": graph_regression_summary,
+        "docqa": docqa_summary,
+        "complexqa": complexqa_summary,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run the Batch 4 release gate.")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--top-k", type=int, default=12)
+    parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--output-json", type=Path, default=DEFAULT_OUTPUT_JSON)
+    parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args()
+
+    summary = run_release_gate(base_url=args.base_url, top_k=args.top_k, timeout=args.timeout)
+    args.output_json.parent.mkdir(parents=True, exist_ok=True)
+    args.output_md.parent.mkdir(parents=True, exist_ok=True)
+    args.output_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    args.output_md.write_text(render_markdown(summary), encoding="utf-8")
+
+    if args.json:
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+    else:
+        print(f"gate_passed={summary['gate_passed']}")
+        print(f"json={args.output_json}")
+        print(f"md={args.output_md}")
+    return 0 if summary["gate_passed"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

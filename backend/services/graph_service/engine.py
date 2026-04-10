@@ -6,8 +6,10 @@ from collections import Counter, deque
 from dataclasses import dataclass
 import math
 from pathlib import Path
+import re
 from typing import Any, Callable
 
+from services.common.evidence_payloads import normalize_book_label
 from services.graph_service.nebulagraph_store import NebulaGraphStore
 from services.graph_service.runtime_store import RuntimeGraphStore
 
@@ -85,6 +87,9 @@ def _path_query_predicate_priority(predicate: str) -> float:
     return float(PREDICATE_BASE_PRIORITY.get(normalized, 0.6)) + float(PATH_QUERY_PREDICATE_BOOST.get(normalized, 0.0))
 
 
+QUERY_FRAGMENT_SPLIT_PATTERN = re.compile(r"[\s，。；、！？?：:（）()\[\]【】《》“”\"'·/]+")
+
+
 def _ordered_path_neighbors(
     rows: list[dict[str, Any]],
     *,
@@ -126,6 +131,65 @@ def _search_ranked_paths(
 
     built_paths: list[dict[str, Any]] = []
     seen_signatures: set[tuple[str, ...]] = set()
+    relation_cache: dict[str, list[dict[str, Any]]] = {}
+    ordered_neighbor_cache: dict[tuple[str, tuple[str, ...]], list[str]] = {}
+
+    def _cached_relation_rows(node: str) -> list[dict[str, Any]]:
+        rows = relation_cache.get(node)
+        if rows is None:
+            rows = relation_rows(node)
+            relation_cache[node] = rows
+        return rows
+
+    def _cached_ordered_neighbors(node: str) -> list[str]:
+        cache_key = (node, tuple(sorted(target_set)))
+        neighbors = ordered_neighbor_cache.get(cache_key)
+        if neighbors is None:
+            neighbors = _ordered_path_neighbors(_cached_relation_rows(node), target_set=target_set)
+            ordered_neighbor_cache[cache_key] = neighbors
+        return neighbors
+
+    # Fast path: try exact edge and high-value 2-hop bridge before broad BFS.
+    for start_node in start_candidates[:3]:
+        if len(built_paths) >= path_limit:
+            break
+        direct_payload = build_path_payload([start_node, next(iter(target_set))]) if len(target_set) == 1 else None
+        if direct_payload and tuple(direct_payload.get("nodes", [])) not in seen_signatures:
+            seen_signatures.add(tuple(direct_payload.get("nodes", [])))
+            built_paths.append(direct_payload)
+            if len(built_paths) >= path_limit:
+                break
+        if max_hops < 2:
+            continue
+        start_neighbors = _cached_ordered_neighbors(start_node)
+        target_neighbors_by_target: dict[str, set[str]] = {
+            target: set(_cached_ordered_neighbors(target))
+            for target in list(target_set)[:3]
+        }
+        for target in list(target_set)[:3]:
+            if target in start_neighbors:
+                payload = build_path_payload([start_node, target])
+                if payload:
+                    signature = tuple(payload.get("nodes", []))
+                    if signature not in seen_signatures:
+                        seen_signatures.add(signature)
+                        built_paths.append(payload)
+                        if len(built_paths) >= path_limit:
+                            break
+            bridge_candidates = [neighbor for neighbor in start_neighbors if neighbor in target_neighbors_by_target.get(target, set())]
+            for bridge in bridge_candidates[: min(6, path_limit)]:
+                payload = build_path_payload([start_node, bridge, target])
+                if not payload:
+                    continue
+                signature = tuple(payload.get("nodes", []))
+                if signature in seen_signatures:
+                    continue
+                seen_signatures.add(signature)
+                built_paths.append(payload)
+                if len(built_paths) >= path_limit:
+                    break
+            if len(built_paths) >= path_limit:
+                break
 
     for start_node in start_candidates[:3]:
         queue: deque[list[str]] = deque([[start_node]])
@@ -136,7 +200,7 @@ def _search_ranked_paths(
             current_depth = len(current_path) - 1
             if current_depth >= max_hops:
                 continue
-            for next_node in _ordered_path_neighbors(relation_rows(current_node), target_set=target_set):
+            for next_node in _cached_ordered_neighbors(current_node):
                 if next_node in current_path:
                     continue
                 new_path = current_path + [next_node]
@@ -268,8 +332,16 @@ class GraphQueryEngine:
         }
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
-        start_candidates = self._resolve_entities(start)
-        end_candidates = self._resolve_entities(end)
+        start_candidates = self._resolve_entities(start, exact_only=True)
+        end_candidates = self._resolve_entities(end, exact_only=True)
+        fast_paths = self._fast_path_candidates(
+            start_candidates=start_candidates,
+            end_candidates=end_candidates,
+            max_hops=max_hops,
+            path_limit=path_limit,
+        )
+        if int(fast_paths.get("total", 0) or 0) > 0:
+            return fast_paths
         return _search_ranked_paths(
             start_candidates=start_candidates,
             target_set=set(end_candidates[:3]),
@@ -309,7 +381,11 @@ class GraphQueryEngine:
     def entity_type(self, entity_name: str) -> str:
         return self.store.entity_type(entity_name)
 
-    def _resolve_entities(self, query: str, preferred_types: set[str] | None = None) -> list[str]:
+    def _resolve_entities(self, query: str, preferred_types: set[str] | None = None, *, exact_only: bool = False) -> list[str]:
+        if exact_only:
+            exact = self.store.exact_entities(query, preferred_types, limit=20)
+            if exact:
+                return exact
         return self.store.resolve_entities(query, preferred_types, limit=20)
 
     def _collect_relations(self, entity_name: str) -> list[dict[str, Any]]:
@@ -456,6 +532,17 @@ class GraphQueryEngine:
                 ),
             ),
         ]
+        if any(self._source_book_match_score(item, query_text) > 0 for item in clusters):
+            rank_views.append(
+                sorted(
+                    clusters,
+                    key=lambda item: (
+                        -self._source_book_match_score(item, query_text),
+                        -self._relation_score(item, query_text),
+                        -float(item.get("max_confidence", 0.0) or 0.0),
+                    ),
+                )
+            )
         for cluster in clusters:
             cluster["_fusion_score"] = 0.0
         for view in rank_views:
@@ -533,7 +620,10 @@ class GraphQueryEngine:
         predicate = str(relation.get("predicate", "")).strip()
         target = str(relation.get("target", "")).strip()
         source_text = str(relation.get("source_text", "")).strip()
+        source_book = str(relation.get("source_book", "")).strip()
+        source_chapter = str(relation.get("source_chapter", "")).strip()
         normalized_query = (query_text or "").strip()
+        query_fragments = self._query_fragments(normalized_query)
         for token, preferred_predicates in RELATION_QUERY_HINTS.items():
             if token in normalized_query and predicate in preferred_predicates:
                 score += 50
@@ -541,8 +631,13 @@ class GraphQueryEngine:
             score += 20
         if target and target in normalized_query:
             score += 10
-        if source_text and any(fragment and fragment in source_text for fragment in self._query_fragments(normalized_query)):
+        if target and target in query_fragments:
+            score += 18
+        if source_text and any(fragment and fragment in source_text for fragment in query_fragments):
             score += 5
+        score += self._source_book_match_score(relation, normalized_query) * 80
+        if source_chapter and source_chapter in normalized_query:
+            score += 10
         score += int(round(self._predicate_priority(relation) * 10))
         score += min(int(relation.get("source_book_count", 0) or 0), 5)
         score += min(int(math.log1p(int(relation.get("evidence_count", 0) or 0)) * 4), 8)
@@ -551,17 +646,91 @@ class GraphQueryEngine:
         return score
 
     def _query_fragments(self, query_text: str) -> list[str]:
-        fragments = [
-            item.strip(" ，。？?：:（）()")
-            for item in query_text.replace("有什么", " ").replace("是什么", " ").replace("有哪些", " ").replace("什么", " ").split()
-        ]
-        return [item for item in fragments if len(item) >= 2]
+        normalized = (
+            str(query_text or "")
+            .replace("有什么", " ")
+            .replace("是什么", " ")
+            .replace("有哪些", " ")
+            .replace("什么", " ")
+            .replace("请从", " ")
+            .replace("请结合", " ")
+            .replace("并说明", " ")
+            .replace("并论述", " ")
+            .replace("并比较", " ")
+        )
+        candidates = [item.strip() for item in QUERY_FRAGMENT_SPLIT_PATTERN.split(normalized)]
+        fragments: list[str] = []
+        seen: set[str] = set()
+        for item in candidates:
+            item = item.lstrip("中就按从与和及并请")
+            if len(item) < 2:
+                continue
+            if item in seen:
+                continue
+            seen.add(item)
+            fragments.append(item)
+        return fragments
+
+    def _query_mentions_source_book(self, query_text: str, source_book: str) -> bool:
+        normalized_query = str(query_text or "").strip()
+        normalized_book = normalize_book_label(source_book)
+        if not normalized_query or not normalized_book:
+            return False
+        if normalized_book in normalized_query:
+            return True
+        return f"《{normalized_book}》" in normalized_query
+
+    def _source_book_match_score(self, relation: dict[str, Any], query_text: str) -> int:
+        source_book = str(relation.get("source_book", "")).strip()
+        if not source_book:
+            return 0
+        return 2 if self._query_mentions_source_book(query_text, source_book) else 0
 
     def _adjacent_names(self, entity_name: str) -> list[str]:
         return self.store.adjacent_names(entity_name)
 
     def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
         return self.store.collect_relations(entity_name)
+
+    def _fast_path_candidates(
+        self,
+        *,
+        start_candidates: list[str],
+        end_candidates: list[str],
+        max_hops: int,
+        path_limit: int,
+    ) -> dict[str, Any]:
+        if not start_candidates or not end_candidates:
+            return {"paths": [], "total": 0}
+        built_paths: list[dict[str, Any]] = []
+        seen_signatures: set[tuple[str, ...]] = set()
+        for start_node in start_candidates[:2]:
+            for end_node in end_candidates[:2]:
+                direct_payload = self._build_path_payload([start_node, end_node])
+                if direct_payload:
+                    signature = tuple(direct_payload.get("nodes", []))
+                    if signature not in seen_signatures:
+                        seen_signatures.add(signature)
+                        built_paths.append(direct_payload)
+                        if len(built_paths) >= path_limit:
+                            built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+                            return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
+                if max_hops < 2:
+                    continue
+                for bridge in self.store.two_hop_bridges(start_node, end_node, limit=max(4, path_limit * 2))[: max(2, path_limit)]:
+                    payload = self._build_path_payload([start_node, bridge, end_node])
+                    if not payload:
+                        continue
+                    signature = tuple(payload.get("nodes", []))
+                    if signature in seen_signatures:
+                        continue
+                    seen_signatures.add(signature)
+                    built_paths.append(payload)
+                    if len(built_paths) >= path_limit:
+                        built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+                        return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
+        built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+        return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit])}
 
     def _build_path_payload(self, nodes: list[str]) -> dict[str, Any] | None:
         edges: list[str] = []
@@ -622,12 +791,13 @@ class NebulaPrimaryGraphEngine:
     def health(self) -> dict[str, Any]:
         primary = self.primary_store.health()
         fallback = self.fallback_engine.health()
-        using_primary = primary.get("status") == "ok"
+        local_ready = fallback.get("status") == "ok"
+        nebula_ready = primary.get("status") == "ok"
         return {
-            "status": "ok" if using_primary else fallback.get("status", "ok"),
-            "backend": "nebulagraph_primary" if using_primary else fallback.get("backend", "sqlite_runtime_graph"),
-            "selected_backend": "nebula",
-            "active_backend": "nebula" if using_primary else "sqlite_fallback",
+            "status": fallback.get("status", "ok") if local_ready else ("ok" if nebula_ready else primary.get("status", "error")),
+            "backend": fallback.get("backend", "sqlite_runtime_graph") if local_ready else "nebulagraph_fallback",
+            "selected_backend": "sqlite",
+            "active_backend": "sqlite" if local_ready else "nebula_fallback",
             "primary": primary,
             "fallback": fallback,
             "graph_path": fallback.get("graph_path", ""),
@@ -645,13 +815,16 @@ class NebulaPrimaryGraphEngine:
         predicate_allowlist: list[str] | None = None,
         predicate_blocklist: list[str] | None = None,
     ) -> dict[str, Any]:
+        local_result = self.fallback_engine.entity_lookup(
+            name,
+            top_k=top_k,
+            predicate_allowlist=predicate_allowlist,
+            predicate_blocklist=predicate_blocklist,
+        )
+        if local_result:
+            return local_result
         if not self._use_primary():
-            return self.fallback_engine.entity_lookup(
-                name,
-                top_k=top_k,
-                predicate_allowlist=predicate_allowlist,
-                predicate_blocklist=predicate_blocklist,
-            )
+            return local_result
         try:
             candidates = self.fallback_engine._resolve_entities(name)
             if not candidates:
@@ -682,19 +855,25 @@ class NebulaPrimaryGraphEngine:
                 }
         except Exception:
             pass
-        return self.fallback_engine.entity_lookup(
-            name,
-            top_k=top_k,
-            predicate_allowlist=predicate_allowlist,
-            predicate_blocklist=predicate_blocklist,
-        )
+        return local_result
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
+        local_result = self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
+        if int(local_result.get("total", 0) or 0) > 0:
+            return local_result
         if not self._use_primary():
-            return self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
+            return local_result
         try:
-            start_candidates = self.fallback_engine._resolve_entities(start)[:3]
-            end_candidates = self.fallback_engine._resolve_entities(end)[:3]
+            start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
+            end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
+            fast_paths = self.fallback_engine._fast_path_candidates(  # noqa: SLF001
+                start_candidates=start_candidates,
+                end_candidates=end_candidates,
+                max_hops=max_hops,
+                path_limit=path_limit,
+            )
+            if int(fast_paths.get("total", 0) or 0) > 0:
+                return fast_paths
             return _search_ranked_paths(
                 start_candidates=start_candidates,
                 target_set=set(end_candidates),
@@ -704,11 +883,14 @@ class NebulaPrimaryGraphEngine:
                 build_path_payload=self.fallback_engine._build_path_payload,
             )
         except Exception:
-            return self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
+            return local_result
 
     def syndrome_chain(self, symptom: str, top_k: int = 5) -> dict[str, Any]:
+        local_result = self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
+        if local_result.get("syndromes"):
+            return local_result
         if not self._use_primary():
-            return self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
+            return local_result
         try:
             symptom_candidates = self.fallback_engine._resolve_entities(symptom, preferred_types={"symptom"})
             if not symptom_candidates:
@@ -737,7 +919,7 @@ class NebulaPrimaryGraphEngine:
             results = sorted(deduped.values(), key=lambda item: item["score"], reverse=True)[: max(1, top_k)]
             return {"symptom": symptom.strip(), "syndromes": results}
         except Exception:
-            return self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
+            return local_result
 
     def _use_primary(self) -> bool:
         return self.primary_store.ready()
@@ -813,9 +995,9 @@ _graph_engine: GraphQueryEngine | NebulaPrimaryGraphEngine | None = None
 def get_graph_engine() -> GraphQueryEngine | NebulaPrimaryGraphEngine:
     global _graph_engine
     if _graph_engine is None:
-        selected_backend = os.getenv("GRAPH_BACKEND", "nebula").strip().lower()
+        selected_backend = os.getenv("GRAPH_BACKEND", "sqlite").strip().lower()
         fallback_engine = GraphQueryEngine()
-        if selected_backend == "nebula":
+        if selected_backend in {"nebula", "sqlite"}:
             _graph_engine = NebulaPrimaryGraphEngine(
                 primary_store=NebulaGraphStore(),
                 fallback_engine=fallback_engine,

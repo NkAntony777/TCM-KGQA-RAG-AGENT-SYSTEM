@@ -5,6 +5,7 @@ from typing import Literal
 
 from router.compare_entity_refiner import CompareEntityRefiner
 from router.tcm_intent_classifier import GraphQueryKind, QueryAnalysis, RouteName, analyze_tcm_query
+from services.common.evidence_payloads import normalize_book_label
 from services.qa_service.alias_service import get_runtime_alias_service
 
 MODERN_RESEARCH_KEYWORDS = (
@@ -51,6 +52,7 @@ class RetrievalStrategy:
     path_end: str = ""
     compare_entities: list[str] = field(default_factory=list)
     entity_aliases: list[str] = field(default_factory=list)
+    preferred_books: list[str] = field(default_factory=list)
     predicate_allowlist: list[str] = field(default_factory=list)
     predicate_blocklist: list[str] = field(default_factory=list)
     graph_candidate_k: int = 24
@@ -128,6 +130,7 @@ def derive_retrieval_strategy(
     predicate_allowlist: list[str] = []
     predicate_blocklist: list[str] = []
     sources = _default_sources(route_hint)
+    preferred_books = _preferred_books_from_analysis(resolved)
 
     if intent == "formula_composition":
         preferred_route = "graph"
@@ -180,6 +183,7 @@ def derive_retrieval_strategy(
         symptom_name=symptom_name,
         compare_entities=compare_entities,
         entity_aliases=entity_aliases,
+        preferred_books=preferred_books,
         predicate_allowlist=predicate_allowlist,
         predicate_blocklist=predicate_blocklist,
         graph_candidate_k=graph_candidate_k,
@@ -240,6 +244,14 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
             paths.extend([f"entity://{entity}/{predicate}" for predicate in strategy.predicate_allowlist])
         else:
             paths.append(f"entity://{entity}/*")
+        for alias_name in strategy.entity_aliases[:2]:
+            alias_text = str(alias_name).strip()
+            if not alias_text or alias_text == entity:
+                continue
+            if strategy.predicate_allowlist:
+                paths.extend([f"entity://{alias_text}/{predicate}" for predicate in strategy.predicate_allowlist])
+            else:
+                paths.append(f"entity://{alias_text}/*")
 
     if strategy.symptom_name:
         paths.append(f"symptom://{strategy.symptom_name}/syndrome_chain")
@@ -247,6 +259,8 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
     for entity in analysis.matched_entities:
         if "source_book" in entity.types:
             paths.append(f"book://{entity.name}/*")
+    for book_name in strategy.preferred_books:
+        paths.append(f"book://{book_name}/*")
 
     if "qa_structured_index" in strategy.sources and strategy.graph_query_text:
         paths.append(f"qa://{strategy.graph_query_text}/similar")
@@ -254,6 +268,20 @@ def _build_evidence_paths(strategy: RetrievalStrategy, analysis: QueryAnalysis) 
         paths.append(f"caseqa://{strategy.graph_query_text}/similar")
 
     return list(dict.fromkeys(paths))
+
+
+def _preferred_books_from_analysis(analysis: QueryAnalysis) -> list[str]:
+    books: list[str] = []
+    seen = set()
+    for entity in analysis.matched_entities:
+        if "source_book" not in entity.types:
+            continue
+        for candidate in (str(entity.name).strip(), normalize_book_label(str(entity.name).strip())):
+            if not candidate or candidate in seen:
+                continue
+            seen.add(candidate)
+            books.append(candidate)
+    return books
 
 
 def _should_use_case_qa(*, text: str, intent: str, analysis: QueryAnalysis) -> bool:

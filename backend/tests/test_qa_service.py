@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from services.qa_service.engine import QAService, _apply_origin_action_policy, _factual_evidence_from_payload, _identify_evidence_gaps, _plan_followup_actions
-from services.qa_service.evidence import _coverage_gaps_from_state, _init_coverage_state, _update_coverage_state
+from services.qa_service.evidence import _coverage_gaps_from_state, _deep_quality_gaps_from_state, _init_coverage_state, _update_coverage_state
 from services.qa_service.planner_support import _pick_best_source_path
 from services.qa_service.prompts import _build_planner_user_prompt, _requested_answer_dimensions
 
@@ -1114,6 +1114,43 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertNotIn("path_reasoning", gaps)
+
+    def test_deep_quality_gap_requires_source_completion_for_compare_queries(self) -> None:
+        payload = {
+            "query_analysis": {
+                "dominant_intent": "compare_entities",
+                "compare_entities": ["小柴胡汤", "柴胡桂枝干姜汤"],
+            },
+            "retrieval_strategy": {
+                "intent": "compare_entities",
+                "entity_name": "小柴胡汤",
+                "compare_entities": ["小柴胡汤", "柴胡桂枝干姜汤"],
+                "sources": ["graph_sqlite", "classic_docs"],
+            },
+        }
+        evidence_paths = ["entity://小柴胡汤/*", "entity://柴胡桂枝干姜汤/*", "book://伤寒论/*"]
+        state = _init_coverage_state(
+            query="请比较小柴胡汤与柴胡桂枝干姜汤的病机差异，并给出处佐证。",
+            payload=payload,
+            evidence_paths=evidence_paths,
+        )
+        _update_coverage_state(
+            state,
+            new_factual_evidence=[
+                {
+                    "source_type": "graph",
+                    "source": "伤寒论/辨少阳病脉证并治",
+                    "snippet": "小柴胡汤和解少阳，柴胡桂枝干姜汤偏于温化水饮。",
+                    "predicate": "功效",
+                    "target": "和解少阳",
+                    "source_book": "伤寒论",
+                    "source_chapter": "辨少阳病脉证并治",
+                    "anchor_entity": "小柴胡汤",
+                }
+            ],
+        )
+
+        self.assertEqual(_deep_quality_gaps_from_state(state), [])
 
     def test_incremental_coverage_state_matches_gap_identifier(self) -> None:
         payload = {

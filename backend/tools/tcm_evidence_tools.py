@@ -138,17 +138,18 @@ def _alias_items(entity_name: str) -> list[dict[str, Any]]:
 def _filter_items_by_book(items: list[dict[str, Any]], *, book_name: str) -> list[dict[str, Any]]:
     if not book_name:
         return items
+    normalized_book = _normalize_book_label(book_name)
     filtered: list[dict[str, Any]] = []
     for item in items:
-        haystack = " ".join(
-            [
-                str(item.get("source", "")),
-                str(item.get("source_file", "")),
-                str(item.get("source_book", "")),
-                str(item.get("snippet", "")),
-            ]
-        )
-        if book_name in haystack:
+        haystack_parts = [
+            str(item.get("source", "")),
+            str(item.get("source_file", "")),
+            str(item.get("source_book", "")),
+            str(item.get("snippet", "")),
+        ]
+        haystack = " ".join(haystack_parts)
+        normalized_haystack = " ".join(_normalize_book_label(part) for part in haystack_parts if str(part).strip())
+        if book_name in haystack or (normalized_book and normalized_book in normalized_haystack):
             filtered.append(item)
     return filtered or items
 
@@ -190,7 +191,7 @@ def _source_scope_specs(paths: list[str]) -> list[tuple[str, str]]:
             continue
         body = normalized.removeprefix("book://")
         book_name, _, hint = body.partition("/")
-        book_name = book_name.strip()
+        book_name = _normalize_book_label(book_name.strip())
         hint_text = hint.replace("*", "").strip("/")
         if book_name:
             specs.append((book_name, hint_text))

@@ -1,0 +1,280 @@
+{
+  "generated_at": "2026-04-10 12:35:38 +0800",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "top_issues": [],
+  "by_category": {
+    "entity_resolution": {
+      "total": 2,
+      "failed": 0
+    },
+    "relation_ranking": {
+      "total": 5,
+      "failed": 0
+    },
+    "source_aware_ranking": {
+      "total": 2,
+      "failed": 0
+    },
+    "syndrome_chain": {
+      "total": 1,
+      "failed": 0
+    }
+  },
+  "failures": [],
+  "results": [
+    {
+      "id": "graph_reg_001",
+      "category": "entity_resolution",
+      "kind": "resolve_entity",
+      "passed": true,
+      "issues": [],
+      "resolved_entities": [
+        "六味地黄丸",
+        "六味地黄",
+        "地黄丸",
+        "六味",
+        "黄丸",
+        "六味地黄丸料",
+        "六味地黄丸汤",
+        "六味地黄丸煎服",
+        "六味地黄丸加五味",
+        "六味地黄丸加味方"
+      ]
+    },
+    {
+      "id": "graph_reg_002",
+      "category": "entity_resolution",
+      "kind": "resolve_entity",
+      "passed": true,
+      "issues": [],
+      "resolved_entities": [
+        "熟地黄",
+        "熟地",
+        "地黄",
+        "熟地黄末",
+        "熟地黄炭",
+        "熟地黄连",
+        "大熟地黄",
+        "干熟地黄",
+        "怀熟地黄",
+        "淮熟地黄"
+      ]
+    },
+    {
+      "id": "graph_reg_003",
+      "category": "relation_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "六味地黄丸",
+        "canonical_name": "六味地黄丸",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "使用药材"
+      ],
+      "targets": [
+        "地黄",
+        "山茱萸",
+        "泽泻",
+        "熟地黄",
+        "牡丹皮",
+        "白茯苓"
+      ],
+      "books": [
+        "医方考",
+        "医方论"
+      ],
+      "total": 6
+    },
+    {
+      "id": "graph_reg_004",
+      "category": "relation_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "六味地黄丸",
+        "canonical_name": "六味地黄丸",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "治疗证候"
+      ],
+      "targets": [
+        "下消",
+        "肝气热而不能主血",
+        "肝经虚热",
+        "肝经血少",
+        "肝肾不足"
+      ],
+      "books": [
+        "医方考",
+        "医方论",
+        "女科证治准绳",
+        "疠疡机要"
+      ],
+      "total": 5
+    },
+    {
+      "id": "graph_reg_005",
+      "category": "relation_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "六君子汤",
+        "canonical_name": "六君子汤",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "治疗证候"
+      ],
+      "targets": [
+        "协热下利",
+        "气虚兼痰饮证"
+      ],
+      "books": [
+        "删补名医方论",
+        "女科证治准绳"
+      ],
+      "total": 2
+    },
+    {
+      "id": "graph_reg_006",
+      "category": "source_aware_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "六味地黄丸",
+        "canonical_name": "六味地黄丸",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "使用药材",
+        "别名",
+        "功效",
+        "属于范畴",
+        "治疗证候"
+      ],
+      "targets": [
+        "三阴并治",
+        "地黄丸",
+        "泽泻",
+        "肝肾不足",
+        "补养之剂"
+      ],
+      "books": [
+        "保婴撮要",
+        "医方论"
+      ],
+      "total": 5
+    },
+    {
+      "id": "graph_reg_007",
+      "category": "source_aware_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "六味地黄丸",
+        "canonical_name": "六味地黄丸",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "别名",
+        "功效",
+        "治疗证候"
+      ],
+      "targets": [
+        "六味丸",
+        "地黄丸",
+        "滋肾水",
+        "肝肾不足",
+        "肝血虚"
+      ],
+      "books": [
+        "保婴撮要",
+        "医方论",
+        "妇人规"
+      ],
+      "total": 5
+    },
+    {
+      "id": "graph_reg_010",
+      "category": "syndrome_chain",
+      "kind": "syndrome_chain",
+      "passed": true,
+      "issues": [],
+      "syndromes": [
+        "太阳病无阳证",
+        "少阴病",
+        "百合病",
+        "脏厥"
+      ]
+    },
+    {
+      "id": "graph_reg_011",
+      "category": "relation_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "升阳益胃汤",
+        "canonical_name": "升阳益胃汤",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "使用药材"
+      ],
+      "targets": [
+        "人参",
+        "半夏",
+        "柴胡",
+        "泽泻",
+        "独活",
+        "白术",
+        "羌活",
+        "防风"
+      ],
+      "books": [
+        "医方考",
+        "古今名医方论"
+      ],
+      "total": 8
+    },
+    {
+      "id": "graph_reg_012",
+      "category": "relation_ranking",
+      "kind": "entity_lookup",
+      "passed": true,
+      "issues": [],
+      "entity": {
+        "name": "四君子汤",
+        "canonical_name": "四君子汤",
+        "entity_type": "formula"
+      },
+      "predicates": [
+        "使用药材"
+      ],
+      "targets": [
+        "人参",
+        "炙甘草",
+        "甘草",
+        "白术",
+        "白茯苓",
+        "茯苓"
+      ],
+      "books": [
+        "外科心法要诀",
+        "本草纲目",
+        "竹林女科证治"
+      ],
+      "total": 6
+    }
+  ]
+}
