@@ -78,6 +78,13 @@ class TCMIntentClassifierTests(unittest.TestCase):
         self.assertEqual(analysis.graph_query_kind, "entity")
         self.assertEqual(analysis.route_hint, "hybrid")
 
+    def test_formula_regex_strips_instruction_noise_prefix(self) -> None:
+        analysis = analyze_tcm_query(
+            "《灵枢·卫气行》论述卫气昼行于阳、夜行于阴的节律。请分析半夏秫米汤通阴阳的配伍原理，并说明其与现代睡眠节律调节的对应机制。"
+        )
+        self.assertIn("半夏秫米汤", analysis.entity_types())
+        self.assertEqual(analysis.primary_entity, "半夏秫米汤")
+
 
 if __name__ == "__main__":
     unittest.main()

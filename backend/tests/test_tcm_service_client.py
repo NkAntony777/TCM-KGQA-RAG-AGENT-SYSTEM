@@ -7,6 +7,7 @@ from tools.tcm_service_client import (
     call_graph_entity_lookup,
     call_retrieval_case_qa,
     call_retrieval_hybrid,
+    service_health_snapshot,
 )
 
 
@@ -37,7 +38,7 @@ class ServiceClientLocalFallbackTests(unittest.TestCase):
         ):
             result = call_graph_entity_lookup("六味地黄丸", top_k=6, predicate_allowlist=["使用药材"])
 
-        self.assertEqual(result["backend"], "local-fallback")
+        self.assertEqual(result["backend"], "local-engine")
         self.assertEqual(result["code"], 0)
         self.assertEqual(result["data"]["relations"][0]["target"], "熟地黄")
 
@@ -75,7 +76,7 @@ class ServiceClientLocalFallbackTests(unittest.TestCase):
                 allowed_file_path_prefixes=["classic://"],
             )
 
-        self.assertEqual(result["backend"], "local-fallback")
+        self.assertEqual(result["backend"], "local-engine")
         self.assertEqual(result["code"], 0)
         self.assertEqual(result["data"]["retrieval_mode"], "files_first")
         self.assertEqual(result["data"]["chunks"][0]["source_file"], "133-小儿药证直诀.txt")
@@ -117,7 +118,7 @@ class ServiceClientLocalFallbackTests(unittest.TestCase):
                 search_mode="hybrid",
             )
 
-        self.assertEqual(result["backend"], "local-fallback")
+        self.assertEqual(result["backend"], "local-engine")
         self.assertEqual(result["code"], 0)
         self.assertEqual(result["data"]["retrieval_mode"], "files_first")
         self.assertEqual(len(fake_engine.calls), 2)
@@ -155,10 +156,18 @@ class ServiceClientLocalFallbackTests(unittest.TestCase):
                 candidate_k=12,
             )
 
-        self.assertEqual(result["backend"], "local-fallback")
+        self.assertEqual(result["backend"], "local-engine")
         self.assertEqual(result["code"], 0)
         self.assertEqual(result["data"]["retrieval_mode"], "case_qa_local")
         self.assertIn("逍遥散", result["data"]["chunks"][0]["answer"])
+
+    def test_service_health_snapshot_skips_sidecar_probe_in_local_mode(self) -> None:
+        with patch("tools.tcm_service_client._health", side_effect=AssertionError("should not probe")):
+            snapshot = service_health_snapshot()
+
+        self.assertEqual(snapshot["execution_mode"], "local")
+        self.assertTrue(snapshot["sidecar_probe_skipped"])
+        self.assertEqual(snapshot["graph_backend"], "local-engine")
 
 
 if __name__ == "__main__":

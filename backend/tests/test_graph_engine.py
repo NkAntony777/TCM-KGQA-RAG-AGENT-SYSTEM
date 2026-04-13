@@ -19,6 +19,7 @@ from pathlib import Path
 from services.graph_service.engine import GraphQueryEngine
 from services.graph_service.engine import GraphServiceSettings
 from services.graph_service.engine import _ordered_path_neighbors, _search_ranked_paths
+from services.graph_service.relation_governance import expand_filter_predicates
 from services.graph_service.runtime_store import RuntimeGraphStore
 from services.graph_service.runtime_store import RuntimeGraphStoreSettings
 from services.graph_service.engine import get_graph_engine
@@ -147,6 +148,107 @@ class TestEntityLookup(unittest.TestCase):
         predicates = _predicates(result["relations"])
         self.assertEqual(predicates, {"使用药材"})
 
+    def test_lookup_predicate_allowlist_supports_family_name(self) -> None:
+        """关系族应能在查询层展开，不要求调用方显式枚举所有原始谓词。"""
+        result = self.engine.entity_lookup(
+            "六味地黄丸",
+            top_k=12,
+            predicate_allowlist=["主治族"],
+        )
+        predicates = _predicates(result["relations"])
+        self.assertTrue(predicates)
+        self.assertTrue(predicates <= {"治疗证候", "治疗疾病", "治疗症状"})
+        for relation in result["relations"]:
+            self.assertEqual(relation.get("predicate_family"), "主治族")
+
+    def test_lookup_marks_ontology_boundary_mismatch_for_out_of_schema_relation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            sample_path = root / "sample_graph.json"
+            runtime_path = root / "graph_runtime.json"
+            evidence_path = root / "graph_runtime.evidence.jsonl"
+
+            sample_path.write_text("[]", encoding="utf-8")
+            runtime_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "fact_id": "f1",
+                            "fact_ids": ["f1"],
+                            "subject": "HT皮疮",
+                            "predicate": "使用药材",
+                            "object": "大黄",
+                            "subject_type": "disease",
+                            "object_type": "herb",
+                            "source_book": "282-医门补要",
+                            "source_chapter": "282-医门补要_正文",
+                        }
+                    ],
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            evidence_path.write_text("", encoding="utf-8")
+
+            engine = GraphQueryEngine(
+                GraphServiceSettings(
+                    backend_dir=root,
+                    sample_graph_path=sample_path,
+                    runtime_graph_path=runtime_path,
+                    runtime_evidence_path=evidence_path,
+                )
+            )
+
+            result = engine.entity_lookup("HT皮疮", top_k=5)
+
+            self.assertEqual(result["entity"]["entity_type"], "disease")
+            self.assertEqual(result["relations"][0]["predicate"], "使用药材")
+            self.assertFalse(result["relations"][0]["ontology_boundary_ok"])
+            self.assertEqual(result["relations"][0]["ontology_boundary_tier"], "acceptable_polysemy")
+
+    def test_lookup_exposes_review_needed_tier_for_formula_to_formula_recommendation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            sample_path = root / "sample_graph.json"
+            runtime_path = root / "graph_runtime.json"
+            evidence_path = root / "graph_runtime.evidence.jsonl"
+
+            sample_path.write_text("[]", encoding="utf-8")
+            runtime_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "fact_id": "f1",
+                            "fact_ids": ["f1"],
+                            "subject": "三焦咳",
+                            "predicate": "推荐方剂",
+                            "object": "小青龙汤",
+                            "subject_type": "formula",
+                            "object_type": "formula",
+                            "source_book": "395-凌临灵方",
+                            "source_chapter": "395-凌临灵方_正文",
+                        }
+                    ],
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            evidence_path.write_text("", encoding="utf-8")
+
+            engine = GraphQueryEngine(
+                GraphServiceSettings(
+                    backend_dir=root,
+                    sample_graph_path=sample_path,
+                    runtime_graph_path=runtime_path,
+                    runtime_evidence_path=evidence_path,
+                )
+            )
+
+            result = engine.entity_lookup("三焦咳", top_k=5)
+
+            self.assertEqual(result["relations"][0]["predicate"], "推荐方剂")
+            self.assertEqual(result["relations"][0]["ontology_boundary_tier"], "review_needed")
+
 
 class TestPathQuery(unittest.TestCase):
     """路径查询：验证 runtime 图中实际存在的连通路径。"""
@@ -267,6 +369,18 @@ class TestPathGuardrails(unittest.TestCase):
         self.assertEqual(result["paths"][0]["nodes"], ["起点", "桥节点", "终点"])
         self.assertLessEqual(calls.get("起点", 0) + calls.get("终点", 0), 2)
 
+    def test_ordered_path_neighbors_skips_text_heavy_display_edges(self) -> None:
+        rows = [
+            {"predicate": "食忌", "target": "忌猪肉", "confidence": 1.0},
+            {"predicate": "出处", "target": "伤寒论", "confidence": 1.0},
+            {"predicate": "推荐方剂", "target": "真节点", "confidence": 0.8},
+        ]
+
+        ordered = _ordered_path_neighbors(rows, target_set={"真节点"}, fanout_cap=5)
+
+        self.assertEqual(ordered, ["真节点"])
+
+
 
 class TestRelationRankingSignals(unittest.TestCase):
     @classmethod
@@ -296,6 +410,12 @@ class TestRelationRankingSignals(unittest.TestCase):
         other_score = self.engine._relation_score(other_relation, "《小儿药证直诀》中六味地黄丸的出处依据是什么")  # noqa: SLF001
 
         self.assertGreater(matching_score, other_score)
+
+    def test_expand_filter_predicates_supports_normalized_and_parent_targets(self) -> None:
+        expanded = expand_filter_predicates(["拉丁学名", "归经"])
+        self.assertIn("药材基源", expanded)
+        self.assertIn("归经", expanded)
+        self.assertIn("药性特征", expanded)
 
 
 class TestRuntimeEntityResolutionRanking(unittest.TestCase):
@@ -458,6 +578,50 @@ class TestRuntimeEvidence(unittest.TestCase):
             self.assertEqual(rel["source_text"], "测试方以甘草为君。")
             self.assertAlmostEqual(rel["confidence"], 0.95, places=2)
 
+    def test_normalized_predicate_allowlist_matches_logical_mapping(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            sample_path = root / "sample_graph.json"
+            runtime_path = root / "graph_runtime.json"
+            evidence_path = root / "graph_runtime.evidence.jsonl"
+
+            sample_path.write_text("[]", encoding="utf-8")
+            runtime_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "fact_id": "fact-origin-001",
+                            "fact_ids": ["fact-origin-001"],
+                            "subject": "黄芪",
+                            "predicate": "药材基源",
+                            "object": "Astragalus membranaceus",
+                            "subject_type": "herb",
+                            "object_type": "origin",
+                            "source_book": "TCM-MKG",
+                            "source_chapter": "D8_CHP_PO",
+                        }
+                    ],
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            evidence_path.write_text("", encoding="utf-8")
+
+            engine = GraphQueryEngine(
+                GraphServiceSettings(
+                    backend_dir=root,
+                    sample_graph_path=sample_path,
+                    runtime_graph_path=runtime_path,
+                    runtime_evidence_path=evidence_path,
+                )
+            )
+
+            result = engine.entity_lookup("黄芪", top_k=5, predicate_allowlist=["拉丁学名"])
+
+            self.assertEqual(result["entity"]["canonical_name"], "黄芪")
+            self.assertEqual(_predicates(result["relations"]), {"药材基源"})
+            self.assertEqual(result["relations"][0].get("normalized_predicate"), "拉丁学名")
+
     def test_runtime_evidence_count_matches_jsonl(self) -> None:
         """真实 runtime 引擎的 evidence_count 应与 JSONL 行数一致。"""
         engine = get_graph_engine()
@@ -468,6 +632,66 @@ class TestRuntimeEvidence(unittest.TestCase):
         # 简单合理性断言：evidence 数 > 0 且非无限大
         self.assertGreater(evidence_count, 0)
         self.assertGreater(node_count, 0)
+
+
+class TestRuntimePathNeighbors(unittest.TestCase):
+    def test_path_neighbors_prioritize_high_value_predicates_and_dedupe_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            sample_path = root / "sample_graph.json"
+            runtime_path = root / "graph_runtime.json"
+            evidence_path = root / "graph_runtime.evidence.jsonl"
+
+            sample_path.write_text("[]", encoding="utf-8")
+            runtime_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "fact_id": "f1",
+                            "fact_ids": ["f1"],
+                            "subject": "测试药",
+                            "predicate": "属于范畴",
+                            "object": "杂项A",
+                            "subject_type": "herb",
+                            "object_type": "other",
+                        },
+                        {
+                            "fact_id": "f2",
+                            "fact_ids": ["f2"],
+                            "subject": "测试药",
+                            "predicate": "治疗证候",
+                            "object": "核心证候",
+                            "subject_type": "herb",
+                            "object_type": "syndrome",
+                        },
+                        {
+                            "fact_id": "f3",
+                            "fact_ids": ["f3"],
+                            "subject": "测试药",
+                            "predicate": "功效",
+                            "object": "核心证候",
+                            "subject_type": "herb",
+                            "object_type": "syndrome",
+                        },
+                    ],
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            evidence_path.write_text("", encoding="utf-8")
+
+            store = RuntimeGraphStore.from_graph_paths(
+                graph_path=runtime_path,
+                evidence_path=evidence_path,
+                sample_graph_path=sample_path,
+                sample_evidence_path=None,
+            )
+            neighbors = store.path_neighbors("测试药", limit=3)
+
+        self.assertEqual(neighbors[0]["target"], "核心证候")
+        self.assertEqual(neighbors[0]["predicate"], "治疗证候")
+        targets = [item["target"] for item in neighbors]
+        self.assertEqual(targets.count("核心证候"), 1)
 
 
 if __name__ == "__main__":

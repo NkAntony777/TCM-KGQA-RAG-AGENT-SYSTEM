@@ -1,0 +1,603 @@
+{
+  "generated_at": "2026-04-13 21:26:06 +0800",
+  "db_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\graph_service\\data\\graph_runtime.db",
+  "summary": {
+    "total_rows": 2748,
+    "subtype_counts": {
+      "processing_or_preparation": 230,
+      "formula_component_listing": 737,
+      "other_uncertain": 1752,
+      "pairing_or_external_mix": 29
+    }
+  },
+  "subtypes": {
+    "processing_or_preparation": {
+      "count": 230,
+      "top_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 68
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 18
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 16
+        },
+        {
+          "source_book": "065-卫生易简方",
+          "count": 16
+        },
+        {
+          "source_book": "603-医碥",
+          "count": 14
+        },
+        {
+          "source_book": "117-本草简要方",
+          "count": 8
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 7
+        },
+        {
+          "source_book": "587-石室秘录",
+          "count": 7
+        },
+        {
+          "source_book": "007-本草衍义",
+          "count": 6
+        },
+        {
+          "source_book": "268-伤科汇纂",
+          "count": 6
+        }
+      ],
+      "samples": [
+        {
+          "signature": "榆仁酱||使用药材||榆仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "9d7b9a12c0780070",
+          "subject": "榆仁酱",
+          "object": "榆仁",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "造法∶取榆仁水浸一伏时",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||水银||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "5f347e86ca0ca73a",
+          "subject": "水银粉",
+          "object": "水银",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "升炼轻粉法∶用水银一两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆黄||使用药材||黑豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "346f46292191f573",
+          "subject": "豆黄",
+          "object": "黑豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "造法∶用黑豆一斗蒸熟",
+          "confidence": 0.99
+        },
+        {
+          "signature": "云母||使用药材||沉香||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "d47da0449fb716f8",
+          "subject": "云母",
+          "object": "沉香",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "取沉香一两捣作末，以天池水煎沉香汤三升以来，分为三度，再淘云母浆了",
+          "confidence": 0.98
+        },
+        {
+          "signature": "玄明粉||使用药材||甘草||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "879086b1d1225861",
+          "subject": "玄明粉",
+          "object": "甘草",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "后人因此制为玄明粉，炼多遍，佐以甘草",
+          "confidence": 0.98
+        },
+        {
+          "signature": "玄明粉||使用药材||芒硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "9d4026b8b3dcd481",
+          "subject": "玄明粉",
+          "object": "芒硝",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "以朴硝、芒硝、英硝同甘草煎过，鼎罐升煅，则为玄明粉",
+          "confidence": 0.98
+        },
+        {
+          "signature": "玄明粉||使用药材||英硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "ddf37448ace2ef56",
+          "subject": "玄明粉",
+          "object": "英硝",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "以朴硝、芒硝、英硝同甘草煎过，鼎罐升煅，则为玄明粉",
+          "confidence": 0.98
+        },
+        {
+          "signature": "粉霜||使用药材||汞粉||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "d1a99ca300fae635",
+          "subject": "粉霜",
+          "object": "汞粉",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "升炼法∶用真汞粉一两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "胆星||使用药材||天南星||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "956e88861feeb051",
+          "subject": "胆星",
+          "object": "天南星",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "造胆星法∶以南星生研末，腊月取黄牯牛胆汁和剂",
+          "confidence": 0.98
+        },
+        {
+          "signature": "轻粉||使用药材||水银||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "80272cda8479a8d3",
+          "subject": "轻粉",
+          "object": "水银",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "水银乃至阴毒物，因火丹砂而出，加以盐、矾炼而为轻粉",
+          "confidence": 0.98
+        }
+      ]
+    },
+    "formula_component_listing": {
+      "count": 737,
+      "top_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 170
+        },
+        {
+          "source_book": "010-滇南本草",
+          "count": 48
+        },
+        {
+          "source_book": "399-张聿青医案",
+          "count": 42
+        },
+        {
+          "source_book": "581-兰室秘藏",
+          "count": 40
+        },
+        {
+          "source_book": "378-王氏医案绎注",
+          "count": 23
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 23
+        },
+        {
+          "source_book": "603-医碥",
+          "count": 23
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 19
+        },
+        {
+          "source_book": "249-周慎斋遗书",
+          "count": 18
+        },
+        {
+          "source_book": "416-续名医类案",
+          "count": 17
+        }
+      ],
+      "samples": [
+        {
+          "signature": "水银粉||使用药材||焰硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "7fee991819e53bf3",
+          "subject": "水银粉",
+          "object": "焰硝",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "先以皂矾四两，盐一两，焰硝五钱",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||白矾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "01edb8c2ea4fee1f",
+          "subject": "水银粉",
+          "object": "白矾",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "白矾二两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||皂矾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "07bd53bdff2ef2ea",
+          "subject": "水银粉",
+          "object": "皂矾",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "又法∶水银一两，皂矾七钱",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||食盐||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "0310b7833f2e5725",
+          "subject": "水银粉",
+          "object": "食盐",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "食盐一两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||杉木炭||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "1b5d2ee671c5ba1c",
+          "subject": "火药",
+          "object": "杉木炭",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||焰硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "139a6a3949317cb5",
+          "subject": "火药",
+          "object": "焰硝",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||硫黄||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "919d0043b1859866",
+          "subject": "火药",
+          "object": "硫黄",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "土黄||使用药材||巴豆仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "688cbe3076544dc0",
+          "subject": "土黄",
+          "object": "巴豆仁",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "木鳖子仁、巴豆仁各半两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||木鳖子仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b58cc2926fa105b6",
+          "subject": "土黄",
+          "object": "木鳖子仁",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "木鳖子仁、巴豆仁各半两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||砒石||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "43d180351493ca58",
+          "subject": "土黄",
+          "object": "砒石",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "用砒石二两",
+          "confidence": 0.98
+        }
+      ]
+    },
+    "other_uncertain": {
+      "count": 1752,
+      "top_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 572
+        },
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 95
+        },
+        {
+          "source_book": "700.李培生老中医经验集",
+          "count": 70
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 61
+        },
+        {
+          "source_book": "399-张聿青医案",
+          "count": 52
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 51
+        },
+        {
+          "source_book": "020-本草经解",
+          "count": 46
+        },
+        {
+          "source_book": "017-本草新编",
+          "count": 45
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 43
+        },
+        {
+          "source_book": "010-滇南本草",
+          "count": 41
+        }
+      ],
+      "samples": [
+        {
+          "signature": "玉屑||使用药材||玉||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "f26b1dedc1be6812",
+          "subject": "玉屑",
+          "object": "玉",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "玉屑是以玉为屑，非别一物也",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||泥豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "98a86ae0cca471e5",
+          "subject": "豆腐",
+          "object": "泥豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||白豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "c48326c357ce5f15",
+          "subject": "豆腐",
+          "object": "白豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||绿豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "486b32af51528f43",
+          "subject": "豆腐",
+          "object": "绿豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||豌豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "6f41b1a851c6d95c",
+          "subject": "豆腐",
+          "object": "豌豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||黄豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "031bb4baf0d29f95",
+          "subject": "豆腐",
+          "object": "黄豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||黑豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "da0fce7aeb691d1c",
+          "subject": "豆腐",
+          "object": "黑豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "仙灵脾酒||使用药材||仙灵脾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b22d6a591292b105",
+          "subject": "仙灵脾酒",
+          "object": "仙灵脾",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "仙灵脾一斤，袋盛，浸无灰",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||秫||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "af61dd1e0d3a5644",
+          "subject": "咂嘛酒",
+          "object": "秫",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||稻||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "61b7511176c532ae",
+          "subject": "咂嘛酒",
+          "object": "稻",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        }
+      ]
+    },
+    "pairing_or_external_mix": {
+      "count": 29,
+      "top_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 6
+        },
+        {
+          "source_book": "627-顾松园医镜",
+          "count": 6
+        },
+        {
+          "source_book": "017-本草新编",
+          "count": 4
+        },
+        {
+          "source_book": "019-本经逢原",
+          "count": 4
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 2
+        },
+        {
+          "source_book": "023-本草纲目拾遗",
+          "count": 2
+        },
+        {
+          "source_book": "004-食疗本草",
+          "count": 1
+        },
+        {
+          "source_book": "259-秘传刘伯温家藏接骨金疮禁方",
+          "count": 1
+        },
+        {
+          "source_book": "255-急救广生集",
+          "count": 1
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 1
+        }
+      ],
+      "samples": [
+        {
+          "signature": "糯米醋||使用药材||小麦大曲||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "ac2e16c01ce8d99a",
+          "subject": "糯米醋",
+          "object": "小麦大曲",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "用六月六日造成小麦大曲和匀",
+          "confidence": 0.98
+        },
+        {
+          "signature": "巴豆||使用药材||松脂||004-食疗本草||004-食疗本草_正文",
+          "fact_id": "5f7b5ce115d6cd2a",
+          "subject": "巴豆",
+          "object": "松脂",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文",
+          "source_text_preview": "巴豆十粒，去壳生用。松脂同捣，绵裹塞耳",
+          "confidence": 0.95
+        },
+        {
+          "signature": "九牛草||使用药材||甘草||011-本草品汇精要||011-本草品汇精要_正文",
+          "fact_id": "3a726baed944292c",
+          "subject": "九牛草",
+          "object": "甘草",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文",
+          "source_text_preview": "九牛草与甘草同煎服解风劳治身体痛",
+          "confidence": 0.95
+        },
+        {
+          "signature": "巴豆||使用药材||蜣螂||259-秘传刘伯温家藏接骨金疮禁方||259-秘传刘伯温家藏接骨金疮禁方_正文",
+          "fact_id": "b02053d5691ca359",
+          "subject": "巴豆",
+          "object": "蜣螂",
+          "source_book": "259-秘传刘伯温家藏接骨金疮禁方",
+          "source_chapter": "259-秘传刘伯温家藏接骨金疮禁方_正文",
+          "source_text_preview": "用巴豆、蜣螂同捣敷之",
+          "confidence": 0.95
+        },
+        {
+          "signature": "人参||使用药材||熟附子||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b210af24d38511c5",
+          "subject": "人参",
+          "object": "熟附子",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "甚者，加熟附子同煎。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "大豆酱||使用药材||大豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "760b98fdc6cf4a20",
+          "subject": "大豆酱",
+          "object": "大豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "大豆酱法∶用豆炒磨成粉，一斗入面三斗和匀",
+          "confidence": 0.9
+        },
+        {
+          "signature": "木鳖子||使用药材||大黄||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "3c141511de189755",
+          "subject": "木鳖子",
+          "object": "大黄",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "木鳖子（耳卒热肿，同小豆、大黄，油调涂。）",
+          "confidence": 0.9
+        },
+        {
+          "signature": "木鳖子||使用药材||小豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "2aa413e4f93123f3",
+          "subject": "木鳖子",
+          "object": "小豆",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "木鳖子（耳卒热肿，同小豆、大黄，油调涂。）",
+          "confidence": 0.9
+        },
+        {
+          "signature": "雌苦楝根||使用药材||糯米||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "c28e7b1c23aa9f6f",
+          "subject": "雌苦楝根",
+          "object": "糯米",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文",
+          "source_text_preview": "雌者入服食，每一两可入糯米五十粒同煎，杀毒",
+          "confidence": 0.9
+        },
+        {
+          "signature": "苦花子||使用药材||梗叶||023-本草纲目拾遗||023-本草纲目拾遗_正文",
+          "fact_id": "027800f562ba43fb",
+          "subject": "苦花子",
+          "object": "梗叶",
+          "source_book": "023-本草纲目拾遗",
+          "source_chapter": "023-本草纲目拾遗_正文",
+          "source_text_preview": "入药梗叶并用",
+          "confidence": 0.9
+        }
+      ]
+    }
+  }
+}

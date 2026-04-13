@@ -14,6 +14,29 @@ _RUNTIME_STORE_LOCK = threading.RLock()
 SQLITE_PARAM_BATCH = 800
 T = TypeVar("T")
 FORMULA_SUFFIXES = ("丸", "散", "汤", "饮", "膏", "丹", "方", "颗粒", "胶囊")
+PATH_PRIORITY_ORDER: tuple[str, ...] = (
+    "治疗证候",
+    "功效",
+    "使用药材",
+    "治疗症状",
+    "治法",
+    "治疗疾病",
+    "推荐方剂",
+    "归经",
+    "药性",
+    "别名",
+    "属于范畴",
+    "常见症状",
+)
+
+
+def _path_priority_case_sql(column: str = "predicate") -> str:
+    parts = ["CASE"]
+    remaining = len(PATH_PRIORITY_ORDER)
+    for index, predicate in enumerate(PATH_PRIORITY_ORDER):
+        parts.append(f" WHEN {column} = '{predicate}' THEN {remaining - index}")
+    parts.append(" ELSE 0 END")
+    return "".join(parts)
 
 
 def _normalize_text(value: Any) -> str:
@@ -556,6 +579,91 @@ class RuntimeGraphStore:
             rows.append(item)
         return rows
 
+    def path_neighbors(self, entity_name: str, *, limit: int = 24) -> list[dict[str, Any]]:
+        self.ensure_ready()
+        entity = _normalize_text(entity_name)
+        if not entity:
+            return []
+        priority_case = _path_priority_case_sql("predicate")
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                f"""
+                WITH candidates AS (
+                    SELECT
+                        predicate,
+                        object AS target,
+                        object_type AS target_type,
+                        'out' AS direction,
+                        source_book,
+                        source_chapter,
+                        fact_id,
+                        fact_ids_text,
+                        best_source_text AS source_text,
+                        best_confidence AS confidence,
+                        {priority_case} AS predicate_priority
+                    FROM facts
+                    WHERE subject = ?
+                    UNION ALL
+                    SELECT
+                        predicate,
+                        subject AS target,
+                        subject_type AS target_type,
+                        'in' AS direction,
+                        source_book,
+                        source_chapter,
+                        fact_id,
+                        fact_ids_text,
+                        best_source_text AS source_text,
+                        best_confidence AS confidence,
+                        {priority_case} AS predicate_priority
+                    FROM facts
+                    WHERE object = ?
+                ),
+                ranked AS (
+                    SELECT
+                        *,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY target
+                            ORDER BY predicate_priority DESC, confidence DESC, direction ASC, predicate ASC
+                        ) AS rn
+                    FROM candidates
+                    WHERE target <> ''
+                )
+                SELECT
+                    predicate,
+                    target AS object,
+                    target_type AS object_type,
+                    direction,
+                    source_book,
+                    source_chapter,
+                    fact_id,
+                    fact_ids_text,
+                    source_text,
+                    confidence
+                FROM ranked
+                WHERE rn = 1
+                ORDER BY predicate_priority DESC, confidence DESC, target ASC
+                LIMIT ?
+                """,
+                (entity, entity, max(1, limit)),
+            ).fetchall()
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            item = {
+                "predicate": _normalize_text(row["predicate"]),
+                "target": _normalize_text(row["object"]),
+                "target_type": _normalize_text(row["object_type"]) or "other",
+                "direction": _normalize_text(row["direction"]) or "out",
+                "source_book": _normalize_text(row["source_book"]),
+                "source_chapter": _normalize_text(row["source_chapter"]),
+                "fact_id": _normalize_text(row["fact_id"]),
+                "fact_ids": [item for item in _normalize_text(row["fact_ids_text"]).split(FACT_IDS_SEP) if item],
+                "source_text": _normalize_text(row["source_text"]),
+                "confidence": float(row["confidence"] or 0.0),
+            }
+            items.append(item)
+        return items
+
     def adjacent_names(self, entity_name: str) -> list[str]:
         self.ensure_ready()
         entity = _normalize_text(entity_name)
@@ -572,34 +680,22 @@ class RuntimeGraphStore:
         return [row["neighbor_name"] for row in rows if _normalize_text(row["neighbor_name"])]
 
     def two_hop_bridges(self, start: str, end: str, *, limit: int = 8) -> list[str]:
-        self.ensure_ready()
         start_entity = _normalize_text(start)
         end_entity = _normalize_text(end)
         if not start_entity or not end_entity:
             return []
-        with closing(self._connect()) as conn:
-            rows = conn.execute(
-                """
-                WITH start_neighbors AS (
-                    SELECT object AS neighbor_name FROM facts WHERE subject = ?
-                    UNION
-                    SELECT subject AS neighbor_name FROM facts WHERE object = ?
-                ),
-                end_neighbors AS (
-                    SELECT object AS neighbor_name FROM facts WHERE subject = ?
-                    UNION
-                    SELECT subject AS neighbor_name FROM facts WHERE object = ?
-                )
-                SELECT s.neighbor_name
-                FROM start_neighbors s
-                INNER JOIN end_neighbors e ON s.neighbor_name = e.neighbor_name
-                WHERE s.neighbor_name <> '' AND s.neighbor_name <> ? AND s.neighbor_name <> ?
-                ORDER BY length(s.neighbor_name) DESC, s.neighbor_name ASC
-                LIMIT ?
-                """,
-                (start_entity, start_entity, end_entity, end_entity, start_entity, end_entity, max(1, limit)),
-            ).fetchall()
-        return [row["neighbor_name"] for row in rows if _normalize_text(row["neighbor_name"])]
+        start_neighbors = self.adjacent_names(start_entity)
+        end_neighbors = set(self.adjacent_names(end_entity))
+        bridges: list[str] = []
+        seen = set()
+        for target in start_neighbors:
+            if not target or target in {start_entity, end_entity} or target not in end_neighbors or target in seen:
+                continue
+            seen.add(target)
+            bridges.append(target)
+            if len(bridges) >= max(1, limit):
+                break
+        return bridges
 
     def first_edge_between(self, source: str, target: str) -> dict[str, Any] | None:
         self.ensure_ready()

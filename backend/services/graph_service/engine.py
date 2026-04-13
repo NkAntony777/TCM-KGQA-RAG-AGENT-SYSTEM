@@ -10,7 +10,19 @@ import re
 from typing import Any, Callable
 
 from services.common.evidence_payloads import normalize_book_label
+from services.common.evidence_payloads import normalize_source_chapter_label
 from services.graph_service.nebulagraph_store import NebulaGraphStore
+from services.graph_service.relation_governance import ACCEPTABLE_POLYSEMY
+from services.graph_service.relation_governance import bridge_allowed
+from services.graph_service.relation_governance import expand_filter_predicates
+from services.graph_service.relation_governance import hinted_predicates as governance_hinted_predicates
+from services.graph_service.relation_governance import LIKELY_DIRTY
+from services.graph_service.relation_governance import ontology_boundary_ok
+from services.graph_service.relation_governance import ontology_boundary_tier
+from services.graph_service.relation_governance import path_expand_allowed
+from services.graph_service.relation_governance import priority_boost as governance_priority_boost
+from services.graph_service.relation_governance import relation_metadata
+from services.graph_service.relation_governance import REVIEW_NEEDED
 from services.graph_service.runtime_store import RuntimeGraphStore
 
 
@@ -36,22 +48,6 @@ def _normalize_relation_name(name: str) -> str:
 
 
 SYMPTOM_RELATIONS = {"常见症状", "表现症状", "相关症状"}
-
-RELATION_QUERY_HINTS: dict[str, set[str]] = {
-    "功效": {"功效"},
-    "归经": {"归经"},
-    "药材": {"使用药材"},
-    "配伍": {"使用药材"},
-    "组成": {"使用药材"},
-    "证候": {"治疗证候", "推荐方剂", "常见症状"},
-    "辨证": {"治疗证候", "推荐方剂", "常见症状"},
-    "症状": {"治疗症状", "常见症状"},
-    "治法": {"治法"},
-    "疾病": {"治疗疾病"},
-    "范畴": {"属于范畴"},
-    "类别": {"属于范畴"},
-    "别名": {"别名"},
-}
 
 PREDICATE_BASE_PRIORITY: dict[str, float] = {
     "治疗证候": 1.0,
@@ -84,7 +80,11 @@ PATH_QUERY_PREDICATE_BOOST: dict[str, float] = {
 
 def _path_query_predicate_priority(predicate: str) -> float:
     normalized = _normalize_relation_name(predicate)
-    return float(PREDICATE_BASE_PRIORITY.get(normalized, 0.6)) + float(PATH_QUERY_PREDICATE_BOOST.get(normalized, 0.0))
+    return (
+        float(PREDICATE_BASE_PRIORITY.get(normalized, 0.6))
+        + float(PATH_QUERY_PREDICATE_BOOST.get(normalized, 0.0))
+        + float(governance_priority_boost(normalized))
+    )
 
 
 QUERY_FRAGMENT_SPLIT_PATTERN = re.compile(r"[\s，。；、！？?：:（）()\[\]【】《》“”\"'·/]+")
@@ -98,12 +98,17 @@ def _ordered_path_neighbors(
 ) -> list[str]:
     best_by_neighbor: dict[str, tuple[int, float, float, str]] = {}
     for row in rows:
+        predicate = str(row.get("predicate", "")).strip()
+        if not path_expand_allowed(predicate) or not bridge_allowed(predicate):
+            continue
+        if row.get("ontology_boundary_tier") in {LIKELY_DIRTY, REVIEW_NEEDED}:
+            continue
         neighbor = str(row.get("target") or row.get("neighbor_name") or "").strip()
         if not neighbor:
             continue
         score = (
             1 if neighbor in target_set else 0,
-            _path_query_predicate_priority(str(row.get("predicate", "")).strip()),
+            _path_query_predicate_priority(predicate),
             float(row.get("confidence", 0.0) or 0.0),
             neighbor,
         )
@@ -314,7 +319,7 @@ class GraphQueryEngine:
         entity_type = self.entity_type(canonical_name)
         relations = self._select_relation_clusters(
             self._filter_relations(
-                self._collect_relations(canonical_name),
+                self._annotate_relation_rows(self._collect_relations(canonical_name), anchor_entity_type=entity_type),
                 predicate_allowlist=predicate_allowlist,
                 predicate_blocklist=predicate_blocklist,
             ),
@@ -391,6 +396,33 @@ class GraphQueryEngine:
     def _collect_relations(self, entity_name: str) -> list[dict[str, Any]]:
         return self.store.collect_relations(entity_name)
 
+    def _annotate_relation_rows(self, rows: list[dict[str, Any]], *, anchor_entity_type: str) -> list[dict[str, Any]]:
+        annotated: list[dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            predicate = _normalize_relation_name(str(item.get("predicate", "")).strip())
+            source_book = str(item.get("source_book", "")).strip()
+            item["predicate"] = predicate
+            item["source_chapter"] = normalize_source_chapter_label(
+                source_book=source_book,
+                source_chapter=str(item.get("source_chapter", "")).strip(),
+            )
+            item.update(relation_metadata(predicate))
+            item["ontology_boundary_tier"] = ontology_boundary_tier(
+                predicate=predicate,
+                direction=str(item.get("direction", "")).strip() or "out",
+                anchor_entity_type=anchor_entity_type,
+                target_type=str(item.get("target_type", "")).strip() or "other",
+            )
+            item["ontology_boundary_ok"] = ontology_boundary_ok(
+                predicate=predicate,
+                direction=str(item.get("direction", "")).strip() or "out",
+                anchor_entity_type=anchor_entity_type,
+                target_type=str(item.get("target_type", "")).strip() or "other",
+            )
+            annotated.append(item)
+        return annotated
+
     def _filter_relations(
         self,
         rows: list[dict[str, Any]],
@@ -398,8 +430,8 @@ class GraphQueryEngine:
         predicate_allowlist: list[str] | None = None,
         predicate_blocklist: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        allow = {_normalize_relation_name(str(item).strip()) for item in (predicate_allowlist or []) if str(item).strip()}
-        block = {_normalize_relation_name(str(item).strip()) for item in (predicate_blocklist or []) if str(item).strip()}
+        allow = {_normalize_relation_name(item) for item in expand_filter_predicates(predicate_allowlist or [])}
+        block = {_normalize_relation_name(item) for item in expand_filter_predicates(predicate_blocklist or [])}
         if not allow and not block:
             return rows
         filtered: list[dict[str, Any]] = []
@@ -434,7 +466,10 @@ class GraphQueryEngine:
             )
             confidence = float(row.get("confidence", 0.0) or 0.0)
             source_book = str(row.get("source_book", "")).strip()
-            source_chapter = str(row.get("source_chapter", "")).strip()
+            source_chapter = normalize_source_chapter_label(
+                source_book=source_book,
+                source_chapter=str(row.get("source_chapter", "")).strip(),
+            )
             raw_fact_ids = row.get("fact_ids")
             fact_ids: set[str] = set()
             if isinstance(raw_fact_ids, list):
@@ -449,6 +484,9 @@ class GraphQueryEngine:
                 cluster["target"] = target
                 cluster["direction"] = direction
                 cluster["target_type"] = str(row.get("target_type", "")).strip() or "other"
+                cluster.update(relation_metadata(predicate))
+                cluster["ontology_boundary_ok"] = row.get("ontology_boundary_ok")
+                cluster["ontology_boundary_tier"] = row.get("ontology_boundary_tier")
                 cluster["_source_books"] = {source_book} if source_book else set()
                 cluster["_source_chapters"] = {source_chapter} if source_chapter else set()
                 cluster["_fact_ids"] = set(fact_ids)
@@ -462,6 +500,12 @@ class GraphQueryEngine:
                 existing["_source_books"].add(source_book)
             if source_chapter:
                 existing["_source_chapters"].add(source_chapter)
+            if row.get("ontology_boundary_ok") is False:
+                existing["ontology_boundary_ok"] = False
+            existing_tier = str(existing.get("ontology_boundary_tier", "")).strip()
+            row_tier = str(row.get("ontology_boundary_tier", "")).strip()
+            if row_tier == LIKELY_DIRTY or (row_tier == REVIEW_NEEDED and existing_tier != LIKELY_DIRTY):
+                existing["ontology_boundary_tier"] = row_tier
             existing["_fact_ids"].update(fact_ids)
             current_confidence = confidence
             existing_confidence = float(existing.get("confidence", 0.0) or 0.0)
@@ -575,6 +619,11 @@ class GraphQueryEngine:
                 novelty = 0.7 * predicate_novelty + 0.15 * direction_novelty + 0.15 * target_type_novelty
                 if predicate_counts[predicate] == 0:
                     novelty += 0.2
+                tier = str(cluster.get("ontology_boundary_tier", "")).strip()
+                if tier == REVIEW_NEEDED:
+                    novelty *= 0.55
+                elif tier == LIKELY_DIRTY:
+                    novelty *= 0.2
                 hinted_bonus = 0.0
                 if hinted_predicates:
                     if predicate in hinted_predicates:
@@ -605,15 +654,10 @@ class GraphQueryEngine:
 
     def _predicate_priority(self, relation: dict[str, Any]) -> float:
         predicate = _normalize_relation_name(str(relation.get("predicate", "")).strip())
-        return float(PREDICATE_BASE_PRIORITY.get(predicate, 0.6))
+        return float(PREDICATE_BASE_PRIORITY.get(predicate, 0.6)) + float(governance_priority_boost(predicate))
 
     def _hinted_predicates(self, query_text: str) -> set[str]:
-        hinted: set[str] = set()
-        normalized_query = (query_text or "").strip()
-        for token, predicates in RELATION_QUERY_HINTS.items():
-            if token in normalized_query:
-                hinted.update(predicates)
-        return hinted
+        return {_normalize_relation_name(item) for item in governance_hinted_predicates(query_text)}
 
     def _relation_score(self, relation: dict[str, Any], query_text: str) -> int:
         score = 0
@@ -622,13 +666,19 @@ class GraphQueryEngine:
         source_text = str(relation.get("source_text", "")).strip()
         source_book = str(relation.get("source_book", "")).strip()
         source_chapter = str(relation.get("source_chapter", "")).strip()
+        predicate_family = str(relation.get("predicate_family", "")).strip()
+        normalized_predicate = str(relation.get("normalized_predicate", "")).strip()
         normalized_query = (query_text or "").strip()
         query_fragments = self._query_fragments(normalized_query)
-        for token, preferred_predicates in RELATION_QUERY_HINTS.items():
-            if token in normalized_query and predicate in preferred_predicates:
-                score += 50
+        hinted = self._hinted_predicates(normalized_query)
+        if predicate in hinted:
+            score += 50
         if predicate and predicate in normalized_query:
             score += 20
+        if normalized_predicate and normalized_predicate in normalized_query:
+            score += 18
+        if predicate_family and predicate_family.replace("族", "") in normalized_query:
+            score += 16
         if target and target in normalized_query:
             score += 10
         if target and target in query_fragments:
@@ -643,6 +693,13 @@ class GraphQueryEngine:
         score += min(int(math.log1p(int(relation.get("evidence_count", 0) or 0)) * 4), 8)
         if relation.get("direction") == "out":
             score += 1
+        tier = str(relation.get("ontology_boundary_tier", "")).strip()
+        if tier == ACCEPTABLE_POLYSEMY:
+            score -= 6
+        elif tier == REVIEW_NEEDED:
+            score -= 18
+        elif tier == LIKELY_DIRTY:
+            score -= 30
         return score
 
     def _query_fragments(self, query_text: str) -> list[str]:
@@ -690,7 +747,10 @@ class GraphQueryEngine:
         return self.store.adjacent_names(entity_name)
 
     def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
-        return self.store.collect_relations(entity_name)
+        return self._annotate_relation_rows(
+            self.store.collect_relations(entity_name),
+            anchor_entity_type=self.entity_type(entity_name),
+        )
 
     def _fast_path_candidates(
         self,
@@ -747,9 +807,13 @@ class GraphQueryEngine:
             if reverse:
                 relation = f"{relation}(逆向)"
             edges.append(relation)
+            source_book = str(edge_data.get("source_book", ""))
             source_item: dict[str, Any] = {
-                "source_book": str(edge_data.get("source_book", "")),
-                "source_chapter": str(edge_data.get("source_chapter", "")),
+                "source_book": source_book,
+                "source_chapter": normalize_source_chapter_label(
+                    source_book=source_book,
+                    source_chapter=str(edge_data.get("source_chapter", "")),
+                ),
             }
             source_item.update(self._edge_evidence_payload(edge_data))
             if source_item not in sources:
@@ -832,16 +896,19 @@ class NebulaPrimaryGraphEngine:
             for canonical_name in candidates[:5]:
                 if not self.primary_store.exact_entity(canonical_name):
                     continue
+                entity_type = self.fallback_engine.entity_type(canonical_name)
                 relations = self.fallback_engine._select_relation_clusters(
                     self.fallback_engine._filter_relations(
-                        self._collect_nebula_relations(canonical_name),
+                        self.fallback_engine._annotate_relation_rows(  # noqa: SLF001
+                            self._collect_nebula_relations(canonical_name),
+                            anchor_entity_type=entity_type,
+                        ),
                         predicate_allowlist=predicate_allowlist,
                         predicate_blocklist=predicate_blocklist,
                     ),
                     query_text=name,
                     top_k=max(1, top_k),
                 )
-                entity_type = self.fallback_engine.entity_type(canonical_name)
                 if not relations and canonical_name != candidates[0]:
                     continue
                 return {
@@ -965,7 +1032,10 @@ class NebulaPrimaryGraphEngine:
         return sorted(names)
 
     def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
-        return self._collect_nebula_relations(entity_name)
+        return self.fallback_engine._annotate_relation_rows(  # noqa: SLF001
+            self._collect_nebula_relations(entity_name),
+            anchor_entity_type=self.fallback_engine.entity_type(entity_name),
+        )
 
     def _evidence_payload_from_row(self, row: dict[str, Any]) -> dict[str, Any]:
         payload: dict[str, Any] = {}

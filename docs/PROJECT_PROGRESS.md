@@ -1,6 +1,279 @@
 # 项目进展
 
-更新时间：2026-04-07
+更新时间：2026-04-13
+
+## 2026-04-13 第三批治理与运行时收口进展
+
+### 当前结论
+
+- 第一批、第二批图谱治理已经完成并落库。
+- 第三批当前已经完成第一阶段，重点不是继续物理改写图谱，而是把治理规则真正接入运行时主链。
+- 当前系统已经新增统一的**关系治理注册表**，并将“关系族”“normalized predicate”“source_chapter 规范化”“ontology 边界限扩散”接入图谱查询层。
+- 当前第三批的方向已经明确为：
+  - 低风险运行时治理优先
+  - 大规模 SQLite / Nebula 全量重建从默认动作降级为专项修复手段
+
+### 今天已落地的内容
+
+#### 1. 关系族正式接入查询层
+
+- 已新增：
+  - `backend/services/graph_service/relation_governance.py`
+- 当前已实现：
+  - `主治族`：
+    - `治疗证候`
+    - `治疗疾病`
+    - `治疗症状`
+  - `临床表现族`：
+    - `常见症状`
+    - `表现症状`
+    - `相关症状`
+  - `药性理论族`：
+    - `药性`
+    - `归经`
+    - `五味`
+- 当前 `entity_lookup` 的 `predicate_allowlist / predicate_blocklist` 已支持直接传关系族名，而不必显式枚举所有原始谓词。
+
+#### 2. normalized predicate 与 parent 规则接入主链
+
+- 当前查询层已能识别并展开：
+  - `药材基源 -> 拉丁学名`
+  - `药性特征 -> 归经`
+- 当前返回的 graph relation cluster 已补充治理元数据：
+  - `predicate_family`
+  - `normalized_predicate`
+  - `governance_parent`
+  - `lock`
+  - `display_only`
+  - `path_expand_allowed`
+  - `bridge_allowed`
+  - `ontology_boundary_ok`
+
+#### 3. source_chapter 运行时规范化已落地
+
+- 已新增共享逻辑：
+  - `backend/services/common/evidence_payloads.py`
+  - `normalize_source_chapter_label(...)`
+- 当前行为：
+  - `089-医方论_正文` 这类“书名前缀 + 正文 slug”不再外显为 `chapter://...`
+  - `089-医方论_卷上` 这类“书名前缀 + 可读章节名”会归一为 `卷上`
+  - graph / path / retrieval / section evidence 已统一走同一套 chapter 规范化逻辑
+- 这意味着：
+  - 旧历史数据即使未全量重写，当前 evidence path 也已经能稳定输出更合理的 `book:// / chapter://`
+
+#### 4. ontology 边界异常已接入运行时保护
+
+- 当前不是直接删边，而是先做：
+  - 规则标记
+  - ranking 降权
+  - path expansion 限扩散
+- 已为以下关系接入低风险 expected type 校验：
+  - `使用药材`
+  - `推荐方剂`
+  - `治疗证候`
+  - `治疗症状`
+  - `归经`
+- 当前策略是：
+  - 异常边仍可见
+  - 但不再与高质量结构边等权参与 path bridging 和前排排序
+
+### 今天已完成的验证
+
+- `uv run pytest tests/test_evidence_payloads.py -q`
+  - `3 passed`
+- `uv run pytest tests/test_tcm_evidence_tools.py -q -k "normalizes_graph_book_label_and_skips_file_slug_chapter or prefers_source_chapter"`
+  - `1 passed`
+- `uv run pytest tests/test_graph_engine.py -q`
+  - `34 passed`
+- `uv run pytest tests/test_tcm_service_client.py -q`
+  - `5 passed`
+- `uv run pytest tests/test_ontology_boundary_tiers.py -q`
+  - `6 passed`
+
+### 今天识别并修复的回归
+
+- 在第三批治理接入后，曾出现：
+  - `六味地黄丸` 在 `top_k=6` 下 `功效` 被重复关系挤出前排
+- 当前已通过恢复 `功效` 的治理优先级修复。
+- 这说明：
+  - 第三批治理已经进入“真实主链细调”阶段
+  - 新治理能力必须持续绑定 regression，而不能只靠规则文档
+
+### 最新治理审计结论
+
+- `polluted_source_chapter_rows = 0`
+- `book_prefixed_body_slug_rows = 3702314`
+- `book_prefixed_readable_rows = 0`
+
+当前解释应明确为：
+
+- “正文污染”已经基本清零
+- 当前大头不是脏文本，而是历史导入遗留的 `书名_正文` slug 规范
+- 这类问题当前已经通过运行时规范化收口，不需要再次全量重建
+
+### ontology 分层审计已完成第一版
+
+- 已新增：
+  - `backend/scripts/audit_ontology_boundary_tiers.py`
+- 已产出：
+  - `backend/eval/ontology_boundary_tiers_latest.json`
+  - `backend/eval/ontology_boundary_tiers_latest.md`
+- 本轮分层结果汇总：
+  - `in-schema = 2121369`
+  - `acceptable_polysemy = 96036`
+  - `review_needed = 35600`
+  - `likely_dirty = 8936`
+
+这说明当前 ontology 异常不能简单理解成“全部都是脏数据”：
+
+- 大头其实是**可接受多义边**，例如：
+  - `disease -> herb` 出现在 `使用药材`
+  - `symptom -> formula` 出现在 `推荐方剂`
+  - `disease -> syndrome` 出现在 `治疗证候`
+  - `therapy -> symptom` 出现在 `治疗症状`
+- 真正更值得优先处理的是 `likely_dirty` 这部分，仅约 `8936` 条，已经比粗审计口径小得多
+
+当前阶段更合理的治理顺序应是：
+
+1. 先锁定 `likely_dirty`
+2. 再人工复核 `review_needed`
+3. `acceptable_polysemy` 保留并继续走运行时降权/限扩散
+
+### ontology 分层规则已接入运行时
+
+- 当前 `relation_governance.py` 已新增统一的分层判定：
+  - `in_schema`
+  - `acceptable_polysemy`
+  - `review_needed`
+  - `likely_dirty`
+- 当前 graph engine 已不再只使用二元的 `ontology_boundary_ok`：
+  - `acceptable_polysemy`：保留，但轻度降权
+  - `review_needed`：更强降权，并默认不参与 path 扩散
+  - `likely_dirty`：强降权，并默认不参与 path 扩散
+- 这意味着：
+- 运行时层已经开始区分“多义边”和“脏边”
+- 后续小批治理可以只盯 `likely_dirty`，而不会误伤大量仍有价值的多义结构
+
+### likely_dirty 首批治理清单已生成
+
+- 已新增：
+  - `backend/scripts/build_ontology_likely_dirty_shortlist.py`
+  - `backend/scripts/export_ontology_likely_dirty_batch1_candidates.py`
+- 已产出：
+  - `backend/eval/ontology_likely_dirty_shortlist_latest.json`
+  - `backend/eval/ontology_likely_dirty_shortlist_latest.md`
+  - `backend/eval/ontology_likely_dirty_batch1_candidates_latest.json`
+  - `backend/eval/ontology_likely_dirty_batch1_candidates_latest.md`
+
+当前 shortlist 结论：
+
+- `likely_dirty` 总量：`8936`
+- 全局最优先处理组合前列为：
+  - `使用药材: herb -> herb`
+  - `使用药材: category -> herb`
+  - `使用药材: other -> herb`
+  - `使用药材: channel -> herb`
+  - `归经: channel -> channel`
+  - `治疗症状: book -> symptom`
+  - `治疗症候: other -> syndrome`
+
+这意味着下一阶段已经不需要再泛化讨论“要不要清 ontology”，而是可以直接进入**首批 likely_dirty 小组合治理**。
+
+### 首批 batch1 候选已完成精确导出
+
+当前已对以下 5 个组合导出 exact candidate rows、来源书籍 Top、代表样本、建议动作：
+
+- `归经: channel -> channel`
+- `使用药材: herb -> herb`
+- `使用药材: category -> herb`
+- `治疗症状: book -> symptom`
+- `治疗症状: chapter -> symptom`
+
+这意味着下一轮如果要做首批治理，已经不需要先做额外筛选，可以直接基于 batch1 候选文件进入 patch 设计。
+
+### likely_dirty batch1 已完成实际落库
+
+- 已新增执行脚本：
+  - `backend/scripts/apply_batch1_likely_dirty_graph_governance.py`
+- 已执行的首批组合：
+  - `归经: channel -> channel`
+  - `治疗症状: book -> symptom`
+  - `治疗症状: chapter -> symptom`
+- 实际删除图关系：
+  - `DELETE:归经[channel->channel] = 446`
+  - `DELETE:治疗症状[book->symptom] = 191`
+  - `DELETE:治疗症状[chapter->symptom] = 164`
+- 合计删除关系：`801`
+- 对应 `fact_id` 删除：`817`
+- `shared_fact_ids_count = 0`
+
+### batch1 应用后效果
+
+- ontology 分层审计结果已刷新：
+  - `likely_dirty_rows: 8936 -> 8135`
+  - 本轮净下降：`801`
+- 当前说明这批 patch 的命中对象和预期一致，没有出现大面积误删或共享 evidence 连带问题。
+
+### batch1 应用后验证
+
+- `uv run pytest tests/test_graph_engine.py -q`
+  - `35 passed`
+- ontology 分层审计已重跑并刷新：
+  - `backend/eval/ontology_boundary_tiers_latest.json`
+  - `backend/eval/ontology_boundary_tiers_latest.md`
+
+这意味着第三批治理已经从“规则接入运行时”推进到了“首批 likely_dirty 真实清理已完成”。
+
+### batch2 LLM-assisted 判定已接入
+
+- 已新增：
+  - `backend/scripts/llm_adjudicate_batch2_likely_dirty.py`
+- 当前复用了三元组抽取模块已有的 LLM provider / call_llm_raw 能力，而不是另起一套 LLM 客户端。
+- 当前已完成两轮小样本判定：
+  - `top_confidence` 小样本
+  - `diverse_books` 跨书样本
+
+当前结论：
+
+- `使用药材: category -> herb`
+  - LLM 判定高度一致
+  - 稳定输出：`retype -> 属于范畴`
+- `使用药材: herb -> herb`
+  - LLM 判定不稳定
+  - 同时出现：
+    - `delete`
+    - `retype -> 配伍禁忌`
+    - `retype -> 属于范畴`
+  - 因此当前**不能直接整批治理**
+
+### batch2a 已完成实际落库
+
+- 已新增执行脚本：
+  - `backend/scripts/apply_batch2a_category_to_herb_retype.py`
+- 已执行对象：
+  - `使用药材: category -> herb -> 属于范畴`
+- 实际重写关系：`1063`
+
+### batch2a 应用后效果
+
+- ontology 分层审计结果继续下降：
+  - `likely_dirty_rows: 8135 -> 7072`
+  - 本轮净下降：`1063`
+- `uv run pytest tests/test_graph_engine.py -q`
+  - `35 passed`
+
+这意味着：
+
+- batch2a 属于“LLM 辅助判定后可稳定自动落库”的成功路径
+- 而 `herb -> herb` 仍然处于“需要更细语义拆分”的阶段
+
+### 当前最重要的下一步
+
+- 第三批还没有彻底结束，接下来最值得做的是：
+  - 对 ontology 边界异常继续做分层审计
+  - 区分“可接受多义边”和“明显脏边”
+  - 制定 backup / 治理产物的清理策略
+- 当前不建议再贸然做第三轮大规模物理改库。
 
 ## 当前状态
 
@@ -25,6 +298,10 @@
   - `quick / deep` 默认 retrieval 主路径已切到 `files_first`
   - `case QA` 默认主路径已切到结构化非向量索引
   - 旧 `dense` 与旧 case 向量链路仅作为**显式兼容 fallback** 保留，默认不再参与主链
+- 同日已完成一次代码层职责拆分：
+  - `qa_service` 的 planner / evidence / runtime 已拆到独立模块
+  - `retrieval_service` 的 files-first 支撑逻辑与 hybrid runtime 已拆到独立模块
+  - 主 `engine.py` 已更接近编排层，而不是“大而全实现层”
 
 ### 当前已经落地的非向量能力
 
@@ -66,7 +343,7 @@
   - dense 已不再是默认主路径
   - 但旧引擎内部仍保留 dense / case 向量兼容代码，尚未物理删除
 - 当前仍残留 dense 的位置主要有：
-  - `services/retrieval_service/engine.py` 的旧 `search_hybrid`
+  - `services/retrieval_service/hybrid_runtime.py` 中的 dense / hybrid fallback 兼容链
   - `services/retrieval_service/chroma_case_store.py` 的旧 case 向量检索兼容层
 - 因此，当前准确表述应是：
   - **项目已把 graph + files-first + structured index 落为默认主链；dense 与旧 case 向量链路仍作为兼容层保留，但默认关闭主导权。**
@@ -82,6 +359,119 @@
   - 继续稳定 `entity:// / book:// / chapter://` 读回质量
   - 做 8002 实际 HTTP 评测，确认运行进程与本地直调一致
   - 让 deep 的 `why_this_step / new_evidence / coverage_after_step` 输出更稳定
+
+### 当前代码架构与函数边界
+
+#### 1. 统一问答入口
+
+- HTTP 入口：
+  - `backend/api/qa.py`
+  - `backend/api/chat.py`
+- 统一服务入口：
+  - `backend/services/qa_service/engine.py`
+  - `QAService.answer(...)`
+  - `QAService.stream_answer(...)`
+
+#### 2. QAService 当前职责
+
+- `backend/services/qa_service/engine.py`
+  - 保留 quick / deep 主流程编排
+  - 保留 route payload 装配、planner 轮次推进、event stream 输出
+  - 保留少量兼容包装函数，避免旧测试与旧调用点失效
+- `QAService._stream_quick(...)`
+  - 固定链路 quick 回答
+- `QAService._stream_deep(...)`
+  - deep planner 回合制 follow-up retrieval
+
+#### 3. QA runtime 拆分
+
+- `backend/services/qa_service/runtime_support.py`
+  - `_load_route_payload(...)`
+  - `_prepare_route_context(...)`
+  - `_cache_key(...)`
+  - `_generate_grounded_answer(...)`
+  - `_build_response(...)`
+  - `_build_live_evidence_bundle(...)`
+  - `_execute_action(...)`
+  - `_can_parallelize_actions(...)`
+  - `_execute_actions_for_round(...)`
+- 作用：
+  - 把“回答拼装 + 工具执行 + request-scope cache”从主 `engine.py` 拆出
+
+#### 4. Planner 拆分
+
+- `backend/services/qa_service/planner.py`
+  - 兼容导出层
+- `backend/services/qa_service/planner_actions.py`
+  - action 规范化、动作生成、skill 级约束
+- `backend/services/qa_service/planner_compare.py`
+  - 比较题相关动作与缺口处理
+- `backend/services/qa_service/planner_support.py`
+  - planner 支撑函数
+- `backend/services/qa_service/planner_runtime.py`
+  - `generate_followup_plan(...)`
+  - `resolve_followup_actions(...)`
+  - 负责 deep 每轮 planner 输出解析与 fallback 规划
+
+#### 5. Evidence 拆分
+
+- `backend/services/common/evidence_payloads.py`
+  - 统一解析 graph / retrieval / section payload
+  - 为 evidence tools 与 QA evidence 构造共用数据格式
+- `backend/services/qa_service/evidence.py`
+  - 兼容导出层
+- `backend/services/qa_service/evidence_items.py`
+  - evidence item 构造与合并
+- `backend/services/qa_service/evidence_coverage.py`
+  - coverage state 初始化、更新、摘要、缺口分析
+- `backend/tools/tcm_evidence_tools.py`
+  - `list_evidence_paths(...)`
+  - `read_evidence_path(...)`
+  - `search_evidence_text(...)`
+  - 负责把 `entity:// / book:// / chapter:// / alias:// / caseqa://` 转成真实可读证据
+
+#### 6. Retrieval 当前职责
+
+- `backend/services/retrieval_service/engine.py`
+  - 当前是 retrieval 编排层
+  - 暴露：
+    - `search_case_qa(...)`
+    - `search_hybrid(...)`
+    - `read_section(...)`
+    - `index_documents(...)`
+    - `index_documents_files_first(...)`
+    - `index_configured_corpora(...)`
+- `backend/services/retrieval_service/hybrid_runtime.py`
+  - `run_hybrid_search(...)`
+  - 统一封装 files-first 主链、dense fallback、rerank、merge、结果收尾
+- `backend/services/retrieval_service/files_first_support.py`
+  - `LocalFilesFirstStore`
+  - `ParentChunkStore`
+  - `normalize_chunk(...)`
+  - `build_section_response(...)`
+  - `read_section(...)`
+  - 负责 FTS5 读回、章节拼装、chunk 标准化
+
+#### 7. 当前回答链路的真实落点
+
+- quick：
+  - `api/qa.py` -> `QAService.answer(...)` -> `QAService._stream_quick(...)`
+  - route payload -> `runtime_support._build_response(...)`
+- deep：
+  - `api/qa.py` / `api/chat.py` -> `QAService.stream_answer(...)` -> `QAService._stream_deep(...)`
+  - `planner_runtime.generate_followup_plan(...)`
+  - `runtime_support._execute_actions_for_round(...)`
+  - `tools/tcm_evidence_tools.py` 完成路径读回
+  - `runtime_support._build_response(...)` 汇总最终答案
+
+#### 8. 一个需要纠正的旧描述
+
+- 当前 deep 模式已经**不是**：
+  - “直接接入 `agent_manager.astream(...)` 做主回答链”
+- 当前真实情况是：
+  - deep 由 `QAService._stream_deep(...)` 驱动
+  - `agent_manager` 目前主要仍用于 session / title 等外围能力
+  - 主问答链已回到可控的工程化 planner + evidence runtime
 
 ## 2026-04-06 问答链路增量进展
 
@@ -136,10 +526,13 @@
   - 结构化证据抽取
   - 基于意图的确定性答案拼装
   - 区分 `factual_evidence` 与 `case_references`
-- 当前 `deep` 模式已经接入现有 `agent_manager.astream(...)`：
-  - 由 Agent 参与工具调用与答案生成
-  - 最终仍回收到统一的结构化返回格式
-  - 若深度模式不可用，会自动降级回快速模式
+- 当前 `deep` 模式已改为工程化 planner 回合制链路：
+  - 先做 `tcm_route_search`
+  - 再做 `list_evidence_paths`
+  - 然后按缺口生成 `next_actions`
+  - 使用 `read_evidence_path / search_evidence_text` 执行 follow-up retrieval
+  - 最后统一回收到结构化返回格式
+  - 若深度模式异常，会自动降级回快速模式
 - 当前统一问答返回中已明确包含：
   - `answer`
   - `mode`

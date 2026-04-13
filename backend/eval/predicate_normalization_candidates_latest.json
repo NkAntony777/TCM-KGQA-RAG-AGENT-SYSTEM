@@ -1,0 +1,4147 @@
+{
+  "generated_at": "2026-04-13 14:31:17 +0800",
+  "db_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\graph_service\\data\\graph_runtime.db",
+  "candidate_count": 30,
+  "action_summary": {
+    "keep": 19,
+    "manual_review_required": 8,
+    "family_only": 3
+  },
+  "risk_summary": {
+    "low": 13,
+    "medium": 8,
+    "high": 9
+  },
+  "candidates": [
+    {
+      "predicate": "使用药材",
+      "count": 1510375,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "herb",
+          "count": 1457544
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "herb",
+          "count": 18611
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "herb",
+          "count": 13341
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "herb",
+          "count": 3936
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "herb",
+          "count": 3328
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "herb",
+          "count": 2748
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "medicine",
+          "count": 2327
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "herb",
+          "count": 1797
+        },
+        {
+          "subject_type": "category",
+          "object_type": "herb",
+          "count": 1063
+        },
+        {
+          "subject_type": "other",
+          "object_type": "herb",
+          "count": 946
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "074-普济方",
+          "count": 151708
+        },
+        {
+          "source_book": "TCM-MKG",
+          "count": 74084
+        },
+        {
+          "source_book": "060-圣济总录",
+          "count": 72051
+        },
+        {
+          "source_book": "055-太平圣惠方",
+          "count": 48589
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 31350
+        },
+        {
+          "source_book": "156-幼幼新书",
+          "count": 28145
+        },
+        {
+          "source_book": "053-外台秘要",
+          "count": 25963
+        },
+        {
+          "source_book": "632-证治准绳·类方",
+          "count": 22330
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 19313
+        },
+        {
+          "source_book": "579-医学纲目",
+          "count": 19171
+        }
+      ],
+      "examples": [
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "何首乌",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "当归",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "枸杞",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "牛膝",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "白茯苓",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "破故纸",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "使用药材",
+          "object": "菟丝子",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "三才封髓丹",
+          "predicate": "使用药材",
+          "object": "人参",
+          "subject_type": "formula",
+          "object_type": "herb",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "治疗症状",
+      "count": 659252,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "count": 465289
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "symptom",
+          "count": 79119
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "symptom",
+          "count": 41638
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "symptom",
+          "count": 39347
+        },
+        {
+          "subject_type": "other",
+          "object_type": "symptom",
+          "count": 12872
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "symptom",
+          "count": 8425
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "symptom",
+          "count": 5962
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "therapy",
+          "count": 1707
+        },
+        {
+          "subject_type": "food",
+          "object_type": "symptom",
+          "count": 1419
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "symptom",
+          "count": 912
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "074-普济方",
+          "count": 59128
+        },
+        {
+          "source_book": "060-圣济总录",
+          "count": 24268
+        },
+        {
+          "source_book": "055-太平圣惠方",
+          "count": 23229
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 21728
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 13720
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 13562
+        },
+        {
+          "source_book": "316-普济方·针灸",
+          "count": 12232
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 10359
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 9195
+        },
+        {
+          "source_book": "070-奇效良方",
+          "count": 8561
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三才封髓丹",
+          "predicate": "治疗症状",
+          "object": "梦遗走泄",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "唐郑相国方",
+          "predicate": "治疗症状",
+          "object": "喘咳",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "唐郑相国方",
+          "predicate": "治疗症状",
+          "object": "腰脚痛",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "四君子汤加竹沥姜汁方",
+          "predicate": "治疗症状",
+          "object": "半身不遂",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "四逆汤",
+          "predicate": "治疗症状",
+          "object": "四肢厥逆",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "大陷胸丸",
+          "predicate": "治疗症状",
+          "object": "上焦喘满",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "妙香散",
+          "predicate": "治疗症状",
+          "object": "惊悸郁结",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "干霍乱吐方",
+          "predicate": "治疗症状",
+          "object": "欲吐不得",
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "作用靶点",
+      "count": 305445,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "count": 305445
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 305445
+        }
+      ],
+      "examples": [
+        {
+          "subject": "AABTWRKUKUPMJG-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "GRHPR",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AABWXKZJSNWRSH-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "APEX1",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AABWXKZJSNWRSH-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "SLC9A2",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AAGFPTSOPGCENQ-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "OSR1",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AAGFPTSOPGCENQ-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "PGBD1",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AAGFPTSOPGCENQ-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "CA5B",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AAGFPTSOPGCENQ-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "GJA3",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        },
+        {
+          "subject": "AAKDPDFZMNYDLR-UHFFFAOYSA-N",
+          "predicate": "作用靶点",
+          "object": "GEM",
+          "subject_type": "ingredient",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D13_InChIKey_EntrezID"
+        }
+      ]
+    },
+    {
+      "predicate": "治疗疾病",
+      "count": 292621,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "disease",
+          "count": 214960
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "disease",
+          "count": 34386
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "disease",
+          "count": 21866
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "disease",
+          "count": 10092
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "disease",
+          "count": 2172
+        },
+        {
+          "subject_type": "other",
+          "object_type": "disease",
+          "count": 1242
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "therapy",
+          "count": 1116
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "disease",
+          "count": 1017
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "disease",
+          "count": 1007
+        },
+        {
+          "subject_type": "food",
+          "object_type": "disease",
+          "count": 951
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "074-普济方",
+          "count": 36821
+        },
+        {
+          "source_book": "060-圣济总录",
+          "count": 14999
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 7820
+        },
+        {
+          "source_book": "055-太平圣惠方",
+          "count": 7302
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 7137
+        },
+        {
+          "source_book": "156-幼幼新书",
+          "count": 5980
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 5284
+        },
+        {
+          "source_book": "579-医学纲目",
+          "count": 4483
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 4153
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 3829
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三白汤",
+          "predicate": "治疗疾病",
+          "object": "内伤",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "大顺散",
+          "predicate": "治疗疾病",
+          "object": "暑月伤寒",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "导气汤",
+          "predicate": "治疗疾病",
+          "object": "疝",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "小陷胸汤",
+          "predicate": "治疗疾病",
+          "object": "小结胸",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "橘核丸",
+          "predicate": "治疗疾病",
+          "object": "疝",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "水解散",
+          "predicate": "治疗疾病",
+          "object": "瘟疫",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "稀涎散",
+          "predicate": "治疗疾病",
+          "object": "猝急痰症",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "《儒门事亲》心气痛方",
+          "predicate": "治疗疾病",
+          "object": "心气痛",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "功效",
+      "count": 167536,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "count": 40449
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "therapy",
+          "count": 27081
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "count": 26833
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 21051
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "property",
+          "count": 20834
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "other",
+          "count": 10590
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "other",
+          "count": 6397
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "property",
+          "count": 5718
+        },
+        {
+          "subject_type": "food",
+          "object_type": "therapy",
+          "count": 1756
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "other",
+          "count": 1597
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 10558
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 8046
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 5354
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 4315
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 3818
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 3557
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 3020
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 2969
+        },
+        {
+          "source_book": "021-本草从新",
+          "count": 2849
+        },
+        {
+          "source_book": "025-本草求真",
+          "count": 2433
+        }
+      ],
+      "examples": [
+        {
+          "subject": "七味白术散",
+          "predicate": "功效",
+          "object": "去热治泻",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "七宝美髯丹",
+          "predicate": "功效",
+          "object": "温补命肾、兼摄纳下元",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "三承气汤",
+          "predicate": "功效",
+          "object": "救人于存亡危急之时",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "人参养营汤",
+          "predicate": "功效",
+          "object": "三阴并补，气血交养",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "侯氏黑散",
+          "predicate": "功效",
+          "object": "平肝息风",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "倒仓法",
+          "predicate": "功效",
+          "object": "补脾、祛除垢滞",
+          "subject_type": "therapy",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "六味地黄丸",
+          "predicate": "功效",
+          "object": "三阴并治",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "十枣汤",
+          "predicate": "功效",
+          "object": "逐水",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "用法",
+      "count": 154143,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "count": 99112
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "processing_method",
+          "count": 28464
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "processing_method",
+          "count": 17806
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "processing_method",
+          "count": 4534
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "processing_method",
+          "count": 1521
+        },
+        {
+          "subject_type": "food",
+          "object_type": "processing_method",
+          "count": 735
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "processing_method",
+          "count": 572
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "processing_method",
+          "count": 252
+        },
+        {
+          "subject_type": "other",
+          "object_type": "processing_method",
+          "count": 232
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "count": 192
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "074-普济方",
+          "count": 8956
+        },
+        {
+          "source_book": "055-太平圣惠方",
+          "count": 4381
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 4296
+        },
+        {
+          "source_book": "060-圣济总录",
+          "count": 3227
+        },
+        {
+          "source_book": "070-奇效良方",
+          "count": 3115
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 3076
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 2920
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 2854
+        },
+        {
+          "source_book": "053-外台秘要",
+          "count": 2619
+        },
+        {
+          "source_book": "579-医学纲目",
+          "count": 2377
+        }
+      ],
+      "examples": [
+        {
+          "subject": "大头天行疫病方",
+          "predicate": "用法",
+          "object": "白水煎",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "普济消毒饮子",
+          "predicate": "用法",
+          "object": "白水煎",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "漏芦方",
+          "predicate": "用法",
+          "object": "白水煎",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "疫病肿大方",
+          "predicate": "用法",
+          "object": "姜汁为丸，井花水调蜜化下",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "葳蕤散",
+          "predicate": "用法",
+          "object": "白水煎",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "虾蟆瘟敷药",
+          "predicate": "用法",
+          "object": "捣汁调敷",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "071-医方集宜",
+          "source_chapter": "071-医方集宜_正文"
+        },
+        {
+          "subject": "四逆散",
+          "predicate": "用法",
+          "object": "水浓煎热服",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "134-幼科切要",
+          "source_chapter": "134-幼科切要_正文"
+        },
+        {
+          "subject": "小建中汤",
+          "predicate": "用法",
+          "object": "水煎服",
+          "subject_type": "formula",
+          "object_type": "processing_method",
+          "source_book": "134-幼科切要",
+          "source_chapter": "134-幼科切要_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "含有成分",
+      "count": 120520,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "count": 120520
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 120520
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "ASUTZQLVASHGKV-JDFRZJQESA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "CKAHWDNDUGDSLE-ARLBYUKCSA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "VHYYSQODIQWPDO-PILAGYSTSA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "WXZAKVLYZHWSNF-KBRIMQKVSA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "XGVJWXAYKUHDOO-DANNLKNASA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "含有成分",
+          "object": "YLWAQARRNQVEHD-GQAVTEOGSA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一枝蒿",
+          "predicate": "含有成分",
+          "object": "BJPSSVHNEGMBDQ-OAACRXHESA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        },
+        {
+          "subject": "一枝蒿",
+          "predicate": "含有成分",
+          "object": "BJPSSVHNEGMBDQ-UHFFFAOYSA-N",
+          "subject_type": "herb",
+          "object_type": "ingredient",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D9_CHP_InChIKey"
+        }
+      ]
+    },
+    {
+      "predicate": "常见症状",
+      "count": 97745,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "disease",
+          "object_type": "symptom",
+          "count": 56334
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "count": 16653
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "symptom",
+          "count": 6889
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "symptom",
+          "count": 6637
+        },
+        {
+          "subject_type": "other",
+          "object_type": "symptom",
+          "count": 4258
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "symptom",
+          "count": 2197
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "symptom",
+          "count": 1223
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "syndrome",
+          "count": 936
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "disease",
+          "count": 689
+        },
+        {
+          "subject_type": "category",
+          "object_type": "symptom",
+          "count": 512
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "571-诸病源候论",
+          "count": 3509
+        },
+        {
+          "source_book": "215-杂病广要",
+          "count": 2825
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 2613
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 2121
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 1992
+        },
+        {
+          "source_book": "299-针灸大成",
+          "count": 1717
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 1694
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 1627
+        },
+        {
+          "source_book": "599-医述",
+          "count": 1519
+        },
+        {
+          "source_book": "575-医宗金鉴",
+          "count": 1478
+        }
+      ],
+      "examples": [
+        {
+          "subject": "阳毒",
+          "predicate": "常见症状",
+          "object": "发热",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阳毒",
+          "predicate": "常见症状",
+          "object": "斑疹",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阳毒",
+          "predicate": "常见症状",
+          "object": "烦躁",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阳陷入阴",
+          "predicate": "常见症状",
+          "object": "面黄、气弱、发热",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阴毒",
+          "predicate": "常见症状",
+          "object": "下利",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阴毒",
+          "predicate": "常见症状",
+          "object": "腹痛",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阴毒",
+          "predicate": "常见症状",
+          "object": "面青",
+          "subject_type": "syndrome",
+          "object_type": "symptom",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "健忘",
+          "predicate": "常见症状",
+          "object": "心虚，兼痰，兼火",
+          "subject_type": "disease",
+          "object_type": "symptom",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "属于范畴",
+      "count": 76063,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "category",
+          "count": 25825
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "category",
+          "count": 16918
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "category",
+          "count": 7316
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "category",
+          "count": 4645
+        },
+        {
+          "subject_type": "other",
+          "object_type": "category",
+          "count": 3188
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "category",
+          "count": 2124
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "category",
+          "count": 1906
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "category",
+          "count": 1798
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "category",
+          "count": 1239
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "channel",
+          "count": 912
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 4265
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 3518
+        },
+        {
+          "source_book": "367-临证指南医案",
+          "count": 1506
+        },
+        {
+          "source_book": "025-本草求真",
+          "count": 1504
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 1154
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 1112
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 981
+        },
+        {
+          "source_book": "575-医宗金鉴",
+          "count": 940
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 916
+        },
+        {
+          "source_book": "599-医述",
+          "count": 858
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三家洗碗水",
+          "predicate": "属于范畴",
+          "object": "水部第五卷水之二",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "两头蛇",
+          "predicate": "属于范畴",
+          "object": "鳞部第四十三卷\\鳞之二",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "五敛子",
+          "predicate": "属于范畴",
+          "object": "果部第三十一卷果之三",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "仙人杖",
+          "predicate": "属于范畴",
+          "object": "木部木之五",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "便闭",
+          "predicate": "属于范畴",
+          "object": "小儿初生诸病",
+          "subject_type": "symptom",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "剪刀股",
+          "predicate": "属于范畴",
+          "object": "金石部金石之一",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "千年艾",
+          "predicate": "属于范畴",
+          "object": "草部第十五卷草之四",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "壁钱",
+          "predicate": "属于范畴",
+          "object": "虫部第四十卷虫之二",
+          "subject_type": "herb",
+          "object_type": "category",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "现代适应证",
+      "count": 69429,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "disease",
+          "count": 69429
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 69429
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "继发性皮肤脓疱病",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "播散性皮肤单纯疱疹感染合并其他皮肤病",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "眼睑的特应性湿疹",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "眼睑脂溢性皮炎",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "其他特指的眼睑皮炎或湿疹",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "未特指的眼睑皮炎或湿疹",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一扫光药膏",
+          "predicate": "现代适应证",
+          "object": "其他特指的眼睑疾患",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        },
+        {
+          "subject": "一柱天酒",
+          "predicate": "现代适应证",
+          "object": "下肢浅表血栓性静脉炎",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D5_CPM_ICD11"
+        }
+      ]
+    },
+    {
+      "predicate": "治疗证候",
+      "count": 66088,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "count": 53968
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "syndrome",
+          "count": 4235
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "syndrome",
+          "count": 2453
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "syndrome",
+          "count": 1559
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "count": 898
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "formula",
+          "count": 608
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "syndrome",
+          "count": 427
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "syndrome",
+          "count": 380
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "therapy",
+          "count": 218
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "herb",
+          "count": 196
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "637-景岳全书",
+          "count": 2785
+        },
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 1679
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 1388
+        },
+        {
+          "source_book": "605-张氏医通",
+          "count": 1340
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 1243
+        },
+        {
+          "source_book": "168-保婴撮要",
+          "count": 1148
+        },
+        {
+          "source_book": "575-医宗金鉴",
+          "count": 1091
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 1046
+        },
+        {
+          "source_book": "635-证治准绳·幼科",
+          "count": 1003
+        },
+        {
+          "source_book": "141-幼科证治准绳",
+          "count": 1000
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三才封髓丹",
+          "predicate": "治疗证候",
+          "object": "龙雷之火不安",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "三黄石膏汤",
+          "predicate": "治疗证候",
+          "object": "三焦郁热，毒火炽盛",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "人参固本丸",
+          "predicate": "治疗证候",
+          "object": "火旺克金",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "六味地黄丸",
+          "predicate": "治疗证候",
+          "object": "肝肾不足",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "四逆散",
+          "predicate": "治疗证候",
+          "object": "热结于内，阳气不能外达",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "四逆汤",
+          "predicate": "治疗证候",
+          "object": "伤寒少阴症",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "大青龙汤",
+          "predicate": "治疗证候",
+          "object": "风寒两伤营卫",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "大青龙汤",
+          "predicate": "治疗证候",
+          "object": "风寒两伤营卫证",
+          "subject_type": "formula",
+          "object_type": "syndrome",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "药性",
+      "count": 47833,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 25711
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "property",
+          "count": 18548
+        },
+        {
+          "subject_type": "food",
+          "object_type": "property",
+          "count": 2289
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "property",
+          "count": 663
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "processing_method",
+          "count": 132
+        },
+        {
+          "subject_type": "other",
+          "object_type": "property",
+          "count": 127
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "property",
+          "count": 93
+        },
+        {
+          "subject_type": "category",
+          "object_type": "property",
+          "count": 89
+        },
+        {
+          "subject_type": "property",
+          "object_type": "property",
+          "count": 59
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "property",
+          "count": 53
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "645-证类本草",
+          "count": 2943
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 1753
+        },
+        {
+          "source_book": "TCM-MKG",
+          "count": 1320
+        },
+        {
+          "source_book": "003-新修本草",
+          "count": 1204
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 1136
+        },
+        {
+          "source_book": "019-本经逢原",
+          "count": 1063
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 1045
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 968
+        },
+        {
+          "source_book": "021-本草从新",
+          "count": 901
+        },
+        {
+          "source_book": "051-千金翼方",
+          "count": 894
+        }
+      ],
+      "examples": [
+        {
+          "subject": "木瓜",
+          "predicate": "药性",
+          "object": "温",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "芰实",
+          "predicate": "药性",
+          "object": "平",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "荏子",
+          "predicate": "药性",
+          "object": "温",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "荏子叶",
+          "predicate": "药性",
+          "object": "温",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "菘菜",
+          "predicate": "药性",
+          "object": "温",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "蒲桃",
+          "predicate": "药性",
+          "object": "平",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "覆盆子",
+          "predicate": "药性",
+          "object": "平",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "魁蛤",
+          "predicate": "药性",
+          "object": "寒",
+          "subject_type": "food",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "别名",
+      "count": 42722,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "herb",
+          "count": 18697
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "formula",
+          "count": 6422
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "medicine",
+          "count": 2916
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "disease",
+          "count": 2325
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "other",
+          "count": 2302
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "other",
+          "count": 2223
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "other",
+          "count": 1896
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "herb",
+          "count": 1083
+        },
+        {
+          "subject_type": "other",
+          "object_type": "other",
+          "count": 1018
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "other",
+          "count": 701
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 5177
+        },
+        {
+          "source_book": "030-本草纲目别名录",
+          "count": 2521
+        },
+        {
+          "source_book": "316-普济方·针灸",
+          "count": 2090
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 1936
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 1864
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 1823
+        },
+        {
+          "source_book": "003-新修本草",
+          "count": 947
+        },
+        {
+          "source_book": "002-本草经集注",
+          "count": 827
+        },
+        {
+          "source_book": "051-千金翼方",
+          "count": 823
+        },
+        {
+          "source_book": "000-神农本草经",
+          "count": 821
+        }
+      ],
+      "examples": [
+        {
+          "subject": "乌喙",
+          "predicate": "别名",
+          "object": "两头尖",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "五倍子",
+          "predicate": "别名",
+          "object": "草零",
+          "subject_type": "herb",
+          "object_type": "other",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "五敛子",
+          "predicate": "别名",
+          "object": "五棱子",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "五敛子",
+          "predicate": "别名",
+          "object": "阳桃",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "何首乌",
+          "predicate": "别名",
+          "object": "交藤",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "何首乌",
+          "predicate": "别名",
+          "object": "地精",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "何首乌",
+          "predicate": "别名",
+          "object": "夜合",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "何首乌",
+          "predicate": "别名",
+          "object": "野苗",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "治法",
+      "count": 38418,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "count": 13594
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "therapy",
+          "count": 12867
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "therapy",
+          "count": 3776
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "therapy",
+          "count": 3063
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "therapy",
+          "count": 2497
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "therapy",
+          "count": 710
+        },
+        {
+          "subject_type": "other",
+          "object_type": "therapy",
+          "count": 590
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "count": 371
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "count": 178
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "disease",
+          "count": 159
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 1164
+        },
+        {
+          "source_book": "599-医述",
+          "count": 732
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 716
+        },
+        {
+          "source_book": "332-针灸集成",
+          "count": 675
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 576
+        },
+        {
+          "source_book": "475-重订通俗伤寒论",
+          "count": 575
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 569
+        },
+        {
+          "source_book": "299-针灸大成",
+          "count": 544
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 517
+        },
+        {
+          "source_book": "579-医学纲目",
+          "count": 468
+        }
+      ],
+      "examples": [
+        {
+          "subject": "五积散",
+          "predicate": "治法",
+          "object": "发表温中",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "伤寒",
+          "predicate": "治法",
+          "object": "发表用麻黄、桂枝，温中用干姜、附子",
+          "subject_type": "disease",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "大承气汤",
+          "predicate": "治法",
+          "object": "攻下",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "小柴胡汤",
+          "predicate": "治法",
+          "object": "和解表里",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "水解散",
+          "predicate": "治法",
+          "object": "发表攻里",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "痰火内蕴外风乘之证",
+          "predicate": "治法",
+          "object": "化痰",
+          "subject_type": "syndrome",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "痰火内蕴外风乘之证",
+          "predicate": "治法",
+          "object": "清营",
+          "subject_type": "syndrome",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        },
+        {
+          "subject": "阳虚发热",
+          "predicate": "治法",
+          "object": "升举阳气、甘温治疗",
+          "subject_type": "syndrome",
+          "object_type": "therapy",
+          "source_book": "089-医方论",
+          "source_chapter": "089-医方论_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "五味",
+      "count": 35835,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 19967
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "property",
+          "count": 12542
+        },
+        {
+          "subject_type": "food",
+          "object_type": "property",
+          "count": 1787
+        },
+        {
+          "subject_type": "other",
+          "object_type": "property",
+          "count": 488
+        },
+        {
+          "subject_type": "category",
+          "object_type": "property",
+          "count": 258
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "property",
+          "count": 246
+        },
+        {
+          "subject_type": "property",
+          "object_type": "property",
+          "count": 168
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "property",
+          "count": 123
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "property",
+          "count": 87
+        },
+        {
+          "subject_type": "property",
+          "object_type": "medicine",
+          "count": 43
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "645-证类本草",
+          "count": 1876
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 1639
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 1068
+        },
+        {
+          "source_book": "003-新修本草",
+          "count": 973
+        },
+        {
+          "source_book": "036-得配本草",
+          "count": 954
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 879
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 870
+        },
+        {
+          "source_book": "051-千金翼方",
+          "count": 853
+        },
+        {
+          "source_book": "010-滇南本草",
+          "count": 795
+        },
+        {
+          "source_book": "002-本草经集注",
+          "count": 752
+        }
+      ],
+      "examples": [
+        {
+          "subject": "龙葵",
+          "predicate": "五味",
+          "object": "苦",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "龟甲",
+          "predicate": "五味",
+          "object": "酸",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "004-食疗本草",
+          "source_chapter": "004-食疗本草_正文"
+        },
+        {
+          "subject": "地笋",
+          "predicate": "五味",
+          "object": "甘",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "婆娑石",
+          "predicate": "五味",
+          "object": "淡",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "炉甘石",
+          "predicate": "五味",
+          "object": "甘",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "白豆蔻",
+          "predicate": "五味",
+          "object": "辛",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "淫羊藿",
+          "predicate": "五味",
+          "object": "辛",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "017-本草新编",
+          "source_chapter": "017-本草新编_正文"
+        },
+        {
+          "subject": "丹砂",
+          "predicate": "五味",
+          "object": "甘",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "027-本草述钩元",
+          "source_chapter": "027-本草述钩元_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "食忌",
+      "count": 30188,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "food",
+          "count": 13818
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "food",
+          "count": 2138
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "food",
+          "count": 2106
+        },
+        {
+          "subject_type": "food",
+          "object_type": "food",
+          "count": 1784
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "food",
+          "count": 1644
+        },
+        {
+          "subject_type": "food",
+          "object_type": "other",
+          "count": 1032
+        },
+        {
+          "subject_type": "food",
+          "object_type": "symptom",
+          "count": 808
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "food",
+          "count": 727
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "other",
+          "count": 581
+        },
+        {
+          "subject_type": "food",
+          "object_type": "property",
+          "count": 579
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "053-外台秘要",
+          "count": 4235
+        },
+        {
+          "source_book": "074-普济方",
+          "count": 2094
+        },
+        {
+          "source_book": "054-医心方",
+          "count": 1025
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 714
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 684
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 669
+        },
+        {
+          "source_book": "555-饮食须知",
+          "count": 628
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 508
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 467
+        },
+        {
+          "source_book": "156-幼幼新书",
+          "count": 432
+        }
+      ],
+      "examples": [
+        {
+          "subject": "甘草",
+          "predicate": "食忌",
+          "object": "猪肉",
+          "subject_type": "herb",
+          "object_type": "food",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "豆黄",
+          "predicate": "食忌",
+          "object": "猪肉",
+          "subject_type": "herb",
+          "object_type": "food",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "半夏",
+          "predicate": "食忌",
+          "object": "饴糖羊肉",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        },
+        {
+          "subject": "商陆",
+          "predicate": "食忌",
+          "object": "犬肉",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        },
+        {
+          "subject": "地黄",
+          "predicate": "食忌",
+          "object": "萝卜",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        },
+        {
+          "subject": "天门冬",
+          "predicate": "食忌",
+          "object": "鲤鱼",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        },
+        {
+          "subject": "巴豆",
+          "predicate": "食忌",
+          "object": "芦笋",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        },
+        {
+          "subject": "常山",
+          "predicate": "食忌",
+          "object": "葱",
+          "subject_type": "medicine",
+          "object_type": "food",
+          "source_book": "041-炮炙大法",
+          "source_chapter": "041-炮炙大法_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "关联靶点",
+      "count": 24403,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "disease",
+          "object_type": "gene",
+          "count": 24403
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 24403
+        }
+      ],
+      "examples": [
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "ACE",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "ADAMTS7",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "ADM",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "AGER",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "AGT",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "AGTR1",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "AHR",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        },
+        {
+          "subject": "不稳定性心绞痛",
+          "predicate": "关联靶点",
+          "object": "APCS",
+          "subject_type": "disease",
+          "object_type": "gene",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D19_D22_ICD11_target_bridge"
+        }
+      ]
+    },
+    {
+      "predicate": "配伍禁忌",
+      "count": 22241,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "herb",
+          "count": 6423
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "herb",
+          "count": 2445
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "other",
+          "count": 1850
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "medicine",
+          "count": 1588
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "other",
+          "count": 1577
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 1026
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "other",
+          "count": 663
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "herb",
+          "count": 499
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "property",
+          "count": 485
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "symptom",
+          "count": 417
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 1078
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 906
+        },
+        {
+          "source_book": "036-得配本草",
+          "count": 762
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 737
+        },
+        {
+          "source_book": "003-新修本草",
+          "count": 571
+        },
+        {
+          "source_book": "021-本草从新",
+          "count": 562
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 554
+        },
+        {
+          "source_book": "002-本草经集注",
+          "count": 543
+        },
+        {
+          "source_book": "073-增广和剂局方药性总论",
+          "count": 532
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 531
+        }
+      ],
+      "examples": [
+        {
+          "subject": "甘遂",
+          "predicate": "配伍禁忌",
+          "object": "甘草",
+          "subject_type": "medicine",
+          "object_type": "herb",
+          "source_book": "016-本草易读",
+          "source_chapter": "016-本草易读_正文"
+        },
+        {
+          "subject": "苦参",
+          "predicate": "配伍禁忌",
+          "object": "藜芦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "044-要药分剂",
+          "source_chapter": "044-要药分剂_正文"
+        },
+        {
+          "subject": "细辛",
+          "predicate": "配伍禁忌",
+          "object": "反藜芦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "542-寿世保元",
+          "source_chapter": "542-寿世保元_正文"
+        },
+        {
+          "subject": "香附",
+          "predicate": "配伍禁忌",
+          "object": "忌铁器",
+          "subject_type": "herb",
+          "object_type": "other",
+          "source_book": "542-寿世保元",
+          "source_chapter": "542-寿世保元_正文"
+        },
+        {
+          "subject": "薤白",
+          "predicate": "配伍禁忌",
+          "object": "牛肉",
+          "subject_type": "herb",
+          "object_type": "food",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "阿胶",
+          "predicate": "配伍禁忌",
+          "object": "畏大黄",
+          "subject_type": "medicine",
+          "object_type": "other",
+          "source_book": "011-本草品汇精要",
+          "source_chapter": "011-本草品汇精要_正文"
+        },
+        {
+          "subject": "芍药",
+          "predicate": "配伍禁忌",
+          "object": "藜芦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "014-本草乘雅半偈",
+          "source_chapter": "014-本草乘雅半偈_正文"
+        },
+        {
+          "subject": "玄参",
+          "predicate": "配伍禁忌",
+          "object": "藜芦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "015-本草征要",
+          "source_chapter": "015-本草征要_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "归经",
+      "count": 21092,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "channel",
+          "count": 11612
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "channel",
+          "count": 5954
+        },
+        {
+          "subject_type": "other",
+          "object_type": "channel",
+          "count": 617
+        },
+        {
+          "subject_type": "channel",
+          "object_type": "channel",
+          "count": 446
+        },
+        {
+          "subject_type": "property",
+          "object_type": "channel",
+          "count": 414
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "channel",
+          "count": 326
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "channel",
+          "count": 315
+        },
+        {
+          "subject_type": "category",
+          "object_type": "channel",
+          "count": 217
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "channel",
+          "count": 193
+        },
+        {
+          "subject_type": "food",
+          "object_type": "channel",
+          "count": 173
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "025-本草求真",
+          "count": 1493
+        },
+        {
+          "source_book": "032-本草撮要",
+          "count": 859
+        },
+        {
+          "source_book": "044-要药分剂",
+          "count": 809
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 789
+        },
+        {
+          "source_book": "015-本草征要",
+          "count": 770
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 764
+        },
+        {
+          "source_book": "597-冯氏锦囊秘录",
+          "count": 741
+        },
+        {
+          "source_book": "036-得配本草",
+          "count": 719
+        },
+        {
+          "source_book": "042-雷公炮制药性解",
+          "count": 617
+        },
+        {
+          "source_book": "031-本草便读",
+          "count": 575
+        }
+      ],
+      "examples": [
+        {
+          "subject": "咸",
+          "predicate": "归经",
+          "object": "肾",
+          "subject_type": "other",
+          "object_type": "other",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "天门冬",
+          "predicate": "归经",
+          "object": "手太阴经、足少阴经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "甘",
+          "predicate": "归经",
+          "object": "脾",
+          "subject_type": "other",
+          "object_type": "other",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "白芷",
+          "predicate": "归经",
+          "object": "阳明经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "石胆",
+          "predicate": "归经",
+          "object": "少阳胆经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "缩砂密",
+          "predicate": "归经",
+          "object": "手足太阳经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "缩砂密",
+          "predicate": "归经",
+          "object": "手足太阴经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "缩砂密",
+          "predicate": "归经",
+          "object": "手足阳明经",
+          "subject_type": "herb",
+          "object_type": "channel",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "关联术语",
+      "count": 11123,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "other",
+          "count": 11123
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 11123
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一扫光药膏",
+          "predicate": "关联术语",
+          "object": "黄水疮",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一把抓",
+          "predicate": "关联术语",
+          "object": "消食导滞",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一捻金",
+          "predicate": "关联术语",
+          "object": "消食导滞",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一捻金",
+          "predicate": "关联术语",
+          "object": "脾胃不和证",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一捻金",
+          "predicate": "关联术语",
+          "object": "积滞",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一捻金胶囊",
+          "predicate": "关联术语",
+          "object": "消食导滞",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一枝蒿伤湿祛痛膏",
+          "predicate": "关联术语",
+          "object": "活血止痛",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        },
+        {
+          "subject": "一柱天酒",
+          "predicate": "关联术语",
+          "object": "温补肾阳",
+          "subject_type": "formula",
+          "object_type": "other",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D3_CPM_TCMT"
+        }
+      ]
+    },
+    {
+      "predicate": "推荐方剂",
+      "count": 5134,
+      "canonical": true,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "low",
+      "type_distribution": [
+        {
+          "subject_type": "disease",
+          "object_type": "formula",
+          "count": 3434
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "formula",
+          "count": 462
+        },
+        {
+          "subject_type": "syndrome",
+          "object_type": "formula",
+          "count": 407
+        },
+        {
+          "subject_type": "symptom",
+          "object_type": "therapy",
+          "count": 195
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "formula",
+          "count": 174
+        },
+        {
+          "subject_type": "therapy",
+          "object_type": "formula",
+          "count": 148
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "formula",
+          "count": 92
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "therapy",
+          "count": 45
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "formula",
+          "count": 42
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "herb",
+          "count": 28
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "237-外科心法要诀",
+          "count": 265
+        },
+        {
+          "source_book": "575-医宗金鉴",
+          "count": 241
+        },
+        {
+          "source_book": "327-神应经",
+          "count": 155
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 150
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 125
+        },
+        {
+          "source_book": "643-证治准绳·疡医",
+          "count": 122
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 121
+        },
+        {
+          "source_book": "205-金匮翼",
+          "count": 112
+        },
+        {
+          "source_book": "071-医方集宜",
+          "count": 102
+        },
+        {
+          "source_book": "635-证治准绳·幼科",
+          "count": 87
+        }
+      ],
+      "examples": [
+        {
+          "subject": "蚱蝉",
+          "predicate": "推荐方剂",
+          "object": "蚱蝉丸",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "蚱蝉",
+          "predicate": "推荐方剂",
+          "object": "蚱蝉散",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "蚱蝉",
+          "predicate": "推荐方剂",
+          "object": "蚱蝉汤",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "湿疟",
+          "predicate": "推荐方剂",
+          "object": "除湿汤",
+          "subject_type": "disease",
+          "object_type": "formula",
+          "source_book": "205-金匮翼",
+          "source_chapter": "205-金匮翼_正文"
+        },
+        {
+          "subject": "治疗暴赤目痛方",
+          "predicate": "推荐方剂",
+          "object": "四物汤",
+          "subject_type": "formula",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "治走马牙疳方",
+          "predicate": "推荐方剂",
+          "object": "甘露饮",
+          "subject_type": "formula",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "白附子",
+          "predicate": "推荐方剂",
+          "object": "牵正散",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        },
+        {
+          "subject": "石胡荽",
+          "predicate": "推荐方剂",
+          "object": "碧云散",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "source_book": "013-本草纲目",
+          "source_chapter": "013-本草纲目_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "药性特征",
+      "count": 2383,
+      "canonical": false,
+      "proposed_action": "family_only",
+      "proposed_target_predicate": "药性",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 2383
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 2383
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一支箭",
+          "predicate": "药性特征",
+          "object": "Liver meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁茄",
+          "predicate": "药性特征",
+          "object": "Stomach meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁茄",
+          "predicate": "药性特征",
+          "object": "Lung meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁香",
+          "predicate": "药性特征",
+          "object": "Stomach meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁香",
+          "predicate": "药性特征",
+          "object": "Spleen meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁香",
+          "predicate": "药性特征",
+          "object": "Kidney meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁香叶",
+          "predicate": "药性特征",
+          "object": "Stomach meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁香叶",
+          "predicate": "药性特征",
+          "object": "Spleen meridian",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        }
+      ]
+    },
+    {
+      "predicate": "升降浮沉",
+      "count": 2311,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 1313
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "property",
+          "count": 813
+        },
+        {
+          "subject_type": "property",
+          "object_type": "property",
+          "count": 169
+        },
+        {
+          "subject_type": "food",
+          "object_type": "property",
+          "count": 6
+        },
+        {
+          "subject_type": "other",
+          "object_type": "property",
+          "count": 4
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "property",
+          "count": 3
+        },
+        {
+          "subject_type": "book",
+          "object_type": "property",
+          "count": 1
+        },
+        {
+          "subject_type": "category",
+          "object_type": "property",
+          "count": 1
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "property",
+          "count": 1
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "044-要药分剂",
+          "count": 235
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 180
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 127
+        },
+        {
+          "source_book": "035-本草择要纲目",
+          "count": 111
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 106
+        },
+        {
+          "source_book": "012-本草蒙筌",
+          "count": 98
+        },
+        {
+          "source_book": "045-珍珠囊补遗药性赋",
+          "count": 98
+        },
+        {
+          "source_book": "577-医学入门",
+          "count": 91
+        },
+        {
+          "source_book": "017-本草新编",
+          "count": 89
+        },
+        {
+          "source_book": "046-药鉴",
+          "count": 85
+        }
+      ],
+      "examples": [
+        {
+          "subject": "巴戟天",
+          "predicate": "升降浮沉",
+          "object": "可升可降",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "044-要药分剂",
+          "source_chapter": "044-要药分剂_正文"
+        },
+        {
+          "subject": "远志",
+          "predicate": "升降浮沉",
+          "object": "可升可降",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "044-要药分剂",
+          "source_chapter": "044-要药分剂_正文"
+        },
+        {
+          "subject": "川芎",
+          "predicate": "升降浮沉",
+          "object": "升",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "017-本草新编",
+          "source_chapter": "017-本草新编_正文"
+        },
+        {
+          "subject": "浓朴",
+          "predicate": "升降浮沉",
+          "object": "可升可降",
+          "subject_type": "medicine",
+          "object_type": "property",
+          "source_book": "017-本草新编",
+          "source_chapter": "017-本草新编_正文"
+        },
+        {
+          "subject": "女贞子",
+          "predicate": "升降浮沉",
+          "object": "降",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "637-景岳全书",
+          "source_chapter": "637-景岳全书_正文"
+        },
+        {
+          "subject": "川芎",
+          "predicate": "升降浮沉",
+          "object": "升",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "637-景岳全书",
+          "source_chapter": "637-景岳全书_正文"
+        },
+        {
+          "subject": "黄柏",
+          "predicate": "升降浮沉",
+          "object": "降",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "637-景岳全书",
+          "source_chapter": "637-景岳全书_正文"
+        },
+        {
+          "subject": "大黄",
+          "predicate": "升降浮沉",
+          "object": "降",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "012-本草蒙筌",
+          "source_chapter": "012-本草蒙筌_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "药味",
+      "count": 2047,
+      "canonical": false,
+      "proposed_action": "family_only",
+      "proposed_target_predicate": "五味",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "property",
+          "count": 2047
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 2047
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一支箭",
+          "predicate": "药味",
+          "object": "Sweet medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "一支箭",
+          "predicate": "药味",
+          "object": "Bitter medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "一枝蒿",
+          "predicate": "药味",
+          "object": "Pungent medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "一枝黄花",
+          "predicate": "药味",
+          "object": "Pungent medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "一枝黄花",
+          "predicate": "药味",
+          "object": "Bitter medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁公藤",
+          "predicate": "药味",
+          "object": "Pungent medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁茄",
+          "predicate": "药味",
+          "object": "Pungent medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        },
+        {
+          "subject": "丁茄",
+          "predicate": "药味",
+          "object": "Bitter medicinal",
+          "subject_type": "herb",
+          "object_type": "property",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D7_CHP_Medicinal_properties"
+        }
+      ]
+    },
+    {
+      "predicate": "药材基源",
+      "count": 1789,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "origin",
+          "count": 1789
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "TCM-MKG",
+          "count": 1789
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一支箭",
+          "predicate": "药材基源",
+          "object": "Ophioglossum pedunculosum",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "一枝蒿",
+          "predicate": "药材基源",
+          "object": "Artemisia rupestris",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "一枝黄花",
+          "predicate": "药材基源",
+          "object": "Solidago decurrens",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "一枝黄花",
+          "predicate": "药材基源",
+          "object": "Solidago altissima",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "丁公藤",
+          "predicate": "药材基源",
+          "object": "Erycibe obtusifolia",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "丁公藤",
+          "predicate": "药材基源",
+          "object": "Erycibe schmidtii",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "丁茄",
+          "predicate": "药材基源",
+          "object": "Solanum virginianum",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        },
+        {
+          "subject": "丁香",
+          "predicate": "药材基源",
+          "object": "Syzygium aromaticum",
+          "subject_type": "herb",
+          "object_type": "origin",
+          "source_book": "TCM-MKG",
+          "source_chapter": "D8_CHP_PO"
+        }
+      ]
+    },
+    {
+      "predicate": "出处",
+      "count": 214,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "formula",
+          "object_type": "book",
+          "count": 142
+        },
+        {
+          "subject_type": "book",
+          "object_type": "book",
+          "count": 19
+        },
+        {
+          "subject_type": "book",
+          "object_type": "other",
+          "count": 9
+        },
+        {
+          "subject_type": "other",
+          "object_type": "book",
+          "count": 9
+        },
+        {
+          "subject_type": "formula",
+          "object_type": "chapter",
+          "count": 7
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "book",
+          "count": 7
+        },
+        {
+          "subject_type": "herb",
+          "object_type": "other",
+          "count": 6
+        },
+        {
+          "subject_type": "disease",
+          "object_type": "book",
+          "count": 5
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "other",
+          "count": 5
+        },
+        {
+          "subject_type": "medicine",
+          "object_type": "book",
+          "count": 2
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "count": 80
+        },
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 75
+        },
+        {
+          "source_book": "700.李培生老中医经验集",
+          "count": 39
+        },
+        {
+          "source_book": "073-增广和剂局方药性总论",
+          "count": 19
+        },
+        {
+          "source_book": "638-订正仲景全书伤寒论注",
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三化汤",
+          "predicate": "出处",
+          "object": "拔粹",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "乌药平气汤",
+          "predicate": "出处",
+          "object": "三因方",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "二陈汤",
+          "predicate": "出处",
+          "object": "疟门",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "五丹丸",
+          "predicate": "出处",
+          "object": "血证类",
+          "subject_type": "formula",
+          "object_type": "chapter",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "五积散",
+          "predicate": "出处",
+          "object": "中寒门",
+          "subject_type": "formula",
+          "object_type": "chapter",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "五积散",
+          "predicate": "出处",
+          "object": "和剂方",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "人参白虎汤",
+          "predicate": "出处",
+          "object": "徐同知方",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        },
+        {
+          "subject": "人参败毒散",
+          "predicate": "出处",
+          "object": "和剂方",
+          "subject_type": "formula",
+          "object_type": "book",
+          "source_book": "067-仁斋直指方论（附补遗）",
+          "source_chapter": "067-仁斋直指方论（附补遗）_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "利水化饮",
+      "count": 7,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "count": 7
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 7
+        }
+      ],
+      "examples": [
+        {
+          "subject": "大腹皮",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "白术",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "砂仁",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "苍术",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "莱菔子",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "防己",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "陈皮",
+          "predicate": "利水化饮",
+          "object": "利水化饮",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "理气活血",
+      "count": 4,
+      "canonical": false,
+      "proposed_action": "manual_review_required",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "count": 4
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 4
+        }
+      ],
+      "examples": [
+        {
+          "subject": "丹参",
+          "predicate": "理气活血",
+          "object": "理气活血",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "薄荷",
+          "predicate": "理气活血",
+          "object": "理气活血",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "陈皮",
+          "predicate": "理气活血",
+          "object": "理气活血",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "青皮",
+          "predicate": "理气活血",
+          "object": "理气活血",
+          "subject_type": "herb",
+          "object_type": "therapy",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "适应证",
+      "count": 3,
+      "canonical": false,
+      "proposed_action": "family_only",
+      "proposed_target_predicate": "现代适应证",
+      "risk": "medium",
+      "type_distribution": [
+        {
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "count": 3
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 3
+        }
+      ],
+      "examples": [
+        {
+          "subject": "柔肝熄风法",
+          "predicate": "适应证",
+          "object": "真阴亏损，虚风内动，瘛疭瘫痪，神疲乏力，或自汗盗汗，手足心热，舌绛少苔或光剥无苔，脉虚大无根或虚而无力",
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "益气散风法",
+          "predicate": "适应证",
+          "object": "气血俱虚，寒湿内蕴，外受风寒，偏瘫身重，心中寒，气短乏力，手足厥冷，舌苔薄白，脉沉细弦",
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        },
+        {
+          "subject": "苦寒泻火法",
+          "predicate": "适应证",
+          "object": "肝胆实火，筋脉失养，头晕头痛，烦躁易怒，轻度偏瘫，恶热，尿黄赤，舌质红苔黄或黄白，脉弦数者",
+          "subject_type": "therapy",
+          "object_type": "syndrome",
+          "source_book": "686-中医临证经验与方法",
+          "source_chapter": "686-中医临证经验与方法_正文"
+        }
+      ]
+    },
+    {
+      "predicate": "欲解时",
+      "count": 1,
+      "canonical": false,
+      "proposed_action": "keep",
+      "proposed_target_predicate": "",
+      "risk": "high",
+      "type_distribution": [
+        {
+          "subject_type": "disease",
+          "object_type": "other",
+          "count": 1
+        }
+      ],
+      "source_books": [
+        {
+          "source_book": "638-订正仲景全书伤寒论注",
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "subject": "太阴病",
+          "predicate": "欲解时",
+          "object": "从亥至丑上",
+          "subject_type": "disease",
+          "object_type": "other",
+          "source_book": "638-订正仲景全书伤寒论注",
+          "source_chapter": "638-订正仲景全书伤寒论注_正文"
+        }
+      ]
+    }
+  ]
+}

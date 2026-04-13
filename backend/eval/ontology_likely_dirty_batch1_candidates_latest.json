@@ -1,0 +1,2107 @@
+{
+  "generated_at": "2026-04-13 19:51:32 +0800",
+  "db_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\graph_service\\data\\graph_runtime.db",
+  "target_count": 5,
+  "targets": [
+    {
+      "predicate": "归经",
+      "subject_type": "channel",
+      "object_type": "channel",
+      "action": "delete_or_retype_relation",
+      "reason": "经脉到经脉/穴位关系不应挂在归经主边上",
+      "count_total": 446,
+      "top_books": [
+        {
+          "source_book": "299-针灸大成",
+          "count": 71
+        },
+        {
+          "source_book": "316-普济方·针灸",
+          "count": 44
+        },
+        {
+          "source_book": "687-经穴秘密",
+          "count": 24
+        },
+        {
+          "source_book": "263-救伤秘旨",
+          "count": 20
+        },
+        {
+          "source_book": "301-针灸甲乙经",
+          "count": 20
+        },
+        {
+          "source_book": "579-医学纲目",
+          "count": 19
+        },
+        {
+          "source_book": "295-针灸大全",
+          "count": 18
+        },
+        {
+          "source_book": "333-针灸资生经",
+          "count": 17
+        },
+        {
+          "source_book": "310-子午流注说难",
+          "count": 13
+        },
+        {
+          "source_book": "427-类经",
+          "count": 12
+        },
+        {
+          "source_book": "604-医学真传",
+          "count": 12
+        },
+        {
+          "source_book": "097-验方新编",
+          "count": 11
+        }
+      ],
+      "examples": [
+        {
+          "signature": "合谷穴||归经||手阳明经||288-痰疠法门||288-痰疠法门_正文",
+          "fact_id": "b79ae2bdc67366fe",
+          "subject": "合谷穴",
+          "object": "手阳明经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "288-痰疠法门",
+          "source_chapter": null,
+          "source_text_preview": "合谷穴 属手阳明经",
+          "confidence": 0.98
+        },
+        {
+          "signature": "手少阳三焦经||归经||手少阳||306-刺灸心法要诀||306-刺灸心法要诀_正文",
+          "fact_id": "046bd54c3b4076a6",
+          "subject": "手少阳三焦经",
+          "object": "手少阳",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "306-刺灸心法要诀",
+          "source_chapter": null,
+          "source_text_preview": "三焦手少阳之脉",
+          "confidence": 0.98
+        },
+        {
+          "signature": "肝||归经||足厥阴||074-普济方||074-普济方_正文",
+          "fact_id": "ef93a8d8953c007d",
+          "subject": "肝",
+          "object": "足厥阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "074-普济方",
+          "source_chapter": null,
+          "source_text_preview": "其经足厥阴",
+          "confidence": 0.95
+        },
+        {
+          "signature": "中冲穴||归经||手厥阴心包络经||097-验方新编||097-验方新编_正文",
+          "fact_id": "c8f8ef46c756d632",
+          "subject": "中冲穴",
+          "object": "手厥阴心包络经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "中冲穴，在中指内甲角，手厥阴心包络经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "丹田穴||归经||任脉||097-验方新编||097-验方新编_正文",
+          "fact_id": "984ad1d7bb43877b",
+          "subject": "丹田穴",
+          "object": "任脉",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "丹田穴…任脉，属肾经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "关冲穴||归经||手少阳三焦经||097-验方新编||097-验方新编_正文",
+          "fact_id": "2b5737522d821870",
+          "subject": "关冲穴",
+          "object": "手少阳三焦经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "关冲穴，在无名指外甲角，手少阳三焦经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "商阳穴||归经||手阳明大肠经||097-验方新编||097-验方新编_正文",
+          "fact_id": "55a5a70de73d91fe",
+          "subject": "商阳穴",
+          "object": "手阳明大肠经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "商阳穴，在食指内甲角，手阳明大肠经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "对门穴||归经||足阳明||097-验方新编||097-验方新编_正文",
+          "fact_id": "333037dc14750f05",
+          "subject": "对门穴",
+          "object": "足阳明",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "对门穴…足阳明，属心、肺二经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "少冲穴||归经||手太阳小肠经||097-验方新编||097-验方新编_正文",
+          "fact_id": "0b6a17bcc9128bd8",
+          "subject": "少冲穴",
+          "object": "手太阳小肠经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "少冲穴，在小指内甲角，手太阳小肠经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "少商穴||归经||手太阴肺经||097-验方新编||097-验方新编_正文",
+          "fact_id": "910394c18f2e42d8",
+          "subject": "少商穴",
+          "object": "手太阴肺经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "少商穴，在大指内甲角，手太阴肺经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "心井穴||归经||任脉||097-验方新编||097-验方新编_正文",
+          "fact_id": "85f0ddf5a1476ebf",
+          "subject": "心井穴",
+          "object": "任脉",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "心井穴…任脉，属五脏",
+          "confidence": 0.95
+        },
+        {
+          "signature": "扇门穴||归经||足阳明||097-验方新编||097-验方新编_正文",
+          "fact_id": "99220c00ad700e4f",
+          "subject": "扇门穴",
+          "object": "足阳明",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "扇门穴…足阳明，属肺经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "血浪穴||归经||足阳明胃经||097-验方新编||097-验方新编_正文",
+          "fact_id": "154a0669fa172f94",
+          "subject": "血浪穴",
+          "object": "足阳明胃经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "血浪穴…足阳明胃经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "颊车穴||归经||足阳明胃经||097-验方新编||097-验方新编_正文",
+          "fact_id": "b202c30d60c760ac",
+          "subject": "颊车穴",
+          "object": "足阳明胃经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "097-验方新编",
+          "source_chapter": null,
+          "source_text_preview": "颊车穴，在耳垂下八分，足阳明胃经",
+          "confidence": 0.95
+        },
+        {
+          "signature": "三焦||归经||手少阳||103-华佗神方||103-华佗神方_正文",
+          "fact_id": "ddce7c03b501c706",
+          "subject": "三焦",
+          "object": "手少阳",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "103-华佗神方",
+          "source_chapter": null,
+          "source_text_preview": "手少阳是其经也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "脾||归经||足太阴经||103-华佗神方||103-华佗神方_正文",
+          "fact_id": "99baa690c869acbc",
+          "subject": "脾",
+          "object": "足太阴经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "103-华佗神方",
+          "source_chapter": null,
+          "source_text_preview": "足太阴是其经也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "心||归经||手少阴||155-幼幼集成||155-幼幼集成_正文",
+          "fact_id": "9b9244538f08f54f",
+          "subject": "心",
+          "object": "手少阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "155-幼幼集成",
+          "source_chapter": null,
+          "source_text_preview": "心者，手少阴火也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "肝||归经||足厥阴||155-幼幼集成||155-幼幼集成_正文",
+          "fact_id": "08631deeb9f82459",
+          "subject": "肝",
+          "object": "足厥阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "155-幼幼集成",
+          "source_chapter": null,
+          "source_text_preview": "肝者，足厥阴木也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "脾||归经||足太阴||155-幼幼集成||155-幼幼集成_正文",
+          "fact_id": "ae953da347ae5dea",
+          "subject": "脾",
+          "object": "足太阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "155-幼幼集成",
+          "source_chapter": null,
+          "source_text_preview": "脾者，足太阴土也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "心||归经||手少阴||162-幼科概论||162-幼科概论_正文",
+          "fact_id": "08152fa6065060a2",
+          "subject": "心",
+          "object": "手少阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "162-幼科概论",
+          "source_chapter": null,
+          "source_text_preview": "心者属手少阴也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "肝||归经||足厥阴||162-幼科概论||162-幼科概论_正文",
+          "fact_id": "67efc99ca49b63d5",
+          "subject": "肝",
+          "object": "足厥阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "162-幼科概论",
+          "source_chapter": null,
+          "source_text_preview": "肝者属足厥阴也",
+          "confidence": 0.95
+        },
+        {
+          "signature": "心||归经||手少阴||208-笔花医镜||208-笔花医镜_正文",
+          "fact_id": "edce5a26797ad4ac",
+          "subject": "心",
+          "object": "手少阴",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "208-笔花医镜",
+          "source_chapter": null,
+          "source_text_preview": "（手少阴属脏）",
+          "confidence": 0.95
+        },
+        {
+          "signature": "三焦||归经||手少阳三焦经||223-疡医大全||223-疡医大全_正文",
+          "fact_id": "154e7acfa3676503",
+          "subject": "三焦",
+          "object": "手少阳三焦经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "223-疡医大全",
+          "source_chapter": null,
+          "source_text_preview": "手少阳三焦引经药歌",
+          "confidence": 0.95
+        },
+        {
+          "signature": "命门穴||归经||心经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "6534fe298ac5d63f",
+          "subject": "命门穴",
+          "object": "心经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "命门穴（在十四椎下，对心下八寸。） 督脉，属心肾二经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "命门穴||归经||肾经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "735f583817eed598",
+          "subject": "命门穴",
+          "object": "肾经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "命门穴（在十四椎下，对心下八寸。） 督脉，属心肾二经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "对心穴||归经||心经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "8dc0393c5e9937a5",
+          "subject": "对心穴",
+          "object": "心经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "对心穴（在第七椎下节间，伯劳下六寸，即至阳穴。） 督脉，属心经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "海底穴||归经||心经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "e7a0b5046b33bc22",
+          "subject": "海底穴",
+          "object": "心经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "海底穴（在粪门前阴囊后，即会阴穴，一名屏翳。） 任脉，属心经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "膝眼穴||归经||心经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "03eb1ebc556b43d8",
+          "subject": "膝眼穴",
+          "object": "心经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "膝眼穴（在膝膑上内白肉陷中，即血海穴。） 足太阴，属心经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "鹳口穴||归经||肺经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "cff9ba4920058060",
+          "subject": "鹳口穴",
+          "object": "肺经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "鹳口穴（在尾 骨上脊骨尽处。） 督脉，属肺肾二经。",
+          "confidence": 0.95
+        },
+        {
+          "signature": "鹳口穴||归经||肾经||263-救伤秘旨||263-救伤秘旨_正文",
+          "fact_id": "fc766bda6c048901",
+          "subject": "鹳口穴",
+          "object": "肾经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "263-救伤秘旨",
+          "source_chapter": null,
+          "source_text_preview": "鹳口穴（在尾 骨上脊骨尽处。） 督脉，属肺肾二经。",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "predicate": "使用药材",
+      "subject_type": "herb",
+      "object_type": "herb",
+      "action": "delete_or_retype_relation",
+      "reason": "药到药组合更像配伍/列举，不应挂在使用药材主边上",
+      "count_total": 2748,
+      "top_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 816
+        },
+        {
+          "source_book": "399-张聿青医案",
+          "count": 97
+        },
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 95
+        },
+        {
+          "source_book": "010-滇南本草",
+          "count": 94
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 93
+        },
+        {
+          "source_book": "011-本草品汇精要",
+          "count": 92
+        },
+        {
+          "source_book": "700.李培生老中医经验集",
+          "count": 70
+        },
+        {
+          "source_book": "416-续名医类案",
+          "count": 57
+        },
+        {
+          "source_book": "020-本草经解",
+          "count": 53
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 52
+        },
+        {
+          "source_book": "367-临证指南医案",
+          "count": 52
+        },
+        {
+          "source_book": "017-本草新编",
+          "count": 51
+        }
+      ],
+      "examples": [
+        {
+          "signature": "榆仁酱||使用药材||榆仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "9d7b9a12c0780070",
+          "subject": "榆仁酱",
+          "object": "榆仁",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "造法∶取榆仁水浸一伏时",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||水银||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "5f347e86ca0ca73a",
+          "subject": "水银粉",
+          "object": "水银",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "升炼轻粉法∶用水银一两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||焰硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "7fee991819e53bf3",
+          "subject": "水银粉",
+          "object": "焰硝",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "先以皂矾四两，盐一两，焰硝五钱",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||白矾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "01edb8c2ea4fee1f",
+          "subject": "水银粉",
+          "object": "白矾",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "白矾二两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||皂矾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "07bd53bdff2ef2ea",
+          "subject": "水银粉",
+          "object": "皂矾",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "又法∶水银一两，皂矾七钱",
+          "confidence": 0.99
+        },
+        {
+          "signature": "水银粉||使用药材||食盐||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "0310b7833f2e5725",
+          "subject": "水银粉",
+          "object": "食盐",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "食盐一两",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||杉木炭||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "1b5d2ee671c5ba1c",
+          "subject": "火药",
+          "object": "杉木炭",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||焰硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "139a6a3949317cb5",
+          "subject": "火药",
+          "object": "焰硝",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "火药||使用药材||硫黄||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "919d0043b1859866",
+          "subject": "火药",
+          "object": "硫黄",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "乃焰硝、硫黄、杉木炭所合",
+          "confidence": 0.99
+        },
+        {
+          "signature": "玉屑||使用药材||玉||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "f26b1dedc1be6812",
+          "subject": "玉屑",
+          "object": "玉",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "玉屑是以玉为屑，非别一物也",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||泥豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "98a86ae0cca471e5",
+          "subject": "豆腐",
+          "object": "泥豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||白豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "c48326c357ce5f15",
+          "subject": "豆腐",
+          "object": "白豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||绿豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "486b32af51528f43",
+          "subject": "豆腐",
+          "object": "绿豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||豌豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "6f41b1a851c6d95c",
+          "subject": "豆腐",
+          "object": "豌豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||黄豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "031bb4baf0d29f95",
+          "subject": "豆腐",
+          "object": "黄豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆腐||使用药材||黑豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "da0fce7aeb691d1c",
+          "subject": "豆腐",
+          "object": "黑豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "凡黑豆、黄豆及白豆、泥豆、豌豆、绿豆之类，皆可为之",
+          "confidence": 0.99
+        },
+        {
+          "signature": "豆黄||使用药材||黑豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "346f46292191f573",
+          "subject": "豆黄",
+          "object": "黑豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "造法∶用黑豆一斗蒸熟",
+          "confidence": 0.99
+        },
+        {
+          "signature": "云母||使用药材||沉香||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "d47da0449fb716f8",
+          "subject": "云母",
+          "object": "沉香",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "取沉香一两捣作末，以天池水煎沉香汤三升以来，分为三度，再淘云母浆了",
+          "confidence": 0.98
+        },
+        {
+          "signature": "仙灵脾酒||使用药材||仙灵脾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b22d6a591292b105",
+          "subject": "仙灵脾酒",
+          "object": "仙灵脾",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "仙灵脾一斤，袋盛，浸无灰",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||秫||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "af61dd1e0d3a5644",
+          "subject": "咂嘛酒",
+          "object": "秫",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||稻||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "61b7511176c532ae",
+          "subject": "咂嘛酒",
+          "object": "稻",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||药曲||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "2c3c45178255e5ab",
+          "subject": "咂嘛酒",
+          "object": "药曲",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||麦||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "2139e6c4c8171dd7",
+          "subject": "咂嘛酒",
+          "object": "麦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "咂嘛酒||使用药材||黍||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "4e5ea6e9b625c998",
+          "subject": "咂嘛酒",
+          "object": "黍",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "秦、蜀有咂嘛酒，用稻、麦、黍、秫、药曲，小罂封酿而成",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||巴豆仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "688cbe3076544dc0",
+          "subject": "土黄",
+          "object": "巴豆仁",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "木鳖子仁、巴豆仁各半两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||木鳖子仁||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b58cc2926fa105b6",
+          "subject": "土黄",
+          "object": "木鳖子仁",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "木鳖子仁、巴豆仁各半两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||砒石||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "43d180351493ca58",
+          "subject": "土黄",
+          "object": "砒石",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "用砒石二两",
+          "confidence": 0.98
+        },
+        {
+          "signature": "土黄||使用药材||硇砂||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "710912d885a98d33",
+          "subject": "土黄",
+          "object": "硇砂",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "硇砂二钱",
+          "confidence": 0.98
+        },
+        {
+          "signature": "大豆豉||使用药材||黑豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "4926fc803a756e84",
+          "subject": "大豆豉",
+          "object": "黑豆",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "豉，诸大豆皆可为之，以黑豆者入药",
+          "confidence": 0.98
+        },
+        {
+          "signature": "女曲||使用药材||小麦||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "9563585ff5b8d817",
+          "subject": "女曲",
+          "object": "小麦",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "恭曰∶女曲，完小麦为饭，和成罨之，待上黄衣，取晒。",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "predicate": "使用药材",
+      "subject_type": "category",
+      "object_type": "herb",
+      "action": "retype_relation",
+      "reason": "分类条目列举药物，不应继续使用使用药材主边",
+      "count_total": 1063,
+      "top_books": [
+        {
+          "source_book": "647-万病回春",
+          "count": 295
+        },
+        {
+          "source_book": "051-千金翼方",
+          "count": 257
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 100
+        },
+        {
+          "source_book": "608-丹台玉案",
+          "count": 83
+        },
+        {
+          "source_book": "537-松峰说疫",
+          "count": 82
+        },
+        {
+          "source_book": "602-类证治裁",
+          "count": 78
+        },
+        {
+          "source_book": "567-脉因证治",
+          "count": 32
+        },
+        {
+          "source_book": "063-杨氏家藏方",
+          "count": 24
+        },
+        {
+          "source_book": "281-疡科纲要",
+          "count": 20
+        },
+        {
+          "source_book": "182-陈氏幼科秘诀",
+          "count": 16
+        },
+        {
+          "source_book": "223-疡医大全",
+          "count": 14
+        },
+        {
+          "source_book": "226-外科大成",
+          "count": 11
+        }
+      ],
+      "examples": [
+        {
+          "signature": "泄剂||使用药材||大黄||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b5aa7fd52efd7003",
+          "subject": "泄剂",
+          "object": "大黄",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "泄可去闭，葶苈、大黄之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泄剂||使用药材||巴豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b952937251d4c3fb",
+          "subject": "泄剂",
+          "object": "巴豆",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泄剂||使用药材||牵牛||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "1757b0b5b8c61c8c",
+          "subject": "泄剂",
+          "object": "牵牛",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泄剂||使用药材||甘遂||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "52c5a55a0af11bff",
+          "subject": "泄剂",
+          "object": "甘遂",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泄剂||使用药材||芒硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "651f1a71f1a92379",
+          "subject": "泄剂",
+          "object": "芒硝",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泄剂||使用药材||葶苈||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "5ea2c1027125120d",
+          "subject": "泄剂",
+          "object": "葶苈",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "泄可去闭，葶苈、大黄之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泻剂||使用药材||大黄||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "25ba8e972a74361a",
+          "subject": "泻剂",
+          "object": "大黄",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泻剂||使用药材||巴豆||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "ab754375c66d168f",
+          "subject": "泻剂",
+          "object": "巴豆",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泻剂||使用药材||牵牛||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "00d69d0a100c4fa9",
+          "subject": "泻剂",
+          "object": "牵牛",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泻剂||使用药材||甘遂||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b88cad9abb47e36d",
+          "subject": "泻剂",
+          "object": "甘遂",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "泻剂||使用药材||芒硝||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "a5fca05df548d569",
+          "subject": "泻剂",
+          "object": "芒硝",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "芒硝、大黄、牵牛、甘遂、巴豆之属，皆泻剂也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||乌梅||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "a6234ee066f3e979",
+          "subject": "涩剂",
+          "object": "乌梅",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "喘嗽上奔，涩以乌梅、诃子",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||五倍子||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "811549a65cac28c7",
+          "subject": "涩剂",
+          "object": "五倍子",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "牡蛎、龙骨、海螵蛸、五倍子、五味子、乌梅、榴皮、诃黎勒、罂粟壳、莲房、棕灰、赤石脂、麻黄根之类，皆涩药也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||木贼||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "269342ba0244f1b0",
+          "subject": "涩剂",
+          "object": "木贼",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑泄不已，涩以豆蔻、枯矾、木贼、罂粟壳",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||枯矾||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "1c00436548cf9f28",
+          "subject": "涩剂",
+          "object": "枯矾",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑泄不已，涩以豆蔻、枯矾、木贼、罂粟壳",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||海螵蛸||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "967be7f99b3cd20e",
+          "subject": "涩剂",
+          "object": "海螵蛸",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "牡蛎、龙骨、海螵蛸、五倍子、五味子、乌梅、榴皮、诃黎勒、罂粟壳、莲房、棕灰、赤石脂、麻黄根之类，皆涩药也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||牡蛎||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "32293e9eb274ebc4",
+          "subject": "涩剂",
+          "object": "牡蛎",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "之才曰∶涩可去脱，牡蛎、龙骨之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||罂粟壳||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "e547e2e56e0917e2",
+          "subject": "涩剂",
+          "object": "罂粟壳",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑泄不已，涩以豆蔻、枯矾、木贼、罂粟壳",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||诃子||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "aa7e16026c21b2e7",
+          "subject": "涩剂",
+          "object": "诃子",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "喘嗽上奔，涩以乌梅、诃子",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||豆蔻||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "dc30b44e07a68bb5",
+          "subject": "涩剂",
+          "object": "豆蔻",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑泄不已，涩以豆蔻、枯矾、木贼、罂粟壳",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||防风||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "914ed43dc779f446",
+          "subject": "涩剂",
+          "object": "防风",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "寝汗不禁，涩以麻黄根、防风",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||麻黄根||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "71fa1f3f5d1ba0bf",
+          "subject": "涩剂",
+          "object": "麻黄根",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "寝汗不禁，涩以麻黄根、防风",
+          "confidence": 0.98
+        },
+        {
+          "signature": "涩剂||使用药材||龙骨||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "88ac92952385fa7c",
+          "subject": "涩剂",
+          "object": "龙骨",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "之才曰∶涩可去脱，牡蛎、龙骨之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||五叶藤||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "c6a925733da982ea",
+          "subject": "滑剂",
+          "object": "五叶藤",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "引疮毒自小便去者，则五叶藤、萱草根之属",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||冬葵子||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "603079cf414d30ef",
+          "subject": "滑剂",
+          "object": "冬葵子",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑剂之才曰∶滑可去着，冬葵子、榆白皮之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||半夏||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "1f2bb2430efda020",
+          "subject": "滑剂",
+          "object": "半夏",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "引痰涎自小便去者，则半夏、茯苓之属",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||木通||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "4073c1790ca3ccbf",
+          "subject": "滑剂",
+          "object": "木通",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "此与木通、猪苓通以去滞相类而不同",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||榆白皮||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "5866aa121098a920",
+          "subject": "滑剂",
+          "object": "榆白皮",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "滑剂之才曰∶滑可去着，冬葵子、榆白皮之属是也",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||榆皮||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "b65b05a028d4c86b",
+          "subject": "滑剂",
+          "object": "榆皮",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "葵子、榆皮，甘滑之类，去湿热有形之邪",
+          "confidence": 0.98
+        },
+        {
+          "signature": "滑剂||使用药材||牵牛||013-本草纲目||013-本草纲目_正文",
+          "fact_id": "7a9be3871f079688",
+          "subject": "滑剂",
+          "object": "牵牛",
+          "subject_type": "category",
+          "object_type": "herb",
+          "source_book": "013-本草纲目",
+          "source_chapter": null,
+          "source_text_preview": "大便涩者，菠菱、牵牛之属",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "predicate": "治疗症状",
+      "subject_type": "book",
+      "object_type": "symptom",
+      "action": "delete_or_retype_relation",
+      "reason": "书籍论及症状，不等于书籍治疗症状",
+      "count_total": 191,
+      "top_books": [
+        {
+          "source_book": "297-针灸易学",
+          "count": 53
+        },
+        {
+          "source_book": "300-针灸逢源",
+          "count": 44
+        },
+        {
+          "source_book": "335-巢氏病源补养宣导法",
+          "count": 27
+        },
+        {
+          "source_book": "606-中国医籍考",
+          "count": 25
+        },
+        {
+          "source_book": "699-名老中医之路",
+          "count": 18
+        },
+        {
+          "source_book": "675-姚贞白医案",
+          "count": 6
+        },
+        {
+          "source_book": "645-证类本草",
+          "count": 5
+        },
+        {
+          "source_book": "385-奇症汇",
+          "count": 3
+        },
+        {
+          "source_book": "054-医心方",
+          "count": 2
+        },
+        {
+          "source_book": "327-神应经",
+          "count": 2
+        },
+        {
+          "source_book": "384-吴医汇讲",
+          "count": 2
+        },
+        {
+          "source_book": "402-热病衡正",
+          "count": 2
+        }
+      ],
+      "examples": [
+        {
+          "signature": "千金方||治疗症状||腹中胀满||384-吴医汇讲||384-吴医汇讲_正文",
+          "fact_id": "95f58e40e22abd7d",
+          "subject": "千金方",
+          "object": "腹中胀满",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "384-吴医汇讲",
+          "source_chapter": null,
+          "source_text_preview": "《千金》治结气，冷症积在胁下，及香港脚上入小腹，腹中胀满",
+          "confidence": 0.95
+        },
+        {
+          "signature": "《肘后方》||治疗症状||大渴不止||384-吴医汇讲||384-吴医汇讲_正文",
+          "fact_id": "36b88cc14d0220cf",
+          "subject": "《肘后方》",
+          "object": "大渴不止",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "384-吴医汇讲",
+          "source_chapter": null,
+          "source_text_preview": "治霍乱，大渴不止",
+          "confidence": 0.94
+        },
+        {
+          "signature": "千金方||治疗症状||烦闷||645-证类本草||645-证类本草_正文",
+          "fact_id": "2fb8302aba469b1a",
+          "subject": "千金方",
+          "object": "烦闷",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "645-证类本草",
+          "source_chapter": null,
+          "source_text_preview": "又方∶疗烦闷",
+          "confidence": 0.94
+        },
+        {
+          "signature": "《温病条辨》||治疗症状||舌苔老黄，甚则黑有芒刺||402-热病衡正||402-热病衡正_正文",
+          "fact_id": "47284e3940fbf991",
+          "subject": "《温病条辨》",
+          "object": "舌苔老黄，甚则黑有芒刺",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "402-热病衡正",
+          "source_chapter": null,
+          "source_text_preview": "中焦篇第一条就有“舌苔老黄，甚则黑有芒刺”之证",
+          "confidence": 0.92
+        },
+        {
+          "signature": "《病源论》||治疗症状||马啮及马骨所伤刺||054-医心方||054-医心方_正文",
+          "fact_id": "4b04fe71db7ddc90",
+          "subject": "《病源论》",
+          "object": "马啮及马骨所伤刺",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "054-医心方",
+          "source_chapter": null,
+          "source_text_preview": "《病源论》云∶凡人被马啮 及马骨所伤刺，并马缰、 勒所伤，疮皆为毒疮。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "苏敬本草注||治疗症状||口干||054-医心方||054-医心方_正文",
+          "fact_id": "5463e49a05babcf1",
+          "subject": "苏敬本草注",
+          "object": "口干",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "054-医心方",
+          "source_chapter": null,
+          "source_text_preview": "《苏敬本草注》∶口干食软熟柿也",
+          "confidence": 0.9
+        },
+        {
+          "signature": "《痈肿杂效方》||治疗症状||热肿||075-肘后备急方||075-肘后备急方_正文",
+          "fact_id": "e967d8b8aa3f4ac9",
+          "subject": "《痈肿杂效方》",
+          "object": "热肿",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "075-肘后备急方",
+          "source_chapter": null,
+          "source_text_preview": "《痈肿杂效方》，疗热肿。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||两臂顽麻||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "d0dcb7562310ac56",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "两臂顽麻",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "两臂顽麻∶少海、三里。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||偏头痛||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "fb21ed199b0f76f5",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "偏头痛",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "偏头痛∶悬颅、颔厌。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||半身不遂||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "32bfe96e48298bb7",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "半身不遂",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "半身不遂∶阳陵、曲池。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||厥寒厥热||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "8780a521b5ebf16a",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "厥寒厥热",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "厥寒厥热∶涌泉。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||反张悲哭||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "d2d1ce7ae89cd037",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "反张悲哭",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "反张悲哭∶天冲、大横。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||发狂奔走||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "9dd157dc8c6a466d",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "发狂奔走",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "发狂奔走∶上脘、神门。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||口||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "f69c3d757ce22eb0",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "口",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "口 ∶颊车、地仓。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||喉痛||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "e60ed0e59fe53e60",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "喉痛",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "喉痛∶液门、鱼际。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||大肠不收||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "7a6fa082efbb0e3c",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "大肠不收",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "大肠不收∶外丘。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||失音||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "63f00e4138825b26",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "失音",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "失音∶天鼎、间使。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||头痛||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "84883165ce223e50",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "头痛",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "头痛∶强间、丰隆。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||头风||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "2dcf4b7a3bf5f1d0",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "头风",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "头风∶囟会、玉枕。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||寒栗恶寒||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "caa7d18d289baf4c",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "寒栗恶寒",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "寒栗恶寒∶二间、阴郗。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||岁热时行||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "2b4abbaef491eb92",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "岁热时行",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "岁热时行∶陶道、肺俞。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||带下产崩||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "26abed7b45704db9",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "带下产崩",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "带下产崩∶冲门、气冲。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||惊悸怔忡||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "23fb66d77f3ebfc5",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "惊悸怔忡",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "惊悸怔忡∶阳交、解 。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||攀睛||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "34d0b945579b7c79",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "攀睛",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "攀睛∶少泽、肝俞。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||月潮违限||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "7e2351865aeabd98",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "月潮违限",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "月潮违限∶水泉、天枢。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||梦魇不宁||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "292a13dbe4b69cae",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "梦魇不宁",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "梦魇不宁∶厉兑、内庭。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||水肿脐盈||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "c4f8307cca00d853",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "水肿脐盈",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "水肿脐盈∶阴陵、水分。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||泪出||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "898253cee26dd135",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "泪出",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "泪出∶临泣、头维。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||湿寒湿热||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "51e87282ed338f2b",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "湿寒湿热",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "湿寒湿热∶下。",
+          "confidence": 0.9
+        },
+        {
+          "signature": "聚英先生百症赋认症定穴治法||治疗症状||烦心呕吐||297-针灸易学||297-针灸易学_正文",
+          "fact_id": "0b3829dfe424e720",
+          "subject": "聚英先生百症赋认症定穴治法",
+          "object": "烦心呕吐",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "297-针灸易学",
+          "source_chapter": null,
+          "source_text_preview": "烦心呕吐∶阴 。",
+          "confidence": 0.9
+        }
+      ]
+    },
+    {
+      "predicate": "治疗症状",
+      "subject_type": "chapter",
+      "object_type": "symptom",
+      "action": "delete_or_retype_relation",
+      "reason": "篇章描述症状，不等于篇章治疗症状",
+      "count_total": 164,
+      "top_books": [
+        {
+          "source_book": "353-凌门传授铜人指穴",
+          "count": 78
+        },
+        {
+          "source_book": "373-丁甘仁医案",
+          "count": 19
+        },
+        {
+          "source_book": "433-六因条辨",
+          "count": 18
+        },
+        {
+          "source_book": "299-针灸大成",
+          "count": 15
+        },
+        {
+          "source_book": "441-内经评文",
+          "count": 8
+        },
+        {
+          "source_book": "087-医方集解",
+          "count": 7
+        },
+        {
+          "source_book": "581-兰室秘藏",
+          "count": 6
+        },
+        {
+          "source_book": "300-针灸逢源",
+          "count": 4
+        },
+        {
+          "source_book": "418-医学源流论",
+          "count": 2
+        },
+        {
+          "source_book": "436-素问经注节解",
+          "count": 2
+        },
+        {
+          "source_book": "637-景岳全书",
+          "count": 2
+        },
+        {
+          "source_book": "054-医心方",
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "signature": "医案||治疗症状||两足忽肿大如股||299-针灸大成||299-针灸大成_正文",
+          "fact_id": "fa5c672da3ee6c3b",
+          "subject": "医案",
+          "object": "两足忽肿大如股",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "299-针灸大成",
+          "source_chapter": null,
+          "source_text_preview": "两足忽肿大如股",
+          "confidence": 0.95
+        },
+        {
+          "signature": "医案||治疗症状||手臂不举||299-针灸大成||299-针灸大成_正文",
+          "fact_id": "8ba912aa8cf647cc",
+          "subject": "医案",
+          "object": "手臂不举",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "299-针灸大成",
+          "source_chapter": null,
+          "source_text_preview": "母患手臂不举",
+          "confidence": 0.95
+        },
+        {
+          "signature": "医案||治疗症状||盛暑喜穿棉袄||299-针灸大成||299-针灸大成_正文",
+          "fact_id": "47c638cb41adc0b5",
+          "subject": "医案",
+          "object": "盛暑喜穿棉袄",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "299-针灸大成",
+          "source_chapter": null,
+          "source_text_preview": "虽盛暑喜穿棉袄",
+          "confidence": 0.95
+        },
+        {
+          "signature": "医案||治疗症状||结核在臂，大如柿，不红不痛||299-针灸大成||299-针灸大成_正文",
+          "fact_id": "c326e8c6874a1764",
+          "subject": "医案",
+          "object": "结核在臂，大如柿，不红不痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "299-针灸大成",
+          "source_chapter": null,
+          "source_text_preview": "患结核在臂，大如柿，不红不痛",
+          "confidence": 0.95
+        },
+        {
+          "signature": "医案||治疗症状||背恶寒而体倦困||299-针灸大成||299-针灸大成_正文",
+          "fact_id": "892eef782140922f",
+          "subject": "医案",
+          "object": "背恶寒而体倦困",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "299-针灸大成",
+          "source_chapter": null,
+          "source_text_preview": "背恶寒而体倦困",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||伤寒呕哕闷涎随||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "14b629cd19129500",
+          "subject": "杂病十一穴歌",
+          "object": "伤寒呕哕闷涎随",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "伤寒呕哕闷涎随",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||四肢无力中邪风||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "76b15efdfd39f1b4",
+          "subject": "杂病十一穴歌",
+          "object": "四肢无力中邪风",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "四肢无力中邪风",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||头风头痛||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "996872c913a2e1d0",
+          "subject": "杂病十一穴歌",
+          "object": "头风头痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "头风头痛与牙疼",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||心气痛时胸结梗||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "18d97eab1224a1ab",
+          "subject": "杂病十一穴歌",
+          "object": "心气痛时胸结梗",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "心气痛时胸结梗",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||汗出频来||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "863e30dfd729e9fc",
+          "subject": "杂病十一穴歌",
+          "object": "汗出频来",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "汗出频来刺腕骨",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||牙疼||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "65de4b8e06a87697",
+          "subject": "杂病十一穴歌",
+          "object": "牙疼",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "头风头痛与牙疼",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||疟疾||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "47b7cd7d7faa2cfe",
+          "subject": "杂病十一穴歌",
+          "object": "疟疾",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "疟疾将针刺曲池",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||眼涩难开百病攻||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "e3e26b5eab42576f",
+          "subject": "杂病十一穴歌",
+          "object": "眼涩难开百病攻",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "眼涩难开百病攻",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||眼痛||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "679a6de672997be6",
+          "subject": "杂病十一穴歌",
+          "object": "眼痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "更向大都 针眼痛",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||精神昏倦多不语||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "065246b0c46b8117",
+          "subject": "杂病十一穴歌",
+          "object": "精神昏倦多不语",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "精神昏倦多不语",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||耳中聋||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "43a93e1cee2447d7",
+          "subject": "杂病十一穴歌",
+          "object": "耳中聋",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "七分针泻耳中聋",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||肘膝疼||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "32ef80b587b3d776",
+          "subject": "杂病十一穴歌",
+          "object": "肘膝疼",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "肘膝疼时刺曲池",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||肩背并及肩膊疼||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "2650fa5f4ca9fdfa",
+          "subject": "杂病十一穴歌",
+          "object": "肩背并及肩膊疼",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "肩背并及肩膊疼",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||腿胯腰疼痞气攻||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "83dc3e47f1eee4bd",
+          "subject": "杂病十一穴歌",
+          "object": "腿胯腰疼痞气攻",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "腿胯腰疼痞气攻",
+          "confidence": 0.95
+        },
+        {
+          "signature": "杂病十一穴歌||治疗症状||膝痛||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "80d9daf712c78549",
+          "subject": "杂病十一穴歌",
+          "object": "膝痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "膝痛三分针犊鼻",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||中邪霍乱||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "717796786cc5f1eb",
+          "subject": "百症歌",
+          "object": "中邪霍乱",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "中邪霍乱寻阴谷三里之程",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||偏头痛||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "151c0df989d428e9",
+          "subject": "百症歌",
+          "object": "偏头痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "悬颅颔厌之中偏头痛止",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||半身不遂||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "0dccad81f4f2809f",
+          "subject": "百症歌",
+          "object": "半身不遂",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "半身不遂阳陵远达于曲池",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||反张悲哭||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "56ec4fb3bf930be7",
+          "subject": "百症歌",
+          "object": "反张悲哭",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "反张悲哭仗天冲大横须精",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||发热||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "3e0f46635af00ec8",
+          "subject": "百症歌",
+          "object": "发热",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "发热仗少冲曲池之津",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||发狂奔走||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "1571bd759ec4ebea",
+          "subject": "百症歌",
+          "object": "发狂奔走",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "发狂奔走上脘同起于神门",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||喉痛||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "a68bfde718b73ff4",
+          "subject": "百症歌",
+          "object": "喉痛",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "喉痛兮液门鱼际去疗",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||失音嗫嚅||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "ae087a0e016ec4e8",
+          "subject": "百症歌",
+          "object": "失音嗫嚅",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "天突间使失音嗫嚅而休迟",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||头疼||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "4a74406461bcbbc7",
+          "subject": "百症歌",
+          "object": "头疼",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "强间丰隆之际头疼",
+          "confidence": 0.95
+        },
+        {
+          "signature": "百症歌||治疗症状||寒厥热||353-凌门传授铜人指穴||353-凌门传授铜人指穴_正文",
+          "fact_id": "391c7ba0874cb163",
+          "subject": "百症歌",
+          "object": "寒厥热",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "source_book": "353-凌门传授铜人指穴",
+          "source_chapter": null,
+          "source_text_preview": "寒厥热涌泉清",
+          "confidence": 0.95
+        }
+      ]
+    }
+  ]
+}

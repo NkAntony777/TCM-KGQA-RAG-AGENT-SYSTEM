@@ -1,0 +1,513 @@
+{
+  "generated_at": "2026-04-13 18:16:06 +0800",
+  "db_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\graph_service\\data\\graph_runtime.db",
+  "alias": {
+    "alias_edge_pairs": 24446,
+    "alias_nodes": 24233,
+    "component_count": 4072,
+    "largest_components": [
+      10926,
+      138,
+      51,
+      45,
+      45,
+      45,
+      42,
+      40,
+      39,
+      39
+    ]
+  },
+  "relations": {
+    "predicate_count": 26,
+    "top_predicates": [
+      {
+        "predicate": "使用药材",
+        "count": 1510375
+      },
+      {
+        "predicate": "治疗症状",
+        "count": 659252
+      },
+      {
+        "predicate": "作用靶点",
+        "count": 305445
+      },
+      {
+        "predicate": "治疗疾病",
+        "count": 292621
+      },
+      {
+        "predicate": "功效",
+        "count": 167536
+      },
+      {
+        "predicate": "用法",
+        "count": 154143
+      },
+      {
+        "predicate": "含有成分",
+        "count": 120520
+      },
+      {
+        "predicate": "常见症状",
+        "count": 97745
+      },
+      {
+        "predicate": "属于范畴",
+        "count": 76063
+      },
+      {
+        "predicate": "现代适应证",
+        "count": 69429
+      },
+      {
+        "predicate": "治疗证候",
+        "count": 66088
+      },
+      {
+        "predicate": "药性",
+        "count": 47833
+      },
+      {
+        "predicate": "别名",
+        "count": 42722
+      },
+      {
+        "predicate": "治法",
+        "count": 38418
+      },
+      {
+        "predicate": "五味",
+        "count": 37882
+      },
+      {
+        "predicate": "食忌",
+        "count": 30188
+      },
+      {
+        "predicate": "关联靶点",
+        "count": 24403
+      },
+      {
+        "predicate": "配伍禁忌",
+        "count": 22241
+      },
+      {
+        "predicate": "归经",
+        "count": 21092
+      },
+      {
+        "predicate": "关联术语",
+        "count": 11123
+      }
+    ],
+    "non_canonical_predicates": [
+      {
+        "predicate": "作用靶点",
+        "count": 305445
+      },
+      {
+        "predicate": "用法",
+        "count": 154143
+      },
+      {
+        "predicate": "含有成分",
+        "count": 120520
+      },
+      {
+        "predicate": "现代适应证",
+        "count": 69429
+      },
+      {
+        "predicate": "药性",
+        "count": 47833
+      },
+      {
+        "predicate": "五味",
+        "count": 37882
+      },
+      {
+        "predicate": "食忌",
+        "count": 30188
+      },
+      {
+        "predicate": "关联靶点",
+        "count": 24403
+      },
+      {
+        "predicate": "配伍禁忌",
+        "count": 22241
+      },
+      {
+        "predicate": "关联术语",
+        "count": 11123
+      },
+      {
+        "predicate": "药性特征",
+        "count": 2383
+      },
+      {
+        "predicate": "升降浮沉",
+        "count": 2311
+      },
+      {
+        "predicate": "药材基源",
+        "count": 1789
+      },
+      {
+        "predicate": "出处",
+        "count": 214
+      },
+      {
+        "predicate": "适应证",
+        "count": 3
+      }
+    ]
+  },
+  "ontology": {
+    "boundary_issue_groups": [
+      {
+        "predicate": "治疗证候",
+        "expected_subject_types": [
+          "formula",
+          "herb",
+          "medicine"
+        ],
+        "expected_object_types": [
+          "syndrome"
+        ],
+        "count_total": 9240,
+        "count_sampled": 20,
+        "examples": [
+          {
+            "subject": "AD病",
+            "object": "少阴病",
+            "subject_type": "disease",
+            "object_type": "syndrome",
+            "source_book": "048-思考中医"
+          },
+          {
+            "subject": "HT症",
+            "object": "甘桔汤",
+            "subject_type": "disease",
+            "object_type": "formula",
+            "source_book": "341-喉舌备要秘旨"
+          },
+          {
+            "subject": "KT逆",
+            "object": "实证",
+            "subject_type": "disease",
+            "object_type": "syndrome",
+            "source_book": "583-医学正传"
+          },
+          {
+            "subject": "KT逆",
+            "object": "虚证",
+            "subject_type": "disease",
+            "object_type": "syndrome",
+            "source_book": "583-医学正传"
+          },
+          {
+            "subject": "《巢氏病源》小儿遗尿候",
+            "object": "膀胱有冷不能约于水",
+            "subject_type": "syndrome",
+            "object_type": "syndrome",
+            "source_book": "156-幼幼新书"
+          }
+        ]
+      },
+      {
+        "predicate": "治疗症状",
+        "expected_subject_types": [
+          "formula",
+          "herb",
+          "medicine"
+        ],
+        "expected_object_types": [
+          "symptom"
+        ],
+        "count_total": 75497,
+        "count_sampled": 20,
+        "examples": [
+          {
+            "subject": "HT风",
+            "object": "得之数",
+            "subject_type": "disease",
+            "object_type": "symptom",
+            "source_book": "442-内经药瀹"
+          },
+          {
+            "subject": "KT粪杓上竹箍烧灰",
+            "object": "赤白蛇缠",
+            "subject_type": "therapy",
+            "object_type": "symptom",
+            "source_book": "255-急救广生集"
+          },
+          {
+            "subject": "《千金》灸法",
+            "object": "口中肿，腥臭",
+            "subject_type": "therapy",
+            "object_type": "symptom",
+            "source_book": "156-幼幼新书"
+          },
+          {
+            "subject": "《千金方》狂癫吐舌灸法",
+            "object": "狂癫吐舌",
+            "subject_type": "therapy",
+            "object_type": "symptom",
+            "source_book": "054-医心方"
+          },
+          {
+            "subject": "《千金方》狂言妄语灸法",
+            "object": "狂言妄语",
+            "subject_type": "therapy",
+            "object_type": "symptom",
+            "source_book": "054-医心方"
+          }
+        ]
+      },
+      {
+        "predicate": "归经",
+        "expected_subject_types": [
+          "herb",
+          "medicine"
+        ],
+        "expected_object_types": [
+          "channel",
+          "other",
+          "property"
+        ],
+        "count_total": 3508,
+        "count_sampled": 20,
+        "examples": [
+          {
+            "subject": "《巢氏病源》小儿遗尿候",
+            "object": "足太阴经",
+            "subject_type": "syndrome",
+            "object_type": "channel",
+            "source_book": "156-幼幼新书"
+          },
+          {
+            "subject": "《巢氏病源》小儿遗尿候",
+            "object": "足少阴经",
+            "subject_type": "syndrome",
+            "object_type": "channel",
+            "source_book": "156-幼幼新书"
+          },
+          {
+            "subject": "《神农指迷》",
+            "object": "脏腑学说",
+            "subject_type": "book",
+            "object_type": "other",
+            "source_book": "699-名老中医之路"
+          },
+          {
+            "subject": "一月胎胚",
+            "object": "足厥阴肝经",
+            "subject_type": "other",
+            "object_type": "channel",
+            "source_book": "180-张氏妇科"
+          },
+          {
+            "subject": "丁心",
+            "object": "心经",
+            "subject_type": "channel",
+            "object_type": "channel",
+            "source_book": "295-针灸大全"
+          }
+        ]
+      },
+      {
+        "predicate": "使用药材",
+        "expected_subject_types": [
+          "formula",
+          "medicine"
+        ],
+        "expected_object_types": [
+          "herb"
+        ],
+        "count_total": 51034,
+        "count_sampled": 20,
+        "examples": [
+          {
+            "subject": "HT皮疮",
+            "object": "大黄",
+            "subject_type": "disease",
+            "object_type": "herb",
+            "source_book": "282-医门补要"
+          },
+          {
+            "subject": "HT皮疮",
+            "object": "生石膏",
+            "subject_type": "disease",
+            "object_type": "herb",
+            "source_book": "282-医门补要"
+          },
+          {
+            "subject": "HT皮疮",
+            "object": "芙蓉叶",
+            "subject_type": "disease",
+            "object_type": "herb",
+            "source_book": "282-医门补要"
+          },
+          {
+            "subject": "HT皮疮",
+            "object": "青黛",
+            "subject_type": "disease",
+            "object_type": "herb",
+            "source_book": "282-医门补要"
+          },
+          {
+            "subject": "HT皮疮",
+            "object": "黄柏",
+            "subject_type": "disease",
+            "object_type": "herb",
+            "source_book": "282-医门补要"
+          }
+        ]
+      },
+      {
+        "predicate": "推荐方剂",
+        "expected_subject_types": [
+          "disease",
+          "syndrome"
+        ],
+        "expected_object_types": [
+          "formula"
+        ],
+        "count_total": 1293,
+        "count_sampled": 20,
+        "examples": [
+          {
+            "subject": "Ƭˮ塣",
+            "object": "Сð",
+            "subject_type": "formula",
+            "object_type": "formula",
+            "source_book": "203-婴童类萃"
+          },
+          {
+            "subject": "《三因》白花蛇膏方",
+            "object": "通天再造散",
+            "subject_type": "formula",
+            "object_type": "formula",
+            "source_book": "013-本草纲目"
+          },
+          {
+            "subject": "丁香柿蒂汤",
+            "object": "阴饮上逆",
+            "subject_type": "formula",
+            "object_type": "syndrome",
+            "source_book": "494-伤寒指掌"
+          },
+          {
+            "subject": "三品一条枪",
+            "object": "健脾之药",
+            "subject_type": "formula",
+            "object_type": "formula",
+            "source_book": "223-疡医大全"
+          },
+          {
+            "subject": "三品一条枪",
+            "object": "玉红膏",
+            "subject_type": "formula",
+            "object_type": "formula",
+            "source_book": "223-疡医大全"
+          }
+        ]
+      }
+    ]
+  },
+  "source_chapter": {
+    "polluted_source_chapter_rows": 0,
+    "book_prefixed_body_slug_rows": 3702314,
+    "book_prefixed_readable_rows": 0,
+    "polluted_examples": [],
+    "body_slug_examples": [
+      {
+        "fact_id": "00000229b3522020",
+        "source_book": "289-证治汇补",
+        "source_chapter": "289-证治汇补_正文"
+      },
+      {
+        "fact_id": "0000283ba36be62c",
+        "source_book": "223-疡医大全",
+        "source_chapter": "223-疡医大全_正文"
+      },
+      {
+        "fact_id": "00002ad0e7280c0c",
+        "source_book": "069-世医得效方",
+        "source_chapter": "069-世医得效方_正文"
+      },
+      {
+        "fact_id": "00002ddb35b52869",
+        "source_book": "612-古今医彻",
+        "source_chapter": "612-古今医彻_正文"
+      },
+      {
+        "fact_id": "00002e4cdc369d2a",
+        "source_book": "373-丁甘仁医案",
+        "source_chapter": "373-丁甘仁医案_正文"
+      },
+      {
+        "fact_id": "0000309b2f172655",
+        "source_book": "072-医方考",
+        "source_chapter": "072-医方考_正文"
+      },
+      {
+        "fact_id": "000032972bbe55ce",
+        "source_book": "055-太平圣惠方",
+        "source_chapter": "055-太平圣惠方_正文"
+      },
+      {
+        "fact_id": "0000377c48ac5b50",
+        "source_book": "542-寿世保元",
+        "source_chapter": "542-寿世保元_正文"
+      },
+      {
+        "fact_id": "00003ac268407e7d",
+        "source_book": "087-医方集解",
+        "source_chapter": "087-医方集解_正文"
+      },
+      {
+        "fact_id": "00003aed7f0b87e2",
+        "source_book": "198-济阴纲目",
+        "source_chapter": "198-济阴纲目_正文"
+      }
+    ]
+  },
+  "backups": {
+    "backup_files_count": 28,
+    "repair_manifest_count": 4,
+    "merge_manifest_count": 0,
+    "backup_files_preview": [
+      "graph_runtime.20260408_144757.bak.db",
+      "graph_runtime.20260408_144757.bak.json",
+      "graph_runtime.20260408_170026.bak.db",
+      "graph_runtime.20260408_170026.bak.json",
+      "graph_runtime.20260408_171359.bak.db",
+      "graph_runtime.20260408_171359.bak.json",
+      "graph_runtime.20260408_174716.bak.db",
+      "graph_runtime.20260408_174716.bak.json",
+      "graph_runtime.20260408_182442.bak.db",
+      "graph_runtime.20260408_182442.bak.json",
+      "graph_runtime.20260408_183000.bak.db",
+      "graph_runtime.20260413_152742.bak.db",
+      "graph_runtime.20260413_152742.bak.json",
+      "graph_runtime.20260413_154923.bak.db",
+      "graph_runtime.20260413_154923.bak.json",
+      "graph_runtime.20260413_161713.bak.db",
+      "graph_runtime.20260413_161713.bak.json",
+      "graph_runtime.20260413_164110.bak.db",
+      "graph_runtime.20260413_164110.bak.json",
+      "graph_runtime.evidence.20260408_144757.bak.jsonl"
+    ],
+    "repair_manifests_preview": [
+      "graph_runtime.source_chapter_repair.20260408_144757.json",
+      "graph_runtime.source_chapter_repair.20260408_170026.json",
+      "graph_runtime.source_chapter_repair.20260408_171359.json",
+      "graph_runtime.source_chapter_repair.20260408_182442.json"
+    ],
+    "merge_manifests_preview": []
+  }
+}

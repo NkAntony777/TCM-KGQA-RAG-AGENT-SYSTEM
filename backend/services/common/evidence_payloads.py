@@ -30,6 +30,30 @@ def normalize_book_label(text: str) -> str:
     return re.sub(r"^\d+\s*[-_－—]\s*", "", label)
 
 
+def normalize_source_chapter_label(*, source_book: str, source_chapter: str) -> str:
+    book_raw = str(source_book or "").strip()
+    chapter_raw = str(source_chapter or "").strip()
+    if not chapter_raw:
+        return ""
+    normalized_book = normalize_book_label(book_raw)
+    if chapter_raw in {book_raw, normalized_book}:
+        return ""
+    for prefix in (book_raw, normalized_book):
+        if not prefix:
+            continue
+        for separator in ("_", "-", "－", "—"):
+            marker = f"{prefix}{separator}"
+            if not chapter_raw.startswith(marker):
+                continue
+            tail = chapter_raw[len(marker):].strip()
+            if not tail or tail in {"正文", "全文"}:
+                return ""
+            return tail
+    if chapter_raw.endswith("_正文") or chapter_raw.endswith("-正文"):
+        return ""
+    return chapter_raw
+
+
 def _normalized_source_book(
     value: Any,
     *,
@@ -43,7 +67,7 @@ def _normalized_source_book(
 
 def _is_readable_chapter_label(*, source_book: str, chapter_title: str) -> bool:
     normalized_book = normalize_book_label(source_book)
-    normalized_chapter = str(chapter_title or "").strip()
+    normalized_chapter = normalize_source_chapter_label(source_book=source_book, source_chapter=chapter_title)
     if not normalized_chapter:
         return False
     if normalized_chapter in {source_book, normalized_book}:
@@ -63,9 +87,10 @@ def normalize_path_predicate(value: Any) -> str:
 
 def _logical_source_paths(*, source_book: str, source_chapter: str) -> tuple[str | None, str | None]:
     normalized_book = normalize_book_label(source_book)
+    normalized_chapter = normalize_source_chapter_label(source_book=source_book, source_chapter=source_chapter)
     scope_path = f"book://{normalized_book}/*" if normalized_book else None
-    if normalized_book and source_chapter:
-        return f"chapter://{normalized_book}/{source_chapter}", scope_path
+    if normalized_book and normalized_chapter:
+        return f"chapter://{normalized_book}/{normalized_chapter}", scope_path
     return scope_path, scope_path
 
 
@@ -77,7 +102,10 @@ def graph_relation_items(payload: dict[str, Any], *, snippet_limit: int = 300) -
         if not isinstance(relation, dict):
             continue
         source_book = str(relation.get("source_book", "")).strip()
-        source_chapter = str(relation.get("source_chapter", "")).strip()
+        source_chapter = normalize_source_chapter_label(
+            source_book=source_book,
+            source_chapter=str(relation.get("source_chapter", "")).strip(),
+        )
         evidence_path, source_scope_path = _logical_source_paths(
             source_book=source_book,
             source_chapter=source_chapter,
@@ -120,7 +148,10 @@ def graph_path_items(
         sources = path.get("sources", []) if isinstance(path.get("sources"), list) else []
         first_source = sources[0] if sources and isinstance(sources[0], dict) else {}
         source_book = str(first_source.get("source_book", "")).strip()
-        source_chapter = str(first_source.get("source_chapter", "")).strip()
+        source_chapter = normalize_source_chapter_label(
+            source_book=source_book,
+            source_chapter=str(first_source.get("source_chapter", "")).strip(),
+        )
         source = f"{source_book}/{source_chapter}".strip("/") or "graph/path"
         evidence_path, source_scope_path = _logical_source_paths(
             source_book=source_book,
@@ -188,7 +219,10 @@ def syndrome_items(
             continue
         formulas = syndrome.get("recommended_formulas", [])
         source_book = str(syndrome.get("source_book", "")).strip()
-        source_chapter = str(syndrome.get("source_chapter", "")).strip()
+        source_chapter = normalize_source_chapter_label(
+            source_book=source_book,
+            source_chapter=str(syndrome.get("source_chapter", "")).strip(),
+        )
         evidence_path, source_scope_path = _logical_source_paths(
             source_book=source_book,
             source_chapter=source_chapter,
@@ -233,7 +267,10 @@ def retrieval_items(
         source_page = chunk.get("source_page", chunk.get("page_number"))
         source_book_raw = source_file.rsplit(".", 1)[0] if source_file else ""
         source_book = source_book_normalizer(source_book_raw) if source_book_normalizer is not None else source_book_raw
-        source_chapter = str(chunk.get("chapter_title", "")).strip()
+        source_chapter = normalize_source_chapter_label(
+            source_book=source_book,
+            source_chapter=str(chunk.get("chapter_title", "")).strip(),
+        )
         if not source_chapter and fallback_page_to_chapter and source_page not in (None, ""):
             source_chapter = f"第{source_page}页"
         source = f"{source_file}#{source_page}" if source_page not in (None, "") else source_file
@@ -267,7 +304,10 @@ def section_items(payload: dict[str, Any], *, snippet_limit: int = 600) -> list[
     if not isinstance(section, dict) or not section:
         return []
     book_name = str(section.get("book_name", "")).strip()
-    chapter_title = str(section.get("chapter_title", "")).strip()
+    chapter_title = normalize_source_chapter_label(
+        source_book=book_name,
+        source_chapter=str(section.get("chapter_title", "")).strip(),
+    )
     evidence_path, source_scope_path = _logical_source_paths(
         source_book=book_name,
         source_chapter=chapter_title,

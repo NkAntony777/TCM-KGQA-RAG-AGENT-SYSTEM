@@ -1,0 +1,733 @@
+{
+  "generated_at": "2026-04-13 19:44:33 +0800",
+  "source_audit_generated_at": "2026-04-13 19:41:03 +0800",
+  "source_audit_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\eval\\ontology_boundary_tiers_latest.json",
+  "summary": {
+    "predicate_count": 5,
+    "total_likely_dirty_rows": 8936,
+    "top_global_candidates": [
+      {
+        "predicate": "使用药材",
+        "subject_type": "herb",
+        "object_type": "herb",
+        "count": 2748,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "使用药材",
+        "subject_type": "category",
+        "object_type": "herb",
+        "count": 1063,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "使用药材",
+        "subject_type": "other",
+        "object_type": "herb",
+        "count": 946,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "使用药材",
+        "subject_type": "channel",
+        "object_type": "herb",
+        "count": 699,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "归经",
+        "subject_type": "channel",
+        "object_type": "channel",
+        "count": 446,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "使用药材",
+        "subject_type": "herb",
+        "object_type": "formula",
+        "count": 432,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "book",
+        "object_type": "symptom",
+        "count": 191,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "归经",
+        "subject_type": "channel",
+        "object_type": "herb",
+        "count": 167,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "chapter",
+        "object_type": "symptom",
+        "count": 164,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗证候",
+        "subject_type": "other",
+        "object_type": "syndrome",
+        "count": 155,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "归经",
+        "subject_type": "channel",
+        "object_type": "other",
+        "count": 149,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "category",
+        "object_type": "symptom",
+        "count": 149,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗证候",
+        "subject_type": "symptom",
+        "object_type": "herb",
+        "count": 145,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "symptom",
+        "object_type": "disease",
+        "count": 132,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "symptom",
+        "object_type": "channel",
+        "count": 121,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "归经",
+        "subject_type": "channel",
+        "object_type": "property",
+        "count": 114,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗证候",
+        "subject_type": "symptom",
+        "object_type": "formula",
+        "count": 80,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗症状",
+        "subject_type": "symptom",
+        "object_type": "formula",
+        "count": 75,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗证候",
+        "subject_type": "syndrome",
+        "object_type": "formula",
+        "count": 44,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      },
+      {
+        "predicate": "治疗证候",
+        "subject_type": "herb",
+        "object_type": "processing_method",
+        "count": 34,
+        "tier": "likely_dirty",
+        "suggested_action": "candidate_for_small_batch_cleanup"
+      }
+    ]
+  },
+  "predicates": {
+    "治疗证候": {
+      "likely_dirty_count": 923,
+      "top_dirty_combos": [
+        {
+          "tier": "likely_dirty",
+          "subject_type": "other",
+          "object_type": "syndrome",
+          "count": 155
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "symptom",
+          "object_type": "herb",
+          "count": 145
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "symptom",
+          "object_type": "formula",
+          "count": 80
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "syndrome",
+          "object_type": "formula",
+          "count": 44
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "herb",
+          "object_type": "processing_method",
+          "count": 34
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "medicine",
+          "object_type": "processing_method",
+          "count": 33
+        }
+      ],
+      "top_dirty_books": [
+        {
+          "source_book": "137-儿科要略",
+          "count": 65
+        },
+        {
+          "source_book": "008-汤液本草",
+          "count": 58
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 37
+        },
+        {
+          "source_book": "037-本草害利",
+          "count": 35
+        },
+        {
+          "source_book": "027-本草述钩元",
+          "count": 32
+        },
+        {
+          "source_book": "475-重订通俗伤寒论",
+          "count": 22
+        },
+        {
+          "source_book": "519-医灯续焰",
+          "count": 21
+        },
+        {
+          "source_book": "602-类证治裁",
+          "count": 19
+        }
+      ],
+      "examples": [
+        {
+          "subject": "三才配合龟甲、磁朱，及复脉汤去姜、桂，入鸡子黄之属",
+          "object": "安摄其子母",
+          "subject_type": "formula",
+          "object_type": "therapy",
+          "source_book": "280-医学从众录"
+        },
+        {
+          "subject": "三焦",
+          "object": "全当归",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "source_book": "475-重订通俗伤寒论"
+        },
+        {
+          "subject": "三焦",
+          "object": "制香附",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "source_book": "475-重订通俗伤寒论"
+        },
+        {
+          "subject": "三焦",
+          "object": "棉 皮",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "source_book": "475-重订通俗伤寒论"
+        },
+        {
+          "subject": "三焦",
+          "object": "焦山栀",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "source_book": "475-重订通俗伤寒论"
+        },
+        {
+          "subject": "三花神佑丸",
+          "object": "水肿",
+          "subject_type": "formula",
+          "object_type": "disease",
+          "source_book": "570-丹溪心法"
+        }
+      ],
+      "suggested_action": "candidate_for_small_batch_cleanup"
+    },
+    "治疗症状": {
+      "likely_dirty_count": 1187,
+      "top_dirty_combos": [
+        {
+          "tier": "likely_dirty",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "count": 191
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "chapter",
+          "object_type": "symptom",
+          "count": 164
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "category",
+          "object_type": "symptom",
+          "count": 149
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "symptom",
+          "object_type": "disease",
+          "count": 132
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "symptom",
+          "object_type": "channel",
+          "count": 121
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "symptom",
+          "object_type": "formula",
+          "count": 75
+        }
+      ],
+      "top_dirty_books": [
+        {
+          "source_book": "299-针灸大成",
+          "count": 127
+        },
+        {
+          "source_book": "013-本草纲目",
+          "count": 94
+        },
+        {
+          "source_book": "353-凌门传授铜人指穴",
+          "count": 78
+        },
+        {
+          "source_book": "300-针灸逢源",
+          "count": 62
+        },
+        {
+          "source_book": "573-古今医鉴",
+          "count": 59
+        },
+        {
+          "source_book": "297-针灸易学",
+          "count": 53
+        },
+        {
+          "source_book": "188-慈幼便览",
+          "count": 44
+        },
+        {
+          "source_book": "596-医学摘粹",
+          "count": 44
+        }
+      ],
+      "examples": [
+        {
+          "subject": "《温热论》",
+          "object": "舌生芒刺",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "402-热病衡正"
+        },
+        {
+          "subject": "《温病条辨》",
+          "object": "舌苔老黄，甚则黑有芒刺",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "402-热病衡正"
+        },
+        {
+          "subject": "《病源论》",
+          "object": "马啮及马骨所伤刺",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "054-医心方"
+        },
+        {
+          "subject": "《痈肿杂效方》",
+          "object": "热肿",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "075-肘后备急方"
+        },
+        {
+          "subject": "《肘后方》",
+          "object": "大渴不止",
+          "subject_type": "book",
+          "object_type": "symptom",
+          "source_book": "384-吴医汇讲"
+        },
+        {
+          "subject": "一切气痛",
+          "object": "木香磨酒",
+          "subject_type": "symptom",
+          "object_type": "formula",
+          "source_book": "573-古今医鉴"
+        }
+      ],
+      "suggested_action": "candidate_for_small_batch_cleanup"
+    },
+    "归经": {
+      "likely_dirty_count": 883,
+      "top_dirty_combos": [
+        {
+          "tier": "likely_dirty",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "count": 446
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "count": 167
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "channel",
+          "object_type": "other",
+          "count": 149
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "channel",
+          "object_type": "property",
+          "count": 114
+        }
+      ],
+      "top_dirty_books": [
+        {
+          "source_book": "226-外科大成",
+          "count": 138
+        },
+        {
+          "source_book": "299-针灸大成",
+          "count": 78
+        },
+        {
+          "source_book": "316-普济方·针灸",
+          "count": 44
+        },
+        {
+          "source_book": "301-针灸甲乙经",
+          "count": 32
+        },
+        {
+          "source_book": "306-刺灸心法要诀",
+          "count": 26
+        },
+        {
+          "source_book": "687-经穴秘密",
+          "count": 25
+        },
+        {
+          "source_book": "263-救伤秘旨",
+          "count": 20
+        },
+        {
+          "source_book": "427-类经",
+          "count": 20
+        }
+      ],
+      "examples": [
+        {
+          "subject": "丁心",
+          "object": "心经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "295-针灸大全"
+        },
+        {
+          "subject": "三焦",
+          "object": "关冲",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "331-针灸问对"
+        },
+        {
+          "subject": "三焦",
+          "object": "少阳",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "366-侣山堂类辩"
+        },
+        {
+          "subject": "三焦",
+          "object": "手少阳",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "103-华佗神方"
+        },
+        {
+          "subject": "三焦",
+          "object": "手少阳",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "454-难经集注"
+        },
+        {
+          "subject": "三焦",
+          "object": "手少阳三焦经",
+          "subject_type": "channel",
+          "object_type": "channel",
+          "source_book": "223-疡医大全"
+        }
+      ],
+      "suggested_action": "candidate_for_small_batch_cleanup"
+    },
+    "使用药材": {
+      "likely_dirty_count": 5888,
+      "top_dirty_combos": [
+        {
+          "tier": "likely_dirty",
+          "subject_type": "herb",
+          "object_type": "herb",
+          "count": 2748
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "category",
+          "object_type": "herb",
+          "count": 1063
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "other",
+          "object_type": "herb",
+          "count": 946
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "channel",
+          "object_type": "herb",
+          "count": 699
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "herb",
+          "object_type": "formula",
+          "count": 432
+        }
+      ],
+      "top_dirty_books": [
+        {
+          "source_book": "013-本草纲目",
+          "count": 953
+        },
+        {
+          "source_book": "647-万病回春",
+          "count": 295
+        },
+        {
+          "source_book": "051-千金翼方",
+          "count": 281
+        },
+        {
+          "source_book": "643-证治准绳·疡医",
+          "count": 207
+        },
+        {
+          "source_book": "608-丹台玉案",
+          "count": 164
+        },
+        {
+          "source_book": "651-十二經補瀉溫涼引經藥歌",
+          "count": 159
+        },
+        {
+          "source_book": "686-中医临证经验与方法",
+          "count": 154
+        },
+        {
+          "source_book": "617-古今医统大全",
+          "count": 150
+        }
+      ],
+      "examples": [
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "条芩",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        },
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "枳壳",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        },
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "栝蒌仁",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        },
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "桑白皮",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        },
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "甘草",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        },
+        {
+          "subject": "一妇怀孕内热咳嗽",
+          "object": "白芍药",
+          "subject_type": "other",
+          "object_type": "herb",
+          "source_book": "396-孙文垣医案"
+        }
+      ],
+      "suggested_action": "candidate_for_small_batch_cleanup"
+    },
+    "推荐方剂": {
+      "likely_dirty_count": 55,
+      "top_dirty_combos": [
+        {
+          "tier": "likely_dirty",
+          "subject_type": "disease",
+          "object_type": "herb",
+          "count": 28
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "disease",
+          "object_type": "food",
+          "count": 21
+        },
+        {
+          "tier": "likely_dirty",
+          "subject_type": "therapy",
+          "object_type": "food",
+          "count": 4
+        }
+      ],
+      "top_dirty_books": [
+        {
+          "source_book": "182-陈氏幼科秘诀",
+          "count": 27
+        },
+        {
+          "source_book": "523-千金食治",
+          "count": 20
+        },
+        {
+          "source_book": "542-寿世保元",
+          "count": 3
+        },
+        {
+          "source_book": "322-重订囊秘喉书",
+          "count": 2
+        },
+        {
+          "source_book": "303-李翰卿",
+          "count": 1
+        },
+        {
+          "source_book": "123-女科切要",
+          "count": 1
+        },
+        {
+          "source_book": "571-诸病源候论",
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "subject": "五更泻",
+          "object": "补骨脂、肉豆蔻",
+          "subject_type": "disease",
+          "object_type": "herb",
+          "source_book": "303-李翰卿"
+        },
+        {
+          "subject": "产后",
+          "object": "白粥干菜",
+          "subject_type": "disease",
+          "object_type": "food",
+          "source_book": "123-女科切要"
+        },
+        {
+          "subject": "妊娠一月",
+          "object": "大麦",
+          "subject_type": "therapy",
+          "object_type": "food",
+          "source_book": "542-寿世保元"
+        },
+        {
+          "subject": "妊娠四月",
+          "object": "稻粳",
+          "subject_type": "therapy",
+          "object_type": "food",
+          "source_book": "542-寿世保元"
+        },
+        {
+          "subject": "妊娠四月",
+          "object": "鱼雁",
+          "subject_type": "therapy",
+          "object_type": "food",
+          "source_book": "542-寿世保元"
+        },
+        {
+          "subject": "心病",
+          "object": "杏",
+          "subject_type": "disease",
+          "object_type": "food",
+          "source_book": "523-千金食治"
+        }
+      ],
+      "suggested_action": "candidate_for_small_batch_cleanup"
+    }
+  }
+}

@@ -26,6 +26,7 @@ DEFAULT_OUTPUT_MD = BACKEND_ROOT.parent.parent / "docs" / "Batch4_Release_Gate_2
 DOC_QA_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_origin_source_probe_4.json"
 COMPLEX_QA_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_agent_hard_probe_10.json"
 GRAPH_REGRESSION_DATASET = BACKEND_ROOT / "eval" / "datasets" / "graph_regression_12.json"
+DEFAULT_DOCTORAL_BASELINE_JSON = BACKEND_ROOT / "eval" / "doctoral_hard_probe_quick_deep_20260410_deep_quality_tuned.json"
 ROUTER_MIN_ACCURACY = 0.80
 
 
@@ -44,11 +45,57 @@ def _render_failures(items: list[dict[str, Any]]) -> list[str]:
     return lines or ["- none"]
 
 
+def _load_optional_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def summarize_doctoral_baseline(path: Path) -> dict[str, Any]:
+    payload = _load_optional_json(path)
+    if not payload:
+        return {"available": False, "path": str(path), "complete": False, "quick_ok": 0, "deep_ok": 0, "total_questions": 0}
+    questions = payload.get("questions", [])
+    if not isinstance(questions, list):
+        return {"available": True, "path": str(path), "complete": False, "quick_ok": 0, "deep_ok": 0, "total_questions": 0}
+    quick_ok = 0
+    deep_ok = 0
+    complete = True
+    for row in questions:
+        if not isinstance(row, dict):
+            complete = False
+            continue
+        quick = row.get("quick")
+        deep = row.get("deep")
+        if not (isinstance(quick, dict) and quick.get("ok") is True and quick.get("answer")):
+            complete = False
+        else:
+            quick_ok += 1
+        if not (isinstance(deep, dict) and deep.get("ok") is True and deep.get("answer")):
+            complete = False
+        else:
+            deep_ok += 1
+    return {
+        "available": True,
+        "path": str(path),
+        "complete": complete,
+        "quick_ok": quick_ok,
+        "deep_ok": deep_ok,
+        "total_questions": len(questions),
+        "summary": payload.get("summary", {}) if isinstance(payload.get("summary"), dict) else {},
+    }
+
+
 def render_markdown(summary: dict[str, Any]) -> str:
     router = summary["router"]
     docqa = summary["docqa"]
     complexqa = summary["complexqa"]
     graph_regression = summary["graph_regression"]
+    doctoral = summary["doctoral_baseline"]
     health = summary["health"]
     probe_skipped = bool(summary.get("probe_skipped"))
     lines = [
@@ -59,6 +106,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"| generated_at | {summary['generated_at']} |",
         f"| base_url | {summary['base_url']} |",
         f"| gate_passed | {'yes' if summary['gate_passed'] else 'no'} |",
+        f"| strict_mode | {'yes' if summary.get('strict_mode') else 'no'} |",
         f"| probe_skipped | {'yes' if probe_skipped else 'no'} |",
         f"| block_reason | {summary.get('block_reason', '-')} |",
         "",
@@ -70,6 +118,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
         "- fast graph regression failed count must be **0**",
         "- Doc-QA probe failed count must be **0**",
         "- Complex-QA probe failed count must be **0**",
+        "- strict mode additionally requires a complete doctoral baseline artifact",
         "",
         "## Health",
         "",
@@ -92,6 +141,14 @@ def render_markdown(summary: dict[str, Any]) -> str:
             f"- passed: {graph_regression['passed']}/{graph_regression['total']}",
             f"- failed: {graph_regression['failed']}",
             f"- top issues: {graph_regression['top_issues'][:5]}",
+            "",
+            "## Doctoral Baseline",
+            "",
+            f"- available: {'yes' if doctoral['available'] else 'no'}",
+            f"- complete: {'yes' if doctoral['complete'] else 'no'}",
+            f"- quick_ok: {doctoral['quick_ok']}/{doctoral['total_questions']}",
+            f"- deep_ok: {doctoral['deep_ok']}/{doctoral['total_questions']}",
+            f"- path: {doctoral['path']}",
             "",
             "## Doc-QA probe",
             "",
@@ -124,12 +181,13 @@ def render_markdown(summary: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def run_release_gate(*, base_url: str, top_k: int, timeout: float) -> dict[str, Any]:
+def run_release_gate(*, base_url: str, top_k: int, timeout: float, strict_mode: bool, doctoral_json: Path) -> dict[str, Any]:
     health = check_health({"main_backend": f"{base_url}/health"}, timeout)
     router_summary = evaluate_router(load_router_dataset(ROUTER_DATASET))
     graph_regression_summary = evaluate_graph_regression(
         select_graph_regression_cases(load_graph_regression_dataset(GRAPH_REGRESSION_DATASET), include_heavy=False)
     )
+    doctoral_baseline = summarize_doctoral_baseline(doctoral_json)
     main_backend_ok = bool(health.get("main_backend", {}).get("ok"))
     probe_skipped = not main_backend_ok
     if probe_skipped:
@@ -171,6 +229,7 @@ def run_release_gate(*, base_url: str, top_k: int, timeout: float) -> dict[str, 
         and graph_regression_summary["failed"] == 0
         and docqa_summary["failed"] == 0
         and complexqa_summary["failed"] == 0
+        and ((not strict_mode) or doctoral_baseline["complete"])
     )
     skip_reason = "main_backend_unhealthy" if probe_skipped else ""
     if not main_backend_ok:
@@ -183,6 +242,8 @@ def run_release_gate(*, base_url: str, top_k: int, timeout: float) -> dict[str, 
         block_reason = "docqa_probe_failed"
     elif complexqa_summary["failed"] > 0:
         block_reason = "complexqa_probe_failed"
+    elif strict_mode and not doctoral_baseline["complete"]:
+        block_reason = "doctoral_baseline_incomplete"
     else:
         block_reason = ""
     return {
@@ -190,12 +251,14 @@ def run_release_gate(*, base_url: str, top_k: int, timeout: float) -> dict[str, 
         "base_url": base_url,
         "gate_passed": gate_passed,
         "probe_skipped": probe_skipped,
+        "strict_mode": strict_mode,
         "skip_reason": skip_reason,
         "block_reason": block_reason or "-",
         "router_min_accuracy": ROUTER_MIN_ACCURACY,
         "health": health,
         "router": router_summary,
         "graph_regression": graph_regression_summary,
+        "doctoral_baseline": doctoral_baseline,
         "docqa": docqa_summary,
         "complexqa": complexqa_summary,
     }
@@ -208,10 +271,18 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--output-json", type=Path, default=DEFAULT_OUTPUT_JSON)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
+    parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--doctoral-json", type=Path, default=DEFAULT_DOCTORAL_BASELINE_JSON)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
-    summary = run_release_gate(base_url=args.base_url, top_k=args.top_k, timeout=args.timeout)
+    summary = run_release_gate(
+        base_url=args.base_url,
+        top_k=args.top_k,
+        timeout=args.timeout,
+        strict_mode=bool(args.strict),
+        doctoral_json=args.doctoral_json,
+    )
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_md.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

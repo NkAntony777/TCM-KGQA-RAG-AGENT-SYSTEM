@@ -80,9 +80,10 @@ class FakeCaseQAStore:
 
 
 class RetrievalEngineTests(unittest.TestCase):
-    def _settings(self, tmpdir: Path) -> RetrievalServiceSettings:
+    def _settings(self, tmpdir: Path, *, vector_compatibility_enabled: bool = True) -> RetrievalServiceSettings:
         return RetrievalServiceSettings(
             project_backend_dir=tmpdir,
+            vector_compatibility_enabled=vector_compatibility_enabled,
             milvus_uri=str(tmpdir / "milvus_demo.db"),
             milvus_host="127.0.0.1",
             milvus_port="19530",
@@ -202,6 +203,26 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["chunks"][0]["collection"], "qa_structured_case")
             self.assertIn("逍遥散", result["chunks"][0]["answer"])
             self.assertIn("胁肋胀痛", result["chunks"][0]["document"])
+
+    def test_health_marks_vector_hot_path_disabled_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
+            health = engine.health()
+
+        self.assertFalse(health["vector_compatibility_enabled"])
+        self.assertEqual(health["vector_store"], "disabled")
+        self.assertTrue(health["case_qa_vector_hot_path_disabled"])
+        self.assertIsNone(engine.case_qa)
+
+    def test_search_hybrid_skips_dense_branch_when_vector_compatibility_disabled(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
+            engine.embedding_client = FakeEmbeddingClient()
+            result = engine.search_hybrid("逍遥散有什么功效", top_k=3, candidate_k=6, enable_rerank=False, search_mode="hybrid")
+
+        self.assertEqual(result["retrieval_mode"], "vector_compatibility_disabled")
+        self.assertEqual(result["total"], 0)
+        self.assertIn("vector_compatibility_disabled", result["warnings"])
 
     def test_search_hybrid_filters_docs_that_miss_query_anchor_entity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
