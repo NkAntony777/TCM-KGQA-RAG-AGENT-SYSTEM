@@ -12,12 +12,15 @@ Runtime 图核心实体（截至 2026-03-29）：
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 from services.graph_service.engine import GraphQueryEngine
 from services.graph_service.engine import GraphServiceSettings
+from services.graph_service.engine import NebulaPrimaryGraphEngine
 from services.graph_service.engine import _ordered_path_neighbors, _search_ranked_paths
 from services.graph_service.relation_governance import expand_filter_predicates
 from services.graph_service.runtime_store import RuntimeGraphStore
@@ -258,14 +261,14 @@ class TestPathQuery(unittest.TestCase):
         cls.engine = get_graph_engine()
 
     def test_herb_to_syndrome_via_formula(self) -> None:
-        """熟地黄 → 六味地黄丸 → 真阴亏损（2 跳，graph 中均有直连边）。"""
+        """熟地黄 → 六味地黄丸/六味地黄汤 → 真阴亏损。"""
         result = self.engine.path_query("熟地黄", "真阴亏损", max_hops=3, path_limit=5)
         self.assertGreaterEqual(result["total"], 1)
-        # 路径中必须经过六味地黄丸
+        # 路径中必须经过六味地黄系方名之一
         all_nodes = set()
         for path in result["paths"]:
             all_nodes.update(path["nodes"])
-        self.assertIn("六味地黄丸", all_nodes)
+        self.assertTrue(all_nodes & {"六味地黄丸", "六味地黄汤", "六味丸"})
 
     def test_herb_to_formula_direct(self) -> None:
         """熟地黄 → 六味地黄丸（1 跳，直连）。"""
@@ -379,6 +382,118 @@ class TestPathGuardrails(unittest.TestCase):
         ordered = _ordered_path_neighbors(rows, target_set={"真节点"}, fanout_cap=5)
 
         self.assertEqual(ordered, ["真节点"])
+
+
+class TestNebulaDirectPathPayload(unittest.TestCase):
+    def test_build_payload_from_nebula_path_row_preserves_nodes_and_sources(self) -> None:
+        class StubStore:
+            def first_edge_between(self, left: str, right: str) -> dict[str, Any]:
+                mapping = {
+                    ("熟地黄", "六味地黄汤"): {
+                        "predicate": "使用药材",
+                        "source_book": "医方考",
+                        "source_chapter": "卷上",
+                        "fact_id": "f1",
+                        "fact_ids": ["f1"],
+                        "source_text": "熟地黄入六味地黄汤。",
+                        "confidence": 0.95,
+                    },
+                    ("六味地黄汤", "真阴亏损"): {
+                        "predicate": "治疗证候",
+                        "source_book": "验方新编",
+                        "source_chapter": "卷下",
+                        "fact_id": "f2",
+                        "fact_ids": ["f2"],
+                        "source_text": "六味地黄汤治真阴亏损。",
+                        "confidence": 0.9,
+                    },
+                }
+                return mapping.get((left, right), {})
+
+        class StubFallbackEngine:
+            def __init__(self) -> None:
+                self.store = StubStore()
+
+            def _edge_evidence_payload(self, edge_data: dict[str, Any]) -> dict[str, Any]:
+                payload: dict[str, Any] = {}
+                if edge_data.get("fact_id"):
+                    payload["fact_id"] = edge_data["fact_id"]
+                if edge_data.get("fact_ids"):
+                    payload["fact_ids"] = edge_data["fact_ids"]
+                if edge_data.get("source_text"):
+                    payload["source_text"] = edge_data["source_text"]
+                if edge_data.get("confidence") is not None:
+                    payload["confidence"] = edge_data["confidence"]
+                return payload
+
+        engine = NebulaPrimaryGraphEngine(primary_store=None, fallback_engine=StubFallbackEngine())
+        row = {
+            "p": [
+                {"entity.name": "熟地黄", "entity.entity_type": "herb"},
+                {"predicate": "使用药材", "source_book": "医方考", "source_chapter": "卷上", "fact_id": "f1"},
+                {"entity.name": "六味地黄汤", "entity.entity_type": "formula"},
+                {"predicate": "治疗证候", "source_book": "验方新编", "source_chapter": "卷下", "fact_id": "f2"},
+                {"entity.name": "真阴亏损", "entity.entity_type": "syndrome"},
+            ]
+        }
+
+        payload = engine._build_payload_from_nebula_path_row(row)  # noqa: SLF001
+
+        self.assertIsNotNone(payload)
+        assert payload is not None
+        self.assertEqual(payload["nodes"], ["熟地黄", "六味地黄汤", "真阴亏损"])
+        self.assertEqual(payload["edges"], ["使用药材", "治疗证候"])
+        self.assertEqual(len(payload["sources"]), 2)
+        self.assertEqual(payload["sources"][0]["source_book"], "医方考")
+        self.assertEqual(payload["sources"][1]["source_book"], "验方新编")
+
+    def test_auto_mode_prefers_nebula_for_heavy_hops_or_candidate_fanout(self) -> None:
+        class StubStore:
+            def ready(self) -> bool:
+                return True
+
+        engine = NebulaPrimaryGraphEngine(primary_store=StubStore(), fallback_engine=GraphQueryEngine())
+        original_mode = os.environ.get("PATH_QUERY_EXECUTION_MODE")
+        original_hops = os.environ.get("NEBULA_PATH_QUERY_AUTO_MIN_HOPS")
+        original_pairs = os.environ.get("NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS")
+        try:
+            os.environ["PATH_QUERY_EXECUTION_MODE"] = "auto"
+            os.environ["NEBULA_PATH_QUERY_AUTO_MIN_HOPS"] = "4"
+            os.environ["NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS"] = "4"
+            self.assertTrue(
+                engine._should_prefer_nebula_path(  # noqa: SLF001
+                    max_hops=5,
+                    start_candidates=["a"],
+                    end_candidates=["b"],
+                )
+            )
+            self.assertTrue(
+                engine._should_prefer_nebula_path(  # noqa: SLF001
+                    max_hops=2,
+                    start_candidates=["a", "b"],
+                    end_candidates=["c", "d"],
+                )
+            )
+            self.assertFalse(
+                engine._should_prefer_nebula_path(  # noqa: SLF001
+                    max_hops=2,
+                    start_candidates=["a"],
+                    end_candidates=["b"],
+                )
+            )
+        finally:
+            if original_mode is None:
+                os.environ.pop("PATH_QUERY_EXECUTION_MODE", None)
+            else:
+                os.environ["PATH_QUERY_EXECUTION_MODE"] = original_mode
+            if original_hops is None:
+                os.environ.pop("NEBULA_PATH_QUERY_AUTO_MIN_HOPS", None)
+            else:
+                os.environ["NEBULA_PATH_QUERY_AUTO_MIN_HOPS"] = original_hops
+            if original_pairs is None:
+                os.environ.pop("NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS", None)
+            else:
+                os.environ["NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS"] = original_pairs
 
 
 

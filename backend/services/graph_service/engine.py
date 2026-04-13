@@ -68,6 +68,8 @@ PREDICATE_BASE_PRIORITY: dict[str, float] = {
 
 RRF_RANK_CONSTANT = 20
 PATH_QUERY_FANOUT_CAP = 24
+NEBULA_PATH_QUERY_AUTO_MIN_HOPS = 4
+NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS = 4
 PATH_QUERY_PREDICATE_BOOST: dict[str, float] = {
     "推荐方剂": 0.14,
     "治疗证候": 0.14,
@@ -925,14 +927,23 @@ class NebulaPrimaryGraphEngine:
         return local_result
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
+        start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
+        end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
+        if self._should_prefer_nebula_path(max_hops=max_hops, start_candidates=start_candidates, end_candidates=end_candidates):
+            nebula_result = self._direct_path_query_via_nebula(
+                start_candidates=start_candidates,
+                end_candidates=end_candidates,
+                max_hops=max_hops,
+                path_limit=path_limit,
+            )
+            if int(nebula_result.get("total", 0) or 0) > 0:
+                return nebula_result
         local_result = self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
         if int(local_result.get("total", 0) or 0) > 0:
             return local_result
         if not self._use_primary():
             return local_result
         try:
-            start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
-            end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
             fast_paths = self.fallback_engine._fast_path_candidates(  # noqa: SLF001
                 start_candidates=start_candidates,
                 end_candidates=end_candidates,
@@ -941,6 +952,14 @@ class NebulaPrimaryGraphEngine:
             )
             if int(fast_paths.get("total", 0) or 0) > 0:
                 return fast_paths
+            nebula_result = self._direct_path_query_via_nebula(
+                start_candidates=start_candidates,
+                end_candidates=end_candidates,
+                max_hops=max_hops,
+                path_limit=path_limit,
+            )
+            if int(nebula_result.get("total", 0) or 0) > 0:
+                return nebula_result
             return _search_ranked_paths(
                 start_candidates=start_candidates,
                 target_set=set(end_candidates),
@@ -990,6 +1009,213 @@ class NebulaPrimaryGraphEngine:
 
     def _use_primary(self) -> bool:
         return self.primary_store.ready()
+
+    def _path_query_mode(self) -> str:
+        mode = os.getenv("PATH_QUERY_EXECUTION_MODE", "nebula_first").strip().lower()
+        return mode if mode in {"local_first", "nebula_first", "auto"} else "local_first"
+
+    def _should_prefer_nebula_path(
+        self,
+        *,
+        max_hops: int,
+        start_candidates: list[str],
+        end_candidates: list[str],
+    ) -> bool:
+        if not self._use_primary() or not start_candidates or not end_candidates:
+            return False
+        mode = self._path_query_mode()
+        if mode == "nebula_first":
+            return True
+        if mode == "auto":
+            auto_min_hops = int(os.getenv("NEBULA_PATH_QUERY_AUTO_MIN_HOPS", str(NEBULA_PATH_QUERY_AUTO_MIN_HOPS)).strip() or NEBULA_PATH_QUERY_AUTO_MIN_HOPS)
+            auto_min_pairs = int(
+                os.getenv("NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS", str(NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS)).strip()
+                or NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS
+            )
+            pair_count = max(1, len(start_candidates[:3])) * max(1, len(end_candidates[:3]))
+            return int(max_hops) >= auto_min_hops or pair_count >= auto_min_pairs
+        return False
+
+    def _direct_path_query_via_nebula(
+        self,
+        *,
+        start_candidates: list[str],
+        end_candidates: list[str],
+        max_hops: int,
+        path_limit: int,
+    ) -> dict[str, Any]:
+        built_paths: list[dict[str, Any]] = []
+        seen_signatures: set[tuple[str, ...]] = set()
+        rows = self.primary_store.find_shortest_path_rows(
+            start_candidates[:3],
+            end_candidates[:3],
+            max_hops=max_hops,
+            limit=max(1, path_limit * 3),
+            with_prop=False,
+        )
+        skeletons = [self._extract_nebula_path_skeleton(row) for row in rows]
+        skeletons = [item for item in skeletons if item]
+        vertex_vids: set[str] = set()
+        edge_refs: list[dict[str, Any]] = []
+        for skeleton in skeletons:
+            vertex_vids.update(skeleton["node_vids"])
+            edge_refs.extend(skeleton["edge_refs"])
+        vertex_map = self.primary_store.fetch_vertices_by_vids(sorted(vertex_vids))
+        edge_map = self.primary_store.fetch_edges_by_refs(edge_refs)
+        for skeleton in skeletons:
+            payload = self._build_payload_from_nebula_skeleton(
+                skeleton,
+                vertex_map=vertex_map,
+                edge_map=edge_map,
+            )
+            if not payload:
+                continue
+            signature = tuple(payload.get("nodes", []))
+            if signature in seen_signatures:
+                continue
+            seen_signatures.add(signature)
+            built_paths.append(payload)
+            if len(built_paths) >= path_limit:
+                break
+        built_paths.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+        return {"paths": built_paths[:path_limit], "total": len(built_paths[:path_limit]), "strategy": "nebula_shortest_path"}
+
+    def _build_payload_from_nebula_path_row(self, row: dict[str, Any]) -> dict[str, Any] | None:
+        segments = row.get("p")
+        if not isinstance(segments, list) or len(segments) < 3:
+            return None
+        vertex_segments = [segment for index, segment in enumerate(segments) if index % 2 == 0 and isinstance(segment, dict)]
+        edge_segments = [segment for index, segment in enumerate(segments) if index % 2 == 1 and isinstance(segment, dict)]
+        nodes = [str(segment.get("entity.name", "")).strip() for segment in vertex_segments]
+        if not nodes or any(not name for name in nodes):
+            return None
+        if len(edge_segments) != len(nodes) - 1:
+            return None
+        edges: list[str] = []
+        sources: list[dict[str, Any]] = []
+        for left, right, segment in zip(nodes, nodes[1:], edge_segments):
+            predicate = _normalize_relation_name(str(segment.get("predicate", "相关")).strip() or "相关")
+            reverse = False
+            edge_data = self.fallback_engine.store.first_edge_between(left, right)
+            if not edge_data:
+                edge_data = self.fallback_engine.store.first_edge_between(right, left)
+                reverse = bool(edge_data)
+            if edge_data:
+                predicate = _normalize_relation_name(str(edge_data.get("predicate", predicate)).strip() or predicate)
+                source_book = str(edge_data.get("source_book", "")).strip()
+                source_item: dict[str, Any] = {
+                    "source_book": source_book,
+                    "source_chapter": normalize_source_chapter_label(
+                        source_book=source_book,
+                        source_chapter=str(edge_data.get("source_chapter", "")).strip(),
+                    ),
+                }
+                source_item.update(self.fallback_engine._edge_evidence_payload(edge_data))  # noqa: SLF001
+            else:
+                source_book = str(segment.get("source_book", "")).strip()
+                source_item = {
+                    "source_book": source_book,
+                    "source_chapter": normalize_source_chapter_label(
+                        source_book=source_book,
+                        source_chapter=str(segment.get("source_chapter", "")).strip(),
+                    ),
+                }
+                source_item.update(self._evidence_payload_from_row(segment))
+            if reverse:
+                predicate = f"{predicate}(逆向)"
+            edges.append(predicate)
+            if source_item not in sources:
+                sources.append(source_item)
+        if len(nodes) < 2 or len(edges) != len(nodes) - 1:
+            return None
+        hop_count = len(nodes) - 1
+        score = round(1.0 / max(hop_count, 1) + min(len(sources), 3) * 0.05, 4)
+        return {"nodes": nodes, "edges": edges, "score": score, "sources": sources}
+
+    def _extract_nebula_path_skeleton(self, row: dict[str, Any]) -> dict[str, Any] | None:
+        segments = row.get("p")
+        if not isinstance(segments, list) or len(segments) < 3:
+            return None
+        node_vids: list[str] = []
+        edge_refs: list[dict[str, Any]] = []
+        for index, segment in enumerate(segments):
+            if not isinstance(segment, dict):
+                return None
+            if index % 2 == 0:
+                vid = str(segment.get("vid", "")).strip()
+                if not vid:
+                    return None
+                node_vids.append(vid)
+            else:
+                src = str(segment.get("src", "")).strip()
+                dst = str(segment.get("dst", "")).strip()
+                ranking = segment.get("ranking")
+                edge_type = int(segment.get("edge_type", 0) or 0)
+                if not src or not dst or ranking in (None, ""):
+                    return None
+                if edge_type < 0:
+                    src, dst = dst, src
+                edge_refs.append({"src": src, "dst": dst, "ranking": int(ranking)})
+        if len(edge_refs) != len(node_vids) - 1:
+            return None
+        return {"node_vids": node_vids, "edge_refs": edge_refs}
+
+    def _build_payload_from_nebula_skeleton(
+        self,
+        skeleton: dict[str, Any],
+        *,
+        vertex_map: dict[str, dict[str, Any]],
+        edge_map: dict[tuple[str, str, int], dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        node_vids = list(skeleton.get("node_vids", []))
+        edge_refs = list(skeleton.get("edge_refs", []))
+        if not node_vids or len(edge_refs) != len(node_vids) - 1:
+            return None
+        nodes: list[str] = []
+        edges: list[str] = []
+        sources: list[dict[str, Any]] = []
+        for vid in node_vids:
+            vertex = vertex_map.get(vid, {})
+            name = str(vertex.get("name", "")).strip()
+            if not name:
+                return None
+            nodes.append(name)
+        for index, ref in enumerate(edge_refs):
+            src = str(ref.get("src", "")).strip()
+            dst = str(ref.get("dst", "")).strip()
+            ranking = int(ref.get("ranking", 0) or 0)
+            edge_data = edge_map.get((src, dst, ranking))
+            reverse = False
+            if edge_data is None:
+                edge_data = edge_map.get((dst, src, ranking))
+                reverse = edge_data is not None
+            if edge_data is None:
+                return None
+            predicate = _normalize_relation_name(str(edge_data.get("predicate", "相关")).strip() or "相关")
+            if reverse:
+                predicate = f"{predicate}(逆向)"
+            edges.append(predicate)
+            source_book = str(edge_data.get("source_book", "")).strip()
+            source_item: dict[str, Any] = {
+                "source_book": source_book,
+                "source_chapter": normalize_source_chapter_label(
+                    source_book=source_book,
+                    source_chapter=str(edge_data.get("source_chapter", "")).strip(),
+                ),
+            }
+            source_item.update(
+                {
+                    "fact_id": str(edge_data.get("fact_id", "")).strip(),
+                    "fact_ids": list(edge_data.get("fact_ids", [])),
+                    "source_text": str(edge_data.get("source_text", "")).strip(),
+                    "confidence": float(edge_data.get("confidence", 0.0) or 0.0),
+                }
+            )
+            if source_item not in sources:
+                sources.append(source_item)
+        hop_count = len(nodes) - 1
+        score = round(1.0 / max(hop_count, 1) + min(len(sources), 3) * 0.05, 4)
+        return {"nodes": nodes, "edges": edges, "score": score, "sources": sources}
 
     def _collect_nebula_relations(self, entity_name: str) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []

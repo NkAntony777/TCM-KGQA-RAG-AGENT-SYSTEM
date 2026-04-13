@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-04-13T23:17:21",
+  "path_query_execution_mode": "local_first",
+  "iterations": 1,
+  "results": [
+    {
+      "case_id": "light_001",
+      "lane": "light",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 45,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 45s"
+    },
+    {
+      "case_id": "light_001",
+      "lane": "light",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 98.03,
+      "median_ms": 98.03,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 1,
+      "quality_ok": true,
+      "first_nodes": [
+        "熟地黄",
+        "六味地黄汤"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "light_002",
+      "lane": "light",
+      "backend": "sqlite_local",
+      "status": "ok",
+      "mean_ms": 17286.58,
+      "median_ms": 17286.58,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 3,
+      "first_hops": 1,
+      "quality_ok": true,
+      "first_nodes": [
+        "附子",
+        "少阴病"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "light_002",
+      "lane": "light",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 269.47,
+      "median_ms": 269.47,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 1,
+      "quality_ok": true,
+      "first_nodes": [
+        "附子",
+        "少阴病"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "light_003",
+      "lane": "light",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 45,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 45s"
+    },
+    {
+      "case_id": "light_003",
+      "lane": "light",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 607.91,
+      "median_ms": 607.91,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 2,
+      "quality_ok": true,
+      "first_nodes": [
+        "人参",
+        "白术散",
+        "脾胃气虚"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "light_004",
+      "lane": "light",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 45,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 45s"
+    },
+    {
+      "case_id": "light_004",
+      "lane": "light",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 82.95,
+      "median_ms": 82.95,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 2,
+      "quality_ok": true,
+      "first_nodes": [
+        "四君子汤",
+        "水泛为痰",
+        "六味地黄丸"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "heavy_001",
+      "lane": "heavy",
+      "backend": "sqlite_local",
+      "status": "ok",
+      "mean_ms": 29295.19,
+      "median_ms": 29295.19,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 3,
+      "first_hops": 2,
+      "quality_ok": true,
+      "first_nodes": [
+        "熟地黄",
+        "六味丸",
+        "真阴亏损"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "heavy_001",
+      "lane": "heavy",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 95.52,
+      "median_ms": 95.52,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 2,
+      "quality_ok": true,
+      "first_nodes": [
+        "熟地黄",
+        "六味地黄汤",
+        "真阴亏损"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "heavy_002",
+      "lane": "heavy",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 90,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 90s"
+    },
+    {
+      "case_id": "heavy_002",
+      "lane": "heavy",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 11045.47,
+      "median_ms": 11045.47,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 3,
+      "first_hops": 3,
+      "quality_ok": true,
+      "first_nodes": [
+        "黄芪",
+        "五味子",
+        "三甲复脉汤",
+        "虚风内动"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "heavy_003",
+      "lane": "heavy",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 90,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 90s"
+    },
+    {
+      "case_id": "heavy_003",
+      "lane": "heavy",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 8127.26,
+      "median_ms": 8127.26,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 1,
+      "first_hops": 3,
+      "quality_ok": true,
+      "first_nodes": [
+        "桂枝",
+        "复脉汤",
+        "三甲复脉汤",
+        "虚风内动"
+      ],
+      "warning": ""
+    },
+    {
+      "case_id": "heavy_004",
+      "lane": "heavy",
+      "backend": "sqlite_local",
+      "status": "timeout",
+      "mean_ms": null,
+      "median_ms": null,
+      "runs": 0,
+      "timeout_s": 90,
+      "total": null,
+      "first_hops": null,
+      "quality_ok": false,
+      "first_nodes": [],
+      "warning": "timed out after 90s"
+    },
+    {
+      "case_id": "heavy_004",
+      "lane": "heavy",
+      "backend": "nebula_direct",
+      "status": "ok",
+      "mean_ms": 13118.72,
+      "median_ms": 13118.72,
+      "runs": 1,
+      "timeout_s": 0,
+      "total": 3,
+      "first_hops": 3,
+      "quality_ok": true,
+      "first_nodes": [
+        "附子",
+        "黄柏",
+        "三甲复脉汤",
+        "虚风内动"
+      ],
+      "warning": ""
+    }
+  ]
+}

@@ -58,6 +58,7 @@ services:
       - --port=9669
       - --ws_http_port=19669
       - --log_dir=/logs
+      - --num_operator_threads=${NEBULA_NUM_OPERATOR_THREADS:-8}
       - --v=0
       - --minloglevel=0
     depends_on:

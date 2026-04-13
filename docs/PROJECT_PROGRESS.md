@@ -2,6 +2,112 @@
 
 更新时间：2026-04-13
 
+## 2026-04-13 Nebula Path Query 七项优化完成
+
+### 当前结论
+
+- 本轮已完成 Nebula path query 的 7 项工程优化，不再停留在“只把 path_query 切到 Nebula”这一步。
+- 当前 `path_query` 已具备：
+  - 共享连接池
+  - 批量起终点 shortest-path
+  - 轻量 skeleton 查询
+  - 二阶段批量补点边属性
+  - PROFILE 诊断脚本
+  - graphd 线程参数入口
+  - 更细粒度的 auto 路由阈值
+
+### 关键收益
+
+- 最新 benchmark 已显示：
+  - `熟地黄 -> 六味地黄汤`
+    - Nebula: `98.03ms`
+  - `附子 -> 少阴病`
+    - Nebula: `269.47ms`
+  - `熟地黄 -> 真阴亏损`
+    - Nebula: `95.52ms`
+  - 多个 3 hop heavy case：
+    - Nebula: `8s ~ 13s`
+    - SQLite: 大面积 `timeout`
+
+### 本轮新增产物
+
+- 代码：
+  - `backend/services/graph_service/nebulagraph_store.py`
+  - `backend/services/graph_service/engine.py`
+  - `backend/services/graph_service/docker-compose.nebula.yml`
+  - `backend/scripts/profile_nebula_path_queries.py`
+- 基准与诊断：
+  - `backend/eval/path_query_backend_benchmark_latest.json`
+  - `backend/eval/nebula_path_profile_latest.json`
+- 文档：
+  - `docs/Path_Query_Backend_Benchmark_20260413.md`
+  - `docs/Nebula_Path_Profile_20260413.md`
+  - `docs/Nebula_Path_Query_七项优化报告_20260413.md`
+
+## 2026-04-13 Path Query 后端对比与路由收口
+
+### 当前结论
+
+- 已完成 `path_query` 的 SQLite local 与 Nebula direct 的真实 A/B 对比，不再只凭合成 benchmark 做判断。
+- 当前结论是：
+  - `NebulaGraph FIND SHORTEST PATH WITH PROP` 不只是重路径更有优势；
+  - 在本轮真实 light / heavy case 中，普通 1 到 2 跳 path 也普遍快于当前 SQLite 本地路径搜索。
+- 因此当前 `path_query` 已从“SQLite-first”调整为**Nebula-first，本地回退**。
+
+### 已完成的代码改动
+
+- 修复了 Nebula 反向邻居查询语法错误：
+  - `backend/services/graph_service/nebulagraph_store.py`
+- 新增 Nebula 直连最短路径查询封装：
+  - `find_shortest_path_rows(...)`
+- 图查询引擎已接入 Nebula-first path query：
+  - `backend/services/graph_service/engine.py`
+  - 当前行为：
+    - 默认 `PATH_QUERY_EXECUTION_MODE=nebula_first`
+    - Nebula 可用时优先走 direct shortest-path
+    - Nebula 无结果或不可用时回退到本地 SQLite path search
+
+### 已新增的基准与验证资产
+
+- 基准脚本：
+  - `backend/scripts/benchmark_path_query_backends.py`
+- 产物：
+  - `backend/eval/path_query_backend_benchmark_latest.json`
+  - `docs/Path_Query_Backend_Benchmark_20260413.md`
+- 新增 regression：
+  - `backend/tests/test_graph_engine.py`
+  - 已补充 Nebula direct path payload 构造测试
+
+### 本轮基准结论摘要
+
+- `light_001 熟地黄 -> 六味地黄汤`
+  - SQLite: `21.54s`
+  - Nebula: `10.75s`
+- `light_002 附子 -> 少阴病`
+  - SQLite: `15.97s`
+  - Nebula: `5.59s`
+- `light_003 人参 -> 脾胃气虚`
+  - SQLite: `45s timeout`
+  - Nebula: `17.05s`
+- `light_004 四君子汤 -> 六味地黄丸`
+  - SQLite: `45s timeout`
+  - Nebula: `16.23s`
+- `heavy_001 熟地黄 -> 真阴亏损`
+  - SQLite: `27.09s`
+  - Nebula: `16.26s`
+- `heavy_002 / heavy_003 / heavy_004`
+  - SQLite: `90s timeout`
+  - Nebula: `32s ~ 34s` 且均成功返回
+
+### 当前判断
+
+- 现阶段 `path_query` 的主要性能瓶颈已经不再是“是否有最小 guardrail”，而是：
+  - SQLite 本地路径搜索对真实多跳 case 的 wall-clock 成本过高
+  - 一旦需要 2 跳以上解释路径，本地 BFS 失败率和超时率明显上升
+- 因此当前更合理的架构收口是：
+  - `entity_lookup / syndrome_chain` 继续以 SQLite-first 为主
+  - `path_query` 切换为 Nebula-first
+
 ## 2026-04-13 第三批治理与运行时收口进展
 
 ### 当前结论

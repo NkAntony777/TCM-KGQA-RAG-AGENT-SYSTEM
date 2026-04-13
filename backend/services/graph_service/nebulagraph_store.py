@@ -5,6 +5,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 from dotenv import load_dotenv
@@ -151,6 +152,10 @@ def load_graph_rows(graph_path: Path, evidence_path: Path | None = None) -> list
 
 
 class NebulaGraphStore:
+    _pool_lock: Lock = Lock()
+    _shared_pool: Any = None
+    _shared_pool_key: tuple[str, int] | None = None
+
     def __init__(self, settings: NebulaGraphSettings | None = None):
         self.settings = settings or load_nebula_settings()
 
@@ -318,12 +323,12 @@ class NebulaGraphStore:
         }
 
     def neighbors(self, entity_name: str, *, reverse: bool = False) -> list[dict[str, Any]]:
-        direction = "REVERSELY " if reverse else ""
         vid = entity_vid(entity_name, self.settings.vid_max_length)
         edge_endpoint = "src(edge)" if reverse else "dst(edge)"
+        over_clause = "`relation` REVERSELY" if reverse else "`relation`"
         statement = (
             f'USE `{self.settings.space}`; '
-            f'GO FROM "{vid}" OVER {direction}`relation` '
+            f'GO FROM "{vid}" OVER {over_clause} '
             "YIELD "
             f"{edge_endpoint} AS neighbor_vid, "
             "properties($$).name AS neighbor_name, "
@@ -337,6 +342,99 @@ class NebulaGraphStore:
             "relation.confidence AS confidence;"
         )
         return self.execute_rows(statement)
+
+    def find_shortest_path_rows(
+        self,
+        start_entity_name: str | list[str],
+        end_entity_name: str | list[str],
+        *,
+        max_hops: int = 4,
+        limit: int = 5,
+        with_prop: bool = True,
+    ) -> list[dict[str, Any]]:
+        start_vids = self._normalize_vid_inputs(start_entity_name)
+        end_vids = self._normalize_vid_inputs(end_entity_name)
+        if not start_vids or not end_vids:
+            return []
+        with_prop_clause = " WITH PROP" if with_prop else ""
+        statement = (
+            f'USE `{self.settings.space}`; '
+            f'FIND SHORTEST PATH{with_prop_clause} FROM {self._format_vid_list(start_vids)} TO {self._format_vid_list(end_vids)} '
+            f'OVER `relation` BIDIRECT UPTO {max(1, int(max_hops))} STEPS '
+            f'YIELD path as p | LIMIT {max(1, int(limit))};'
+        )
+        return self.execute_rows(statement)
+
+    def fetch_vertices_by_vids(self, vids: list[str]) -> dict[str, dict[str, Any]]:
+        normalized = [str(item).strip() for item in vids if str(item).strip()]
+        if not normalized:
+            return {}
+        statement = (
+            f'USE `{self.settings.space}`; '
+            f'FETCH PROP ON `entity` {self._format_vid_list(normalized)} '
+            "YIELD id(vertex) AS vid, properties(vertex).name AS name, properties(vertex).entity_type AS entity_type;"
+        )
+        rows = self.execute_rows(statement)
+        result: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            vid = str(row.get("vid", "")).strip()
+            if not vid:
+                continue
+            result[vid] = {
+                "vid": vid,
+                "name": str(row.get("name", "")).strip(),
+                "entity_type": str(row.get("entity_type", "")).strip() or "entity",
+            }
+        return result
+
+    def fetch_edges_by_refs(self, refs: list[dict[str, Any]]) -> dict[tuple[str, str, int], dict[str, Any]]:
+        normalized: list[tuple[str, str, int]] = []
+        for ref in refs:
+            src = str(ref.get("src", "")).strip()
+            dst = str(ref.get("dst", "")).strip()
+            ranking = ref.get("ranking")
+            if not src or not dst or ranking in (None, ""):
+                continue
+            normalized.append((src, dst, int(ranking)))
+        if not normalized:
+            return {}
+        edge_expr = ",".join(f'"{src}"->"{dst}"@{ranking}' for src, dst, ranking in normalized)
+        statement = (
+            f'USE `{self.settings.space}`; '
+            f'FETCH PROP ON `relation` {edge_expr} '
+            "YIELD "
+            "src(edge) AS src, "
+            "dst(edge) AS dst, "
+            "rank(edge) AS ranking, "
+            "properties(edge).predicate AS predicate, "
+            "properties(edge).source_book AS source_book, "
+            "properties(edge).source_chapter AS source_chapter, "
+            "properties(edge).fact_id AS fact_id, "
+            "properties(edge).fact_ids AS fact_ids, "
+            "properties(edge).source_text AS source_text, "
+            "properties(edge).confidence AS confidence;"
+        )
+        rows = self.execute_rows(statement)
+        result: dict[tuple[str, str, int], dict[str, Any]] = {}
+        for row in rows:
+            src = str(row.get("src", "")).strip()
+            dst = str(row.get("dst", "")).strip()
+            ranking = row.get("ranking")
+            if not src or not dst or ranking in (None, ""):
+                continue
+            result[(src, dst, int(ranking))] = {
+                "src": src,
+                "dst": dst,
+                "ranking": int(ranking),
+                "predicate": str(row.get("predicate", "")).strip(),
+                "source_book": str(row.get("source_book", "")).strip(),
+                "source_chapter": str(row.get("source_chapter", "")).strip(),
+                "fact_id": str(row.get("fact_id", "")).strip(),
+                "fact_ids": self._parse_fact_ids(row.get("fact_ids")),
+                "source_text": str(row.get("source_text", "")).strip(),
+                "confidence": float(row.get("confidence", 0.0) or 0.0),
+            }
+        return result
 
     def exact_entity(self, entity_name: str) -> list[dict[str, Any]]:
         vid = entity_vid(entity_name, self.settings.vid_max_length)
@@ -380,15 +478,40 @@ class NebulaGraphStore:
             columns = [str(item) for item in result.get("columns", [])]
             for item in result.get("data", []):
                 values = item.get("row", [])
+                meta = item.get("meta", [])
                 row = {
-                    column: self._decode_value(value)
-                    for column, value in zip(columns, values)
+                    column: self._decode_value(value, meta_info=meta[index] if index < len(meta) else None)
+                    for index, (column, value) in enumerate(zip(columns, values))
                 }
                 if row:
                     rows.append(row)
         return rows
 
-    def _decode_value(self, value: Any) -> Any:
+    def _decode_value(self, value: Any, *, meta_info: Any = None) -> Any:
+        if meta_info and isinstance(meta_info, list) and isinstance(value, list) and len(meta_info) == len(value):
+            return [self._decode_value(item, meta_info=meta_info[index]) for index, item in enumerate(value)]
+        if meta_info and isinstance(meta_info, dict):
+            meta_type = str(meta_info.get("type", "")).strip().lower()
+            if meta_type == "vertex":
+                decoded = self._decode_value(value)
+                if isinstance(decoded, dict):
+                    decoded.setdefault("__kind", "vertex")
+                    decoded.setdefault("vid", str(meta_info.get("id", "")).strip())
+                    return decoded
+                return {"__kind": "vertex", "vid": str(meta_info.get("id", "")).strip()}
+            if meta_type == "edge":
+                edge_id = meta_info.get("id", {}) or {}
+                decoded = self._decode_value(value)
+                payload = decoded if isinstance(decoded, dict) else {}
+                payload.setdefault("__kind", "edge")
+                payload.setdefault("src", str(edge_id.get("src", "")).strip())
+                payload.setdefault("dst", str(edge_id.get("dst", "")).strip())
+                ranking = edge_id.get("ranking")
+                if ranking not in (None, ""):
+                    payload.setdefault("ranking", int(ranking))
+                payload.setdefault("edge_type", int(edge_id.get("type", 0) or 0))
+                payload.setdefault("edge_name", str(edge_id.get("name", "")).strip())
+                return payload
         if isinstance(value, dict):
             if "id" in value:
                 return value["id"]
@@ -418,13 +541,7 @@ class NebulaGraphStore:
     def _session(self):
         if not self.client_available():  # pragma: no cover - import guarded above
             raise RuntimeError("nebula3-python not installed")
-
-        config = NebulaConfig()
-        config.max_connection_pool_size = 4
-        pool = ConnectionPool()
-        ok = pool.init([(self.settings.host, self.settings.port)], config)
-        if not ok:
-            raise RuntimeError("failed_to_init_nebula_connection_pool")
+        pool = self._get_or_create_pool()
         session = pool.get_session(self.settings.user, self.settings.password)
 
         class _SessionContext:
@@ -432,9 +549,58 @@ class NebulaGraphStore:
                 return session
 
             def __exit__(self_nonlocal, exc_type, exc, tb):
-                try:
-                    session.release()
-                finally:
-                    pool.close()
+                session.release()
 
         return _SessionContext()
+
+    def _get_or_create_pool(self):
+        pool_key = (self.settings.host, self.settings.port)
+        shared_pool = self.__class__._shared_pool
+        if shared_pool is not None and self.__class__._shared_pool_key == pool_key:
+            return shared_pool
+        with self.__class__._pool_lock:
+            shared_pool = self.__class__._shared_pool
+            if shared_pool is not None and self.__class__._shared_pool_key == pool_key:
+                return shared_pool
+            config = NebulaConfig()
+            config.max_connection_pool_size = 8
+            pool = ConnectionPool()
+            ok = pool.init([(self.settings.host, self.settings.port)], config)
+            if not ok:
+                raise RuntimeError("failed_to_init_nebula_connection_pool")
+            self.__class__._shared_pool = pool
+            self.__class__._shared_pool_key = pool_key
+            return pool
+
+    def _normalize_vid_inputs(self, value: str | list[str]) -> list[str]:
+        if isinstance(value, list):
+            normalized_items: list[str] = []
+            for item in value:
+                text = str(item).strip()
+                if not text:
+                    continue
+                normalized_items.append(text if text.startswith("ent_") else entity_vid(text, self.settings.vid_max_length))
+            return normalized_items
+        normalized = str(value).strip()
+        if not normalized:
+            return []
+        if normalized.startswith("ent_"):
+            return [normalized]
+        return [entity_vid(normalized, self.settings.vid_max_length)]
+
+    def _format_vid_list(self, vids: list[str]) -> str:
+        return ",".join(f'"{vid}"' for vid in vids if vid)
+
+    def _parse_fact_ids(self, value: Any) -> list[str]:
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        text = str(value or "").strip()
+        if not text:
+            return []
+        try:
+            payload = json.loads(text)
+        except Exception:
+            return [item for item in text.split("\x1f") if item]
+        if isinstance(payload, list):
+            return [str(item).strip() for item in payload if str(item).strip()]
+        return [text]
