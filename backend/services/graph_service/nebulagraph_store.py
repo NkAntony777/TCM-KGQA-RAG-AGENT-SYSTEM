@@ -518,7 +518,16 @@ class NebulaGraphStore:
         return [row for row in rows if str(row.get("name", "")).strip()]
 
     def exact_entity_names(self, query: str, preferred_types: set[str] | None = None) -> list[str]:
-        rows = self.exact_entity(query)
+        rows: list[dict[str, Any]] = []
+        statement = (
+            f'USE `{self.settings.space}`; '
+            f'LOOKUP ON `entity` WHERE entity.name == "{_escape_ngql(query)}" '
+            "YIELD properties(vertex).name AS name, properties(vertex).entity_type AS entity_type;"
+        )
+        try:
+            rows = self.execute_rows(statement)
+        except Exception:
+            rows = self.exact_entity(query)
         names: list[str] = []
         preferred = {str(item).strip() for item in preferred_types or set() if str(item).strip()}
         for row in rows:
