@@ -38,6 +38,7 @@ MODERN_RESEARCH_KEYWORDS = (
     "mmp",
     "fMRI",
 )
+COMPARISON_QUERY_MARKERS = ("比较", "鉴别", "异同", "区别", "对比", "差异", "递进", "阶梯")
 
 
 @dataclass
@@ -60,6 +61,7 @@ class RetrievalStrategy:
     vector_candidate_k: int = 24
     sources: list[str] = field(default_factory=list)
     evidence_paths: list[str] = field(default_factory=list)
+    answer_policy: str = ""
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
@@ -109,7 +111,9 @@ def derive_retrieval_strategy(
     symptom_name = resolved.symptom_name if graph_query_kind == "syndrome" else ""
     compare_entities = resolved.compare_entities()
     notes = list(resolved.notes)
-    if intent == "compare_entities" and compare_entities:
+    answer_policy = ""
+    explicit_comparison = any(marker in text for marker in COMPARISON_QUERY_MARKERS)
+    if compare_entities and (intent == "compare_entities" or explicit_comparison):
         refine_result = CompareEntityRefiner().refine(
             query=text,
             compare_entities=compare_entities,
@@ -120,6 +124,8 @@ def derive_retrieval_strategy(
             entity_name = refine_result.primary_entity
         notes.append(f"compare_entities_refiner={refine_result.backend}")
         notes.extend(refine_result.notes)
+    elif intent != "compare_entities":
+        compare_entities = []
     alias_service = get_runtime_alias_service()
     alias_focus_entities = compare_entities or ([entity_name] if entity_name else [])
     entity_aliases: list[str] = []
@@ -136,22 +142,27 @@ def derive_retrieval_strategy(
         preferred_route = "graph"
         predicate_allowlist = ["使用药材"]
         sources = ["graph_sqlite", "graph_nebula"]
+        answer_policy = "graph_relation_first"
     elif intent == "formula_efficacy":
         preferred_route = "graph"
         predicate_allowlist = ["功效", "治法", "归经"]
         sources = ["graph_sqlite", "graph_nebula"]
+        answer_policy = "graph_relation_first"
     elif intent == "formula_indication":
         preferred_route = "graph"
         predicate_allowlist = ["治疗证候", "治疗症状", "治疗疾病", "推荐方剂"]
         sources = ["graph_sqlite", "graph_nebula"]
+        answer_policy = "graph_relation_first"
     elif intent == "formula_origin":
         preferred_route = "hybrid"
         predicate_allowlist = []
         sources = ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"]
         notes.append("origin queries keep graph lookup broad to expose source-book clues")
+        answer_policy = "graph_relation_with_origin"
     elif intent == "compare_entities":
         preferred_route = "hybrid"
         sources = ["graph_sqlite", "graph_nebula", "qa_structured_index", "classic_docs"]
+        answer_policy = "graph_relation_with_origin"
     elif intent == "syndrome_to_formula":
         preferred_route = "graph"
         if graph_query_kind == "entity":
@@ -159,6 +170,7 @@ def derive_retrieval_strategy(
         else:
             predicate_allowlist = ["推荐方剂"]
         sources = ["graph_sqlite", "graph_nebula"]
+        answer_policy = "graph_relation_first"
     elif route_hint == "retrieval":
         sources = ["qa_structured_index", "classic_docs"]
 
@@ -190,6 +202,7 @@ def derive_retrieval_strategy(
         graph_final_k=graph_final_k,
         vector_candidate_k=vector_candidate_k,
         sources=sources,
+        answer_policy=answer_policy,
         notes=notes + [f"classifier_dominant_intent={intent}"],
     )
     strategy.evidence_paths = _build_evidence_paths(strategy, resolved)

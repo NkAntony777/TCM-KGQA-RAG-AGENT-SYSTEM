@@ -10,6 +10,9 @@ from services.common.evidence_payloads import (
     syndrome_items as _syndrome_items,
 )
 
+GRAPH_STRUCTURED_SOURCE_TYPES = {"graph", "graph_path", "graph_alias"}
+DOC_LIKE_SOURCE_TYPES = {"doc", "chapter"}
+
 
 def _evidence_identity(item: dict[str, Any]) -> tuple[str, str, str]:
     return (
@@ -82,6 +85,25 @@ def _merge_evidence_items(*, primary: list[dict[str, Any]], fallback: list[dict[
     merged = [dict(item) for item in primary]
     merged.extend(dict(item) for item in fallback)
     return _dedupe_evidence(merged)
+
+
+def _split_factual_evidence(*, factual_evidence: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    structured: list[dict[str, Any]] = []
+    documentary: list[dict[str, Any]] = []
+    other: list[dict[str, Any]] = []
+    for item in factual_evidence:
+        source_type = str(item.get("source_type", "")).strip()
+        if source_type in GRAPH_STRUCTURED_SOURCE_TYPES:
+            structured.append(item)
+        elif source_type in DOC_LIKE_SOURCE_TYPES:
+            documentary.append(item)
+        else:
+            other.append(item)
+    return {
+        "structured": structured,
+        "documentary": documentary,
+        "other": other,
+    }
 
 
 def _build_book_citations(*, factual_evidence: list[dict[str, Any]]) -> list[str]:

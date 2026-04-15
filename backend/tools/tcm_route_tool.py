@@ -49,6 +49,16 @@ def _append_degradation(output: dict[str, object], *, source_route: str, target_
         degradation.append({"from": source_route, "to": target_route, "reason": reason})
 
 
+def _normalize_route_reason(*, base_reason: str, execution_route: str, strategy_override: str = "") -> str:
+    parts = [str(base_reason or "").strip()]
+    if strategy_override:
+        parts.append(strategy_override)
+    parts = [item for item in parts if item]
+    if not parts:
+        return execution_route
+    return "; ".join(dict.fromkeys(parts))
+
+
 def _case_qa_enabled(strategy) -> bool:
     sources = {str(item).strip() for item in getattr(strategy, "sources", []) if str(item).strip()}
     return bool({"qa_case_structured_index", "qa_case_vector_db"} & sources)
@@ -83,9 +93,18 @@ class TCMRouteSearchTool(BaseTool):
         strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route, analysis=analysis)
         execution_route = decision.route
         route_reason = decision.reason
+        route_override_reason = ""
         if strategy.intent == "formula_origin" and strategy.entity_name and decision.route == "retrieval":
             execution_route = "hybrid"
-            route_reason = f"{decision.reason}; origin_entity_forced_hybrid"
+            route_override_reason = "origin_entity_forced_hybrid"
+        elif strategy.preferred_route == "graph" and decision.route == "hybrid":
+            execution_route = "graph"
+            route_override_reason = "strategy_graph_override"
+        route_reason = _normalize_route_reason(
+            base_reason=route_reason,
+            execution_route=execution_route,
+            strategy_override=route_override_reason,
+        )
         health = service_health_snapshot()
         output: dict[str, object] = {
             "route": execution_route,

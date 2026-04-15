@@ -122,6 +122,26 @@ def _grounded_factual_lines(
     return lines
 
 
+def _grounded_group_lines(
+    *,
+    label: str,
+    items: list[dict[str, Any]],
+    limit: int,
+    include_snippet: bool,
+) -> list[str]:
+    if not items:
+        return [f"{label}：none"]
+    lines = [f"{label}："]
+    lines.extend(
+        _grounded_factual_lines(
+            items=items,
+            limit=limit,
+            include_snippet=include_snippet,
+        )
+    )
+    return lines
+
+
 def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2) -> list[str]:
     lines: list[str] = []
     for index, item in enumerate(items[:limit], start=1):
@@ -131,10 +151,11 @@ def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2) -> list
     return lines
 
 
-def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int) -> str:
+def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int) -> str:
     strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
     analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
     include_verbatim_evidence = _query_requests_verbatim_evidence(query)
+    answer_policy = str(strategy.get("answer_policy", "")).strip()
     lines = [
         f"用户问题：{query}",
         f"执行模式：{mode}",
@@ -142,6 +163,8 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         f"核心实体：{strategy.get('entity_name', '')}",
         f"症状/证候：{strategy.get('symptom_name', '')}",
     ]
+    if answer_policy:
+        lines.append(f"回答策略：{answer_policy}")
     compare_entities = strategy.get("compare_entities", analysis.get("compare_entities", []))
     if isinstance(compare_entities, list) and compare_entities:
         lines.append("比较对象：" + "、".join(str(item) for item in compare_entities if str(item).strip()))
@@ -150,15 +173,37 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("用户要求保留的回答角度：" + "、".join(requested_dimensions))
         lines.append("输出要求：请按这些角度逐段作答，并显式写出对应标题。")
     lines.append("事实证据摘要：")
-    if factual_evidence:
+    structured_items = evidence_groups.get("structured", []) if isinstance(evidence_groups, dict) else []
+    documentary_items = evidence_groups.get("documentary", []) if isinstance(evidence_groups, dict) else []
+    other_items = evidence_groups.get("other", []) if isinstance(evidence_groups, dict) else []
+    if structured_items:
         lines.extend(
-            _grounded_factual_lines(
-                items=factual_evidence,
-                limit=evidence_limit,
+            _grounded_group_lines(
+                label="结构化图谱证据",
+                items=structured_items,
+                limit=min(evidence_limit, 4),
+                include_snippet=False,
+            )
+        )
+    if documentary_items:
+        lines.extend(
+            _grounded_group_lines(
+                label="文献原文证据",
+                items=documentary_items,
+                limit=min(evidence_limit, 4),
                 include_snippet=include_verbatim_evidence,
             )
         )
-    else:
+    if other_items:
+        lines.extend(
+            _grounded_group_lines(
+                label="补充证据",
+                items=other_items,
+                limit=max(1, min(evidence_limit, 2)),
+                include_snippet=include_verbatim_evidence,
+            )
+        )
+    if not factual_evidence:
         lines.append("1. 当前没有事实证据。")
     if case_references:
         lines.append("案例参考：")
@@ -177,6 +222,10 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("回答时允许引用上面的出处摘录，但保持精简，不要大段抄录。")
     else:
         lines.append("回答时优先用 claim 级摘要组织结论，不要复述整段原文。")
+    if answer_policy == "graph_relation_first":
+        lines.append("输出要求：先用结构化关系给结论，再补充必要的文献出处；若文献证据缺失，应明确说明当前结论主要来自图谱关系。")
+    elif answer_policy == "graph_relation_with_origin":
+        lines.append("输出要求：先概括图谱关系结论，再补充对应出处或条文支撑；若用户问出处/原文，必须优先交代书名、篇章或方后注。")
     lines.append("输出自然中文答案，不复述检索流程，末尾可用“依据：...”列 1 到 3 条来源。")
     return "\n".join(lines)
 

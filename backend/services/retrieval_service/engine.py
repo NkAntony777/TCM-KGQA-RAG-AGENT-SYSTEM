@@ -18,6 +18,7 @@ import httpx
 from dotenv import load_dotenv
 
 from router.tcm_intent_classifier import analyze_tcm_query
+from services.qa_service.alias_service import get_runtime_alias_service
 from services.retrieval_service.files_first_support import (
     build_section_response as _build_section_response,
     LocalFilesFirstStore,
@@ -111,6 +112,7 @@ class RetrievalServiceSettings:
     modern_corpus_path: Path
     classic_corpus_path: Path
     runtime_graph_db_path: Path
+    section_summary_cache_path: Path
 
 
 def load_settings() -> RetrievalServiceSettings:
@@ -164,6 +166,7 @@ def load_settings() -> RetrievalServiceSettings:
         modern_corpus_path=backend_dir / "services" / "retrieval_service" / "data" / "herb2_modern_corpus.json",
         classic_corpus_path=backend_dir / "services" / "retrieval_service" / "data" / "classic_books_corpus.json",
         runtime_graph_db_path=backend_dir / "services" / "graph_service" / "data" / "graph_runtime.db",
+        section_summary_cache_path=backend_dir / "storage" / "section_summary_cache.sqlite",
     )
 
 
@@ -804,6 +807,7 @@ class RetrievalEngine:
         self.files_first_store = LocalFilesFirstStore(
             self.settings.local_index_path.with_suffix(".fts.db"),
             tokenizer=self.lexicon,
+            summary_cache_path=self.settings.section_summary_cache_path,
         )
         self.embedding_client = OpenAICompatibleClient(
             base_url=self.settings.embedding_base_url,
@@ -980,7 +984,7 @@ class RetrievalEngine:
         allowed_file_path_prefixes: list[str] | None = None,
         search_mode: str = "files_first",
     ) -> dict[str, Any]:
-        return run_hybrid_search(
+        result = run_hybrid_search(
             settings=self.settings,
             files_first_store=self.files_first_store,
             milvus=self.milvus,
@@ -998,6 +1002,99 @@ class RetrievalEngine:
             filter_docs_fn=self._filter_docs_by_file_path_prefixes,
             lexical_gate_fn=self._apply_lexical_sanity_gate,
         )
+        refined_query = self._maybe_refine_files_first_query(
+            query=query,
+            search_mode=search_mode,
+            result=result,
+            top_k=top_k,
+        )
+        if not refined_query:
+            return result
+        refined_result = run_hybrid_search(
+            settings=self.settings,
+            files_first_store=self.files_first_store,
+            milvus=self.milvus,
+            local_store=self.local_store,
+            lexicon=self.lexicon,
+            embedding_client=self.embedding_client,
+            query=refined_query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            enable_rerank=enable_rerank,
+            allowed_file_path_prefixes=allowed_file_path_prefixes,
+            search_mode=search_mode,
+            rerank_fn=self._rerank,
+            auto_merge_fn=self._auto_merge,
+            filter_docs_fn=self._filter_docs_by_file_path_prefixes,
+            lexical_gate_fn=self._apply_lexical_sanity_gate,
+        )
+        if self._prefer_refined_result(primary=result, refined=refined_result):
+            warnings = list(refined_result.get("warnings", [])) if isinstance(refined_result.get("warnings"), list) else []
+            warnings.append(f"single_query_refinement_applied:{refined_query}")
+            refined_result["warnings"] = warnings
+            refined_result["refined_from_query"] = query
+            refined_result["refined_query"] = refined_query
+            return refined_result
+        warnings = list(result.get("warnings", [])) if isinstance(result.get("warnings"), list) else []
+        warnings.append("single_query_refinement_no_gain")
+        result["warnings"] = warnings
+        return result
+
+    def _maybe_refine_files_first_query(
+        self,
+        *,
+        query: str,
+        search_mode: str,
+        result: dict[str, Any],
+        top_k: int,
+    ) -> str:
+        if (search_mode or "").strip().lower() != "files_first":
+            return ""
+        chunks = result.get("chunks", []) if isinstance(result.get("chunks"), list) else []
+        if chunks and len(chunks) >= min(max(2, top_k // 2), top_k):
+            return ""
+        warnings = {str(item).strip() for item in result.get("warnings", []) if str(item).strip()} if isinstance(result.get("warnings"), list) else set()
+        top_score = float(chunks[0].get("score", 0.0) or 0.0) if chunks else 0.0
+        low_confidence = not chunks or len(chunks) <= 1 or top_score < 0.12 or "files_first_sparse_query_empty" in warnings
+        if not low_confidence:
+            return ""
+        return self._refine_files_first_query(query)
+
+    def _refine_files_first_query(self, query: str) -> str:
+        base_query = str(query or "").strip()
+        if not base_query:
+            return ""
+        alias_service = get_runtime_alias_service()
+        heuristic = alias_service.expand_query_with_aliases(
+            base_query,
+            max_aliases_per_entity=3,
+            max_entities=2,
+        )
+        if self.rewrite_client.is_ready():
+            prompt = (
+                "请把下面的中医问题改写成一条更适合古籍全文检索与图谱检索的短查询。"
+                "要求：保留核心实体、证候、书名线索；补全常见古今异名或近义表述；不超过40字；只输出改写结果。\n"
+                f"问题：{base_query}"
+            )
+            rewritten = str(self.rewrite_client.chat(prompt, self.settings.rewrite_model) or "").strip()
+            rewritten = re.sub(r"\s+", " ", rewritten)
+            if rewritten and rewritten != base_query:
+                return rewritten
+        return heuristic if heuristic != base_query else ""
+
+    @staticmethod
+    def _prefer_refined_result(*, primary: dict[str, Any], refined: dict[str, Any]) -> bool:
+        primary_chunks = primary.get("chunks", []) if isinstance(primary.get("chunks"), list) else []
+        refined_chunks = refined.get("chunks", []) if isinstance(refined.get("chunks"), list) else []
+        if not refined_chunks:
+            return False
+        if not primary_chunks:
+            return True
+        primary_top = float(primary_chunks[0].get("score", 0.0) or 0.0)
+        refined_top = float(refined_chunks[0].get("score", 0.0) or 0.0)
+        if len(refined_chunks) > len(primary_chunks):
+            return True
+        return refined_top > primary_top + 0.03
 
     def rewrite_query(self, query: str, strategy: str = "complex") -> dict[str, Any]:
         strategy = (strategy or "complex").strip().lower()

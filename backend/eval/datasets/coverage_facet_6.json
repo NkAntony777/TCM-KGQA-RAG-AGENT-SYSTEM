@@ -1,0 +1,8 @@
+[
+  {"id":"cf_001","query":"请从药性矛盾与统一、指导意义、鉴别三个角度分析小柴胡汤少阳咳加减。","expected_facets":["comparison","path_reasoning"]},
+  {"id":"cf_002","query":"请从酸甘化阴与辛甘化阳两个角度说明小建中汤寒热并治。","expected_facets":["composition","efficacy"]},
+  {"id":"cf_003","query":"请比较宣痹汤与白虎加桂枝汤在热痹证中的鉴别要点，并说明为什么湿温痹证不宜早用石膏知母。","expected_facets":["comparison","path_reasoning"]},
+  {"id":"cf_004","query":"请解释四逆散为何不用附子干姜而用柴胡枳实，并比较其与四逆汤、当归四逆汤。","expected_facets":["comparison","path_reasoning"]},
+  {"id":"cf_005","query":"请说明半夏秫米汤通阴阳的配伍原理，并论述与褪黑素、GABA受体激动剂的对应机制。","expected_facets":["path_reasoning"]},
+  {"id":"cf_006","query":"请从三方证阶梯性差异和现代冠心病分层两个角度说明胸痹三方。","expected_facets":["comparison","path_reasoning"]}
+]

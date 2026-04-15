@@ -42,10 +42,18 @@ COMPARISON_NOISE_TERMS = {
     "咳者",
 }
 COMPARISON_NOISE_PREFIXES = ("请从", "请结合", "分析", "论述", "论证", "比较", "鉴别", "说明", "解释")
-SOURCE_TEXT_MARKERS = ("原文", "原句", "原话", "原段", "条文", "方后注")
+SOURCE_TEXT_MARKERS = ("原文", "原句", "原话", "原段", "方后注")
 ORIGIN_BOOK_MARKERS = ("出处", "出自", "哪本书", "哪部书")
 SOURCE_TRACE_MARKERS = (*ORIGIN_BOOK_MARKERS, *SOURCE_TEXT_MARKERS, "佐证", "来源")
 DEEP_FACET_QUERY_MARKERS = ("分析", "论述", "论证", "辨析", "鉴别", "为什么", "病机", "异同", "比较")
+FACET_MARKERS: dict[str, tuple[str, ...]] = {
+    "composition": ("组成", "配伍", "药材", "组方"),
+    "efficacy": ("功效", "治法", "作用", "归经"),
+    "indication": ("主治", "证候", "适应", "治什么"),
+    "comparison": ("比较", "鉴别", "异同", "区别", "对比"),
+    "origin": ("出处", "出自", "原文", "原句", "方后注"),
+    "path_reasoning": ("病机", "机制", "为什么", "原理", "递进", "阶梯"),
+}
 
 
 def _init_coverage_state(*, query: str, payload: dict[str, Any], evidence_paths: list[str]) -> dict[str, Any]:
@@ -62,6 +70,7 @@ def _init_coverage_state(*, query: str, payload: dict[str, Any], evidence_paths:
         "intent": str(strategy.get("intent", analysis.get("dominant_intent", "")) or "").strip(),
         "entity_name": str(strategy.get("entity_name", "")).strip(),
         "compare_entities": compare_entities,
+        "requested_facets": _requested_facets(query),
         "sources": sources,
         "evidence_path_count": len(evidence_paths),
         "factual_count": 0,
@@ -189,6 +198,7 @@ def _coverage_gaps_from_state(state: dict[str, Any]) -> list[str]:
     predicates = set(state.get("predicates", set()))
     source_types = set(state.get("source_types", set()))
     compare_entities = list(state.get("compare_entities", []))
+    requested_facets = set(state.get("requested_facets", set()))
     sources = set(state.get("sources", set()))
 
     wants_source_text = any(marker in query for marker in SOURCE_TEXT_MARKERS)
@@ -251,6 +261,8 @@ def _coverage_gaps_from_state(state: dict[str, Any]) -> list[str]:
         gaps.append("path_reasoning")
     if compare_entities and not _comparison_state_sufficient(state):
         gaps.append("comparison")
+    if "comparison" in requested_facets and compare_entities and not _comparison_state_sufficient(state):
+        gaps.append("comparison")
     if ("qa_case_structured_index" in sources or "qa_case_vector_db" in sources or intent == "syndrome_to_formula") and int(state.get("case_count", 0)) <= 0 and _query_benefits_from_case_reference(query=query):
         gaps.append("case_reference")
     resolved = list(dict.fromkeys(gaps))
@@ -265,6 +277,7 @@ def _coverage_summary_from_state(state: dict[str, Any]) -> dict[str, Any]:
     gaps = _coverage_gaps_from_state(state)
     summary = {
         "gaps": gaps,
+        "requested_facets": sorted(state.get("requested_facets", set())),
         "factual_count": int(state.get("factual_count", 0)),
         "case_count": int(state.get("case_count", 0)),
         "evidence_path_count": int(state.get("evidence_path_count", 0)),
@@ -335,6 +348,15 @@ def _needs_path_reasoning(*, query: str) -> bool:
 
 def _query_benefits_from_case_reference(*, query: str) -> bool:
     return any(marker in query for marker in ("医案", "病例", "案例", "经验", "临床", "辨证", "主诉", "现病史"))
+
+
+def _requested_facets(query: str) -> set[str]:
+    text = str(query or "").strip()
+    requested: set[str] = set()
+    for facet, markers in FACET_MARKERS.items():
+        if any(marker in text for marker in markers):
+            requested.add(facet)
+    return requested
 
 
 def _refine_compare_entities(*, raw_entities: Any, entity_name: str, evidence_paths: list[str]) -> list[str]:
@@ -556,3 +578,9 @@ def _coverage_summary(*, query: str, payload: dict[str, Any], evidence_paths: li
     state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
     _update_coverage_state(state, new_factual_evidence=factual_evidence, new_case_references=case_references)
     return _coverage_summary_from_state(state)
+    if "composition" in requested_facets and "使用药材" not in predicates:
+        gaps.append("composition")
+    if "efficacy" in requested_facets and not predicates.intersection({"功效", "治法", "归经"}):
+        gaps.append("efficacy")
+    if "indication" in requested_facets and not predicates.intersection({"治疗证候", "治疗症状", "治疗疾病"}):
+        gaps.append("indication")

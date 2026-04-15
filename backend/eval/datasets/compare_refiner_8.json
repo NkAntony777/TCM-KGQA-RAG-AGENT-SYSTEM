@@ -1,0 +1,10 @@
+[
+  {"id":"cr_001","query":"请比较小柴胡汤与柴胡桂枝干姜汤在少阳咳中的异同。","expected_compare_entities":["小柴胡汤","柴胡桂枝干姜汤"]},
+  {"id":"cr_002","query":"宣痹汤与白虎加桂枝汤在热痹证中的鉴别要点是什么？","expected_compare_entities":["宣痹汤","白虎加桂枝汤"]},
+  {"id":"cr_003","query":"栝楼薤白白酒汤、栝楼薤白半夏汤、枳实薤白桂枝汤三方证如何递进？","expected_compare_entities":["栝楼薤白白酒汤","栝楼薤白半夏汤","枳实薤白桂枝汤"]},
+  {"id":"cr_004","query":"四逆散与四逆汤、当归四逆汤在手足逆冷上的区别。","expected_compare_entities":["四逆散","四逆汤证","当归四逆汤证"]},
+  {"id":"cr_005","query":"请比较虫类药与草木活血化瘀药的作用层次差异。","expected_compare_entities":["虫类药","活血化瘀"]},
+  {"id":"cr_006","query":"黄芪托毒生肌与益气升阳为什么能够统一？","expected_compare_entities":[]},
+  {"id":"cr_007","query":"半夏秫米汤为什么能通阴阳治疗不寐？","expected_compare_entities":[]},
+  {"id":"cr_008","query":"请从阳郁于里而非阳虚角度解释四逆散证四逆。","expected_compare_entities":[]}
+]

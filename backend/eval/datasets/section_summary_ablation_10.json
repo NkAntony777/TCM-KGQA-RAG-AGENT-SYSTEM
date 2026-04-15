@@ -1,0 +1,61 @@
+[
+  {
+    "id": "sum_001",
+    "query": "小柴胡汤方后注里关于少阳咳的加减说明",
+    "expected_book": "伤寒论",
+    "expected_keywords": ["小柴胡汤", "五味子", "干姜", "若咳者"]
+  },
+  {
+    "id": "sum_002",
+    "query": "虚劳里急手足烦热咽干口燥对应的小建中汤条文",
+    "expected_book": "金匮要略",
+    "expected_keywords": ["小建中汤", "虚劳里急", "手足烦热", "咽干口燥"]
+  },
+  {
+    "id": "sum_003",
+    "query": "升阳益胃汤里风药胜湿与黄连并用的论述",
+    "expected_book": "脾胃论",
+    "expected_keywords": ["升阳益胃汤", "黄连", "风药", "胜湿"]
+  },
+  {
+    "id": "sum_004",
+    "query": "宣痹汤治疗湿温痹阻和白虎加桂枝汤鉴别",
+    "expected_book": "温病条辨",
+    "expected_keywords": ["宣痹汤", "湿温", "痹阻", "白虎加桂枝汤"]
+  },
+  {
+    "id": "sum_005",
+    "query": "久病入络与虫类药搜剔络邪的论述",
+    "expected_book": "临证指南医案",
+    "expected_keywords": ["久病入络", "虫类药", "搜剔络邪"]
+  },
+  {
+    "id": "sum_006",
+    "query": "黄芪主痈疽久败疮排脓止痛的古籍记载",
+    "expected_book": "神农本草经",
+    "expected_keywords": ["黄芪", "痈疽久败疮", "排脓止痛"]
+  },
+  {
+    "id": "sum_007",
+    "query": "半夏秫米汤治疗不寐阳不入阴的相关论述",
+    "expected_keywords": ["半夏秫米汤", "不寐", "阳不入阴"]
+  },
+  {
+    "id": "sum_008",
+    "query": "栝楼薤白白酒汤胸痹心痛短气病脉证治的记载",
+    "expected_book": "金匮要略",
+    "expected_keywords": ["栝楼薤白白酒汤", "胸痹", "心痛", "短气"]
+  },
+  {
+    "id": "sum_009",
+    "query": "四逆散少阴病四逆原条文和阳郁于里的解释",
+    "expected_book": "伤寒论",
+    "expected_keywords": ["四逆散", "少阴病", "四逆", "阳郁于里"]
+  },
+  {
+    "id": "sum_010",
+    "query": "黄帝内经里卫气昼行于阳夜行于阴的节律",
+    "expected_book": "黄帝内经",
+    "expected_keywords": ["卫气", "昼行于阳", "夜行于阴"]
+  }
+]

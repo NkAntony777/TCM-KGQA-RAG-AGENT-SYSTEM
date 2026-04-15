@@ -1,0 +1,10 @@
+[
+  {"id":"gf_001","query":"六味地黄丸的组成是什么","entity":"六味地黄丸","predicate_allowlist":["使用药材"],"expected_predicates_any":["使用药材"],"expected_targets_any":["熟地黄","山茱萸","山药"]},
+  {"id":"gf_002","query":"四君子汤的组成药材有哪些","entity":"四君子汤","predicate_allowlist":["使用药材"],"expected_predicates_any":["使用药材"],"expected_targets_any":["人参","白术","甘草"]},
+  {"id":"gf_003","query":"小建中汤的功效是什么","entity":"小建中汤","predicate_allowlist":["功效","治法"],"expected_predicates_any":["功效","治法"]},
+  {"id":"gf_004","query":"升阳益胃汤的治法与功效","entity":"升阳益胃汤","predicate_allowlist":["功效","治法"],"expected_predicates_any":["功效","治法"]},
+  {"id":"gf_005","query":"宣痹汤主治什么证候","entity":"宣痹汤","predicate_allowlist":["治疗证候","治疗症状"],"expected_predicates_any":["治疗证候","治疗症状"]},
+  {"id":"gf_006","query":"四逆散治疗什么证候","entity":"四逆散","predicate_allowlist":["治疗证候","治疗症状","治疗疾病"],"expected_predicates_any":["治疗证候","治疗症状","治疗疾病"]},
+  {"id":"gf_007","query":"黄芪有哪些功效","entity":"黄芪","predicate_allowlist":["功效","归经"],"expected_predicates_any":["功效","归经"]},
+  {"id":"gf_008","query":"栝楼薤白白酒汤主治什么","entity":"栝楼薤白白酒汤","predicate_allowlist":["治疗证候","治疗症状"],"expected_predicates_any":["治疗证候","治疗症状"]}
+]

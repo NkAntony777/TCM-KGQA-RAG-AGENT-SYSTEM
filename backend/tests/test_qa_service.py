@@ -213,6 +213,38 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["generation_backend"], "deterministic_quick_fallback")
         self.assertIn("熟地黄", result["answer"])
 
+    async def test_deep_mode_retries_generation_once_before_fallback(self) -> None:
+        answer_generator = FakeSequentialAnswerGenerator(
+            [RuntimeError("temporary_timeout"), "Deep 完整回答"]
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_composition_payload()),
+            answer_generator=answer_generator,
+        )
+
+        result = await service.answer("六味地黄丸的组成是什么", mode="deep", top_k=12)
+
+        self.assertEqual(result["generation_backend"], "planner_llm")
+        self.assertIn("Deep 完整回答", result["answer"])
+        self.assertEqual(len(answer_generator.calls), 2)
+        self.assertTrue(any("deep_llm_retry_1" in note for note in result["notes"]))
+
+    async def test_deep_mode_uses_quick_grounded_fallback_before_deterministic(self) -> None:
+        answer_generator = FakeSequentialAnswerGenerator(
+            [RuntimeError("deep_timeout_1"), RuntimeError("deep_timeout_2"), "Quick 风格完整回答"]
+        )
+        service = QAService(
+            route_tool=FakeRouteTool(_composition_payload()),
+            answer_generator=answer_generator,
+        )
+
+        result = await service.answer("六味地黄丸的组成是什么", mode="deep", top_k=12)
+
+        self.assertEqual(result["generation_backend"], "deep_quick_grounded_fallback")
+        self.assertIn("Quick 风格完整回答", result["answer"])
+        self.assertEqual(len(answer_generator.calls), 3)
+        self.assertTrue(any("deep_fallback_to_quick_grounded" in note for note in result["notes"]))
+
     async def test_quick_mode_runs_bounded_followup_for_comparison_gap(self) -> None:
         payload = {
             "route": "hybrid",

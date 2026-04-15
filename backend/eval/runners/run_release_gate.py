@@ -28,6 +28,8 @@ COMPLEX_QA_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_agent_hard_probe_1
 GRAPH_REGRESSION_DATASET = BACKEND_ROOT / "eval" / "datasets" / "graph_regression_12.json"
 DEFAULT_DOCTORAL_BASELINE_JSON = BACKEND_ROOT / "eval" / "doctoral_hard_probe_quick_deep_20260410_deep_quality_tuned.json"
 ROUTER_MIN_ACCURACY = 0.80
+DEEP_MIN_ANSWER_CHARS = 400
+DEEP_DISALLOWED_BACKENDS = {"planner_deterministic_fallback"}
 
 
 def _utc_now_text() -> str:
@@ -64,6 +66,8 @@ def summarize_doctoral_baseline(path: Path) -> dict[str, Any]:
         return {"available": True, "path": str(path), "complete": False, "quick_ok": 0, "deep_ok": 0, "total_questions": 0}
     quick_ok = 0
     deep_ok = 0
+    deep_fallback_count = 0
+    deep_short_answer_count = 0
     complete = True
     for row in questions:
         if not isinstance(row, dict):
@@ -79,12 +83,21 @@ def summarize_doctoral_baseline(path: Path) -> dict[str, Any]:
             complete = False
         else:
             deep_ok += 1
+            deep_backend = str(deep.get("generation_backend", "") or "").strip()
+            if deep_backend in DEEP_DISALLOWED_BACKENDS:
+                deep_fallback_count += 1
+                complete = False
+            if len(str(deep.get("answer", "") or "").strip()) < DEEP_MIN_ANSWER_CHARS:
+                deep_short_answer_count += 1
+                complete = False
     return {
         "available": True,
         "path": str(path),
         "complete": complete,
         "quick_ok": quick_ok,
         "deep_ok": deep_ok,
+        "deep_fallback_count": deep_fallback_count,
+        "deep_short_answer_count": deep_short_answer_count,
         "total_questions": len(questions),
         "summary": payload.get("summary", {}) if isinstance(payload.get("summary"), dict) else {},
     }
@@ -148,6 +161,8 @@ def render_markdown(summary: dict[str, Any]) -> str:
             f"- complete: {'yes' if doctoral['complete'] else 'no'}",
             f"- quick_ok: {doctoral['quick_ok']}/{doctoral['total_questions']}",
             f"- deep_ok: {doctoral['deep_ok']}/{doctoral['total_questions']}",
+            f"- deep_fallback_count: {doctoral['deep_fallback_count']}",
+            f"- deep_short_answer_count: {doctoral['deep_short_answer_count']}",
             f"- path: {doctoral['path']}",
             "",
             "## Doc-QA probe",

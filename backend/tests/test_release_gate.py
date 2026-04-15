@@ -16,8 +16,8 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
                 json.dumps(
                     {
                         "questions": [
-                            {"quick": {"ok": True, "answer": "a"}, "deep": {"ok": True, "answer": "b"}},
-                            {"quick": {"ok": True, "answer": "c"}, "deep": {"ok": True, "answer": "d"}},
+                            {"quick": {"ok": True, "answer": "a" * 20}, "deep": {"ok": True, "answer": "b" * 500, "generation_backend": "planner_llm"}},
+                            {"quick": {"ok": True, "answer": "c" * 20}, "deep": {"ok": True, "answer": "d" * 500, "generation_backend": "planner_llm"}},
                         ],
                         "summary": {"total_questions": 2},
                     },
@@ -31,6 +31,8 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
         self.assertTrue(summary["complete"])
         self.assertEqual(summary["quick_ok"], 2)
         self.assertEqual(summary["deep_ok"], 2)
+        self.assertEqual(summary["deep_fallback_count"], 0)
+        self.assertEqual(summary["deep_short_answer_count"], 0)
         self.assertEqual(summary["total_questions"], 2)
 
     def test_summarize_doctoral_baseline_detects_incomplete_payload(self) -> None:
@@ -53,6 +55,29 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
         self.assertFalse(summary["complete"])
         self.assertEqual(summary["quick_ok"], 1)
         self.assertEqual(summary["deep_ok"], 0)
+
+    def test_summarize_doctoral_baseline_rejects_short_or_fallback_deep_answer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "doctoral.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": [
+                            {
+                                "quick": {"ok": True, "answer": "a"},
+                                "deep": {"ok": True, "answer": "太短", "generation_backend": "planner_deterministic_fallback"},
+                            },
+                        ]
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            summary = summarize_doctoral_baseline(path)
+
+        self.assertFalse(summary["complete"])
+        self.assertEqual(summary["deep_fallback_count"], 1)
+        self.assertEqual(summary["deep_short_answer_count"], 1)
 
 
 if __name__ == "__main__":

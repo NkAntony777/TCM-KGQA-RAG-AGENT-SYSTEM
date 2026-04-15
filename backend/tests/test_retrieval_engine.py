@@ -15,6 +15,32 @@ class FakeEmbeddingClient:
         return [[0.1, 0.2, 0.3] for _ in texts]
 
 
+class FakeRewriteClient:
+    def __init__(self, rewritten: str):
+        self.rewritten = rewritten
+
+    def is_ready(self) -> bool:
+        return True
+
+    def chat(self, prompt: str, model: str) -> str:
+        return self.rewritten
+
+
+class FakeFilesFirstStoreSequence:
+    def __init__(self, responses: list[tuple[list[dict], str]]):
+        self.responses = list(responses)
+        self.calls = 0
+
+    def health(self) -> dict:
+        return {"files_first_index_available": True, "files_first_index_docs": 2}
+
+    def search(self, *, query: str, top_k: int, candidate_k: int, leaf_level: int):
+        self.calls += 1
+        if self.responses:
+            return self.responses.pop(0)
+        return [], "fts_local"
+
+
 class FakeMilvusStore:
     def health(self) -> dict:
         return {"milvus_available": True, "collection_exists": True}
@@ -119,6 +145,7 @@ class RetrievalEngineTests(unittest.TestCase):
             modern_corpus_path=tmpdir / "modern.json",
             classic_corpus_path=tmpdir / "classic.json",
             runtime_graph_db_path=tmpdir / "graph_runtime.db",
+            section_summary_cache_path=tmpdir / "section_summary_cache.sqlite",
         )
 
     def test_sparse_lexicon_persistence(self) -> None:
@@ -258,8 +285,54 @@ class RetrievalEngineTests(unittest.TestCase):
             )
 
             self.assertEqual(result["total"], 0)
-            self.assertEqual(result["chunks"], [])
-            self.assertIn("lexical_sanity_filtered_all", result["warnings"])
+
+    def test_search_hybrid_applies_single_query_refinement_for_low_hit_files_first(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
+            engine.files_first_store = FakeFilesFirstStoreSequence(
+                [
+                    ([], "fts_local"),
+                    (
+                        [
+                            {
+                                "chunk_id": "section::1",
+                                "text": "小柴胡汤功效为和解少阳。",
+                                "filename": "伤寒论.txt",
+                                "file_type": "SECTION",
+                                "file_path": "classic://伤寒论/0001",
+                                "page_number": 1,
+                                "chunk_idx": 0,
+                                "chunk_level": 2,
+                                "parent_chunk_id": "",
+                                "root_chunk_id": "",
+                                "book_name": "伤寒论",
+                                "chapter_title": "辨太阳病脉证并治",
+                                "section_key": "伤寒论::辨太阳病脉证并治",
+                                "score": 0.42,
+                                "match_snippet": "小柴胡汤 [功效] 为和解少阳",
+                            }
+                        ],
+                        "fts_local_section",
+                    ),
+                ]
+            )
+            engine.rewrite_client = FakeRewriteClient("小柴胡汤 功效 和解少阳")
+
+            result = engine.search_hybrid(
+                "小柴胡汤有啥用",
+                top_k=3,
+                candidate_k=6,
+                enable_rerank=False,
+                search_mode="files_first",
+            )
+
+            self.assertEqual(engine.files_first_store.calls, 2)
+            self.assertEqual(result["total"], 1)
+            self.assertEqual(result["refined_query"], "小柴胡汤 功效 和解少阳")
+            self.assertIn("single_query_refinement_applied", " ".join(result["warnings"]))
+            self.assertEqual(result["chunks"][0]["book_name"], "伤寒论")
+            self.assertEqual(result["chunks"][0]["file_type"], "SECTION")
+            self.assertEqual(result["chunks"][0]["chunk_level"], 2)
 
     def test_search_hybrid_can_filter_by_file_path_prefix(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

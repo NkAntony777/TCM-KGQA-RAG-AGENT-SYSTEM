@@ -26,6 +26,7 @@ from services.qa_service.evidence_items import (
     _factual_evidence_from_payload,
     _merge_evidence_items,
     _new_unique_evidence,
+    _split_factual_evidence,
 )
 
 __all__ = [
@@ -51,5 +52,6 @@ __all__ = [
     "_path_reasoning_sufficient",
     "_query_benefits_from_case_reference",
     "_source_trace_sufficient",
+    "_split_factual_evidence",
     "_update_coverage_state",
 ]

@@ -1,0 +1,64 @@
+[
+  {
+    "id": "qa_sum_001",
+    "category": "classical_formula",
+    "query": "请说明小柴胡汤方后注中少阳咳的加减法及其临床意义。",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["伤寒论", "医方论"],
+    "expected_answer_any": ["小柴胡汤", "少阳咳", "五味子", "干姜"]
+  },
+  {
+    "id": "qa_sum_002",
+    "category": "classical_formula",
+    "query": "小建中汤为什么能同时治疗里急腹痛和手足烦热？",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["金匮要略"],
+    "expected_answer_any": ["小建中汤", "酸甘化阴", "辛甘化阳"]
+  },
+  {
+    "id": "qa_sum_003",
+    "category": "classical_formula",
+    "query": "升阳益胃汤中为何同时大量使用风药和黄连？",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["脾胃论"],
+    "expected_answer_any": ["升阳益胃汤", "风药", "黄连"]
+  },
+  {
+    "id": "qa_sum_004",
+    "category": "classical_formula",
+    "query": "请比较宣痹汤与白虎加桂枝汤在热痹证中的区别。",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["温病条辨"],
+    "expected_answer_any": ["宣痹汤", "白虎加桂枝汤", "热痹"]
+  },
+  {
+    "id": "qa_sum_005",
+    "category": "classic_theory",
+    "query": "久病入络与虫类药搜剔络邪的核心思想是什么？",
+    "mode_expectations": ["quick", "deep"],
+    "expected_answer_any": ["久病入络", "虫类药", "搜剔络邪"]
+  },
+  {
+    "id": "qa_sum_006",
+    "category": "herb_classic",
+    "query": "《神农本草经》里黄芪主痈疽久败疮的记载如何理解？",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["神农本草经"],
+    "expected_answer_any": ["黄芪", "痈疽久败疮", "排脓止痛"]
+  },
+  {
+    "id": "qa_sum_007",
+    "category": "sleep_theory",
+    "query": "半夏秫米汤为什么能通阴阳治疗不寐？",
+    "mode_expectations": ["quick", "deep"],
+    "expected_answer_any": ["半夏秫米汤", "通阴阳", "不寐"]
+  },
+  {
+    "id": "qa_sum_008",
+    "category": "classical_formula",
+    "query": "请解释四逆散为何不用附子干姜而用柴胡枳实。",
+    "mode_expectations": ["quick", "deep"],
+    "expected_books_any": ["伤寒论"],
+    "expected_answer_any": ["四逆散", "柴胡", "枳实", "阳郁于里"]
+  }
+]
