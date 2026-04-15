@@ -11,6 +11,7 @@ from typing import Any, Callable
 
 from services.common.evidence_payloads import normalize_book_label
 from services.common.evidence_payloads import normalize_source_chapter_label
+from services.graph_service.nebulagraph_store import entity_vid
 from services.graph_service.nebulagraph_store import NebulaGraphStore
 from services.graph_service.relation_governance import ACCEPTABLE_POLYSEMY
 from services.graph_service.relation_governance import bridge_allowed
@@ -48,6 +49,7 @@ def _normalize_relation_name(name: str) -> str:
 
 
 SYMPTOM_RELATIONS = {"常见症状", "表现症状", "相关症状"}
+SYNDROME_CHAIN_TARGET_TYPES = {"syndrome", "disease"}
 
 PREDICATE_BASE_PRIORITY: dict[str, float] = {
     "治疗证候": 1.0,
@@ -859,11 +861,13 @@ class NebulaPrimaryGraphEngine:
         fallback = self.fallback_engine.health()
         local_ready = fallback.get("status") == "ok"
         nebula_ready = primary.get("status") == "ok"
+        active_backend = "nebula" if nebula_ready else ("sqlite_fallback" if local_ready else "unavailable")
+        status = "ok" if nebula_ready or local_ready else primary.get("status", "error")
         return {
-            "status": fallback.get("status", "ok") if local_ready else ("ok" if nebula_ready else primary.get("status", "error")),
-            "backend": fallback.get("backend", "sqlite_runtime_graph") if local_ready else "nebulagraph_fallback",
-            "selected_backend": "sqlite",
-            "active_backend": "sqlite" if local_ready else "nebula_fallback",
+            "status": status,
+            "backend": "nebulagraph_primary" if nebula_ready else fallback.get("backend", "sqlite_runtime_graph"),
+            "selected_backend": "nebula",
+            "active_backend": active_backend,
             "primary": primary,
             "fallback": fallback,
             "graph_path": fallback.get("graph_path", ""),
@@ -881,29 +885,129 @@ class NebulaPrimaryGraphEngine:
         predicate_allowlist: list[str] | None = None,
         predicate_blocklist: list[str] | None = None,
     ) -> dict[str, Any]:
-        local_result = self.fallback_engine.entity_lookup(
+        if self._use_primary():
+            try:
+                nebula_result = self._entity_lookup_via_nebula(
+                    name,
+                    top_k=top_k,
+                    predicate_allowlist=predicate_allowlist,
+                    predicate_blocklist=predicate_blocklist,
+                )
+                if nebula_result:
+                    return nebula_result
+            except Exception:
+                pass
+        return self.fallback_engine.entity_lookup(
             name,
             top_k=top_k,
             predicate_allowlist=predicate_allowlist,
             predicate_blocklist=predicate_blocklist,
         )
-        if local_result:
-            return local_result
-        if not self._use_primary():
-            return local_result
-        try:
-            candidates = self.fallback_engine._resolve_entities(name)
-            if not candidates:
-                return {}
-            for canonical_name in candidates[:5]:
-                if not self.primary_store.exact_entity(canonical_name):
-                    continue
-                entity_type = self.fallback_engine.entity_type(canonical_name)
-                relations = self.fallback_engine._select_relation_clusters(
+
+    def _entity_lookup_via_nebula(
+        self,
+        name: str,
+        *,
+        top_k: int,
+        predicate_allowlist: list[str] | None,
+        predicate_blocklist: list[str] | None,
+    ) -> dict[str, Any]:
+        normalized_name = str(name or "").strip()
+        predicate_allow_expanded = list(expand_filter_predicates(predicate_allowlist or [])) if predicate_allowlist else []
+        source_aware = self._query_has_source_constraint(normalized_name)
+        limit_per_entity = self._entity_lookup_limit_per_candidate(
+            query_text=normalized_name,
+            predicate_allowlist=predicate_allow_expanded,
+        )
+
+        exact_candidates = self._resolve_entities_via_primary(normalized_name, exact_only=True)
+        exact_payload = self._entity_lookup_exact_hit_payload(
+            exact_candidates,
+            query_text=normalized_name,
+            predicate_allowlist=predicate_allow_expanded,
+            predicate_blocklist=predicate_blocklist,
+            top_k=top_k,
+            limit_per_entity=limit_per_entity,
+        )
+        if exact_payload is not None:
+            return exact_payload
+
+        candidates = list(exact_candidates)
+        if not source_aware:
+            layered_candidates = self._resolve_entities_via_primary(normalized_name)
+            for item in layered_candidates:
+                if item not in candidates:
+                    candidates.append(item)
+        if not candidates:
+            return {}
+        candidate_names = candidates[:5]
+        vertex_map = self._primary_vertex_map(candidate_names)
+        grouped_rows = self._group_nebula_relations_by_source(
+            candidate_names,
+            predicate_allowlist=predicate_allow_expanded or None,
+            source_books=self._query_source_book_hints(normalized_name) if source_aware else None,
+            limit_per_entity=limit_per_entity,
+            directions=self._entity_lookup_directions(
+                query_text=normalized_name,
+                predicate_allowlist=predicate_allow_expanded or None,
+            ),
+        )
+        candidate_rankings: list[tuple[int, int, int, str, str, list[dict[str, Any]]]] = []
+        for canonical_name in candidate_names:
+            if canonical_name not in vertex_map:
+                continue
+            entity_type = self.fallback_engine.entity_type(canonical_name)
+            relations = self.fallback_engine._select_relation_clusters(
+                self.fallback_engine._filter_relations(
+                    self.fallback_engine._annotate_relation_rows(  # noqa: SLF001
+                        grouped_rows.get(canonical_name, []),
+                        anchor_entity_type=entity_type,
+                    ),
+                    predicate_allowlist=predicate_allowlist,
+                    predicate_blocklist=predicate_blocklist,
+                ),
+                query_text=name,
+                top_k=max(1, top_k),
+            )
+            if not relations:
+                continue
+            relation_peak = max(self.fallback_engine._relation_score(item, name) for item in relations)
+            predicate_peak = max(int(round(self.fallback_engine._predicate_priority(item) * 100)) for item in relations)
+            exact_name_bonus = 1 if canonical_name == name.strip() else 0
+            candidate_rankings.append(
+                (
+                    relation_peak + exact_name_bonus * 12,
+                    predicate_peak,
+                    len(relations),
+                    canonical_name,
+                    entity_type,
+                    relations,
+                )
+            )
+        if candidate_rankings:
+            candidate_rankings.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+            exact_candidate = next((item for item in candidate_rankings if item[3] == name.strip()), None)
+            best_candidate = candidate_rankings[0]
+            best_non_exact = next((item for item in candidate_rankings if item[3] != name.strip()), None)
+            selected_rows: list[dict[str, Any]] = []
+            selected_names: list[str] = []
+            if exact_candidate is not None:
+                selected_rows.extend(grouped_rows.get(exact_candidate[3], []))
+                selected_names.append(exact_candidate[3])
+            if best_candidate[3] not in selected_names:
+                selected_rows.extend(grouped_rows.get(best_candidate[3], []))
+                selected_names.append(best_candidate[3])
+            if best_non_exact is not None and best_non_exact[3] not in selected_names:
+                selected_rows.extend(grouped_rows.get(best_non_exact[3], []))
+                selected_names.append(best_non_exact[3])
+            if selected_rows:
+                primary_entity_name = exact_candidate[3] if exact_candidate is not None else best_candidate[3]
+                primary_entity_type = exact_candidate[4] if exact_candidate is not None else best_candidate[4]
+                merged_relations = self.fallback_engine._select_relation_clusters(
                     self.fallback_engine._filter_relations(
                         self.fallback_engine._annotate_relation_rows(  # noqa: SLF001
-                            self._collect_nebula_relations(canonical_name),
-                            anchor_entity_type=entity_type,
+                            selected_rows,
+                            anchor_entity_type=primary_entity_type,
                         ),
                         predicate_allowlist=predicate_allowlist,
                         predicate_blocklist=predicate_blocklist,
@@ -911,24 +1015,36 @@ class NebulaPrimaryGraphEngine:
                     query_text=name,
                     top_k=max(1, top_k),
                 )
-                if not relations and canonical_name != candidates[0]:
-                    continue
                 return {
                     "entity": {
                         "name": name.strip(),
-                        "canonical_name": canonical_name,
-                        "entity_type": entity_type,
+                        "canonical_name": primary_entity_name,
+                        "entity_type": primary_entity_type,
                     },
-                    "relations": relations,
-                    "total": len(relations),
+                    "relations": merged_relations,
+                    "total": len(merged_relations),
+                    "merged_candidates": selected_names,
                 }
-        except Exception:
-            pass
-        return local_result
+        if candidate_names and candidate_names[0] in vertex_map:
+            entity_type = self.fallback_engine.entity_type(candidate_names[0])
+            return {
+                "entity": {
+                    "name": name.strip(),
+                    "canonical_name": candidate_names[0],
+                    "entity_type": entity_type,
+                },
+                "relations": [],
+                "total": 0,
+            }
+        return {}
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
-        start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
-        end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
+        start_candidates = self._resolve_entities_via_primary(start, exact_only=True)[:3]
+        end_candidates = self._resolve_entities_via_primary(end, exact_only=True)[:3]
+        if not start_candidates:
+            start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
+        if not end_candidates:
+            end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
         if self._should_prefer_nebula_path(max_hops=max_hops, start_candidates=start_candidates, end_candidates=end_candidates):
             nebula_result = self._direct_path_query_via_nebula(
                 start_candidates=start_candidates,
@@ -972,40 +1088,63 @@ class NebulaPrimaryGraphEngine:
             return local_result
 
     def syndrome_chain(self, symptom: str, top_k: int = 5) -> dict[str, Any]:
-        local_result = self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
-        if local_result.get("syndromes"):
-            return local_result
-        if not self._use_primary():
-            return local_result
-        try:
-            symptom_candidates = self.fallback_engine._resolve_entities(symptom, preferred_types={"symptom"})
-            if not symptom_candidates:
-                symptom_candidates = self.fallback_engine._resolve_entities(symptom)
-            if not symptom_candidates:
-                return {"symptom": symptom.strip(), "syndromes": []}
+        if self._use_primary():
+            try:
+                nebula_result = self._syndrome_chain_via_nebula(symptom, top_k=top_k)
+                if nebula_result.get("syndromes"):
+                    return nebula_result
+            except Exception:
+                pass
+        return self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
 
+    def _syndrome_chain_via_nebula(self, symptom: str, *, top_k: int) -> dict[str, Any]:
+        symptom_candidates = self._resolve_entities_via_primary(symptom, preferred_types={"symptom"})
+        if not symptom_candidates:
+            symptom_candidates = self.fallback_engine._resolve_entities(symptom, preferred_types={"symptom"})
+        if not symptom_candidates:
+            symptom_candidates = self._resolve_entities_via_primary(symptom)
+        if not symptom_candidates:
+            symptom_candidates = self.fallback_engine._resolve_entities(symptom)
+        if not symptom_candidates:
+            return {"symptom": symptom.strip(), "syndromes": []}
+        try:
+            symptom_names = symptom_candidates[:5]
+            raw_rows = self._primary_batch_neighbors(
+                symptom_names,
+                reverse=True,
+                predicates=list(SYMPTOM_RELATIONS),
+                target_types=list(SYNDROME_CHAIN_TARGET_TYPES),
+                limit_per_entity=max(8, top_k * 8),
+            )
             deduped: dict[str, dict[str, Any]] = {}
-            for symptom_node in symptom_candidates[:5]:
-                for row in self.primary_store.neighbors(symptom_node, reverse=True):
-                    syndrome_name = str(row.get("neighbor_name", "")).strip()
-                    syndrome_type = str(row.get("neighbor_type", "")).strip()
-                    predicate = _normalize_relation_name(str(row.get("predicate", "")).strip())
-                    if not syndrome_name or syndrome_type != "syndrome" or predicate not in SYMPTOM_RELATIONS:
-                        continue
-                    item = {
-                        "name": syndrome_name,
-                        "score": 0.92 if symptom_node == symptom.strip() else 0.82,
-                        "recommended_formulas": self.fallback_engine._collect_recommended_formulas(syndrome_name),
-                    }
-                    item.update(self._evidence_payload_from_row(row))
-                    existing = deduped.get(syndrome_name)
-                    if existing is None or float(item["score"]) > float(existing["score"]):
-                        deduped[syndrome_name] = item
+            source_vid_to_name = self._source_vid_name_map(symptom_names)
+            for row in raw_rows:
+                symptom_node = source_vid_to_name.get(str(row.get("source_vid", "")).strip(), symptom.strip())
+                if symptom_node == symptom.strip() and len(symptom_names) == 1:
+                    symptom_node = symptom_names[0]
+                syndrome_name = str(row.get("neighbor_name", "")).strip()
+                syndrome_type = str(row.get("neighbor_type", "")).strip()
+                predicate = _normalize_relation_name(str(row.get("predicate", "")).strip())
+                if (
+                    not syndrome_name
+                    or predicate not in SYMPTOM_RELATIONS
+                    or (syndrome_type and syndrome_type not in SYNDROME_CHAIN_TARGET_TYPES)
+                ):
+                    continue
+                item = {
+                    "name": syndrome_name,
+                    "score": 0.92 if symptom_node == symptom.strip() else 0.82,
+                    "recommended_formulas": self.fallback_engine._collect_recommended_formulas(syndrome_name),
+                }
+                item.update(self._evidence_payload_from_row(row))
+                existing = deduped.get(syndrome_name)
+                if existing is None or float(item["score"]) > float(existing["score"]):
+                    deduped[syndrome_name] = item
 
             results = sorted(deduped.values(), key=lambda item: item["score"], reverse=True)[: max(1, top_k)]
             return {"symptom": symptom.strip(), "syndromes": results}
         except Exception:
-            return local_result
+            return {"symptom": symptom.strip(), "syndromes": []}
 
     def _use_primary(self) -> bool:
         return self.primary_store.ready()
@@ -1219,7 +1358,7 @@ class NebulaPrimaryGraphEngine:
 
     def _collect_nebula_relations(self, entity_name: str) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
-        for row in self.primary_store.neighbors(entity_name, reverse=False):
+        for row in self._primary_batch_neighbors([entity_name], reverse=False, limit_per_entity=256):
             rows.append(
                 {
                     "predicate": _normalize_relation_name(str(row.get("predicate", "")).strip()),
@@ -1231,7 +1370,7 @@ class NebulaPrimaryGraphEngine:
                     **self._evidence_payload_from_row(row),
                 }
             )
-        for row in self.primary_store.neighbors(entity_name, reverse=True):
+        for row in self._primary_batch_neighbors([entity_name], reverse=True, limit_per_entity=256):
             rows.append(
                 {
                     "predicate": _normalize_relation_name(str(row.get("predicate", "")).strip()),
@@ -1247,15 +1386,275 @@ class NebulaPrimaryGraphEngine:
 
     def _adjacent_names(self, entity_name: str) -> list[str]:
         names: set[str] = set()
-        for row in self.primary_store.neighbors(entity_name, reverse=False):
+        for row in self._primary_batch_neighbors([entity_name], reverse=False, limit_per_entity=128):
             name = str(row.get("neighbor_name", "")).strip()
             if name:
                 names.add(name)
-        for row in self.primary_store.neighbors(entity_name, reverse=True):
+        for row in self._primary_batch_neighbors([entity_name], reverse=True, limit_per_entity=128):
             name = str(row.get("neighbor_name", "")).strip()
             if name:
                 names.add(name)
         return sorted(names)
+
+    def _group_nebula_relations_by_source(
+        self,
+        entity_names: list[str],
+        *,
+        predicate_allowlist: list[str] | None = None,
+        source_books: list[str] | None = None,
+        limit_per_entity: int = 256,
+        directions: tuple[bool, ...] = (False, True),
+    ) -> dict[str, list[dict[str, Any]]]:
+        grouped: dict[str, list[dict[str, Any]]] = {name: [] for name in entity_names}
+        source_vid_to_name = self._source_vid_name_map(entity_names)
+        for reverse in directions:
+            rows = self._primary_batch_neighbors(
+                entity_names,
+                reverse=reverse,
+                predicates=predicate_allowlist,
+                source_books=source_books,
+                limit_per_entity=limit_per_entity,
+            )
+            direction = "in" if reverse else "out"
+            for row in rows:
+                source_name = source_vid_to_name.get(str(row.get("source_vid", "")).strip())
+                if not source_name and len(entity_names) == 1:
+                    source_name = entity_names[0]
+                if not source_name:
+                    continue
+                grouped.setdefault(source_name, []).append(
+                    {
+                        "predicate": _normalize_relation_name(str(row.get("predicate", "")).strip()),
+                        "target": str(row.get("neighbor_name", "")).strip(),
+                        "target_type": str(row.get("neighbor_type", "")).strip() or "other",
+                        "direction": direction,
+                        "source_book": str(row.get("source_book", "")).strip(),
+                        "source_chapter": str(row.get("source_chapter", "")).strip(),
+                        **self._evidence_payload_from_row(row),
+                    }
+                )
+        return grouped
+
+    def _primary_batch_neighbors(
+        self,
+        entity_names: list[str],
+        *,
+        reverse: bool,
+        predicates: list[str] | None = None,
+        target_types: list[str] | None = None,
+        source_books: list[str] | None = None,
+        limit_per_entity: int = 64,
+    ) -> list[dict[str, Any]]:
+        if hasattr(self.primary_store, "batch_neighbors"):
+            return self.primary_store.batch_neighbors(
+                entity_names,
+                reverse=reverse,
+                predicates=predicates,
+                target_types=target_types,
+                source_books=source_books,
+                limit_per_entity=limit_per_entity,
+            )
+        source_vid_to_name = self._source_vid_name_map(entity_names)
+        source_book_set = {str(item).strip() for item in source_books or [] if str(item).strip()}
+        target_type_set = {str(item).strip() for item in target_types or [] if str(item).strip()}
+        predicate_set = {_normalize_relation_name(str(item).strip()) for item in predicates or [] if str(item).strip()}
+        rows: list[dict[str, Any]] = []
+        for name in entity_names:
+            source_vid = self._primary_vid(name)
+            count = 0
+            for row in self.primary_store.neighbors(name, reverse=reverse):
+                predicate = _normalize_relation_name(str(row.get("predicate", "")).strip())
+                target_type = str(row.get("neighbor_type", "")).strip()
+                source_book = str(row.get("source_book", "")).strip()
+                if predicate_set and predicate not in predicate_set:
+                    continue
+                if target_type_set and target_type not in target_type_set:
+                    continue
+                if source_book_set and source_book not in source_book_set:
+                    continue
+                item = dict(row)
+                item.setdefault("source_vid", source_vid)
+                rows.append(item)
+                count += 1
+                if count >= max(1, limit_per_entity):
+                    break
+        return rows
+
+    def _source_vid_name_map(self, entity_names: list[str]) -> dict[str, str]:
+        return {self._primary_vid(name): name for name in entity_names if str(name).strip()}
+
+    def _primary_vertex_map(self, entity_names: list[str]) -> dict[str, dict[str, Any]]:
+        if hasattr(self.primary_store, "batch_exact_entities"):
+            return self.primary_store.batch_exact_entities(entity_names)
+        if hasattr(self.primary_store, "fetch_vertices_by_vids"):
+            vertex_map = self.primary_store.fetch_vertices_by_vids([self._primary_vid(name) for name in entity_names if str(name).strip()])
+            return {
+                str(item.get("name", "")).strip(): item
+                for item in vertex_map.values()
+                if str(item.get("name", "")).strip()
+            }
+        result: dict[str, dict[str, Any]] = {}
+        for name in entity_names:
+            rows = self.primary_store.exact_entity(name)
+            if rows:
+                result[name] = rows[0]
+        return result
+
+    def _primary_vid(self, entity_name: str) -> str:
+        max_length = getattr(getattr(self.primary_store, "settings", None), "vid_max_length", 64)
+        return entity_vid(entity_name, max_length=max_length)
+
+    def _resolve_entities_via_primary(
+        self,
+        query: str,
+        preferred_types: set[str] | None = None,
+        *,
+        exact_only: bool = False,
+    ) -> list[str]:
+        normalized = str(query or "").strip()
+        if not normalized or not self._use_primary():
+            return []
+        candidates: list[str] = []
+        seen: set[str] = set()
+        exact_names: list[str] = []
+        try:
+            if hasattr(self.primary_store, "exact_entity_names"):
+                exact_names = self.primary_store.exact_entity_names(normalized, preferred_types=preferred_types)
+            elif hasattr(self.primary_store, "exact_entity"):
+                preferred = {str(item).strip() for item in preferred_types or set() if str(item).strip()}
+                rows = self.primary_store.exact_entity(normalized)
+                for row in rows:
+                    name = str(row.get("name", "")).strip()
+                    entity_type = str(row.get("entity_type", "")).strip()
+                    if not name:
+                        continue
+                    if preferred and entity_type not in preferred:
+                        continue
+                    exact_names.append(name)
+        except Exception:
+            exact_names = []
+        for item in exact_names:
+            text = str(item).strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            candidates.append(text)
+        if exact_only:
+            return candidates
+        if exact_names:
+            try:
+                alias_names = self.primary_store.alias_candidates(exact_names[0], preferred_types=preferred_types, limit=20)
+            except Exception:
+                alias_names = []
+            for item in alias_names:
+                text = str(item).strip()
+                if not text or text in seen:
+                    continue
+                seen.add(text)
+                candidates.append(text)
+        return candidates
+
+    def _entity_lookup_exact_hit_payload(
+        self,
+        exact_candidates: list[str],
+        *,
+        query_text: str,
+        predicate_allowlist: list[str] | None,
+        predicate_blocklist: list[str] | None,
+        top_k: int,
+        limit_per_entity: int,
+    ) -> dict[str, Any] | None:
+        if not exact_candidates:
+            return None
+        exact_name = str(exact_candidates[0]).strip()
+        grouped_rows = self._group_nebula_relations_by_source(
+            [exact_name],
+            predicate_allowlist=predicate_allowlist,
+            source_books=self._query_source_book_hints(query_text),
+            limit_per_entity=limit_per_entity,
+            directions=self._entity_lookup_directions(
+                query_text=query_text,
+                predicate_allowlist=predicate_allowlist,
+            ),
+        )
+        rows = grouped_rows.get(exact_name, [])
+        if not rows:
+            return None
+        entity_type = self.fallback_engine.entity_type(exact_name)
+        relations = self.fallback_engine._select_relation_clusters(
+            self.fallback_engine._filter_relations(
+                self.fallback_engine._annotate_relation_rows(rows, anchor_entity_type=entity_type),  # noqa: SLF001
+                predicate_allowlist=predicate_allowlist or None,
+                predicate_blocklist=predicate_blocklist,
+            ),
+            query_text=query_text,
+            top_k=max(1, top_k),
+        )
+        min_relations = 1 if predicate_allowlist else min(max(2, top_k // 2), top_k)
+        if len(relations) < min_relations:
+            return None
+        return {
+            "entity": {
+                "name": query_text.strip(),
+                "canonical_name": exact_name,
+                "entity_type": entity_type,
+            },
+            "relations": relations,
+            "total": len(relations),
+            "merged_candidates": [exact_name],
+        }
+
+    def _entity_lookup_limit_per_candidate(self, *, query_text: str, predicate_allowlist: list[str] | None) -> int:
+        allow = {_normalize_relation_name(item) for item in predicate_allowlist or []}
+        if allow == {"使用药材"}:
+            return 24
+        if allow and allow <= {"功效", "治法"}:
+            return 20
+        if allow and allow <= {"治疗证候", "治疗疾病", "治疗症状"}:
+            return 24
+        if self._query_has_source_constraint(query_text):
+            return 16
+        return 48
+
+    def _entity_lookup_directions(self, *, query_text: str, predicate_allowlist: list[str] | None) -> tuple[bool, ...]:
+        allow = {_normalize_relation_name(item) for item in predicate_allowlist or []}
+        out_only_predicates = {
+            "使用药材",
+            "功效",
+            "治法",
+            "治疗证候",
+            "治疗疾病",
+            "治疗症状",
+            "归经",
+            "药性",
+            "五味",
+        }
+        if allow and allow <= out_only_predicates:
+            return (False,)
+        if self._query_has_source_constraint(query_text):
+            return (False,)
+        return (False, True)
+
+    def _query_has_source_constraint(self, query_text: str) -> bool:
+        fragments = self._query_fragments(query_text)
+        if "出处" in query_text or "原文" in query_text or "原句" in query_text:
+            return True
+        return any(self._query_mentions_source_book(query_text, fragment) for fragment in fragments)
+
+    def _query_source_book_hints(self, query_text: str) -> list[str]:
+        fragments = self._query_fragments(query_text)
+        hints: list[str] = []
+        for fragment in fragments:
+            if self.fallback_engine.store.source_book_exists(fragment):  # noqa: SLF001
+                if fragment not in hints:
+                    hints.append(fragment)
+        return hints
+
+    def _query_fragments(self, query_text: str) -> list[str]:
+        return self.fallback_engine._query_fragments(query_text)  # noqa: SLF001
+
+    def _query_mentions_source_book(self, query_text: str, source_book: str) -> bool:
+        return self.fallback_engine._query_mentions_source_book(query_text, source_book)  # noqa: SLF001
 
     def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
         return self.fallback_engine._annotate_relation_rows(  # noqa: SLF001

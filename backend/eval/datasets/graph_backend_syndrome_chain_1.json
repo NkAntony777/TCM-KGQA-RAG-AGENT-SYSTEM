@@ -1,0 +1,10 @@
+[
+  {
+    "id": "gbsc_001",
+    "kind": "syndrome_chain",
+    "query": "脉涩对应什么证候，推荐什么方剂",
+    "symptom": "脉涩",
+    "top_k": 5,
+    "expected_syndromes_any": ["瘀血发热", "瘀血腰痛"]
+  }
+]

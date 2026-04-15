@@ -495,6 +495,210 @@ class TestNebulaDirectPathPayload(unittest.TestCase):
             else:
                 os.environ["NEBULA_PATH_QUERY_AUTO_MIN_CANDIDATE_PAIRS"] = original_pairs
 
+    def test_nebula_syndrome_chain_accepts_disease_typed_candidates(self) -> None:
+        class StubPrimaryStore:
+            def ready(self) -> bool:
+                return True
+
+            def batch_neighbors(self, entity_names, *, reverse=False, predicates=None, target_types=None, source_books=None, limit_per_entity=64):
+                rows = []
+                for name in entity_names:
+                    for row in self.neighbors(name, reverse=reverse):
+                        item = dict(row)
+                        item.setdefault("source_vid", f"vid::{name}")
+                        rows.append(item)
+                return rows
+
+            def neighbors(self, entity_name: str, *, reverse: bool = False) -> list[dict[str, Any]]:
+                assert entity_name == "脉涩"
+                assert reverse is True
+                return [
+                    {
+                        "neighbor_name": "瘀血发热",
+                        "neighbor_type": "syndrome",
+                        "predicate": "常见症状",
+                        "fact_id": "f1",
+                        "fact_ids": ["f1"],
+                        "source_text": "瘀血发热者，其脉涩",
+                        "confidence": 0.98,
+                    },
+                    {
+                        "neighbor_name": "滞血发热",
+                        "neighbor_type": "disease",
+                        "predicate": "常见症状",
+                        "fact_id": "f2",
+                        "fact_ids": ["f2"],
+                        "source_text": "滞血发热，其脉涩",
+                        "confidence": 0.9,
+                    },
+                    {
+                        "neighbor_name": "加减息奔丸",
+                        "neighbor_type": "formula",
+                        "predicate": "常见症状",
+                        "fact_id": "f3",
+                        "fact_ids": ["f3"],
+                        "source_text": "加减息奔丸......脉涩",
+                        "confidence": 0.9,
+                    },
+                ]
+
+        class StubFallbackEngine:
+            def syndrome_chain(self, symptom: str, top_k: int = 5) -> dict[str, Any]:
+                return {"symptom": symptom, "syndromes": []}
+
+            def _resolve_entities(self, symptom: str, preferred_types: set[str] | None = None) -> list[str]:
+                return ["脉涩"] if symptom == "脉涩" else []
+
+            def _collect_recommended_formulas(self, syndrome_name: str) -> list[str]:
+                return ["当归承气汤"] if syndrome_name == "瘀血发热" else []
+
+        engine = NebulaPrimaryGraphEngine(primary_store=StubPrimaryStore(), fallback_engine=StubFallbackEngine())
+
+        result = engine.syndrome_chain("脉涩", top_k=5)
+
+        syndrome_names = {item["name"] for item in result["syndromes"]}
+        self.assertIn("瘀血发热", syndrome_names)
+        self.assertIn("滞血发热", syndrome_names)
+        self.assertNotIn("加减息奔丸", syndrome_names)
+
+    def test_nebula_entity_lookup_prefers_primary_result_over_local(self) -> None:
+        class StubPrimaryStore:
+            def ready(self) -> bool:
+                return True
+
+            def exact_entity(self, entity_name: str) -> list[dict[str, Any]]:
+                return [{"name": entity_name, "entity_type": "formula"}] if entity_name == "六味地黄丸" else []
+
+            def batch_exact_entities(self, entity_names: list[str]) -> dict[str, dict[str, Any]]:
+                return {
+                    item: {"name": item, "entity_type": "formula"}
+                    for item in entity_names
+                    if item == "六味地黄丸"
+                }
+
+            def batch_neighbors(self, entity_names, *, reverse=False, predicates=None, target_types=None, source_books=None, limit_per_entity=64):
+                rows = []
+                for name in entity_names:
+                    for row in self.neighbors(name, reverse=reverse):
+                        item = dict(row)
+                        item.setdefault("source_vid", f"vid::{name}")
+                        rows.append(item)
+                return rows
+
+            def neighbors(self, entity_name: str, *, reverse: bool = False) -> list[dict[str, Any]]:
+                assert entity_name == "六味地黄丸"
+                if reverse:
+                    return []
+                return [
+                    {
+                        "neighbor_name": "熟地黄",
+                        "neighbor_type": "herb",
+                        "predicate": "使用药材",
+                        "source_book": "医方考",
+                        "source_chapter": "卷上",
+                        "fact_id": "f1",
+                        "fact_ids": "[]",
+                        "source_text": "六味地黄丸用熟地黄。",
+                        "confidence": 0.95,
+                    }
+                ]
+
+        class StubFallbackEngine:
+            class store:
+                @staticmethod
+                def source_book_exists(name: str) -> bool:
+                    return False
+
+            def entity_lookup(self, name: str, top_k: int = 12, predicate_allowlist=None, predicate_blocklist=None) -> dict[str, Any]:
+                return {
+                    "entity": {"name": name, "canonical_name": name, "entity_type": "formula"},
+                    "relations": [{"predicate": "功效", "target": "补虚", "direction": "out"}],
+                    "total": 1,
+                }
+
+            def _resolve_entities(self, query: str, preferred_types=None) -> list[str]:
+                return ["六味地黄丸"] if query == "六味地黄丸" else []
+
+            def entity_type(self, entity_name: str) -> str:
+                return "formula"
+
+            def _annotate_relation_rows(self, rows: list[dict[str, Any]], *, anchor_entity_type: str) -> list[dict[str, Any]]:
+                return rows
+
+            def _filter_relations(self, rows: list[dict[str, Any]], *, predicate_allowlist=None, predicate_blocklist=None) -> list[dict[str, Any]]:
+                return rows
+
+            def _select_relation_clusters(self, rows: list[dict[str, Any]], *, query_text: str, top_k: int) -> list[dict[str, Any]]:
+                return rows[:top_k]
+
+            def _relation_score(self, relation: dict[str, Any], query_text: str) -> int:
+                return 100 if relation.get("predicate") == "使用药材" else 10
+
+            def _predicate_priority(self, relation: dict[str, Any]) -> float:
+                return 1.0 if relation.get("predicate") == "使用药材" else 0.1
+
+            def _query_fragments(self, query_text: str) -> list[str]:
+                return [query_text]
+
+            def _query_mentions_source_book(self, query_text: str, source_book: str) -> bool:
+                return False
+
+        engine = NebulaPrimaryGraphEngine(primary_store=StubPrimaryStore(), fallback_engine=StubFallbackEngine())
+
+        result = engine.entity_lookup("六味地黄丸", top_k=5, predicate_allowlist=["使用药材"])
+
+        self.assertEqual(result["entity"]["canonical_name"], "六味地黄丸")
+        self.assertEqual(result["relations"][0]["predicate"], "使用药材")
+        self.assertEqual(result["relations"][0]["target"], "熟地黄")
+
+    def test_nebula_syndrome_chain_prefers_primary_result_over_local(self) -> None:
+        class StubPrimaryStore:
+            def ready(self) -> bool:
+                return True
+
+            def batch_neighbors(self, entity_names, *, reverse=False, predicates=None, target_types=None, source_books=None, limit_per_entity=64):
+                rows = []
+                for name in entity_names:
+                    for row in self.neighbors(name, reverse=reverse):
+                        item = dict(row)
+                        item.setdefault("source_vid", f"vid::{name}")
+                        rows.append(item)
+                return rows
+
+            def neighbors(self, entity_name: str, *, reverse: bool = False) -> list[dict[str, Any]]:
+                assert entity_name == "脉涩"
+                assert reverse is True
+                return [
+                    {
+                        "neighbor_name": "瘀血发热",
+                        "neighbor_type": "syndrome",
+                        "predicate": "常见症状",
+                        "fact_id": "f1",
+                        "fact_ids": ["f1"],
+                        "source_text": "瘀血发热者，其脉涩",
+                        "confidence": 0.98,
+                    }
+                ]
+
+        class StubFallbackEngine:
+            def syndrome_chain(self, symptom: str, top_k: int = 5) -> dict[str, Any]:
+                return {
+                    "symptom": symptom,
+                    "syndromes": [{"name": "本地旧结果", "score": 0.5, "recommended_formulas": []}],
+                }
+
+            def _resolve_entities(self, symptom: str, preferred_types: set[str] | None = None) -> list[str]:
+                return ["脉涩"] if symptom == "脉涩" else []
+
+            def _collect_recommended_formulas(self, syndrome_name: str) -> list[str]:
+                return ["当归承气汤"] if syndrome_name == "瘀血发热" else []
+
+        engine = NebulaPrimaryGraphEngine(primary_store=StubPrimaryStore(), fallback_engine=StubFallbackEngine())
+
+        result = engine.syndrome_chain("脉涩", top_k=5)
+
+        self.assertEqual(result["syndromes"][0]["name"], "瘀血发热")
+
 
 
 class TestRelationRankingSignals(unittest.TestCase):

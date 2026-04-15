@@ -343,6 +343,75 @@ class NebulaGraphStore:
         )
         return self.execute_rows(statement)
 
+    def batch_neighbors(
+        self,
+        entity_names: list[str],
+        *,
+        reverse: bool = False,
+        predicates: list[str] | None = None,
+        target_types: list[str] | None = None,
+        source_books: list[str] | None = None,
+        limit_per_entity: int = 64,
+    ) -> list[dict[str, Any]]:
+        vids = self._normalize_vid_inputs(entity_names)
+        if not vids:
+            return []
+
+        source_vid_expr = "dst(edge)" if reverse else "src(edge)"
+        neighbor_vid_expr = "src(edge)" if reverse else "dst(edge)"
+        over_clause = "`relation` REVERSELY" if reverse else "`relation`"
+        overall_limit = max(1, int(limit_per_entity)) * max(1, len(vids))
+        base_statement = (
+            f'USE `{self.settings.space}`; '
+            f'GO FROM {self._format_vid_list(vids)} OVER {over_clause} '
+            "YIELD "
+            f"{source_vid_expr} AS source_vid, "
+            f"{neighbor_vid_expr} AS neighbor_vid, "
+            "properties($$).name AS neighbor_name, "
+            "properties($$).entity_type AS neighbor_type, "
+            "relation.predicate AS predicate, "
+            "relation.source_book AS source_book, "
+            "relation.source_chapter AS source_chapter, "
+            "relation.fact_id AS fact_id, "
+            "relation.fact_ids AS fact_ids, "
+            "relation.source_text AS source_text, "
+            "relation.confidence AS confidence"
+        )
+
+        where_clauses: list[str] = []
+        if predicates:
+            where_clauses.append(f"$-.predicate IN {self._format_string_list(predicates)}")
+        if target_types:
+            where_clauses.append(f"$-.neighbor_type IN {self._format_string_list(target_types)}")
+        if source_books:
+            where_clauses.append(f"$-.source_book IN {self._format_string_list(source_books)}")
+
+        statement = base_statement
+        if where_clauses:
+            statement += " | WHERE " + " AND ".join(where_clauses)
+        statement += f" | LIMIT {overall_limit};"
+
+        try:
+            return self.execute_rows(statement)
+        except Exception:
+            rows = self.execute_rows(base_statement + f" | LIMIT {overall_limit};")
+            predicate_set = {str(item).strip() for item in predicates or [] if str(item).strip()}
+            target_type_set = {str(item).strip() for item in target_types or [] if str(item).strip()}
+            source_book_set = {str(item).strip() for item in source_books or [] if str(item).strip()}
+            filtered: list[dict[str, Any]] = []
+            for row in rows:
+                predicate = str(row.get("predicate", "")).strip()
+                neighbor_type = str(row.get("neighbor_type", "")).strip()
+                source_book = str(row.get("source_book", "")).strip()
+                if predicate_set and predicate not in predicate_set:
+                    continue
+                if target_type_set and neighbor_type not in target_type_set:
+                    continue
+                if source_book_set and source_book not in source_book_set:
+                    continue
+                filtered.append(row)
+            return filtered[:overall_limit]
+
     def find_shortest_path_rows(
         self,
         start_entity_name: str | list[str],
@@ -447,6 +516,50 @@ class NebulaGraphStore:
         )
         rows = self.execute_rows(statement)
         return [row for row in rows if str(row.get("name", "")).strip()]
+
+    def exact_entity_names(self, query: str, preferred_types: set[str] | None = None) -> list[str]:
+        rows = self.exact_entity(query)
+        names: list[str] = []
+        preferred = {str(item).strip() for item in preferred_types or set() if str(item).strip()}
+        for row in rows:
+            name = str(row.get("name", "")).strip()
+            entity_type = str(row.get("entity_type", "")).strip()
+            if not name:
+                continue
+            if preferred and entity_type not in preferred:
+                continue
+            names.append(name)
+        return names
+
+    def alias_candidates(self, entity_name: str, *, preferred_types: set[str] | None = None, limit: int = 8) -> list[str]:
+        preferred = [str(item).strip() for item in preferred_types or set() if str(item).strip()]
+        names: list[str] = []
+        seen: set[str] = set()
+        for reverse in (False, True):
+            rows = self.batch_neighbors(
+                [entity_name],
+                reverse=reverse,
+                predicates=["别名"],
+                target_types=preferred or None,
+                limit_per_entity=max(1, limit),
+            )
+            for row in rows:
+                neighbor_name = str(row.get("neighbor_name", "")).strip()
+                if not neighbor_name or neighbor_name == entity_name or neighbor_name in seen:
+                    continue
+                seen.add(neighbor_name)
+                names.append(neighbor_name)
+                if len(names) >= max(1, limit):
+                    return names
+        return names
+
+    def batch_exact_entities(self, entity_names: list[str]) -> dict[str, dict[str, Any]]:
+        vid_map = self.fetch_vertices_by_vids(self._normalize_vid_inputs(entity_names))
+        return {
+            str(item.get("name", "")).strip(): item
+            for item in vid_map.values()
+            if str(item.get("name", "")).strip()
+        }
 
     def execute_rows(self, statement: str) -> list[dict[str, Any]]:
         if not self.client_available():
@@ -590,6 +703,10 @@ class NebulaGraphStore:
 
     def _format_vid_list(self, vids: list[str]) -> str:
         return ",".join(f'"{vid}"' for vid in vids if vid)
+
+    def _format_string_list(self, values: list[str]) -> str:
+        normalized = [f'"{_escape_ngql(str(item).strip())}"' for item in values if str(item).strip()]
+        return "[" + ",".join(normalized) + "]"
 
     def _parse_fact_ids(self, value: Any) -> list[str]:
         if isinstance(value, list):
