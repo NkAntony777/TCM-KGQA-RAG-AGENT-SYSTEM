@@ -13,6 +13,7 @@ def run_hybrid_search(
     local_store,
     lexicon,
     embedding_client,
+    query_context,
     query: str,
     top_k: int,
     candidate_k: int,
@@ -34,6 +35,7 @@ def run_hybrid_search(
         try:
             docs, retrieval_mode = files_first_store.search(
                 query=query,
+                query_context=query_context,
                 top_k=top_k,
                 candidate_k=max(candidate_k, top_k),
                 leaf_level=settings.leaf_retrieve_level,

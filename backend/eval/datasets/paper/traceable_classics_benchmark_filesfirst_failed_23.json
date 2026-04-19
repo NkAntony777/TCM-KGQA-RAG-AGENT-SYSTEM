@@ -1,0 +1,2710 @@
+[
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "疮科通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "疮科通治方"
+    ],
+    "expected_keywords_any": [
+      "木鳖子仁",
+      "韭菜",
+      "皂角刺"
+    ],
+    "preferred_terms": [
+      "木鳖子仁",
+      "韭菜",
+      "皂角刺"
+    ],
+    "gold_answer_outline": [
+      "木鳖子仁",
+      "韭菜",
+      "皂角刺"
+    ],
+    "gold_evidence_any": [
+      "白芨 白蔹 白芷 木鳖子仁 官桂 杏仁 当归 柿花 乳香 没药（各一两）",
+      "韭菜 连须葱 丝瓜叶",
+      "牡蛎 大黄 山栀子 金银花 木通 连翘 牛蒡子 地骨皮 乳香 没药 皂角刺 栝蒌"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "疮科通治方",
+        "predicate": "使用药材",
+        "object": "木鳖子仁"
+      },
+      {
+        "subject": "疮科通治方",
+        "predicate": "使用药材",
+        "object": "韭菜"
+      },
+      {
+        "subject": "疮科通治方",
+        "predicate": "使用药材",
+        "object": "皂角刺"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "白芨 白蔹 白芷 木鳖子仁 官桂 杏仁 当归 柿花 乳香 没药（各一两）",
+        "confidence": 0.98,
+        "fact_id": "2e5a171854643cc6"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "韭菜 连须葱 丝瓜叶",
+        "confidence": 0.98,
+        "fact_id": "272a2b008d084f64"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "牡蛎 大黄 山栀子 金银花 木通 连翘 牛蒡子 地骨皮 乳香 没药 皂角刺 栝蒌",
+        "confidence": 0.98,
+        "fact_id": "200120a0bd57d9e5"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_432ab8d9b2c4_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于疮科通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "疮科通治方"
+    ],
+    "strict_answer_outline": [
+      "木鳖子仁",
+      "韭菜",
+      "皂角刺"
+    ],
+    "strict_evidence_any": [
+      "白芨 白蔹 白芷 木鳖子仁 官桂 杏仁 当归 柿花 乳香 没药（各一两）",
+      "韭菜 连须葱 丝瓜叶",
+      "牡蛎 大黄 山栀子 金银花 木通 连翘 牛蒡子 地骨皮 乳香 没药 皂角刺 栝蒌"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "疮科通治方"
+    ],
+    "acceptable_answer_outline": [
+      "木鳖子仁",
+      "韭菜",
+      "皂角刺"
+    ],
+    "acceptable_evidence_any": [
+      "白芨 白蔹 白芷 木鳖子仁 官桂 杏仁 当归 柿花 乳香 没药（各一两）",
+      "韭菜 连须葱 丝瓜叶",
+      "牡蛎 大黄 山栀子 金银花 木通 连翘 牛蒡子 地骨皮 乳香 没药 皂角刺 栝蒌"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "071-医方集宜",
+      "医方集宜",
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "治方",
+      "五痹通治方"
+    ],
+    "expected_keywords_any": [
+      "橘仁",
+      "酒生地",
+      "王不留行",
+      "当归"
+    ],
+    "preferred_terms": [
+      "橘仁",
+      "酒生地",
+      "王不留行"
+    ],
+    "gold_answer_outline": [
+      "橘仁",
+      "酒生地",
+      "王不留行",
+      "当归"
+    ],
+    "gold_evidence_any": [
+      "生姜 半夏 柿蒂 橘仁 橘皮 香附",
+      "防风 柴胡 升麻 酒生地 酒知母 酒黄柏 羌活 黄 甘草",
+      "穿山甲 瞿麦 王不留行 当归 麦门冬 陈皮 川芎",
+      "赤茯苓 川芎 防风 桑白皮 官桂 麻黄 芍药 当归 甘草（炙，各一钱半）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "治方",
+        "predicate": "使用药材",
+        "object": "橘仁"
+      },
+      {
+        "subject": "治方",
+        "predicate": "使用药材",
+        "object": "酒生地"
+      },
+      {
+        "subject": "治方",
+        "predicate": "使用药材",
+        "object": "王不留行"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "071-医方集宜",
+        "source_book_clean": "医方集宜",
+        "source_chapter": "071-医方集宜_正文",
+        "source_text": "生姜 半夏 柿蒂 橘仁 橘皮 香附",
+        "confidence": 0.9,
+        "fact_id": "8510f19476da3a53"
+      },
+      {
+        "source_book": "071-医方集宜",
+        "source_book_clean": "医方集宜",
+        "source_chapter": "071-医方集宜_正文",
+        "source_text": "防风 柴胡 升麻 酒生地 酒知母 酒黄柏 羌活 黄 甘草",
+        "confidence": 0.95,
+        "fact_id": "6ee7bc3c1bde85ac"
+      },
+      {
+        "source_book": "071-医方集宜",
+        "source_book_clean": "医方集宜",
+        "source_chapter": "071-医方集宜_正文",
+        "source_text": "穿山甲 瞿麦 王不留行 当归 麦门冬 陈皮 川芎",
+        "confidence": 0.95,
+        "fact_id": "4311cda40a1fca9f"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "赤茯苓 川芎 防风 桑白皮 官桂 麻黄 芍药 当归 甘草（炙，各一钱半）",
+        "confidence": 0.98,
+        "fact_id": "4f1351f0fbd99656"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_4a4a5c3997dc_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=071-医方集宜 objects=3; acceptable_books=4; acceptable_answers=4",
+    "strict_books_any": [
+      "071-医方集宜",
+      "医方集宜",
+      "医方集宜"
+    ],
+    "strict_chapters_any": [
+      "治方"
+    ],
+    "strict_answer_outline": [
+      "橘仁",
+      "酒生地",
+      "王不留行"
+    ],
+    "strict_evidence_any": [
+      "生姜 半夏 柿蒂 橘仁 橘皮 香附",
+      "防风 柴胡 升麻 酒生地 酒知母 酒黄柏 羌活 黄 甘草",
+      "穿山甲 瞿麦 王不留行 当归 麦门冬 陈皮 川芎"
+    ],
+    "acceptable_books_any": [
+      "071-医方集宜",
+      "医方集宜",
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "治方",
+      "五痹通治方"
+    ],
+    "acceptable_answer_outline": [
+      "橘仁",
+      "酒生地",
+      "王不留行",
+      "当归"
+    ],
+    "acceptable_evidence_any": [
+      "生姜 半夏 柿蒂 橘仁 橘皮 香附",
+      "防风 柴胡 升麻 酒生地 酒知母 酒黄柏 羌活 黄 甘草",
+      "穿山甲 瞿麦 王不留行 当归 麦门冬 陈皮 川芎",
+      "赤茯苓 川芎 防风 桑白皮 官桂 麻黄 芍药 当归 甘草（炙，各一钱半）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "调经通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "调经通治方"
+    ],
+    "expected_keywords_any": [
+      "紫苏",
+      "白术",
+      "血余"
+    ],
+    "preferred_terms": [
+      "紫苏",
+      "白术",
+      "血余"
+    ],
+    "gold_answer_outline": [
+      "紫苏",
+      "白术",
+      "血余"
+    ],
+    "gold_evidence_any": [
+      "大腹皮 紫苏 木通 桑白皮 羌活 荆芥 芍药 青皮 木瓜 独活（各一钱）",
+      "牡丹皮 川大黄 赤茯苓 生地黄 赤芍药 当归 白术 各一钱半 桃仁 官桂 石苇 木香（各一钱）",
+      "锦片 木贼 棕榈 柏叶 艾叶 干漆 鲫鳞 鲤鳞 血余 当归（以上逐味火化存性，各等分研末） 麝香（少许，研）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "调经通治方",
+        "predicate": "使用药材",
+        "object": "紫苏"
+      },
+      {
+        "subject": "调经通治方",
+        "predicate": "使用药材",
+        "object": "白术"
+      },
+      {
+        "subject": "调经通治方",
+        "predicate": "使用药材",
+        "object": "血余"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "大腹皮 紫苏 木通 桑白皮 羌活 荆芥 芍药 青皮 木瓜 独活（各一钱）",
+        "confidence": 0.95,
+        "fact_id": "6cb736ba86f15b43"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "牡丹皮 川大黄 赤茯苓 生地黄 赤芍药 当归 白术 各一钱半 桃仁 官桂 石苇 木香（各一钱）",
+        "confidence": 0.98,
+        "fact_id": "0957b39c1733a34f"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "锦片 木贼 棕榈 柏叶 艾叶 干漆 鲫鳞 鲤鳞 血余 当归（以上逐味火化存性，各等分研末） 麝香（少许，研）",
+        "confidence": 0.95,
+        "fact_id": "ecfc4f2a24ad05d8"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_8eb0acc00c51_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于调经通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "调经通治方"
+    ],
+    "strict_answer_outline": [
+      "紫苏",
+      "白术",
+      "血余"
+    ],
+    "strict_evidence_any": [
+      "大腹皮 紫苏 木通 桑白皮 羌活 荆芥 芍药 青皮 木瓜 独活（各一钱）",
+      "牡丹皮 川大黄 赤茯苓 生地黄 赤芍药 当归 白术 各一钱半 桃仁 官桂 石苇 木香（各一钱）",
+      "锦片 木贼 棕榈 柏叶 艾叶 干漆 鲫鳞 鲤鳞 血余 当归（以上逐味火化存性，各等分研末） 麝香（少许，研）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "调经通治方"
+    ],
+    "acceptable_answer_outline": [
+      "紫苏",
+      "白术",
+      "血余"
+    ],
+    "acceptable_evidence_any": [
+      "大腹皮 紫苏 木通 桑白皮 羌活 荆芥 芍药 青皮 木瓜 独活（各一钱）",
+      "牡丹皮 川大黄 赤茯苓 生地黄 赤芍药 当归 白术 各一钱半 桃仁 官桂 石苇 木香（各一钱）",
+      "锦片 木贼 棕榈 柏叶 艾叶 干漆 鲫鳞 鲤鳞 血余 当归（以上逐味火化存性，各等分研末） 麝香（少许，研）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "一方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "617-古今医统大全",
+      "古今医统大全",
+      "198-济阴纲目",
+      "济阴纲目",
+      "079-仁术便览",
+      "仁术便览"
+    ],
+    "expected_chapters_any": [
+      "药方",
+      "治阴户生疮",
+      "吹乳痈肿",
+      "【治耳鸣方】"
+    ],
+    "expected_keywords_any": [
+      "赤头蜈蚣",
+      "生地黄",
+      "鸡肫内黄皮",
+      "黄连",
+      "当归尾",
+      "黄柏"
+    ],
+    "preferred_terms": [
+      "赤头蜈蚣",
+      "生地黄",
+      "鸡肫内黄皮"
+    ],
+    "gold_answer_outline": [
+      "赤头蜈蚣",
+      "生地黄",
+      "鸡肫内黄皮",
+      "黄连",
+      "当归尾",
+      "黄柏"
+    ],
+    "gold_evidence_any": [
+      "用赤头蜈蚣一枚为末分服",
+      "治血淋以生地黄绞汁一盏",
+      "治淋取鸡肫内黄皮五钱",
+      "升麻 白芷 黄连 木通 当归 川芎 白术 茯苓",
+      "天花粉 金银花 皂角刺 穿山甲 当归尾 白芷梢 栝蒌仁 贝母（去心） 甘草节",
+      "当归 川芎 芍药 地黄 知母 黄柏 香附 栀子 半夏 陈皮 薄荷 荆芥 菖蒲 连翘 黄芩 黄连（各制，各等）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "一方",
+        "predicate": "使用药材",
+        "object": "赤头蜈蚣"
+      },
+      {
+        "subject": "一方",
+        "predicate": "使用药材",
+        "object": "生地黄"
+      },
+      {
+        "subject": "一方",
+        "predicate": "使用药材",
+        "object": "鸡肫内黄皮"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "617-古今医统大全",
+        "source_book_clean": "古今医统大全",
+        "source_chapter": "617-古今医统大全_正文",
+        "source_text": "用赤头蜈蚣一枚为末分服",
+        "confidence": 0.9,
+        "fact_id": "0667907bc523fe58"
+      },
+      {
+        "source_book": "617-古今医统大全",
+        "source_book_clean": "古今医统大全",
+        "source_chapter": "617-古今医统大全_正文",
+        "source_text": "治血淋以生地黄绞汁一盏",
+        "confidence": 0.93,
+        "fact_id": "9e04c75147cb703d"
+      },
+      {
+        "source_book": "617-古今医统大全",
+        "source_book_clean": "古今医统大全",
+        "source_chapter": "617-古今医统大全_正文",
+        "source_text": "治淋取鸡肫内黄皮五钱",
+        "confidence": 0.93,
+        "fact_id": "53dad59d3be93da5"
+      },
+      {
+        "source_book": "198-济阴纲目",
+        "source_book_clean": "济阴纲目",
+        "source_chapter": "198-济阴纲目_正文",
+        "source_text": "升麻 白芷 黄连 木通 当归 川芎 白术 茯苓",
+        "confidence": 0.95,
+        "fact_id": "d6b981afadd2e820"
+      },
+      {
+        "source_book": "198-济阴纲目",
+        "source_book_clean": "济阴纲目",
+        "source_chapter": "198-济阴纲目_正文",
+        "source_text": "天花粉 金银花 皂角刺 穿山甲 当归尾 白芷梢 栝蒌仁 贝母（去心） 甘草节",
+        "confidence": 0.98,
+        "fact_id": "975da9654413b1e6"
+      },
+      {
+        "source_book": "079-仁术便览",
+        "source_book_clean": "仁术便览",
+        "source_chapter": "079-仁术便览_正文",
+        "source_text": "当归 川芎 芍药 地黄 知母 黄柏 香附 栀子 半夏 陈皮 薄荷 荆芥 菖蒲 连翘 黄芩 黄连（各制，各等）",
+        "confidence": 0.98,
+        "fact_id": "98e2ebf16bd3ac83"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_c32415309f9c_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于一方组成的记载出自哪本书哪一篇？",
+    "notes": "source=617-古今医统大全 objects=3; acceptable_books=6; acceptable_answers=6",
+    "strict_books_any": [
+      "617-古今医统大全",
+      "古今医统大全",
+      "古今医统大全"
+    ],
+    "strict_chapters_any": [
+      "药方"
+    ],
+    "strict_answer_outline": [
+      "赤头蜈蚣",
+      "生地黄",
+      "鸡肫内黄皮"
+    ],
+    "strict_evidence_any": [
+      "用赤头蜈蚣一枚为末分服",
+      "治血淋以生地黄绞汁一盏",
+      "治淋取鸡肫内黄皮五钱"
+    ],
+    "acceptable_books_any": [
+      "617-古今医统大全",
+      "古今医统大全",
+      "198-济阴纲目",
+      "济阴纲目",
+      "079-仁术便览",
+      "仁术便览"
+    ],
+    "acceptable_chapters_any": [
+      "药方",
+      "治阴户生疮",
+      "吹乳痈肿",
+      "【治耳鸣方】"
+    ],
+    "acceptable_answer_outline": [
+      "赤头蜈蚣",
+      "生地黄",
+      "鸡肫内黄皮",
+      "黄连",
+      "当归尾",
+      "黄柏"
+    ],
+    "acceptable_evidence_any": [
+      "用赤头蜈蚣一枚为末分服",
+      "治血淋以生地黄绞汁一盏",
+      "治淋取鸡肫内黄皮五钱",
+      "升麻 白芷 黄连 木通 当归 川芎 白术 茯苓",
+      "天花粉 金银花 皂角刺 穿山甲 当归尾 白芷梢 栝蒌仁 贝母（去心） 甘草节",
+      "当归 川芎 芍药 地黄 知母 黄柏 香附 栀子 半夏 陈皮 薄荷 荆芥 菖蒲 连翘 黄芩 黄连（各制，各等）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "痨瘵通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "痨瘵通治方"
+    ],
+    "expected_keywords_any": [
+      "苏合香"
+    ],
+    "preferred_terms": [
+      "苏合香"
+    ],
+    "gold_answer_outline": [
+      "苏合香"
+    ],
+    "gold_evidence_any": [
+      "入安息香苏合香阿魏各一钱"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "痨瘵通治方",
+        "predicate": "使用药材",
+        "object": "苏合香"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "入安息香苏合香阿魏各一钱",
+        "confidence": 0.98,
+        "fact_id": "f6bb760b8ef19d33"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_50943261620b_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于痨瘵通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "痨瘵通治方"
+    ],
+    "strict_answer_outline": [
+      "苏合香"
+    ],
+    "strict_evidence_any": [
+      "入安息香苏合香阿魏各一钱"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "痨瘵通治方"
+    ],
+    "acceptable_answer_outline": [
+      "苏合香"
+    ],
+    "acceptable_evidence_any": [
+      "入安息香苏合香阿魏各一钱"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "诸虚通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "诸虚通治方"
+    ],
+    "expected_keywords_any": [
+      "肉豆蔻",
+      "芍药",
+      "枯矾"
+    ],
+    "preferred_terms": [
+      "肉豆蔻",
+      "芍药",
+      "枯矾"
+    ],
+    "gold_answer_outline": [
+      "肉豆蔻",
+      "芍药",
+      "枯矾"
+    ],
+    "gold_evidence_any": [
+      "沉香 木香 人参 肉豆蔻 茴香 草豆蔻 荜澄茄 甘草（各等分）",
+      "茯苓 防风 桂心 山茱萸 白术 细辛 薯蓣 干地黄 附子（炮） 泽泻 紫菀 牛膝芍药 丹参 黄芪 沙参 苁蓉 干姜 玄参 苦参 人参 独活（以上各二两）",
+      "母丁香 木香 朱砂 藿香 附子 干姜 沉香 桂心 生硫黄 枯矾 雄黄 杏仁（别研） 吴茱萸 陈皮（以上各二钱） 轻粉（别研） 麝香（别研，各一分。）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "诸虚通治方",
+        "predicate": "使用药材",
+        "object": "肉豆蔻"
+      },
+      {
+        "subject": "诸虚通治方",
+        "predicate": "使用药材",
+        "object": "芍药"
+      },
+      {
+        "subject": "诸虚通治方",
+        "predicate": "使用药材",
+        "object": "枯矾"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "沉香 木香 人参 肉豆蔻 茴香 草豆蔻 荜澄茄 甘草（各等分）",
+        "confidence": 0.95,
+        "fact_id": "03cd7557ada8f39b"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "茯苓 防风 桂心 山茱萸 白术 细辛 薯蓣 干地黄 附子（炮） 泽泻 紫菀 牛膝芍药 丹参 黄芪 沙参 苁蓉 干姜 玄参 苦参 人参 独活（以上各二两）",
+        "confidence": 0.95,
+        "fact_id": "9e6a19cff10db40f"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "母丁香 木香 朱砂 藿香 附子 干姜 沉香 桂心 生硫黄 枯矾 雄黄 杏仁（别研） 吴茱萸 陈皮（以上各二钱） 轻粉（别研） 麝香（别研，各一分。）",
+        "confidence": 0.95,
+        "fact_id": "583ec7282a0a7e12"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_b26bf7448135_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于诸虚通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "诸虚通治方"
+    ],
+    "strict_answer_outline": [
+      "肉豆蔻",
+      "芍药",
+      "枯矾"
+    ],
+    "strict_evidence_any": [
+      "沉香 木香 人参 肉豆蔻 茴香 草豆蔻 荜澄茄 甘草（各等分）",
+      "茯苓 防风 桂心 山茱萸 白术 细辛 薯蓣 干地黄 附子（炮） 泽泻 紫菀 牛膝芍药 丹参 黄芪 沙参 苁蓉 干姜 玄参 苦参 人参 独活（以上各二两）",
+      "母丁香 木香 朱砂 藿香 附子 干姜 沉香 桂心 生硫黄 枯矾 雄黄 杏仁（别研） 吴茱萸 陈皮（以上各二钱） 轻粉（别研） 麝香（别研，各一分。）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "诸虚通治方"
+    ],
+    "acceptable_answer_outline": [
+      "肉豆蔻",
+      "芍药",
+      "枯矾"
+    ],
+    "acceptable_evidence_any": [
+      "沉香 木香 人参 肉豆蔻 茴香 草豆蔻 荜澄茄 甘草（各等分）",
+      "茯苓 防风 桂心 山茱萸 白术 细辛 薯蓣 干地黄 附子（炮） 泽泻 紫菀 牛膝芍药 丹参 黄芪 沙参 苁蓉 干姜 玄参 苦参 人参 独活（以上各二两）",
+      "母丁香 木香 朱砂 藿香 附子 干姜 沉香 桂心 生硫黄 枯矾 雄黄 杏仁（别研） 吴茱萸 陈皮（以上各二钱） 轻粉（别研） 麝香（别研，各一分。）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "牙齿通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "牙齿通治方"
+    ],
+    "expected_keywords_any": [
+      "三柰",
+      "牵牛",
+      "乌头"
+    ],
+    "preferred_terms": [
+      "三柰",
+      "牵牛",
+      "乌头"
+    ],
+    "gold_answer_outline": [
+      "三柰",
+      "牵牛",
+      "乌头"
+    ],
+    "gold_evidence_any": [
+      "防风 沉香 白芷 白蒺藜 川芎 石膏 青盐 荆芥穗 细辛 甘松 香附 旱莲草 三柰 升麻 胆矾 荷叶灰 没石子（各等分）",
+      "茵陈 连翘 半夏 荆芥穗 麻黄 升麻 黄芩 牡丹皮 射干 羌活 独活 大黄（炮） 薄荷 僵蚕（各一分） 细辛（半两） 牵牛（一两）",
+      "胡椒 青盐 乳香 芫花 荜茇 良姜 细辛 雄黄 乌头 麇香（各等分）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "牙齿通治方",
+        "predicate": "使用药材",
+        "object": "三柰"
+      },
+      {
+        "subject": "牙齿通治方",
+        "predicate": "使用药材",
+        "object": "牵牛"
+      },
+      {
+        "subject": "牙齿通治方",
+        "predicate": "使用药材",
+        "object": "乌头"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "防风 沉香 白芷 白蒺藜 川芎 石膏 青盐 荆芥穗 细辛 甘松 香附 旱莲草 三柰 升麻 胆矾 荷叶灰 没石子（各等分）",
+        "confidence": 0.9,
+        "fact_id": "82e1d101714a1486"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "茵陈 连翘 半夏 荆芥穗 麻黄 升麻 黄芩 牡丹皮 射干 羌活 独活 大黄（炮） 薄荷 僵蚕（各一分） 细辛（半两） 牵牛（一两）",
+        "confidence": 0.95,
+        "fact_id": "5d6907f42a565a0f"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "胡椒 青盐 乳香 芫花 荜茇 良姜 细辛 雄黄 乌头 麇香（各等分）",
+        "confidence": 0.9,
+        "fact_id": "f0c6834ce6abd3cc"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_cfc87926e240_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于牙齿通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "牙齿通治方"
+    ],
+    "strict_answer_outline": [
+      "三柰",
+      "牵牛",
+      "乌头"
+    ],
+    "strict_evidence_any": [
+      "防风 沉香 白芷 白蒺藜 川芎 石膏 青盐 荆芥穗 细辛 甘松 香附 旱莲草 三柰 升麻 胆矾 荷叶灰 没石子（各等分）",
+      "茵陈 连翘 半夏 荆芥穗 麻黄 升麻 黄芩 牡丹皮 射干 羌活 独活 大黄（炮） 薄荷 僵蚕（各一分） 细辛（半两） 牵牛（一两）",
+      "胡椒 青盐 乳香 芫花 荜茇 良姜 细辛 雄黄 乌头 麇香（各等分）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "牙齿通治方"
+    ],
+    "acceptable_answer_outline": [
+      "三柰",
+      "牵牛",
+      "乌头"
+    ],
+    "acceptable_evidence_any": [
+      "防风 沉香 白芷 白蒺藜 川芎 石膏 青盐 荆芥穗 细辛 甘松 香附 旱莲草 三柰 升麻 胆矾 荷叶灰 没石子（各等分）",
+      "茵陈 连翘 半夏 荆芥穗 麻黄 升麻 黄芩 牡丹皮 射干 羌活 独活 大黄（炮） 薄荷 僵蚕（各一分） 细辛（半两） 牵牛（一两）",
+      "胡椒 青盐 乳香 芫花 荜茇 良姜 细辛 雄黄 乌头 麇香（各等分）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "正骨通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "正骨通治方"
+    ],
+    "expected_keywords_any": [
+      "地骨皮",
+      "木鳖子仁",
+      "猪牙皂角"
+    ],
+    "preferred_terms": [
+      "地骨皮",
+      "木鳖子仁",
+      "猪牙皂角"
+    ],
+    "gold_answer_outline": [
+      "地骨皮",
+      "木鳖子仁",
+      "猪牙皂角"
+    ],
+    "gold_evidence_any": [
+      "黄柏 黄芩 当归 赤芍药 黄 牡丹皮 生地黄 木鳖子 黄连 地骨皮 桑白皮 甘草（各一钱半） 白芷 马蓼梢叶（生者一钱，火 过）",
+      "龙骨 鳖甲 苦参 乌贼鱼骨 黄柏 黄芩 黄连 猎牙皂角 白芨 白蔹 浓朴 木鳖子仁 草乌 川乌 当归（洗焙） 香白芷（各一两） 没药（另研） 乳香（另研，各半两） 槐枝 柳枝（各四寸长，二十一条） 黄丹（一斤半，炒过） 清油（四斤）",
+      "白芷 川芎 木鳖子 猪牙皂角 乌药 半夏 紫金皮 杜当归 川乌（各二两）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "正骨通治方",
+        "predicate": "使用药材",
+        "object": "地骨皮"
+      },
+      {
+        "subject": "正骨通治方",
+        "predicate": "使用药材",
+        "object": "木鳖子仁"
+      },
+      {
+        "subject": "正骨通治方",
+        "predicate": "使用药材",
+        "object": "猪牙皂角"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "黄柏 黄芩 当归 赤芍药 黄 牡丹皮 生地黄 木鳖子 黄连 地骨皮 桑白皮 甘草（各一钱半） 白芷 马蓼梢叶（生者一钱，火 过）",
+        "confidence": 0.98,
+        "fact_id": "b938ecbac800f47e"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "龙骨 鳖甲 苦参 乌贼鱼骨 黄柏 黄芩 黄连 猎牙皂角 白芨 白蔹 浓朴 木鳖子仁 草乌 川乌 当归（洗焙） 香白芷（各一两） 没药（另研） 乳香（另研，各半两） 槐枝 柳枝（各四寸长，二十一条） 黄丹（一斤半，炒过） 清油（四斤）",
+        "confidence": 0.93,
+        "fact_id": "d1b4daa213f9b41b"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "白芷 川芎 木鳖子 猪牙皂角 乌药 半夏 紫金皮 杜当归 川乌（各二两）",
+        "confidence": 0.9,
+        "fact_id": "e53a009b4d89a31c"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_91bf32d2db51_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于正骨通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "正骨通治方"
+    ],
+    "strict_answer_outline": [
+      "地骨皮",
+      "木鳖子仁",
+      "猪牙皂角"
+    ],
+    "strict_evidence_any": [
+      "黄柏 黄芩 当归 赤芍药 黄 牡丹皮 生地黄 木鳖子 黄连 地骨皮 桑白皮 甘草（各一钱半） 白芷 马蓼梢叶（生者一钱，火 过）",
+      "龙骨 鳖甲 苦参 乌贼鱼骨 黄柏 黄芩 黄连 猎牙皂角 白芨 白蔹 浓朴 木鳖子仁 草乌 川乌 当归（洗焙） 香白芷（各一两） 没药（另研） 乳香（另研，各半两） 槐枝 柳枝（各四寸长，二十一条） 黄丹（一斤半，炒过） 清油（四斤）",
+      "白芷 川芎 木鳖子 猪牙皂角 乌药 半夏 紫金皮 杜当归 川乌（各二两）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "正骨通治方"
+    ],
+    "acceptable_answer_outline": [
+      "地骨皮",
+      "木鳖子仁",
+      "猪牙皂角"
+    ],
+    "acceptable_evidence_any": [
+      "黄柏 黄芩 当归 赤芍药 黄 牡丹皮 生地黄 木鳖子 黄连 地骨皮 桑白皮 甘草（各一钱半） 白芷 马蓼梢叶（生者一钱，火 过）",
+      "龙骨 鳖甲 苦参 乌贼鱼骨 黄柏 黄芩 黄连 猎牙皂角 白芨 白蔹 浓朴 木鳖子仁 草乌 川乌 当归（洗焙） 香白芷（各一两） 没药（另研） 乳香（另研，各半两） 槐枝 柳枝（各四寸长，二十一条） 黄丹（一斤半，炒过） 清油（四斤）",
+      "白芷 川芎 木鳖子 猪牙皂角 乌药 半夏 紫金皮 杜当归 川乌（各二两）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "五痹通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "五痹通治方"
+    ],
+    "expected_keywords_any": [
+      "生姜",
+      "薯蓣"
+    ],
+    "preferred_terms": [
+      "生姜",
+      "薯蓣"
+    ],
+    "gold_answer_outline": [
+      "生姜",
+      "薯蓣"
+    ],
+    "gold_evidence_any": [
+      "防风 防己 蜀椒 细辛 桂心 麻黄 石膏 独活 黄芩 茵芋 葛根 川芎 芍药 甘草（以上各一两） 生姜 茯苓（去皮，各二两） 乌头（二枚）",
+      "石斛 防风 细辛 甘菊花 蜀椒 干姜 人参 云母石 附子 杜仲 牛膝 菟丝子（酒浸） 白术 薯蓣 天雄（炮） 熟地黄 续断 巴戟 远志（去心） 肉苁蓉 茯苓 菖蒲萆 蛇床子 桂心 山茱萸（各一两） 五味子（半两）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "五痹通治方",
+        "predicate": "使用药材",
+        "object": "生姜"
+      },
+      {
+        "subject": "五痹通治方",
+        "predicate": "使用药材",
+        "object": "薯蓣"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "防风 防己 蜀椒 细辛 桂心 麻黄 石膏 独活 黄芩 茵芋 葛根 川芎 芍药 甘草（以上各一两） 生姜 茯苓（去皮，各二两） 乌头（二枚）",
+        "confidence": 0.95,
+        "fact_id": "6266614246030241"
+      },
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "石斛 防风 细辛 甘菊花 蜀椒 干姜 人参 云母石 附子 杜仲 牛膝 菟丝子（酒浸） 白术 薯蓣 天雄（炮） 熟地黄 续断 巴戟 远志（去心） 肉苁蓉 茯苓 菖蒲萆 蛇床子 桂心 山茱萸（各一两） 五味子（半两）",
+        "confidence": 0.95,
+        "fact_id": "9aeac964c5be16a2"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_633f9691b540_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于五痹通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=2; acceptable_books=2; acceptable_answers=2",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "五痹通治方"
+    ],
+    "strict_answer_outline": [
+      "生姜",
+      "薯蓣"
+    ],
+    "strict_evidence_any": [
+      "防风 防己 蜀椒 细辛 桂心 麻黄 石膏 独活 黄芩 茵芋 葛根 川芎 芍药 甘草（以上各一两） 生姜 茯苓（去皮，各二两） 乌头（二枚）",
+      "石斛 防风 细辛 甘菊花 蜀椒 干姜 人参 云母石 附子 杜仲 牛膝 菟丝子（酒浸） 白术 薯蓣 天雄（炮） 熟地黄 续断 巴戟 远志（去心） 肉苁蓉 茯苓 菖蒲萆 蛇床子 桂心 山茱萸（各一两） 五味子（半两）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "五痹通治方"
+    ],
+    "acceptable_answer_outline": [
+      "生姜",
+      "薯蓣"
+    ],
+    "acceptable_evidence_any": [
+      "防风 防己 蜀椒 细辛 桂心 麻黄 石膏 独活 黄芩 茵芋 葛根 川芎 芍药 甘草（以上各一两） 生姜 茯苓（去皮，各二两） 乌头（二枚）",
+      "石斛 防风 细辛 甘菊花 蜀椒 干姜 人参 云母石 附子 杜仲 牛膝 菟丝子（酒浸） 白术 薯蓣 天雄（炮） 熟地黄 续断 巴戟 远志（去心） 肉苁蓉 茯苓 菖蒲萆 蛇床子 桂心 山茱萸（各一两） 五味子（半两）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "云台膏",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "expected_chapters_any": [
+      "云台膏"
+    ],
+    "expected_keywords_any": [
+      "蛇蜕",
+      "生矾",
+      "郁金"
+    ],
+    "preferred_terms": [
+      "蛇蜕",
+      "生矾",
+      "郁金"
+    ],
+    "gold_answer_outline": [
+      "蛇蜕",
+      "生矾",
+      "郁金"
+    ],
+    "gold_evidence_any": [
+      "茅苍术 羌活 独活 防风 连翘 香附 乌药 陈皮青皮 天花粉 川芎 白芷 山栀 赤芍 苦杏仁 桃仁 生草乌 生川乌 生南星 生半夏 生黄柏 黄连 细辛 五倍子 僵蚕 生山甲 蜈蚣 全蝎 露蜂房（有子者佳） 黄芩 蝉蜕 蛇蜕 干地龙 蟾皮 生牡蛎 皂角 红花 蓖麻仁（各一两○蓖麻仁或用三两） 发团（二两四钱）",
+      "漂铜绿 枯矾 生矾 银朱 扫盆粉 明雄 制乳香 制没药 官桂 丁香 樟脑 苏合油（各一两）",
+      "拟增甘遂大戟延胡灵脂远志郁金荆芥蒲黄各一两"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "云台膏",
+        "predicate": "使用药材",
+        "object": "蛇蜕"
+      },
+      {
+        "subject": "云台膏",
+        "predicate": "使用药材",
+        "object": "生矾"
+      },
+      {
+        "subject": "云台膏",
+        "predicate": "使用药材",
+        "object": "郁金"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "茅苍术 羌活 独活 防风 连翘 香附 乌药 陈皮青皮 天花粉 川芎 白芷 山栀 赤芍 苦杏仁 桃仁 生草乌 生川乌 生南星 生半夏 生黄柏 黄连 细辛 五倍子 僵蚕 生山甲 蜈蚣 全蝎 露蜂房（有子者佳） 黄芩 蝉蜕 蛇蜕 干地龙 蟾皮 生牡蛎 皂角 红花 蓖麻仁（各一两○蓖麻仁或用三两） 发团（二两四钱）",
+        "confidence": 0.95,
+        "fact_id": "6dd90986b0e1c0f0"
+      },
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "漂铜绿 枯矾 生矾 银朱 扫盆粉 明雄 制乳香 制没药 官桂 丁香 樟脑 苏合油（各一两）",
+        "confidence": 0.95,
+        "fact_id": "96f467b2666cc173"
+      },
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "拟增甘遂大戟延胡灵脂远志郁金荆芥蒲黄各一两",
+        "confidence": 0.9,
+        "fact_id": "f707977d2bbaf4d1"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_f294b450c3a9_ans",
+    "task_family": "answer_trace",
+    "query": "云台膏由哪些药材组成？请依据古籍回答并给出出处。",
+    "notes": "source=337-理瀹骈文 objects=3; acceptable_books=2; acceptable_answers=3",
+    "strict_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文",
+      "理瀹骈文"
+    ],
+    "strict_chapters_any": [
+      "云台膏"
+    ],
+    "strict_answer_outline": [
+      "蛇蜕",
+      "生矾",
+      "郁金"
+    ],
+    "strict_evidence_any": [
+      "茅苍术 羌活 独活 防风 连翘 香附 乌药 陈皮青皮 天花粉 川芎 白芷 山栀 赤芍 苦杏仁 桃仁 生草乌 生川乌 生南星 生半夏 生黄柏 黄连 细辛 五倍子 僵蚕 生山甲 蜈蚣 全蝎 露蜂房（有子者佳） 黄芩 蝉蜕 蛇蜕 干地龙 蟾皮 生牡蛎 皂角 红花 蓖麻仁（各一两○蓖麻仁或用三两） 发团（二两四钱）",
+      "漂铜绿 枯矾 生矾 银朱 扫盆粉 明雄 制乳香 制没药 官桂 丁香 樟脑 苏合油（各一两）",
+      "拟增甘遂大戟延胡灵脂远志郁金荆芥蒲黄各一两"
+    ],
+    "acceptable_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "acceptable_chapters_any": [
+      "云台膏"
+    ],
+    "acceptable_answer_outline": [
+      "蛇蜕",
+      "生矾",
+      "郁金"
+    ],
+    "acceptable_evidence_any": [
+      "茅苍术 羌活 独活 防风 连翘 香附 乌药 陈皮青皮 天花粉 川芎 白芷 山栀 赤芍 苦杏仁 桃仁 生草乌 生川乌 生南星 生半夏 生黄柏 黄连 细辛 五倍子 僵蚕 生山甲 蜈蚣 全蝎 露蜂房（有子者佳） 黄芩 蝉蜕 蛇蜕 干地龙 蟾皮 生牡蛎 皂角 红花 蓖麻仁（各一两○蓖麻仁或用三两） 发团（二两四钱）",
+      "漂铜绿 枯矾 生矾 银朱 扫盆粉 明雄 制乳香 制没药 官桂 丁香 樟脑 苏合油（各一两）",
+      "拟增甘遂大戟延胡灵脂远志郁金荆芥蒲黄各一两"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "添加回生集续补经验良方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "116-回生集",
+      "回生集"
+    ],
+    "expected_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "expected_keywords_any": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "preferred_terms": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "gold_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "gold_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "添加回生集续补经验良方",
+        "predicate": "使用药材",
+        "object": "粪窖内多年瓦片"
+      },
+      {
+        "subject": "添加回生集续补经验良方",
+        "predicate": "使用药材",
+        "object": "风凰衣"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "116-回生集",
+        "source_book_clean": "回生集",
+        "source_chapter": "116-回生集_正文",
+        "source_text": "将粪窖内多年瓦片洗净",
+        "confidence": 0.9,
+        "fact_id": "a5b40702f20d8279"
+      },
+      {
+        "source_book": "116-回生集",
+        "source_book_clean": "回生集",
+        "source_chapter": "116-回生集_正文",
+        "source_text": "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草",
+        "confidence": 0.95,
+        "fact_id": "3541523a77ea46aa"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_f6e60ecfa98e_ans",
+    "task_family": "answer_trace",
+    "query": "添加回生集续补经验良方由哪些药材组成？请依据古籍回答并给出出处。",
+    "notes": "source=116-回生集 objects=2; acceptable_books=2; acceptable_answers=2",
+    "strict_books_any": [
+      "116-回生集",
+      "回生集",
+      "回生集"
+    ],
+    "strict_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "strict_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "strict_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ],
+    "acceptable_books_any": [
+      "116-回生集",
+      "回生集"
+    ],
+    "acceptable_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "acceptable_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "acceptable_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "添加回生集续补经验良方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "116-回生集",
+      "回生集"
+    ],
+    "expected_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "expected_keywords_any": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "preferred_terms": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "gold_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "gold_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "添加回生集续补经验良方",
+        "predicate": "使用药材",
+        "object": "粪窖内多年瓦片"
+      },
+      {
+        "subject": "添加回生集续补经验良方",
+        "predicate": "使用药材",
+        "object": "风凰衣"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "116-回生集",
+        "source_book_clean": "回生集",
+        "source_chapter": "116-回生集_正文",
+        "source_text": "将粪窖内多年瓦片洗净",
+        "confidence": 0.9,
+        "fact_id": "a5b40702f20d8279"
+      },
+      {
+        "source_book": "116-回生集",
+        "source_book_clean": "回生集",
+        "source_chapter": "116-回生集_正文",
+        "source_text": "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草",
+        "confidence": 0.95,
+        "fact_id": "3541523a77ea46aa"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_f6e60ecfa98e_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于添加回生集续补经验良方组成的记载出自哪本书哪一篇？",
+    "notes": "source=116-回生集 objects=2; acceptable_books=2; acceptable_answers=2",
+    "strict_books_any": [
+      "116-回生集",
+      "回生集",
+      "回生集"
+    ],
+    "strict_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "strict_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "strict_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ],
+    "acceptable_books_any": [
+      "116-回生集",
+      "回生集"
+    ],
+    "acceptable_chapters_any": [
+      "添加回生集续补经验良方"
+    ],
+    "acceptable_answer_outline": [
+      "粪窖内多年瓦片",
+      "风凰衣"
+    ],
+    "acceptable_evidence_any": [
+      "将粪窖内多年瓦片洗净",
+      "当归 蒲公英 管仲 天葵 乳没 丝瓜穣 风凰衣 甘草"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "扶阳益火膏",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "expected_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "expected_keywords_any": [
+      "地骨皮"
+    ],
+    "preferred_terms": [
+      "地骨皮"
+    ],
+    "gold_answer_outline": [
+      "地骨皮"
+    ],
+    "gold_evidence_any": [
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "扶阳益火膏",
+        "predicate": "使用药材",
+        "object": "地骨皮"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）",
+        "confidence": 0.95,
+        "fact_id": "3969722c3b8ffe25"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_c9b6a12de297_ans",
+    "task_family": "answer_trace",
+    "query": "扶阳益火膏的一个组成药材是什么？请依据古籍回答并给出出处。",
+    "notes": "source=337-理瀹骈文 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文",
+      "理瀹骈文"
+    ],
+    "strict_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "strict_answer_outline": [
+      "地骨皮"
+    ],
+    "strict_evidence_any": [
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ],
+    "acceptable_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "acceptable_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "acceptable_answer_outline": [
+      "地骨皮"
+    ],
+    "acceptable_evidence_any": [
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "滋阴壮水膏",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "expected_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "expected_keywords_any": [
+      "桑白皮",
+      "萸肉"
+    ],
+    "preferred_terms": [
+      "桑白皮",
+      "萸肉"
+    ],
+    "gold_answer_outline": [
+      "桑白皮",
+      "萸肉"
+    ],
+    "gold_evidence_any": [
+      "党参 白术 生黄 川芎 柴胡 连翘 桑白皮 杜仲",
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "滋阴壮水膏",
+        "predicate": "使用药材",
+        "object": "桑白皮"
+      },
+      {
+        "subject": "滋阴壮水膏",
+        "predicate": "使用药材",
+        "object": "萸肉"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "党参 白术 生黄 川芎 柴胡 连翘 桑白皮 杜仲",
+        "confidence": 0.95,
+        "fact_id": "2b185f3a45c55d36"
+      },
+      {
+        "source_book": "337-理瀹骈文",
+        "source_book_clean": "理瀹骈文",
+        "source_chapter": "337-理瀹骈文_正文",
+        "source_text": "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）",
+        "confidence": 0.95,
+        "fact_id": "25b2211dcf9d67a2"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_3ec534d39839_ans",
+    "task_family": "answer_trace",
+    "query": "滋阴壮水膏由哪些药材组成？请依据古籍回答并给出出处。",
+    "notes": "source=337-理瀹骈文 objects=2; acceptable_books=2; acceptable_answers=2",
+    "strict_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文",
+      "理瀹骈文"
+    ],
+    "strict_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "strict_answer_outline": [
+      "桑白皮",
+      "萸肉"
+    ],
+    "strict_evidence_any": [
+      "党参 白术 生黄 川芎 柴胡 连翘 桑白皮 杜仲",
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ],
+    "acceptable_books_any": [
+      "337-理瀹骈文",
+      "理瀹骈文"
+    ],
+    "acceptable_chapters_any": [
+      "滋阴壮水膏"
+    ],
+    "acceptable_answer_outline": [
+      "桑白皮",
+      "萸肉"
+    ],
+    "acceptable_evidence_any": [
+      "党参 白术 生黄 川芎 柴胡 连翘 桑白皮 杜仲",
+      "丹参 熟地 萸肉 黄柏 知母 麦冬 当归 白芍 丹皮 地骨皮（各二两）"
+    ]
+  },
+  {
+    "category": "formula_method",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "养荣承气汤",
+    "subject_type": "formula",
+    "predicate": "治法",
+    "predicate_label": "治法",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "expected_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "expected_keywords_any": [
+      "润燥兼下结热法"
+    ],
+    "preferred_terms": [
+      "润燥兼下结热法"
+    ],
+    "gold_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "gold_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "养荣承气汤",
+        "predicate": "治法",
+        "object": "润燥兼下结热法"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "475-重订通俗伤寒论",
+        "source_book_clean": "重订通俗伤寒论",
+        "source_chapter": "475-重订通俗伤寒论_正文",
+        "source_text": "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》",
+        "confidence": 0.95,
+        "fact_id": "f44df7b317ff303b"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_6d98aea0c9f2_ans",
+    "task_family": "answer_trace",
+    "query": "养荣承气汤体现的一个治法要点是什么？请依据古籍回答并给出出处。",
+    "notes": "source=475-重订通俗伤寒论 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "strict_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "strict_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "strict_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ],
+    "acceptable_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "acceptable_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "acceptable_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "acceptable_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ]
+  },
+  {
+    "category": "formula_method",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "养荣承气汤",
+    "subject_type": "formula",
+    "predicate": "治法",
+    "predicate_label": "治法",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "expected_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "expected_keywords_any": [
+      "润燥兼下结热法"
+    ],
+    "preferred_terms": [
+      "润燥兼下结热法"
+    ],
+    "gold_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "gold_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "养荣承气汤",
+        "predicate": "治法",
+        "object": "润燥兼下结热法"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "475-重订通俗伤寒论",
+        "source_book_clean": "重订通俗伤寒论",
+        "source_chapter": "475-重订通俗伤寒论_正文",
+        "source_text": "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》",
+        "confidence": 0.95,
+        "fact_id": "f44df7b317ff303b"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_6d98aea0c9f2_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于养荣承气汤治法的记载出自哪本书哪一篇？",
+    "notes": "source=475-重订通俗伤寒论 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "strict_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "strict_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "strict_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ],
+    "acceptable_books_any": [
+      "475-重订通俗伤寒论",
+      "重订通俗伤寒论"
+    ],
+    "acceptable_chapters_any": [
+      "第三节·攻下剂"
+    ],
+    "acceptable_answer_outline": [
+      "润燥兼下结热法"
+    ],
+    "acceptable_evidence_any": [
+      "养荣承气汤 润燥兼下结热法 俞氏经验方载吴又可《温疫论》"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "鸡内金",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "303-李翰卿",
+      "李翰卿"
+    ],
+    "expected_chapters_any": [
+      "71．鸡内金解",
+      "88．论女子瘕治法",
+      "李翰卿"
+    ],
+    "expected_keywords_any": [
+      "催月信速于下行",
+      "化瘀",
+      "通经",
+      "祛瘀除积"
+    ],
+    "preferred_terms": [
+      "催月信速于下行",
+      "化瘀",
+      "通经"
+    ],
+    "gold_answer_outline": [
+      "催月信速于下行",
+      "化瘀",
+      "通经",
+      "祛瘀除积"
+    ],
+    "gold_evidence_any": [
+      "即能催月信速于下行也",
+      "鸡内金原饶有化瘀之力",
+      "由此可确知鸡内金通经之力",
+      "加鸡内金取其既能消食化滞又兼祛瘀除积之功"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "鸡内金",
+        "predicate": "功效",
+        "object": "催月信速于下行"
+      },
+      {
+        "subject": "鸡内金",
+        "predicate": "功效",
+        "object": "化瘀"
+      },
+      {
+        "subject": "鸡内金",
+        "predicate": "功效",
+        "object": "通经"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "即能催月信速于下行也",
+        "confidence": 0.9,
+        "fact_id": "4b4aa102088a91ee"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "鸡内金原饶有化瘀之力",
+        "confidence": 0.93,
+        "fact_id": "a68452dd34445c5c"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "由此可确知鸡内金通经之力",
+        "confidence": 0.93,
+        "fact_id": "d3999ed796360c8f"
+      },
+      {
+        "source_book": "303-李翰卿",
+        "source_book_clean": "李翰卿",
+        "source_chapter": "303-李翰卿_正文",
+        "source_text": "加鸡内金取其既能消食化滞又兼祛瘀除积之功",
+        "confidence": 0.9,
+        "fact_id": "3d704c3d58a69da1"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_1d14845d9935_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于鸡内金功效的记载出自哪本书哪一篇？",
+    "notes": "source=584-医学衷中参西录 objects=3; acceptable_books=4; acceptable_answers=4",
+    "strict_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "医学衷中参西录"
+    ],
+    "strict_chapters_any": [
+      "71．鸡内金解",
+      "88．论女子瘕治法"
+    ],
+    "strict_answer_outline": [
+      "催月信速于下行",
+      "化瘀",
+      "通经"
+    ],
+    "strict_evidence_any": [
+      "即能催月信速于下行也",
+      "鸡内金原饶有化瘀之力",
+      "由此可确知鸡内金通经之力"
+    ],
+    "acceptable_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "303-李翰卿",
+      "李翰卿"
+    ],
+    "acceptable_chapters_any": [
+      "71．鸡内金解",
+      "88．论女子瘕治法",
+      "李翰卿"
+    ],
+    "acceptable_answer_outline": [
+      "催月信速于下行",
+      "化瘀",
+      "通经",
+      "祛瘀除积"
+    ],
+    "acceptable_evidence_any": [
+      "即能催月信速于下行也",
+      "鸡内金原饶有化瘀之力",
+      "由此可确知鸡内金通经之力",
+      "加鸡内金取其既能消食化滞又兼祛瘀除积之功"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "生麦芽",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "669-名师垂教",
+      "名师垂教"
+    ],
+    "expected_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼",
+      "9．肺劳喘嗽兼不寐证",
+      "10．流产后满闷",
+      "名师垂教"
+    ],
+    "expected_keywords_any": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "preferred_terms": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气"
+    ],
+    "gold_answer_outline": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "gold_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气",
+      "生用之则善于升达肝气",
+      "况其性能补益胃中酸汁",
+      "兼为化食消胀之妙品乎",
+      "因其性长于升发而助脾胃"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "生麦芽",
+        "predicate": "功效",
+        "object": "调肝"
+      },
+      {
+        "subject": "生麦芽",
+        "predicate": "功效",
+        "object": "善调和肝气"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "因麦芽生用亦善调肝者也",
+        "confidence": 0.92,
+        "fact_id": "5e8995831b6a050a"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "且麦芽生用原善调和肝气",
+        "confidence": 0.92,
+        "fact_id": "e37bcf3af3635cc2"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "生用之则善于升达肝气",
+        "confidence": 0.9,
+        "fact_id": "ed85255e749c7548"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "况其性能补益胃中酸汁",
+        "confidence": 0.9,
+        "fact_id": "81d5302ac173f0c2"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "兼为化食消胀之妙品乎",
+        "confidence": 0.9,
+        "fact_id": "df1b77902cc5365a"
+      },
+      {
+        "source_book": "669-名师垂教",
+        "source_book_clean": "名师垂教",
+        "source_chapter": "名师垂教",
+        "source_text": "因其性长于升发而助脾胃",
+        "confidence": 0.9,
+        "fact_id": "98e62b7f7417b175"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_9b00e8ff191a_ans",
+    "task_family": "answer_trace",
+    "query": "生麦芽在古籍中的主要功效是什么？请给出依据。",
+    "notes": "source=584-医学衷中参西录 objects=2; acceptable_books=4; acceptable_answers=6",
+    "strict_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "医学衷中参西录"
+    ],
+    "strict_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼"
+    ],
+    "strict_answer_outline": [
+      "调肝",
+      "善调和肝气"
+    ],
+    "strict_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气"
+    ],
+    "acceptable_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "669-名师垂教",
+      "名师垂教"
+    ],
+    "acceptable_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼",
+      "9．肺劳喘嗽兼不寐证",
+      "10．流产后满闷",
+      "名师垂教"
+    ],
+    "acceptable_answer_outline": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "acceptable_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气",
+      "生用之则善于升达肝气",
+      "况其性能补益胃中酸汁",
+      "兼为化食消胀之妙品乎",
+      "因其性长于升发而助脾胃"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "medium",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "生麦芽",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "669-名师垂教",
+      "名师垂教"
+    ],
+    "expected_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼",
+      "9．肺劳喘嗽兼不寐证",
+      "10．流产后满闷",
+      "名师垂教"
+    ],
+    "expected_keywords_any": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "preferred_terms": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气"
+    ],
+    "gold_answer_outline": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "gold_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气",
+      "生用之则善于升达肝气",
+      "况其性能补益胃中酸汁",
+      "兼为化食消胀之妙品乎",
+      "因其性长于升发而助脾胃"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "生麦芽",
+        "predicate": "功效",
+        "object": "调肝"
+      },
+      {
+        "subject": "生麦芽",
+        "predicate": "功效",
+        "object": "善调和肝气"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "因麦芽生用亦善调肝者也",
+        "confidence": 0.92,
+        "fact_id": "5e8995831b6a050a"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "且麦芽生用原善调和肝气",
+        "confidence": 0.92,
+        "fact_id": "e37bcf3af3635cc2"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "生用之则善于升达肝气",
+        "confidence": 0.9,
+        "fact_id": "ed85255e749c7548"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "况其性能补益胃中酸汁",
+        "confidence": 0.9,
+        "fact_id": "81d5302ac173f0c2"
+      },
+      {
+        "source_book": "584-医学衷中参西录",
+        "source_book_clean": "医学衷中参西录",
+        "source_chapter": "584-医学衷中参西录_正文",
+        "source_text": "兼为化食消胀之妙品乎",
+        "confidence": 0.9,
+        "fact_id": "df1b77902cc5365a"
+      },
+      {
+        "source_book": "669-名师垂教",
+        "source_book_clean": "名师垂教",
+        "source_chapter": "名师垂教",
+        "source_text": "因其性长于升发而助脾胃",
+        "confidence": 0.9,
+        "fact_id": "98e62b7f7417b175"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_9b00e8ff191a_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于生麦芽功效的记载出自哪本书哪一篇？",
+    "notes": "source=584-医学衷中参西录 objects=2; acceptable_books=4; acceptable_answers=6",
+    "strict_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "医学衷中参西录"
+    ],
+    "strict_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼"
+    ],
+    "strict_answer_outline": [
+      "调肝",
+      "善调和肝气"
+    ],
+    "strict_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气"
+    ],
+    "acceptable_books_any": [
+      "584-医学衷中参西录",
+      "医学衷中参西录",
+      "669-名师垂教",
+      "名师垂教"
+    ],
+    "acceptable_chapters_any": [
+      "20．阳明病三承气汤证",
+      "2．脑充血头疼",
+      "9．肺劳喘嗽兼不寐证",
+      "10．流产后满闷",
+      "名师垂教"
+    ],
+    "acceptable_answer_outline": [
+      "调肝",
+      "善调和肝气",
+      "升达肝气",
+      "补益胃中酸汁",
+      "化食消胀",
+      "升发而助脾胃"
+    ],
+    "acceptable_evidence_any": [
+      "因麦芽生用亦善调肝者也",
+      "且麦芽生用原善调和肝气",
+      "生用之则善于升达肝气",
+      "况其性能补益胃中酸汁",
+      "兼为化食消胀之妙品乎",
+      "因其性长于升发而助脾胃"
+    ]
+  },
+  {
+    "category": "herb_channel",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "property"
+    ],
+    "subject": "皂荚",
+    "subject_type": "herb",
+    "predicate": "归经",
+    "predicate_label": "归经",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "027-本草述钩元",
+      "本草述钩元"
+    ],
+    "expected_chapters_any": [
+      "皂荚"
+    ],
+    "expected_keywords_any": [
+      "手太阴手足阳明经气分"
+    ],
+    "preferred_terms": [
+      "手太阴手足阳明经气分"
+    ],
+    "gold_answer_outline": [
+      "手太阴手足阳明经气分"
+    ],
+    "gold_evidence_any": [
+      "及手太阴手足阳明经气分"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "皂荚",
+        "predicate": "归经",
+        "object": "手太阴手足阳明经气分"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "027-本草述钩元",
+        "source_book_clean": "本草述钩元",
+        "source_chapter": "027-本草述钩元_正文",
+        "source_text": "及手太阴手足阳明经气分",
+        "confidence": 0.95,
+        "fact_id": "6a6dc798aad22bea"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_556d7be9d41b_ans",
+    "task_family": "answer_trace",
+    "query": "皂荚归入的一条经脉是什么？请给出古籍依据。",
+    "notes": "source=027-本草述钩元 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "027-本草述钩元",
+      "本草述钩元",
+      "本草述钩元"
+    ],
+    "strict_chapters_any": [
+      "皂荚"
+    ],
+    "strict_answer_outline": [
+      "手太阴手足阳明经气分"
+    ],
+    "strict_evidence_any": [
+      "及手太阴手足阳明经气分"
+    ],
+    "acceptable_books_any": [
+      "027-本草述钩元",
+      "本草述钩元"
+    ],
+    "acceptable_chapters_any": [
+      "皂荚"
+    ],
+    "acceptable_answer_outline": [
+      "手太阴手足阳明经气分"
+    ],
+    "acceptable_evidence_any": [
+      "及手太阴手足阳明经气分"
+    ]
+  },
+  {
+    "category": "herb_channel",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "property"
+    ],
+    "subject": "络石藤",
+    "subject_type": "herb",
+    "predicate": "归经",
+    "predicate_label": "归经",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "027-本草述钩元",
+      "本草述钩元"
+    ],
+    "expected_chapters_any": [
+      "络石藤"
+    ],
+    "expected_keywords_any": [
+      "足阳明手足少阴足厥阴少阳经"
+    ],
+    "preferred_terms": [
+      "足阳明手足少阴足厥阴少阳经"
+    ],
+    "gold_answer_outline": [
+      "足阳明手足少阴足厥阴少阳经"
+    ],
+    "gold_evidence_any": [
+      "入足阳明手足少阴足厥阴少阳经。"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "络石藤",
+        "predicate": "归经",
+        "object": "足阳明手足少阴足厥阴少阳经"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "027-本草述钩元",
+        "source_book_clean": "本草述钩元",
+        "source_chapter": "027-本草述钩元_正文",
+        "source_text": "入足阳明手足少阴足厥阴少阳经。",
+        "confidence": 0.95,
+        "fact_id": "fdda832a122bcf62"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_22e18a957ac2_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于络石藤归经的记载出自哪本书哪一篇？",
+    "notes": "source=027-本草述钩元 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "027-本草述钩元",
+      "本草述钩元",
+      "本草述钩元"
+    ],
+    "strict_chapters_any": [
+      "络石藤"
+    ],
+    "strict_answer_outline": [
+      "足阳明手足少阴足厥阴少阳经"
+    ],
+    "strict_evidence_any": [
+      "入足阳明手足少阴足厥阴少阳经。"
+    ],
+    "acceptable_books_any": [
+      "027-本草述钩元",
+      "本草述钩元"
+    ],
+    "acceptable_chapters_any": [
+      "络石藤"
+    ],
+    "acceptable_answer_outline": [
+      "足阳明手足少阴足厥阴少阳经"
+    ],
+    "acceptable_evidence_any": [
+      "入足阳明手足少阴足厥阴少阳经。"
+    ]
+  },
+  {
+    "category": "entity_alias",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "alias"
+    ],
+    "subject": "苍耳",
+    "subject_type": "herb",
+    "predicate": "别名",
+    "predicate_label": "别名",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "expected_chapters_any": [
+      "耳"
+    ],
+    "expected_keywords_any": [
+      "道人头"
+    ],
+    "preferred_terms": [
+      "道人头"
+    ],
+    "gold_answer_outline": [
+      "道人头"
+    ],
+    "gold_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "苍耳",
+        "predicate": "别名",
+        "object": "道人头"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "赤目生疮作痛∶道人头末二两",
+        "confidence": 0.95,
+        "fact_id": "7337727b2b77030a"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_89d570c7a54e_ans",
+    "task_family": "answer_trace",
+    "query": "苍耳在古籍中的一个别名是什么？请给出出处。",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "耳"
+    ],
+    "strict_answer_outline": [
+      "道人头"
+    ],
+    "strict_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "acceptable_chapters_any": [
+      "耳"
+    ],
+    "acceptable_answer_outline": [
+      "道人头"
+    ],
+    "acceptable_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ]
+  },
+  {
+    "category": "entity_alias",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "alias"
+    ],
+    "subject": "苍耳",
+    "subject_type": "herb",
+    "predicate": "别名",
+    "predicate_label": "别名",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "expected_chapters_any": [
+      "耳"
+    ],
+    "expected_keywords_any": [
+      "道人头"
+    ],
+    "preferred_terms": [
+      "道人头"
+    ],
+    "gold_answer_outline": [
+      "道人头"
+    ],
+    "gold_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "苍耳",
+        "predicate": "别名",
+        "object": "道人头"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "赤目生疮作痛∶道人头末二两",
+        "confidence": 0.95,
+        "fact_id": "7337727b2b77030a"
+      }
+    ],
+    "split": "test",
+    "case_id": "tcb_89d570c7a54e_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于苍耳别名的记载出自哪本书哪一篇？",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "耳"
+    ],
+    "strict_answer_outline": [
+      "道人头"
+    ],
+    "strict_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "acceptable_chapters_any": [
+      "耳"
+    ],
+    "acceptable_answer_outline": [
+      "道人头"
+    ],
+    "acceptable_evidence_any": [
+      "赤目生疮作痛∶道人头末二两"
+    ]
+  }
+]

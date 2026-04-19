@@ -1,0 +1,224 @@
+{
+  "benchmark_name": "traceable_classics_benchmark",
+  "version": "2026-04-18",
+  "graph_json": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\graph_service\\data\\graph_runtime.json",
+  "retrieval_db": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\retrieval_local_index.fts.db",
+  "build_config": {
+    "size_profile": "default",
+    "family_scale": 1.0,
+    "max_workers": 6,
+    "oversample_factor": 4,
+    "per_subject_limit": 1,
+    "per_book_limit": 10,
+    "eval_cache_db": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\benchmark_traceable_classics_eval_cache.sqlite",
+    "cache_version": "v2|graph_runtime.json:925397566:1776084689|retrieval_local_index.fts.db:2140303360:1776409549"
+  },
+  "candidate_cache": {
+    "candidate_db": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\benchmark_traceable_classics_candidates.sqlite",
+    "cached": true,
+    "rows": 2239258
+  },
+  "nebula_health": {
+    "backend": "nebulagraph",
+    "client_available": true,
+    "space": "tcm_kg",
+    "host": "127.0.0.1",
+    "port": 9669,
+    "status": "ok"
+  },
+  "selection_summary": {
+    "families": {
+      "formula_composition": {
+        "target_groups": 50,
+        "selected_groups": 32,
+        "selected_cases": 64,
+        "rejections": {
+          "retrieval_missing": 52,
+          "subject_cap": 6,
+          "book_cap": 107,
+          "insufficient_evidence_objects": 3
+        }
+      },
+      "formula_indication_symptom": {
+        "target_groups": 28,
+        "selected_groups": 3,
+        "selected_cases": 6,
+        "rejections": {
+          "subject_cap": 26,
+          "retrieval_missing": 34,
+          "book_cap": 49
+        }
+      },
+      "formula_indication_disease": {
+        "target_groups": 20,
+        "selected_groups": 0,
+        "selected_cases": 0,
+        "rejections": {
+          "subject_cap": 27,
+          "book_cap": 45,
+          "nebula_missing": 1,
+          "retrieval_missing": 7
+        }
+      },
+      "formula_indication_syndrome": {
+        "target_groups": 18,
+        "selected_groups": 1,
+        "selected_cases": 2,
+        "rejections": {
+          "retrieval_missing": 40,
+          "nebula_missing": 17,
+          "subject_cap": 14
+        }
+      },
+      "formula_effect": {
+        "target_groups": 24,
+        "selected_groups": 3,
+        "selected_cases": 6,
+        "rejections": {
+          "subject_cap": 7,
+          "retrieval_missing": 28,
+          "book_cap": 41,
+          "nebula_missing": 17
+        }
+      },
+      "formula_method": {
+        "target_groups": 12,
+        "selected_groups": 3,
+        "selected_cases": 6,
+        "rejections": {
+          "subject_cap": 10,
+          "retrieval_missing": 9,
+          "nebula_missing": 39,
+          "book_cap": 3
+        }
+      },
+      "herb_effect": {
+        "target_groups": 28,
+        "selected_groups": 19,
+        "selected_cases": 38,
+        "rejections": {
+          "retrieval_missing": 48,
+          "subject_cap": 9,
+          "nebula_missing": 36
+        }
+      },
+      "herb_property": {
+        "target_groups": 12,
+        "selected_groups": 0,
+        "selected_cases": 0,
+        "rejections": {
+          "nebula_missing": 35,
+          "subject_cap": 6,
+          "book_cap": 13,
+          "retrieval_missing": 10
+        }
+      },
+      "herb_flavor": {
+        "target_groups": 12,
+        "selected_groups": 0,
+        "selected_cases": 0,
+        "rejections": {
+          "nebula_missing": 41,
+          "retrieval_missing": 18,
+          "subject_cap": 1,
+          "book_cap": 4
+        }
+      },
+      "herb_channel": {
+        "target_groups": 10,
+        "selected_groups": 4,
+        "selected_cases": 8,
+        "rejections": {
+          "nebula_missing": 49,
+          "subject_cap": 4,
+          "retrieval_missing": 7
+        }
+      },
+      "entity_alias": {
+        "target_groups": 8,
+        "selected_groups": 2,
+        "selected_cases": 4,
+        "rejections": {
+          "retrieval_missing": 45,
+          "subject_cap": 7,
+          "nebula_missing": 10
+        }
+      },
+      "formula_alias": {
+        "target_groups": 8,
+        "selected_groups": 1,
+        "selected_cases": 2,
+        "rejections": {
+          "subject_cap": 7,
+          "book_cap": 31,
+          "nebula_missing": 10,
+          "retrieval_missing": 15
+        }
+      }
+    },
+    "rejected": {
+      "retrieval_missing": 313,
+      "subject_cap": 124,
+      "book_cap": 293,
+      "insufficient_evidence_objects": 3,
+      "nebula_missing": 255
+    }
+  },
+  "acceptable_summary": {
+    "subject_predicate_pairs": 68,
+    "multi_book_pairs": 68,
+    "single_book_pairs": 0
+  },
+  "validation_summary": {
+    "total_cases": 136,
+    "split_distribution": {
+      "test": 90,
+      "dev": 32,
+      "debug": 14
+    },
+    "category_distribution": {
+      "formula_composition": 64,
+      "formula_indication_symptom": 6,
+      "formula_indication_syndrome": 2,
+      "formula_effect": 6,
+      "formula_method": 6,
+      "herb_effect": 38,
+      "herb_channel": 8,
+      "entity_alias": 4,
+      "formula_alias": 2
+    },
+    "task_family_distribution": {
+      "answer_trace": 68,
+      "source_locate": 68
+    },
+    "unique_subjects": 68,
+    "unique_books": 25,
+    "top_books": {
+      "074-普济方": 24,
+      "070-奇效良方": 20,
+      "584-医学衷中参西录": 14,
+      "027-本草述钩元": 10,
+      "013-本草纲目": 8,
+      "337-理瀹骈文": 6,
+      "060-圣济总录": 6,
+      "597-冯氏锦囊秘录": 6,
+      "011-本草品汇精要": 6,
+      "633-证治准绳·伤寒": 4,
+      "475-重订通俗伤寒论": 4,
+      "071-医方集宜": 2,
+      "617-古今医统大全": 2,
+      "675-姚贞白医案": 2,
+      "116-回生集": 2,
+      "473-伤寒证治准绳": 2,
+      "416-续名医类案": 2,
+      "168-保婴撮要": 2,
+      "289-证治汇补": 2,
+      "681-赵绍琴临证验案精选上": 2
+    },
+    "duplicate_case_ids": [],
+    "duplicate_queries": [],
+    "leaked_subjects": [],
+    "retrieval_validation_pass": 136,
+    "nebula_validation_pass": 136
+  }
+}

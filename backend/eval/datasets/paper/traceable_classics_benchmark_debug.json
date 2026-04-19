@@ -1,0 +1,1592 @@
+[
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "耳鸣耳聋通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "expected_keywords_any": [
+      "白蒺藜"
+    ],
+    "preferred_terms": [
+      "白蒺藜"
+    ],
+    "gold_answer_outline": [
+      "白蒺藜"
+    ],
+    "gold_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "耳鸣耳聋通治方",
+        "predicate": "使用药材",
+        "object": "白蒺藜"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）",
+        "confidence": 0.98,
+        "fact_id": "4c9a45cf4d4c0cd2"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_f1d58e32c014_ans",
+    "task_family": "answer_trace",
+    "query": "耳鸣耳聋通治方的一个组成药材是什么？请依据古籍回答并给出出处。",
+    "notes": "source=070-奇效良方 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "strict_answer_outline": [
+      "白蒺藜"
+    ],
+    "strict_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "acceptable_answer_outline": [
+      "白蒺藜"
+    ],
+    "acceptable_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "耳鸣耳聋通治方",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "expected_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "expected_keywords_any": [
+      "白蒺藜"
+    ],
+    "preferred_terms": [
+      "白蒺藜"
+    ],
+    "gold_answer_outline": [
+      "白蒺藜"
+    ],
+    "gold_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "耳鸣耳聋通治方",
+        "predicate": "使用药材",
+        "object": "白蒺藜"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "070-奇效良方",
+        "source_book_clean": "奇效良方",
+        "source_chapter": "070-奇效良方_正文",
+        "source_text": "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）",
+        "confidence": 0.98,
+        "fact_id": "4c9a45cf4d4c0cd2"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_f1d58e32c014_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于耳鸣耳聋通治方组成的记载出自哪本书哪一篇？",
+    "notes": "source=070-奇效良方 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "070-奇效良方",
+      "奇效良方",
+      "奇效良方"
+    ],
+    "strict_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "strict_answer_outline": [
+      "白蒺藜"
+    ],
+    "strict_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ],
+    "acceptable_books_any": [
+      "070-奇效良方",
+      "奇效良方"
+    ],
+    "acceptable_chapters_any": [
+      "耳鸣耳聋通治方"
+    ],
+    "acceptable_answer_outline": [
+      "白蒺藜"
+    ],
+    "acceptable_evidence_any": [
+      "辣桂 川芎 当归 石菖蒲 细辛 木通 木香 白蒺藜（炒，去刺） 麻黄（去节） 甘 草（炙，各一钱）"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "如圣散",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "074-普济方",
+      "普济方",
+      "617-古今医统大全",
+      "古今医统大全",
+      "060-圣济总录",
+      "圣济总录",
+      "579-医学纲目",
+      "医学纲目",
+      "089-医方论",
+      "医方论",
+      "591-痧胀玉衡",
+      "痧胀玉衡",
+      "079-仁术便览",
+      "仁术便览",
+      "081-祖剂",
+      "祖剂"
+    ],
+    "expected_chapters_any": [
+      "沙石淋",
+      "药方",
+      "产后乳汁不下",
+      "疠风",
+      "如圣散",
+      "备用要方",
+      "【如圣散】"
+    ],
+    "expected_keywords_any": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "preferred_terms": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根"
+    ],
+    "gold_answer_outline": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "gold_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+      "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+      "地胆草 栝蒌根 莴苣子",
+      "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+      "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+      "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+      "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+      "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "如圣散",
+        "predicate": "使用药材",
+        "object": "麦门冬"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "074-普济方",
+        "source_book_clean": "普济方",
+        "source_chapter": "074-普济方_正文",
+        "source_text": "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+        "confidence": 0.93,
+        "fact_id": "b09fdec9c5dc4d80"
+      },
+      {
+        "source_book": "617-古今医统大全",
+        "source_book_clean": "古今医统大全",
+        "source_chapter": "617-古今医统大全_正文",
+        "source_text": "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+        "confidence": 0.93,
+        "fact_id": "94608075162ccb1c"
+      },
+      {
+        "source_book": "060-圣济总录",
+        "source_book_clean": "圣济总录",
+        "source_chapter": "060-圣济总录_正文",
+        "source_text": "地胆草 栝蒌根 莴苣子",
+        "confidence": 0.93,
+        "fact_id": "eaec61c669be619c"
+      },
+      {
+        "source_book": "579-医学纲目",
+        "source_book_clean": "医学纲目",
+        "source_chapter": "579-医学纲目_正文",
+        "source_text": "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+        "confidence": 0.9,
+        "fact_id": "91ad39d377bb27c8"
+      },
+      {
+        "source_book": "089-医方论",
+        "source_book_clean": "医方论",
+        "source_chapter": "089-医方论_正文",
+        "source_text": "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+        "confidence": 0.98,
+        "fact_id": "9150fd0c83642ca8"
+      },
+      {
+        "source_book": "591-痧胀玉衡",
+        "source_book_clean": "痧胀玉衡",
+        "source_chapter": "591-痧胀玉衡_正文",
+        "source_text": "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+        "confidence": 0.9,
+        "fact_id": "fdcb7b0c22d7b903"
+      },
+      {
+        "source_book": "079-仁术便览",
+        "source_book_clean": "仁术便览",
+        "source_chapter": "079-仁术便览_正文",
+        "source_text": "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+        "confidence": 0.95,
+        "fact_id": "8954cb5ce4932ef0"
+      },
+      {
+        "source_book": "081-祖剂",
+        "source_book_clean": "祖剂",
+        "source_chapter": "081-祖剂_正文",
+        "source_text": "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分",
+        "confidence": 0.95,
+        "fact_id": "ff0e913978ce2181"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_7d966a168564_ans",
+    "task_family": "answer_trace",
+    "query": "如圣散由哪些药材组成？请依据古籍回答并给出出处。",
+    "notes": "source=074-普济方 objects=1; acceptable_books=16; acceptable_answers=8",
+    "strict_books_any": [
+      "074-普济方",
+      "普济方",
+      "普济方"
+    ],
+    "strict_chapters_any": [
+      "沙石淋"
+    ],
+    "strict_answer_outline": [
+      "麦门冬"
+    ],
+    "strict_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）"
+    ],
+    "acceptable_books_any": [
+      "074-普济方",
+      "普济方",
+      "617-古今医统大全",
+      "古今医统大全",
+      "060-圣济总录",
+      "圣济总录",
+      "579-医学纲目",
+      "医学纲目",
+      "089-医方论",
+      "医方论",
+      "591-痧胀玉衡",
+      "痧胀玉衡",
+      "079-仁术便览",
+      "仁术便览",
+      "081-祖剂",
+      "祖剂"
+    ],
+    "acceptable_chapters_any": [
+      "沙石淋",
+      "药方",
+      "产后乳汁不下",
+      "疠风",
+      "如圣散",
+      "备用要方",
+      "【如圣散】"
+    ],
+    "acceptable_answer_outline": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "acceptable_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+      "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+      "地胆草 栝蒌根 莴苣子",
+      "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+      "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+      "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+      "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+      "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分"
+    ]
+  },
+  {
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "composition"
+    ],
+    "subject": "如圣散",
+    "subject_type": "formula",
+    "predicate": "使用药材",
+    "predicate_label": "组成",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "074-普济方",
+      "普济方",
+      "617-古今医统大全",
+      "古今医统大全",
+      "060-圣济总录",
+      "圣济总录",
+      "579-医学纲目",
+      "医学纲目",
+      "089-医方论",
+      "医方论",
+      "591-痧胀玉衡",
+      "痧胀玉衡",
+      "079-仁术便览",
+      "仁术便览",
+      "081-祖剂",
+      "祖剂"
+    ],
+    "expected_chapters_any": [
+      "沙石淋",
+      "药方",
+      "产后乳汁不下",
+      "疠风",
+      "如圣散",
+      "备用要方",
+      "【如圣散】"
+    ],
+    "expected_keywords_any": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "preferred_terms": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根"
+    ],
+    "gold_answer_outline": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "gold_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+      "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+      "地胆草 栝蒌根 莴苣子",
+      "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+      "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+      "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+      "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+      "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "如圣散",
+        "predicate": "使用药材",
+        "object": "麦门冬"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "074-普济方",
+        "source_book_clean": "普济方",
+        "source_chapter": "074-普济方_正文",
+        "source_text": "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+        "confidence": 0.93,
+        "fact_id": "b09fdec9c5dc4d80"
+      },
+      {
+        "source_book": "617-古今医统大全",
+        "source_book_clean": "古今医统大全",
+        "source_chapter": "617-古今医统大全_正文",
+        "source_text": "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+        "confidence": 0.93,
+        "fact_id": "94608075162ccb1c"
+      },
+      {
+        "source_book": "060-圣济总录",
+        "source_book_clean": "圣济总录",
+        "source_chapter": "060-圣济总录_正文",
+        "source_text": "地胆草 栝蒌根 莴苣子",
+        "confidence": 0.93,
+        "fact_id": "eaec61c669be619c"
+      },
+      {
+        "source_book": "579-医学纲目",
+        "source_book_clean": "医学纲目",
+        "source_chapter": "579-医学纲目_正文",
+        "source_text": "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+        "confidence": 0.9,
+        "fact_id": "91ad39d377bb27c8"
+      },
+      {
+        "source_book": "089-医方论",
+        "source_book_clean": "医方论",
+        "source_chapter": "089-医方论_正文",
+        "source_text": "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+        "confidence": 0.98,
+        "fact_id": "9150fd0c83642ca8"
+      },
+      {
+        "source_book": "591-痧胀玉衡",
+        "source_book_clean": "痧胀玉衡",
+        "source_chapter": "591-痧胀玉衡_正文",
+        "source_text": "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+        "confidence": 0.9,
+        "fact_id": "fdcb7b0c22d7b903"
+      },
+      {
+        "source_book": "079-仁术便览",
+        "source_book_clean": "仁术便览",
+        "source_chapter": "079-仁术便览_正文",
+        "source_text": "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+        "confidence": 0.95,
+        "fact_id": "8954cb5ce4932ef0"
+      },
+      {
+        "source_book": "081-祖剂",
+        "source_book_clean": "祖剂",
+        "source_chapter": "081-祖剂_正文",
+        "source_text": "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分",
+        "confidence": 0.95,
+        "fact_id": "ff0e913978ce2181"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_7d966a168564_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于如圣散组成的记载出自哪本书哪一篇？",
+    "notes": "source=074-普济方 objects=1; acceptable_books=16; acceptable_answers=8",
+    "strict_books_any": [
+      "074-普济方",
+      "普济方",
+      "普济方"
+    ],
+    "strict_chapters_any": [
+      "沙石淋"
+    ],
+    "strict_answer_outline": [
+      "麦门冬"
+    ],
+    "strict_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）"
+    ],
+    "acceptable_books_any": [
+      "074-普济方",
+      "普济方",
+      "617-古今医统大全",
+      "古今医统大全",
+      "060-圣济总录",
+      "圣济总录",
+      "579-医学纲目",
+      "医学纲目",
+      "089-医方论",
+      "医方论",
+      "591-痧胀玉衡",
+      "痧胀玉衡",
+      "079-仁术便览",
+      "仁术便览",
+      "081-祖剂",
+      "祖剂"
+    ],
+    "acceptable_chapters_any": [
+      "沙石淋",
+      "药方",
+      "产后乳汁不下",
+      "疠风",
+      "如圣散",
+      "备用要方",
+      "【如圣散】"
+    ],
+    "acceptable_answer_outline": [
+      "麦门冬",
+      "陈皮",
+      "栝蒌根",
+      "紫参",
+      "白芷",
+      "连翘",
+      "两头尖",
+      "白茅根"
+    ],
+    "acceptable_evidence_any": [
+      "马蔺花 麦门冬 甜葶苈 白茅根 车前子 檀香 连翘（各等分炒）",
+      "苦参 玄参 紫参 沙参 陈皮 浓朴 蔓荆子 荆芥穗 麻黄 防风 白芷 威灵仙",
+      "地胆草 栝蒌根 莴苣子",
+      "蔓荆子 苦参 玄参 浓朴 荆芥 紫参 陈皮 沙参 麻黄（去节，一两） 防风 白芷 威灵仙（各二两）",
+      "羌活 防风 白芷 柴胡 甘草 黄芩 半夏 川芎 芍药 当归 乌药",
+      "牛蒡子 苏梗 薄荷 甘菊 金银花 川贝母 连翘 枳壳（各一钱） 桔梗（五分） 乌药（四分）",
+      "白芷 川芎 防风 细辛 雄黄 苍术 乌头 两头尖",
+      "用白茅根马蔺花麦门冬去心车前子甜葶苈苦葶苈炒檀香连翘各等分"
+    ]
+  },
+  {
+    "category": "formula_indication_symptom",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "indication"
+    ],
+    "subject": "十全大补汤",
+    "subject_type": "formula",
+    "predicate": "治疗症状",
+    "predicate_label": "主治症状",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "416-续名医类案",
+      "续名医类案"
+    ],
+    "expected_chapters_any": [
+      "腰胁痛"
+    ],
+    "expected_keywords_any": [
+      "寒热"
+    ],
+    "preferred_terms": [
+      "寒热"
+    ],
+    "gold_answer_outline": [
+      "寒热"
+    ],
+    "gold_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "十全大补汤",
+        "predicate": "治疗症状",
+        "object": "寒热"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "416-续名医类案",
+        "source_book_clean": "续名医类案",
+        "source_chapter": "416-续名医类案_正文",
+        "source_text": "又用十全大补汤而寒热退",
+        "confidence": 0.93,
+        "fact_id": "0612078239b8f9c7"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_99b9dada3796_ans",
+    "task_family": "answer_trace",
+    "query": "十全大补汤主治中的一个关键病证或症状是什么？请依据古籍回答并给出出处。",
+    "notes": "source=416-续名医类案 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "416-续名医类案",
+      "续名医类案",
+      "续名医类案"
+    ],
+    "strict_chapters_any": [
+      "腰胁痛"
+    ],
+    "strict_answer_outline": [
+      "寒热"
+    ],
+    "strict_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ],
+    "acceptable_books_any": [
+      "416-续名医类案",
+      "续名医类案"
+    ],
+    "acceptable_chapters_any": [
+      "腰胁痛"
+    ],
+    "acceptable_answer_outline": [
+      "寒热"
+    ],
+    "acceptable_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ]
+  },
+  {
+    "category": "formula_indication_symptom",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "indication"
+    ],
+    "subject": "十全大补汤",
+    "subject_type": "formula",
+    "predicate": "治疗症状",
+    "predicate_label": "主治症状",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "416-续名医类案",
+      "续名医类案"
+    ],
+    "expected_chapters_any": [
+      "腰胁痛"
+    ],
+    "expected_keywords_any": [
+      "寒热"
+    ],
+    "preferred_terms": [
+      "寒热"
+    ],
+    "gold_answer_outline": [
+      "寒热"
+    ],
+    "gold_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "十全大补汤",
+        "predicate": "治疗症状",
+        "object": "寒热"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "416-续名医类案",
+        "source_book_clean": "续名医类案",
+        "source_chapter": "416-续名医类案_正文",
+        "source_text": "又用十全大补汤而寒热退",
+        "confidence": 0.93,
+        "fact_id": "0612078239b8f9c7"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_99b9dada3796_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于十全大补汤主治的记载出自哪本书哪一篇？",
+    "notes": "source=416-续名医类案 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "416-续名医类案",
+      "续名医类案",
+      "续名医类案"
+    ],
+    "strict_chapters_any": [
+      "腰胁痛"
+    ],
+    "strict_answer_outline": [
+      "寒热"
+    ],
+    "strict_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ],
+    "acceptable_books_any": [
+      "416-续名医类案",
+      "续名医类案"
+    ],
+    "acceptable_chapters_any": [
+      "腰胁痛"
+    ],
+    "acceptable_answer_outline": [
+      "寒热"
+    ],
+    "acceptable_evidence_any": [
+      "又用十全大补汤而寒热退"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "牛膝",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "expected_chapters_any": [
+      "五淋散"
+    ],
+    "expected_keywords_any": [
+      "治淋之圣药"
+    ],
+    "preferred_terms": [
+      "治淋之圣药"
+    ],
+    "gold_answer_outline": [
+      "治淋之圣药"
+    ],
+    "gold_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "牛膝",
+        "predicate": "功效",
+        "object": "治淋之圣药"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "597-冯氏锦囊秘录",
+        "source_book_clean": "冯氏锦囊秘录",
+        "source_chapter": "597-冯氏锦囊秘录_正文",
+        "source_text": "故牛膝为治淋之圣药。",
+        "confidence": 0.9,
+        "fact_id": "ee5ae27e9b1988a5"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_854f4052ab6b_ans",
+    "task_family": "answer_trace",
+    "query": "牛膝在古籍中的一个主要功效是什么？请给出依据。",
+    "notes": "source=597-冯氏锦囊秘录 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "strict_chapters_any": [
+      "五淋散"
+    ],
+    "strict_answer_outline": [
+      "治淋之圣药"
+    ],
+    "strict_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ],
+    "acceptable_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "acceptable_chapters_any": [
+      "五淋散"
+    ],
+    "acceptable_answer_outline": [
+      "治淋之圣药"
+    ],
+    "acceptable_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "牛膝",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "expected_chapters_any": [
+      "五淋散"
+    ],
+    "expected_keywords_any": [
+      "治淋之圣药"
+    ],
+    "preferred_terms": [
+      "治淋之圣药"
+    ],
+    "gold_answer_outline": [
+      "治淋之圣药"
+    ],
+    "gold_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "牛膝",
+        "predicate": "功效",
+        "object": "治淋之圣药"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "597-冯氏锦囊秘录",
+        "source_book_clean": "冯氏锦囊秘录",
+        "source_chapter": "597-冯氏锦囊秘录_正文",
+        "source_text": "故牛膝为治淋之圣药。",
+        "confidence": 0.9,
+        "fact_id": "ee5ae27e9b1988a5"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_854f4052ab6b_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于牛膝功效的记载出自哪本书哪一篇？",
+    "notes": "source=597-冯氏锦囊秘录 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "strict_chapters_any": [
+      "五淋散"
+    ],
+    "strict_answer_outline": [
+      "治淋之圣药"
+    ],
+    "strict_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ],
+    "acceptable_books_any": [
+      "597-冯氏锦囊秘录",
+      "冯氏锦囊秘录"
+    ],
+    "acceptable_chapters_any": [
+      "五淋散"
+    ],
+    "acceptable_answer_outline": [
+      "治淋之圣药"
+    ],
+    "acceptable_evidence_any": [
+      "故牛膝为治淋之圣药。"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "龙胆",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "501-金匮玉函经二注",
+      "金匮玉函经二注",
+      "590-轩岐救正论",
+      "轩岐救正论"
+    ],
+    "expected_chapters_any": [
+      "龙胆",
+      "黄胆病脉证并治第十五",
+      "心脾郁热淋血"
+    ],
+    "expected_keywords_any": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "preferred_terms": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "gold_answer_outline": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "gold_evidence_any": [
+      "好古曰∶益肝胆之气而泄火",
+      "苦参用龙胆除胃中伏热。",
+      "龙胆善治实热诸淋敷功极速"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "龙胆",
+        "predicate": "功效",
+        "object": "益肝胆之气而泄火"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "好古曰∶益肝胆之气而泄火",
+        "confidence": 0.95,
+        "fact_id": "4c8dc1d54eabdfae"
+      },
+      {
+        "source_book": "501-金匮玉函经二注",
+        "source_book_clean": "金匮玉函经二注",
+        "source_chapter": "501-金匮玉函经二注_正文",
+        "source_text": "苦参用龙胆除胃中伏热。",
+        "confidence": 0.9,
+        "fact_id": "8e6c6acf53c46227"
+      },
+      {
+        "source_book": "590-轩岐救正论",
+        "source_book_clean": "轩岐救正论",
+        "source_chapter": "590-轩岐救正论_正文",
+        "source_text": "龙胆善治实热诸淋敷功极速",
+        "confidence": 0.9,
+        "fact_id": "58c0dd66c766d359"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_4712928b3239_ans",
+    "task_family": "answer_trace",
+    "query": "龙胆在古籍中的主要功效是什么？请给出依据。",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=6; acceptable_answers=3",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "龙胆"
+    ],
+    "strict_answer_outline": [
+      "益肝胆之气而泄火"
+    ],
+    "strict_evidence_any": [
+      "好古曰∶益肝胆之气而泄火"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "501-金匮玉函经二注",
+      "金匮玉函经二注",
+      "590-轩岐救正论",
+      "轩岐救正论"
+    ],
+    "acceptable_chapters_any": [
+      "龙胆",
+      "黄胆病脉证并治第十五",
+      "心脾郁热淋血"
+    ],
+    "acceptable_answer_outline": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "acceptable_evidence_any": [
+      "好古曰∶益肝胆之气而泄火",
+      "苦参用龙胆除胃中伏热。",
+      "龙胆善治实热诸淋敷功极速"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "龙胆",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "501-金匮玉函经二注",
+      "金匮玉函经二注",
+      "590-轩岐救正论",
+      "轩岐救正论"
+    ],
+    "expected_chapters_any": [
+      "龙胆",
+      "黄胆病脉证并治第十五",
+      "心脾郁热淋血"
+    ],
+    "expected_keywords_any": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "preferred_terms": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "gold_answer_outline": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "gold_evidence_any": [
+      "好古曰∶益肝胆之气而泄火",
+      "苦参用龙胆除胃中伏热。",
+      "龙胆善治实热诸淋敷功极速"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "龙胆",
+        "predicate": "功效",
+        "object": "益肝胆之气而泄火"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "好古曰∶益肝胆之气而泄火",
+        "confidence": 0.95,
+        "fact_id": "4c8dc1d54eabdfae"
+      },
+      {
+        "source_book": "501-金匮玉函经二注",
+        "source_book_clean": "金匮玉函经二注",
+        "source_chapter": "501-金匮玉函经二注_正文",
+        "source_text": "苦参用龙胆除胃中伏热。",
+        "confidence": 0.9,
+        "fact_id": "8e6c6acf53c46227"
+      },
+      {
+        "source_book": "590-轩岐救正论",
+        "source_book_clean": "轩岐救正论",
+        "source_chapter": "590-轩岐救正论_正文",
+        "source_text": "龙胆善治实热诸淋敷功极速",
+        "confidence": 0.9,
+        "fact_id": "58c0dd66c766d359"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_4712928b3239_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于龙胆功效的记载出自哪本书哪一篇？",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=6; acceptable_answers=3",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "龙胆"
+    ],
+    "strict_answer_outline": [
+      "益肝胆之气而泄火"
+    ],
+    "strict_evidence_any": [
+      "好古曰∶益肝胆之气而泄火"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "501-金匮玉函经二注",
+      "金匮玉函经二注",
+      "590-轩岐救正论",
+      "轩岐救正论"
+    ],
+    "acceptable_chapters_any": [
+      "龙胆",
+      "黄胆病脉证并治第十五",
+      "心脾郁热淋血"
+    ],
+    "acceptable_answer_outline": [
+      "益肝胆之气而泄火",
+      "除胃中伏热",
+      "治实热诸淋"
+    ],
+    "acceptable_evidence_any": [
+      "好古曰∶益肝胆之气而泄火",
+      "苦参用龙胆除胃中伏热。",
+      "龙胆善治实热诸淋敷功极速"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "槟榔",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "038-本草分经",
+      "本草分经"
+    ],
+    "expected_chapters_any": [
+      "岭表十说（吴兴章杰）",
+      "槟榔"
+    ],
+    "expected_keywords_any": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "preferred_terms": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_answer_outline": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_evidence_any": [
+      "槟榔最能下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "槟榔",
+        "predicate": "功效",
+        "object": "下气消食去痰"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "637-景岳全书",
+        "source_book_clean": "景岳全书",
+        "source_chapter": "637-景岳全书_正文",
+        "source_text": "槟榔最能下气消食去痰",
+        "confidence": 0.95,
+        "fact_id": "38ed20b8862070ff"
+      },
+      {
+        "source_book": "038-本草分经",
+        "source_book_clean": "本草分经",
+        "source_chapter": "038-本草分经_正文",
+        "source_text": "泻胸中至高之气至于下极",
+        "confidence": 0.9,
+        "fact_id": "8542d15a867bca6e"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_50d2b0055a8b_ans",
+    "task_family": "answer_trace",
+    "query": "槟榔在古籍中的主要功效是什么？请给出依据。",
+    "notes": "source=637-景岳全书 objects=1; acceptable_books=4; acceptable_answers=2",
+    "strict_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "景岳全书"
+    ],
+    "strict_chapters_any": [
+      "岭表十说（吴兴章杰）"
+    ],
+    "strict_answer_outline": [
+      "下气消食去痰"
+    ],
+    "strict_evidence_any": [
+      "槟榔最能下气消食去痰"
+    ],
+    "acceptable_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "038-本草分经",
+      "本草分经"
+    ],
+    "acceptable_chapters_any": [
+      "岭表十说（吴兴章杰）",
+      "槟榔"
+    ],
+    "acceptable_answer_outline": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "acceptable_evidence_any": [
+      "槟榔最能下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ]
+  },
+  {
+    "category": "herb_effect",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "effect"
+    ],
+    "subject": "槟榔",
+    "subject_type": "herb",
+    "predicate": "功效",
+    "predicate_label": "功效",
+    "expected_route_hint": "graph",
+    "answer_type": "set",
+    "expected_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "038-本草分经",
+      "本草分经"
+    ],
+    "expected_chapters_any": [
+      "岭表十说（吴兴章杰）",
+      "槟榔"
+    ],
+    "expected_keywords_any": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "preferred_terms": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_answer_outline": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_evidence_any": [
+      "槟榔最能下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "槟榔",
+        "predicate": "功效",
+        "object": "下气消食去痰"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "637-景岳全书",
+        "source_book_clean": "景岳全书",
+        "source_chapter": "637-景岳全书_正文",
+        "source_text": "槟榔最能下气消食去痰",
+        "confidence": 0.95,
+        "fact_id": "38ed20b8862070ff"
+      },
+      {
+        "source_book": "038-本草分经",
+        "source_book_clean": "本草分经",
+        "source_chapter": "038-本草分经_正文",
+        "source_text": "泻胸中至高之气至于下极",
+        "confidence": 0.9,
+        "fact_id": "8542d15a867bca6e"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_50d2b0055a8b_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于槟榔功效的记载出自哪本书哪一篇？",
+    "notes": "source=637-景岳全书 objects=1; acceptable_books=4; acceptable_answers=2",
+    "strict_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "景岳全书"
+    ],
+    "strict_chapters_any": [
+      "岭表十说（吴兴章杰）"
+    ],
+    "strict_answer_outline": [
+      "下气消食去痰"
+    ],
+    "strict_evidence_any": [
+      "槟榔最能下气消食去痰"
+    ],
+    "acceptable_books_any": [
+      "637-景岳全书",
+      "景岳全书",
+      "038-本草分经",
+      "本草分经"
+    ],
+    "acceptable_chapters_any": [
+      "岭表十说（吴兴章杰）",
+      "槟榔"
+    ],
+    "acceptable_answer_outline": [
+      "下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ],
+    "acceptable_evidence_any": [
+      "槟榔最能下气消食去痰",
+      "泻胸中至高之气至于下极"
+    ]
+  },
+  {
+    "category": "entity_alias",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "alias"
+    ],
+    "subject": "地肤",
+    "subject_type": "herb",
+    "predicate": "别名",
+    "predicate_label": "别名",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "expected_chapters_any": [
+      "地肤"
+    ],
+    "expected_keywords_any": [
+      "落帚子"
+    ],
+    "preferred_terms": [
+      "落帚子"
+    ],
+    "gold_answer_outline": [
+      "落帚子"
+    ],
+    "gold_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "地肤",
+        "predicate": "别名",
+        "object": "落帚子"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "大明曰∶地肤即落帚子也",
+        "confidence": 0.98,
+        "fact_id": "3e9878c9e39e2a13"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_6bd56843dec4_ans",
+    "task_family": "answer_trace",
+    "query": "地肤在古籍中的一个别名是什么？请给出出处。",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "地肤"
+    ],
+    "strict_answer_outline": [
+      "落帚子"
+    ],
+    "strict_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "acceptable_chapters_any": [
+      "地肤"
+    ],
+    "acceptable_answer_outline": [
+      "落帚子"
+    ],
+    "acceptable_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ]
+  },
+  {
+    "category": "entity_alias",
+    "difficulty": "easy",
+    "eval_focus": [
+      "book_hit",
+      "chapter_hit",
+      "evidence_hit",
+      "answer_keypoint",
+      "provenance_success",
+      "alias"
+    ],
+    "subject": "地肤",
+    "subject_type": "herb",
+    "predicate": "别名",
+    "predicate_label": "别名",
+    "expected_route_hint": "graph",
+    "answer_type": "string",
+    "expected_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "expected_chapters_any": [
+      "地肤"
+    ],
+    "expected_keywords_any": [
+      "落帚子"
+    ],
+    "preferred_terms": [
+      "落帚子"
+    ],
+    "gold_answer_outline": [
+      "落帚子"
+    ],
+    "gold_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ],
+    "gold_relation_tuples": [
+      {
+        "subject": "地肤",
+        "predicate": "别名",
+        "object": "落帚子"
+      }
+    ],
+    "provenance": [
+      {
+        "source_book": "013-本草纲目",
+        "source_book_clean": "本草纲目",
+        "source_chapter": "013-本草纲目_正文",
+        "source_text": "大明曰∶地肤即落帚子也",
+        "confidence": 0.98,
+        "fact_id": "3e9878c9e39e2a13"
+      }
+    ],
+    "split": "debug",
+    "case_id": "tcb_6bd56843dec4_src",
+    "task_family": "source_locate",
+    "query": "古籍中关于地肤别名的记载出自哪本书哪一篇？",
+    "notes": "source=013-本草纲目 objects=1; acceptable_books=2; acceptable_answers=1",
+    "strict_books_any": [
+      "013-本草纲目",
+      "本草纲目",
+      "本草纲目"
+    ],
+    "strict_chapters_any": [
+      "地肤"
+    ],
+    "strict_answer_outline": [
+      "落帚子"
+    ],
+    "strict_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ],
+    "acceptable_books_any": [
+      "013-本草纲目",
+      "本草纲目"
+    ],
+    "acceptable_chapters_any": [
+      "地肤"
+    ],
+    "acceptable_answer_outline": [
+      "落帚子"
+    ],
+    "acceptable_evidence_any": [
+      "大明曰∶地肤即落帚子也"
+    ]
+  }
+]

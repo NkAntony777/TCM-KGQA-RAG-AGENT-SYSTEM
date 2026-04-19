@@ -4,6 +4,7 @@ import json
 import os
 import re
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import closing
 from pathlib import Path
 from typing import Any
@@ -21,7 +22,10 @@ from services.retrieval_service.files_first_support import (
     LocalFilesFirstStore,
     ParentChunkStore,
 )
+from services.retrieval_service.files_first_methods import _descriptive_clause_terms
+from services.retrieval_service.files_first_methods import _query_flags
 from services.retrieval_service.hybrid_runtime import run_hybrid_search
+from services.retrieval_service.query_understanding import LLMQueryUnderstanding
 from services.retrieval_service.qa_structured_store import StructuredQAIndex, StructuredQAIndexSettings
 from services.retrieval_service.settings import load_settings
 from services.retrieval_service.settings import RetrievalServiceSettings
@@ -61,6 +65,10 @@ class RetrievalEngine:
         self.rewrite_client = OpenAICompatibleClient(
             base_url=self.settings.rewrite_base_url,
             api_key=self.settings.rewrite_api_key,
+        )
+        self.query_understanding = LLMQueryUnderstanding(
+            client=self.rewrite_client,
+            model=self.settings.rewrite_model,
         )
         self.milvus = MilvusHybridStore(self.settings)
 
@@ -220,6 +228,11 @@ class RetrievalEngine:
         allowed_file_path_prefixes: list[str] | None = None,
         search_mode: str = "files_first",
     ) -> dict[str, Any]:
+        query_context = None
+        if (search_mode or "").strip().lower() == "files_first" and self.query_understanding.should_run(query):
+            understanding = self.query_understanding.understand(query)
+            if understanding is not None:
+                query_context = understanding.to_context()
         result = run_hybrid_search(
             settings=self.settings,
             files_first_store=self.files_first_store,
@@ -227,6 +240,7 @@ class RetrievalEngine:
             local_store=self.local_store,
             lexicon=self.lexicon,
             embedding_client=self.embedding_client,
+            query_context=query_context,
             query=query,
             top_k=top_k,
             candidate_k=candidate_k,
@@ -253,6 +267,7 @@ class RetrievalEngine:
             local_store=self.local_store,
             lexicon=self.lexicon,
             embedding_client=self.embedding_client,
+            query_context=query_context,
             query=refined_query,
             top_k=top_k,
             candidate_k=candidate_k,
@@ -270,10 +285,14 @@ class RetrievalEngine:
             refined_result["warnings"] = warnings
             refined_result["refined_from_query"] = query
             refined_result["refined_query"] = refined_query
+            if query_context:
+                refined_result["query_context"] = query_context
             return refined_result
         warnings = list(result.get("warnings", [])) if isinstance(result.get("warnings"), list) else []
         warnings.append("single_query_refinement_no_gain")
         result["warnings"] = warnings
+        if query_context:
+            result["query_context"] = query_context
         return result
 
     def _maybe_refine_files_first_query(
@@ -284,14 +303,27 @@ class RetrievalEngine:
         result: dict[str, Any],
         top_k: int,
     ) -> str:
+        if os.getenv("FILES_FIRST_QUERY_REWRITE_ENABLED", "true").strip().lower() in {"0", "false", "no", "off"}:
+            return ""
         if (search_mode or "").strip().lower() != "files_first":
             return ""
         chunks = result.get("chunks", []) if isinstance(result.get("chunks"), list) else []
         if chunks and len(chunks) >= min(max(2, top_k // 2), top_k):
             return ""
+        flags = _query_flags(query)
         warnings = {str(item).strip() for item in result.get("warnings", []) if str(item).strip()} if isinstance(result.get("warnings"), list) else set()
         top_score = float(chunks[0].get("score", 0.0) or 0.0) if chunks else 0.0
-        low_confidence = not chunks or len(chunks) <= 1 or top_score < 0.12 or "files_first_sparse_query_empty" in warnings
+        if chunks and flags.get("source_query") and len(chunks) == 1 and top_score >= 5.0:
+            top_title = str(chunks[0].get("chapter_title", "") or "")
+            top_book = str(chunks[0].get("book_name", "") or "")
+            for focus in self._primary_refine_entities(query):
+                if focus and (focus in top_title or focus in top_book):
+                    return ""
+        low_confidence = (
+            not chunks
+            or "lexical_sanity_filtered_all" in warnings
+            or "files_first_sparse_query_empty" in warnings
+        )
         if not low_confidence:
             return ""
         return self._refine_files_first_query(query)
@@ -300,23 +332,130 @@ class RetrievalEngine:
         base_query = str(query or "").strip()
         if not base_query:
             return ""
+        flags = _query_flags(base_query)
+        fast_refined = self._fast_refine_files_first_query(base_query)
+        if (
+            fast_refined
+            and fast_refined != base_query
+            and (flags.get("property_query") or flags.get("composition_query") or flags.get("comparison_query"))
+            and not flags.get("source_query")
+        ):
+            return fast_refined
         alias_service = get_runtime_alias_service()
         heuristic = alias_service.expand_query_with_aliases(
             base_query,
             max_aliases_per_entity=3,
             max_entities=2,
         )
-        if self.rewrite_client.is_ready():
-            prompt = (
-                "请把下面的中医问题改写成一条更适合古籍全文检索与图谱检索的短查询。"
-                "要求：保留核心实体、证候、书名线索；补全常见古今异名或近义表述；不超过40字；只输出改写结果。\n"
-                f"问题：{base_query}"
-            )
-            rewritten = str(self.rewrite_client.chat(prompt, self.settings.rewrite_model) or "").strip()
-            rewritten = re.sub(r"\s+", " ", rewritten)
-            if rewritten and rewritten != base_query:
-                return rewritten
+        should_remote_rewrite = (
+            self.rewrite_client.is_ready()
+            and (flags.get("source_query") or flags.get("property_query") or flags.get("composition_query"))
+        )
+        if should_remote_rewrite:
+            try:
+                prompt = (
+                    "请把下面的中医问题改写成一条更适合古籍全文检索与图谱检索的短查询。"
+                    "要求：保留核心实体、证候、书名线索；补全常见古今异名或近义表述；不超过40字；只输出改写结果。\n"
+                    f"问题：{base_query}"
+                )
+                rewritten = str(self.rewrite_client.chat(prompt, self.settings.rewrite_model) or "").strip()
+                rewritten = re.sub(r"\s+", " ", rewritten)
+                if rewritten and rewritten != base_query:
+                    return rewritten
+            except Exception:
+                pass
+        if fast_refined and fast_refined != base_query:
+            return fast_refined
         return heuristic if heuristic != base_query else ""
+
+    def _fast_refine_files_first_query(self, query: str) -> str:
+        base_query = str(query or "").strip()
+        if not base_query:
+            return ""
+        flags = _query_flags(base_query)
+        alias_service = get_runtime_alias_service()
+        terms: list[str] = []
+        seen: set[str] = set()
+
+        def push(value: str) -> None:
+            normalized = re.sub(r"\s+", " ", str(value or "")).strip()
+            if len(normalized) < 2 or normalized in seen:
+                return
+            seen.add(normalized)
+            terms.append(normalized)
+
+        try:
+            analysis = analyze_tcm_query(base_query)
+            for item in analysis.matched_entities:
+                name = str(item.name).strip()
+                if len(name) >= 2:
+                    push(name)
+                    if alias_service.is_available():
+                        for alias_name in alias_service.aliases_for_entity(name, max_aliases=2):
+                            push(str(alias_name).strip())
+        except Exception:
+            pass
+
+        for match in re.finditer(r"[\u4e00-\u9fff]{2,16}(?:汤|散|丸|饮|膏|丹|方|颗粒|胶囊)", base_query):
+            push(match.group(0))
+
+        for pattern in (
+            r"^([\u4e00-\u9fff]{2,8}?)(?:主|治)",
+            r"中的([\u4e00-\u9fff]{2,8})",
+            r"^([\u4e00-\u9fff]{2,8}?)(?:的性味|的功效|的归经)",
+        ):
+            for match in re.finditer(pattern, base_query):
+                push(match.group(1))
+
+        for match in re.finditer(r"《([^》]{2,16})》", base_query):
+            push(match.group(1))
+
+        for match in re.finditer(r"[\u4e00-\u9fff]{2,8}", base_query):
+            token = str(match.group(0)).strip()
+            if token in {"什么", "为何", "为什么", "请给", "请从", "作用", "区别", "不同", "如何", "对应"}:
+                continue
+            if len(terms) >= 6:
+                break
+            push(token)
+
+        if flags.get("source_query"):
+            for cue in ("出处", "原文", "条文", "记载"):
+                push(cue)
+            if any(term in base_query for term in ("黄芪", "黄耆", "当归", "柴胡", "人参", "甘草", "附子", "地黄")):
+                push("本草")
+        if flags.get("property_query"):
+            for cue in ("功效", "作用", "方解", "归经", "性味"):
+                push(cue)
+        if flags.get("composition_query"):
+            for cue in ("组成", "药味", "加减", "方后注"):
+                push(cue)
+        if flags.get("comparison_query"):
+            for cue in ("比较", "区别", "异同"):
+                push(cue)
+
+        refined = " ".join(terms[:10]).strip()
+        return refined if refined and refined != base_query else ""
+
+    @staticmethod
+    def _primary_refine_entities(query: str) -> list[str]:
+        entities: list[str] = []
+        for match in re.finditer(r"[\u4e00-\u9fff]{2,16}(?:汤|散|丸|饮|膏|丹|方|颗粒|胶囊)", query):
+            entities.append(str(match.group(0)).strip())
+        for pattern in (
+            r"^([\u4e00-\u9fff]{2,8}?)(?:主|治)",
+            r"中的([\u4e00-\u9fff]{2,8})",
+            r"^([\u4e00-\u9fff]{2,8}?)(?:的性味|的功效|的归经)",
+        ):
+            for match in re.finditer(pattern, query):
+                entities.append(str(match.group(1)).strip())
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for item in entities:
+            if len(item) < 2 or item in seen:
+                continue
+            seen.add(item)
+            deduped.append(item)
+        return deduped[:4]
 
     @staticmethod
     def _prefer_refined_result(*, primary: dict[str, Any], refined: dict[str, Any]) -> bool:
@@ -419,7 +558,16 @@ class RetrievalEngine:
             "vector_store": inserted_to,
         }
 
-    def index_documents_files_first(self, docs: list[dict[str, Any]], *, reset_collection: bool = False) -> dict[str, Any]:
+    def index_documents_files_first(
+        self,
+        docs: list[dict[str, Any]],
+        *,
+        reset_collection: bool = False,
+        state_path: Path | None = None,
+        resume: bool = False,
+        show_progress: bool = False,
+        batch_size: int = 512,
+    ) -> dict[str, Any]:
         parent_docs = [doc for doc in docs if int(doc.get("chunk_level", 0) or 0) < self.settings.leaf_retrieve_level]
         leaf_docs = [doc for doc in docs if int(doc.get("chunk_level", 0) or 0) == self.settings.leaf_retrieve_level]
         if not leaf_docs:
@@ -443,11 +591,20 @@ class RetrievalEngine:
                     "parent_chunk_id": doc.get("parent_chunk_id", ""),
                     "root_chunk_id": doc.get("root_chunk_id", ""),
                     "chunk_level": int(doc.get("chunk_level", self.settings.leaf_retrieve_level) or self.settings.leaf_retrieve_level),
+                    "book_name": doc.get("book_name", ""),
+                    "chapter_title": doc.get("chapter_title", ""),
+                    "section_key": doc.get("section_key", ""),
                 }
             )
-        if reset_collection:
+        if reset_collection and not resume:
             self.files_first_store.reset()
-        files_first_meta = self.files_first_store.rebuild(rows)
+        files_first_meta = self.files_first_store.rebuild(
+            rows,
+            state_path=state_path,
+            reset=reset_collection and not resume,
+            show_progress=show_progress,
+            batch_size=batch_size,
+        )
         self.parent_store.upsert_documents(parent_docs)
         return {
             "indexed_leaf_chunks": len(leaf_docs),
@@ -460,10 +617,50 @@ class RetrievalEngine:
         if not texts:
             return []
         batch_size = max(1, int(self.settings.embedding_batch_size or 64))
+        batches = [texts[start : start + batch_size] for start in range(0, len(texts), batch_size)]
+        total_batches = len(batches)
+        workers = max(1, int(self.settings.embedding_batch_workers or 1))
+        show_progress = bool(self.settings.embedding_show_progress)
+
+        def _print_progress(completed: int) -> None:
+            if not show_progress:
+                return
+            width = 24
+            filled = int(width * completed / max(1, total_batches))
+            bar = "#" * filled + "-" * (width - filled)
+            pct = completed * 100.0 / max(1, total_batches)
+            print(
+                f"[retrieval-index] embedding [{bar}] {completed}/{total_batches} ({pct:.1f}%) workers={workers}",
+                flush=True,
+            )
+
+        def _embed_one(batch_index: int, batch: list[str]) -> tuple[int, list[list[float]]]:
+            return batch_index, self.embedding_client.embed(batch, self.settings.embedding_model)
+
+        if workers == 1:
+            vectors: list[list[float]] = []
+            for batch_index, batch in enumerate(batches):
+                _index, embedded = _embed_one(batch_index, batch)
+                vectors.extend(embedded)
+                _print_progress(batch_index + 1)
+            return vectors
+
+        results: dict[int, list[list[float]]] = {}
+        completed = 0
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            future_map = {
+                executor.submit(_embed_one, batch_index, batch): batch_index
+                for batch_index, batch in enumerate(batches)
+            }
+            for future in as_completed(future_map):
+                batch_index, embedded = future.result()
+                results[batch_index] = embedded
+                completed += 1
+                _print_progress(completed)
+
         vectors: list[list[float]] = []
-        for start in range(0, len(texts), batch_size):
-            batch = texts[start : start + batch_size]
-            vectors.extend(self.embedding_client.embed(batch, self.settings.embedding_model))
+        for batch_index in range(total_batches):
+            vectors.extend(results.get(batch_index, []))
         return vectors
 
     @staticmethod
@@ -495,6 +692,19 @@ class RetrievalEngine:
         return deduped
 
     def index_corpus_files(self, corpus_paths: list[Path], *, reset_collection: bool = False, index_mode: str = "hybrid") -> dict[str, Any]:
+        return self.index_corpus_files_with_options(corpus_paths, reset_collection=reset_collection, index_mode=index_mode)
+
+    def index_corpus_files_with_options(
+        self,
+        corpus_paths: list[Path],
+        *,
+        reset_collection: bool = False,
+        index_mode: str = "hybrid",
+        files_first_state_path: Path | None = None,
+        files_first_resume: bool = False,
+        files_first_show_progress: bool = False,
+        files_first_batch_size: int = 512,
+    ) -> dict[str, Any]:
         resolved_paths = [path for path in corpus_paths if path.exists()]
         if not resolved_paths:
             raise ValueError("no_corpus_files_found")
@@ -503,7 +713,14 @@ class RetrievalEngine:
             combined_docs.extend(self._load_corpus_file(path))
         docs = self._dedupe_docs(combined_docs)
         if (index_mode or "hybrid").strip().lower() == "files_first":
-            result = self.index_documents_files_first(docs, reset_collection=reset_collection)
+            result = self.index_documents_files_first(
+                docs,
+                reset_collection=reset_collection,
+                state_path=files_first_state_path,
+                resume=files_first_resume,
+                show_progress=files_first_show_progress,
+                batch_size=files_first_batch_size,
+            )
         else:
             result = self.index_documents(docs, reset_collection=reset_collection)
         result["corpus_files"] = [str(path) for path in resolved_paths]
@@ -519,6 +736,10 @@ class RetrievalEngine:
         include_modern: bool = True,
         include_classic: bool = True,
         index_mode: str = "hybrid",
+        files_first_state_path: Path | None = None,
+        files_first_resume: bool = False,
+        files_first_show_progress: bool = False,
+        files_first_batch_size: int = 512,
     ) -> dict[str, Any]:
         corpus_paths: list[Path] = []
         if include_sample and self.settings.sample_corpus_path.exists():
@@ -527,7 +748,15 @@ class RetrievalEngine:
             corpus_paths.append(self.settings.modern_corpus_path)
         if include_classic and self.settings.classic_corpus_path.exists():
             corpus_paths.append(self.settings.classic_corpus_path)
-        return self.index_corpus_files(corpus_paths, reset_collection=reset_collection, index_mode=index_mode)
+        return self.index_corpus_files_with_options(
+            corpus_paths,
+            reset_collection=reset_collection,
+            index_mode=index_mode,
+            files_first_state_path=files_first_state_path,
+            files_first_resume=files_first_resume,
+            files_first_show_progress=files_first_show_progress,
+            files_first_batch_size=files_first_batch_size,
+        )
 
     def index_sample_corpus(self, *, reset_collection: bool = False) -> dict[str, Any]:
         return self.index_corpus_files([self.settings.sample_corpus_path], reset_collection=reset_collection)
@@ -658,6 +887,8 @@ class RetrievalEngine:
         docs: list[dict[str, Any]],
         warnings: list[str],
     ) -> list[dict[str, Any]]:
+        if os.getenv("FILES_FIRST_LEXICAL_SANITY_ENABLED", "true").strip().lower() in {"0", "false", "no", "off"}:
+            return docs
         if not docs:
             return docs
         anchors = self._extract_query_anchors(query)
@@ -671,7 +902,7 @@ class RetrievalEngine:
             warnings.append(f"lexical_sanity_filtered:{len(docs)}->{len(filtered)}")
             return filtered
         warnings.append("lexical_sanity_filtered_all")
-        return []
+        return docs
 
     @staticmethod
     def _doc_matches_anchors(item: dict[str, Any], anchors: list[str]) -> bool:
@@ -679,6 +910,12 @@ class RetrievalEngine:
             str(item.get("text", "") or ""),
             str(item.get("source_file", "") or ""),
             str(item.get("filename", "") or ""),
+            str(item.get("file_path", "") or ""),
+            str(item.get("book_name", "") or ""),
+            str(item.get("chapter_title", "") or ""),
+            str(item.get("section_summary", "") or ""),
+            str(item.get("topic_tags", "") or ""),
+            str(item.get("entity_tags", "") or ""),
         ]
         joined = "\n".join(part for part in haystacks if part).lower()
         for anchor in anchors:
@@ -700,6 +937,19 @@ class RetrievalEngine:
                     anchors.append(name)
         except Exception:
             pass
+
+        for clause in _descriptive_clause_terms(query):
+            if len(clause) >= 3:
+                anchors.append(clause)
+
+        for match in re.finditer(r"《([^》]{2,24})》", query):
+            anchors.append(str(match.group(1)).strip())
+        for match in re.finditer(r"([\u4e00-\u9fff]{2,24}?)(?:里|中)(?!医|药|方)", query):
+            candidate = str(match.group(1)).strip()
+            if len(candidate) >= 2:
+                anchors.append(candidate)
+        for match in re.finditer(r"[\u4e00-\u9fff]{2,10}(?:经|论|方论|心典|浅注|集解|方|本草)", query):
+            anchors.append(str(match.group(0)).strip())
 
         for match in re.finditer(r"[\u4e00-\u9fff]{2,10}(?:丸|散|汤|饮|膏|丹|颗粒|胶囊)", query):
             anchors.append(match.group(0))
