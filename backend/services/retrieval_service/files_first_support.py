@@ -2759,6 +2759,28 @@ class LocalFilesFirstStore:
         retrieval_mode = "fts_local"
         return results, retrieval_mode
 
+    def get_docs_by_chunk_ids(self, chunk_ids: list[str]) -> list[dict[str, Any]]:
+        self.ensure_schema()
+        normalized_ids = [str(item or "").strip() for item in chunk_ids if str(item or "").strip()]
+        if not normalized_ids or not self.store_path.exists():
+            return []
+        placeholders = ",".join("?" for _ in normalized_ids)
+        with closing(sqlite3.connect(self.store_path)) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                f"""
+                SELECT
+                    d.chunk_id,d.text,d.filename,d.file_type,d.file_path,d.page_number,d.chunk_idx,d.parent_chunk_id,d.root_chunk_id,d.chunk_level,
+                    d.book_name,d.chapter_title,d.section_key,d.section_summary,d.topic_tags,d.entity_tags,
+                    '[]' AS representative_passages,
+                    substr(d.text, 1, 180) AS match_snippet
+                FROM docs d
+                WHERE d.chunk_id IN ({placeholders})
+                """,
+                normalized_ids,
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def read_section(self, *, path: str, top_k: int = 12) -> dict[str, Any]:
         self.ensure_schema()
         if not self.store_path.exists():
