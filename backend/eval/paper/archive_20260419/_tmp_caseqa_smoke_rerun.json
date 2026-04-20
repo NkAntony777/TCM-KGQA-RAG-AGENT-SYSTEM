@@ -1,0 +1,2221 @@
+{
+  "settings": {
+    "dataset_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\eval\\datasets\\paper\\caseqa_vector_vs_structured_debug_8.json",
+    "index_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\qa_structured_index.sqlite",
+    "qa_input_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\retrieval_service\\data\\case_qa_clean\\qa_fts_ready.jsonl",
+    "case_input_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\retrieval_service\\data\\case_qa_clean\\case_fts_ready.jsonl",
+    "top_k": 3,
+    "candidate_k": 20
+  },
+  "health": {
+    "structured": {
+      "index_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\qa_structured_index.sqlite",
+      "available": true,
+      "qa_records": 3162928,
+      "case_records": 481894
+    },
+    "retrieval_engine": {
+      "status": "ok",
+      "vector_compatibility_enabled": true,
+      "vector_store": "local_hybrid_index",
+      "hybrid_enabled": true,
+      "files_first_enabled": true,
+      "embedding_configured": true,
+      "rewrite_configured": true,
+      "sparse_lexicon_loaded": true,
+      "modern_corpus_available": true,
+      "modern_corpus_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\retrieval_service\\data\\herb2_modern_corpus.json",
+      "classic_corpus_available": true,
+      "classic_corpus_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\services\\retrieval_service\\data\\classic_books_corpus.json",
+      "structured_qa_enabled": true,
+      "case_qa_vector_fallback_enabled": true,
+      "files_first_dense_fallback_enabled": true,
+      "runtime_entity_lexicon_loaded": false,
+      "index_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\qa_structured_index.sqlite",
+      "available": true,
+      "qa_records": 3162928,
+      "case_records": 481894,
+      "case_qa_configured": true,
+      "case_qa_client_available": true,
+      "case_qa_backend": "native_hnsw_sqlite",
+      "case_qa_db_path": "E:\\tcm_vector_db",
+      "case_qa_mirror_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\chroma_case_query_mirror",
+      "case_qa_collection_prefix": "tcm_shard_",
+      "case_qa_query_workers": 3,
+      "case_qa_initial_shard_limit": 4,
+      "case_qa_max_loaded_collections": 2,
+      "case_qa_collection_count": 10,
+      "case_qa_collections": [
+        "tcm_shard_0",
+        "tcm_shard_1",
+        "tcm_shard_2",
+        "tcm_shard_3",
+        "tcm_shard_4",
+        "tcm_shard_5",
+        "tcm_shard_6",
+        "tcm_shard_7",
+        "tcm_shard_8",
+        "tcm_shard_9"
+      ],
+      "milvus_available": false,
+      "collection_exists": false,
+      "error": "<ConnectionConfigException: (code=1, message=milvus-lite is required for local database connections. Please install it with: pip install pymilvus[milvus_lite])>",
+      "local_index_available": false,
+      "local_index_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\retrieval_local_index.json",
+      "files_first_index_available": true,
+      "files_first_index_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\retrieval_local_index.fts.db",
+      "files_first_index_docs": 170319,
+      "files_first_schema_version": 5,
+      "files_first_schema_compatible": true,
+      "files_first_schema_migrated": false
+    }
+  },
+  "summary": {
+    "structured": {
+      "cases": 8,
+      "top1_hit_rate": 0.75,
+      "topk_hit_rate": 1.0,
+      "avg_coverage_any": 0.8313,
+      "preferred_hit_rate": 0.75,
+      "avg_keypoint_precision": 0.2871,
+      "avg_keypoint_recall": 0.6042,
+      "avg_keypoint_f1": 0.359,
+      "avg_latency_ms": 2697.8,
+      "p95_latency_ms": 8293.4
+    },
+    "vector": {
+      "cases": 8,
+      "top1_hit_rate": 0.875,
+      "topk_hit_rate": 1.0,
+      "avg_coverage_any": 0.6687,
+      "preferred_hit_rate": 0.875,
+      "avg_keypoint_precision": 0.2792,
+      "avg_keypoint_recall": 0.6244,
+      "avg_keypoint_f1": 0.3721,
+      "avg_latency_ms": 18242.7,
+      "p95_latency_ms": 37626.0
+    }
+  },
+  "category_summary": {
+    "case_basic": {
+      "structured": {
+        "cases": 2,
+        "top1_hit_rate": 0.5,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 0.7,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.1042,
+        "avg_keypoint_recall": 0.5715,
+        "avg_keypoint_f1": 0.1613,
+        "avg_latency_ms": 3352.9,
+        "p95_latency_ms": 4268.1
+      },
+      "vector": {
+        "cases": 2,
+        "top1_hit_rate": 0.5,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 0.35,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.1667,
+        "avg_keypoint_recall": 0.5,
+        "avg_keypoint_f1": 0.2427,
+        "avg_latency_ms": 21996.0,
+        "p95_latency_ms": 29923.3
+      }
+    },
+    "case_syndrome_formula": {
+      "structured": {
+        "cases": 2,
+        "top1_hit_rate": 0.5,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 0.625,
+        "preferred_hit_rate": 0.5,
+        "avg_keypoint_precision": 0.125,
+        "avg_keypoint_recall": 0.5119,
+        "avg_keypoint_f1": 0.2009,
+        "avg_latency_ms": 994.2,
+        "p95_latency_ms": 1727.9
+      },
+      "vector": {
+        "cases": 2,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 0.325,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.1041,
+        "avg_keypoint_recall": 0.4643,
+        "avg_keypoint_f1": 0.1698,
+        "avg_latency_ms": 21865.5,
+        "p95_latency_ms": 37626.0
+      }
+    },
+    "formula_role": {
+      "structured": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.45,
+        "avg_keypoint_recall": 0.6,
+        "avg_keypoint_f1": 0.5143,
+        "avg_latency_ms": 2411.4,
+        "p95_latency_ms": 2411.4
+      },
+      "vector": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.2917,
+        "avg_keypoint_recall": 0.8,
+        "avg_keypoint_f1": 0.4275,
+        "avg_latency_ms": 6051.2,
+        "p95_latency_ms": 6051.2
+      }
+    },
+    "formula_origin": {
+      "structured": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.4,
+        "avg_keypoint_recall": 0.6667,
+        "avg_keypoint_f1": 0.5,
+        "avg_latency_ms": 726.5,
+        "p95_latency_ms": 726.5
+      },
+      "vector": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.4,
+        "avg_keypoint_recall": 0.6667,
+        "avg_keypoint_f1": 0.5,
+        "avg_latency_ms": 17055.3,
+        "p95_latency_ms": 17055.3
+      }
+    },
+    "compare_boundary": {
+      "structured": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.4167,
+        "avg_keypoint_recall": 0.8,
+        "avg_keypoint_f1": 0.5479,
+        "avg_latency_ms": 1457.2,
+        "p95_latency_ms": 1457.2
+      },
+      "vector": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 1.0,
+        "avg_keypoint_precision": 0.55,
+        "avg_keypoint_recall": 1.0,
+        "avg_keypoint_f1": 0.7097,
+        "avg_latency_ms": 17072.1,
+        "p95_latency_ms": 17072.1
+      }
+    },
+    "open_query": {
+      "structured": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 0.0,
+        "avg_keypoint_precision": 0.5714,
+        "avg_keypoint_recall": 0.6,
+        "avg_keypoint_f1": 0.5854,
+        "avg_latency_ms": 8293.4,
+        "p95_latency_ms": 8293.4
+      },
+      "vector": {
+        "cases": 1,
+        "top1_hit_rate": 1.0,
+        "topk_hit_rate": 1.0,
+        "avg_coverage_any": 1.0,
+        "preferred_hit_rate": 0.0,
+        "avg_keypoint_precision": 0.45,
+        "avg_keypoint_recall": 0.6,
+        "avg_keypoint_f1": 0.5143,
+        "avg_latency_ms": 18040.0,
+        "p95_latency_ms": 18040.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case": {
+        "case_id": "cqv_001",
+        "category": "case_basic",
+        "mode": "case",
+        "query": "女 45岁 口苦 胁痛 舌红 脉弦",
+        "expected_keywords": [
+          "口苦",
+          "胁痛",
+          "舌红",
+          "脉弦"
+        ],
+        "preferred_terms": [
+          "肝郁",
+          "肝郁脾虚",
+          "逍遥散"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 2437.7,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "口苦",
+            "胁痛",
+            "舌红",
+            "脉弦"
+          ],
+          "matched_preferred_any": [
+            "肝郁"
+          ],
+          "keypoint_precision": 0.2083,
+          "keypoint_recall": 0.7143,
+          "keypoint_f1": 0.3226,
+          "matched_keypoints": [
+            "肝郁",
+            "口苦",
+            "胁痛",
+            "舌红",
+            "脉弦"
+          ],
+          "target_keypoints": [
+            "肝郁",
+            "肝郁脾虚",
+            "逍遥散",
+            "口苦",
+            "胁痛",
+            "舌红",
+            "脉弦"
+          ],
+          "predicted_terms": [
+            "一阵热",
+            "口苦胁痛",
+            "春温初起时",
+            "患者可能表现出哪些症状？",
+            "患者可能表现为一阵冷一阵热",
+            "胸闷欲呕",
+            "小便浑浊",
+            "舌质红",
+            "苔黄腻",
+            "脉弦滑而数",
+            "视神经萎缩的肝郁气滞证有",
+            "心烦郁闷",
+            "目珠压痛或转动时牵拉",
+            "哪些症状",
+            "视物模糊",
+            "善太息",
+            "目珠压痛或转动时牵拉痛",
+            "纳少",
+            "寐不安",
+            "舌红",
+            "苔薄白",
+            "脉弦",
+            "片暗影遮挡",
+            "吐血的症状有哪些"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_0::id_368936",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "春温初起时，患者可能表现出哪些症状？",
+            "answer": "春温初起时，患者可能表现为一阵冷一阵热，口苦胁痛，胸闷欲呕，小便浑浊，舌质红，苔黄腻，脉弦滑而数。",
+            "formula_text": "",
+            "symptom_text": "一阵热；口苦胁痛",
+            "syndrome_text": "",
+            "chief_complaint": "",
+            "tongue": "质红，苔黄腻，脉弦滑而数",
+            "pulse": "弦滑而数",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -63.547824803380166
+          },
+          {
+            "record_id": "tcm_shard_0::id_275229",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "视神经萎缩的肝郁气滞证有哪些症状？",
+            "answer": "视物模糊，视野中央区或某象限可有大片暗影遮挡，心烦郁闷，口苦胁痛，善太息，目珠压痛或转动时牵拉痛，纳少，寐不安；舌红，苔薄白，脉弦。",
+            "formula_text": "",
+            "symptom_text": "心烦郁闷；口苦胁痛；目珠压痛或转动时牵拉",
+            "syndrome_text": "视神经萎缩的肝郁气滞证有",
+            "chief_complaint": "",
+            "tongue": "红，苔薄白，脉弦",
+            "pulse": "弦",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -62.96264975663784
+          },
+          {
+            "record_id": "tcm_shard_0::id_18840",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "吐血的症状有哪些？",
+            "answer": "吐血色红或紫黯，口苦胁痛，心烦易怒，寐少梦多，舌质红绛，脉弦数。",
+            "formula_text": "",
+            "symptom_text": "吐血的症状有哪些；吐血色红或紫黯；口苦胁痛；心烦易怒",
+            "syndrome_text": "",
+            "chief_complaint": "",
+            "tongue": "质红绛，脉弦数",
+            "pulse": "弦数",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -63.80195719156903
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 29923.3,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 0.5,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "口苦",
+            "胁痛"
+          ],
+          "matched_preferred_any": [
+            "逍遥散"
+          ],
+          "keypoint_precision": 0.2083,
+          "keypoint_recall": 0.4286,
+          "keypoint_f1": 0.2804,
+          "matched_keypoints": [
+            "逍遥散",
+            "口苦",
+            "胁痛"
+          ],
+          "target_keypoints": [
+            "肝郁",
+            "肝郁脾虚",
+            "逍遥散",
+            "口苦",
+            "胁痛",
+            "舌红",
+            "脉弦"
+          ],
+          "predicted_terms": [
+            "患者愈后口苦",
+            "腰胁胀痛",
+            "此属肝胆气血虚。治疗应用参",
+            "归身",
+            "地黄",
+            "白术",
+            "麦门",
+            "五味",
+            "治之而愈",
+            "服补肾行气等药不愈",
+            "按其肝脉浮而无力",
+            "此属肝胆气血虚",
+            "治疗应用参",
+            "应如何治疗？",
+            "应如何治疗",
+            "乃与逍遥散",
+            "又与六味丸及逍遥散",
+            "一妇人性躁",
+            "寒热口苦",
+            "胁痛耳鸣",
+            "腹胀溺涩年余矣",
+            "症属肝火",
+            "用四君加柴胡",
+            "炒山栀"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_217500",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "患者愈后口苦，腰胁胀痛，应如何治疗？",
+            "answer": "患者愈后口苦，腰胁胀痛，服补肾行气等药不愈。按其肝脉浮而无力，此属肝胆气血虚。治疗应用参、 、归身、地黄、白术、麦门、五味，治之而愈。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.675214,
+            "rerank_score": 1.025214,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_455609",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "一妇人性躁，寒热口苦，胁痛耳鸣，腹胀溺涩年余，如何治疗？",
+            "answer": "一妇人性躁，寒热口苦，胁痛耳鸣，腹胀溺涩年余矣，症属肝火，用四君加柴胡、炒山栀、炒龙胆数剂，乃与逍遥散兼服而疮愈，又与六味丸及逍遥散，七十余剂，诸症悉退。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.644445,
+            "rerank_score": 0.924445,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_1079765",
+            "collection": "tcm_shard_2",
+            "bucket": null,
+            "question_type": null,
+            "question": "少阳病证患者的口苦和胸胁苦满症状是如何体现的？",
+            "answer": "少阳病证患者常有口苦和胸胁苦满的症状。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.618484,
+            "rerank_score": 0.848484,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_004",
+        "category": "case_syndrome_formula",
+        "mode": "case",
+        "query": "如果患者见胁肋胀痛、食少乏力、口苦、失眠，常见什么证候，可参考什么方剂？",
+        "expected_keywords": [
+          "胁肋胀痛",
+          "食少乏力",
+          "口苦",
+          "失眠"
+        ],
+        "preferred_terms": [
+          "肝郁脾虚",
+          "逍遥散"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 260.6,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": false,
+          "topk_hit": true,
+          "coverage_any": 0.25,
+          "preferred_hit": false,
+          "matched_keywords_any": [
+            "食少乏力"
+          ],
+          "matched_preferred_any": [],
+          "keypoint_precision": 0.0417,
+          "keypoint_recall": 0.1667,
+          "keypoint_f1": 0.0667,
+          "matched_keypoints": [
+            "食少乏力"
+          ],
+          "target_keypoints": [
+            "肝郁脾虚",
+            "逍遥散",
+            "胁肋胀痛",
+            "食少乏力",
+            "口苦",
+            "失眠"
+          ],
+          "predicted_terms": [
+            "应使用什么方",
+            "应使用泻心汤",
+            "少阴证中",
+            "在少阴证中",
+            "口燥舌干而渴且身表凉",
+            "如果患者口燥舌干而渴",
+            "应使用泻心汤进行治疗",
+            "口燥舌干而渴且身表凉时",
+            "应使用什么方剂？",
+            "应使用什么方剂",
+            "且身表凉",
+            "脉沉细而虚",
+            "腹胀便稀",
+            "重症肌无力的早期先兆症状有哪些？",
+            "有哪些",
+            "食少乏力",
+            "体倦肢怠",
+            "尿短黄",
+            "舌苔黄腻",
+            "脉濡等",
+            "包括面色萎黄",
+            "呃逆虚证脾胃阳虚的症状有",
+            "泛吐清水",
+            "呃逆虚证脾胃阳虚的症状有哪些？"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_0::id_175879",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "少阴证中，口燥舌干而渴且身表凉时，应使用什么方剂？",
+            "answer": "在少阴证中，如果患者口燥舌干而渴，且身表凉，脉沉细而虚，应使用泻心汤进行治疗。",
+            "formula_text": "应使用什么方；应使用泻心汤",
+            "symptom_text": "口燥舌干而渴且身表凉；如果患者口燥舌干而渴；应使用泻心汤进行治疗",
+            "syndrome_text": "少阴证中；在少阴证中",
+            "chief_complaint": "",
+            "tongue": "干而渴且身表凉时，应使用什么方剂？",
+            "pulse": "沉细而虚，应使用泻心汤进行治疗",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -65.91166335414316
+          },
+          {
+            "record_id": "tcm_shard_0::id_44950",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "重症肌无力的早期先兆症状有哪些？",
+            "answer": "重症肌无力的早期先兆症状包括面色萎黄，食少乏力，体倦肢怠，腹胀便稀，尿短黄，舌苔黄腻，脉濡等。",
+            "formula_text": "",
+            "symptom_text": "腹胀便稀",
+            "syndrome_text": "",
+            "chief_complaint": "",
+            "tongue": "苔黄腻，脉濡等",
+            "pulse": "濡等",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -57.436907723441244
+          },
+          {
+            "record_id": "tcm_shard_1::id_509170",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "呃逆虚证脾胃阳虚的症状有哪些？",
+            "answer": "症状包括呃声低长无力，气不得续，泛吐清水，脘腹不舒，喜温喜按，面色毗白，手足不温，食少乏力，大便溏薄，舌质淡，苔薄白，脉细弱。",
+            "formula_text": "",
+            "symptom_text": "泛吐清水",
+            "syndrome_text": "呃逆虚证脾胃阳虚的症状有",
+            "chief_complaint": "",
+            "tongue": "质淡，苔薄白，脉细弱",
+            "pulse": "细弱",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -56.73706682292523
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 6105.0,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 0.25,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "口苦"
+          ],
+          "matched_preferred_any": [
+            "肝郁脾虚",
+            "逍遥散"
+          ],
+          "keypoint_precision": 0.125,
+          "keypoint_recall": 0.5,
+          "keypoint_f1": 0.2,
+          "matched_keypoints": [
+            "肝郁脾虚",
+            "逍遥散",
+            "口苦"
+          ],
+          "target_keypoints": [
+            "肝郁脾虚",
+            "逍遥散",
+            "胁肋胀痛",
+            "食少乏力",
+            "口苦",
+            "失眠"
+          ],
+          "predicted_terms": [
+            "应与加味逍遥散",
+            "应与加味逍遥散治疗",
+            "一服而效",
+            "数服而安",
+            "患者自述寒热胁痛",
+            "口苦食少",
+            "呻吟不寐",
+            "已经月余",
+            "服药无效",
+            "自以为病情严重。诊脉弦急",
+            "知其平日情志抑郁",
+            "肝木不舒",
+            "病似外感",
+            "实为内伤。应如何治疗？",
+            "自以为病情严重",
+            "诊脉弦急",
+            "实为内伤",
+            "应如何治疗",
+            "腹胀纳呆",
+            "腹痛欲泻",
+            "泻后痛减",
+            "便溏不爽",
+            "肠鸣矢气",
+            "善太息"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_390889",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "患者自述寒热胁痛，口苦食少，呻吟不寐，已经月余，服药无效，自以为病情严重。诊脉弦急，知其平日情志抑郁，肝木不舒，病似外感，实为内伤。应如何治疗？",
+            "answer": "应与加味逍遥散治疗，一服而效，数服而安。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.708067,
+            "rerank_score": 1.088067,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_406611",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "肝郁脾虚证的证候表现是什么？",
+            "answer": "肝郁脾虚证的证候表现包括胸胁胀满窜痛、腹胀纳呆、腹痛欲泻、泻后痛减、便溏不爽、肠鸣矢气、善太息、情志抑郁或急躁易怒、舌苔白、脉弦或缓。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.681065,
+            "rerank_score": 0.981065,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_175493",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "患者长期情志抑郁，导致肝木不舒，出现寒热胁痛，口苦食少，呻吟不寐等症状，已经月余。诊脉弦急，应如何诊断和治疗？",
+            "answer": "诊断为内伤，治疗应使用加味逍遥散，一服而效，数服而安。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.680676,
+            "rerank_score": 1.060676,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_006",
+        "category": "formula_role",
+        "mode": "qa",
+        "query": "托里消毒饮中的金银花在方剂中起什么作用",
+        "expected_keywords": [
+          "托里消毒饮",
+          "金银花"
+        ],
+        "preferred_terms": [
+          "作用",
+          "配伍",
+          "功效"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 2411.4,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "托里消毒饮",
+            "金银花"
+          ],
+          "matched_preferred_any": [
+            "作用"
+          ],
+          "keypoint_precision": 0.45,
+          "keypoint_recall": 0.6,
+          "keypoint_f1": 0.5143,
+          "matched_keypoints": [
+            "作用",
+            "托里消毒饮",
+            "金银花"
+          ],
+          "target_keypoints": [
+            "作用",
+            "配伍",
+            "功效",
+            "托里消毒饮",
+            "金银花"
+          ],
+          "predicted_terms": [
+            "托里消毒饮中的金银花在方",
+            "托里消毒饮",
+            "脓未成时可以散",
+            "剂中起什么作用",
+            "脓未成时可以散之",
+            "脓已成时则排之",
+            "用于治疗痈疽",
+            "脓未成可散",
+            "疗痈疽时有什么作用",
+            "托里消毒饮中的金银花在治疗痈疽时",
+            "脓未成可散之",
+            "脓已成则排之",
+            "具有解毒和排脓的作用",
+            "疗痈疽时",
+            "托里消毒饮中的佐药有哪些？",
+            "托里消毒饮中的佐药包括金银花",
+            "川芎",
+            "桔梗",
+            "皂角刺和白芷",
+            "银花"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_0::id_34",
+            "collection": "tcm_shard_0",
+            "bucket": "formula_qa",
+            "question_type": "efficacy",
+            "question": "托里消毒饮中的金银花在方剂中起什么作用？",
+            "answer": "托里消毒饮中的金银花主要用于治疗痈疽，脓未成时可以散之，脓已成时则排之。",
+            "formula_text": "托里消毒饮中的金银花在方；托里消毒饮；脓未成时可以散",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -269.8823043796997
+          },
+          {
+            "record_id": "tcm_shard_1::id_575767",
+            "collection": "tcm_shard_1",
+            "bucket": "formula_qa",
+            "question_type": "efficacy",
+            "question": "托里消毒饮中的金银花在治疗痈疽时有什么作用？",
+            "answer": "托里消毒饮中的金银花在治疗痈疽时，脓未成可散之，脓已成则排之，具有解毒和排脓的作用。",
+            "formula_text": "托里消毒饮；脓未成可散",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -177.65952620271582
+          },
+          {
+            "record_id": "tcm_shard_1::id_493045",
+            "collection": "tcm_shard_1",
+            "bucket": "generic_qa",
+            "question_type": "generic_qa",
+            "question": "托里消毒饮中的佐药有哪些？",
+            "answer": "托里消毒饮中的佐药包括金银花、川芎、桔梗、皂角刺和白芷。",
+            "formula_text": "托里消毒饮",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -148.24498124412966
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 6051.2,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "托里消毒饮",
+            "金银花"
+          ],
+          "matched_preferred_any": [
+            "作用",
+            "功效"
+          ],
+          "keypoint_precision": 0.2917,
+          "keypoint_recall": 0.8,
+          "keypoint_f1": 0.4275,
+          "matched_keypoints": [
+            "作用",
+            "功效",
+            "托里消毒饮",
+            "金银花"
+          ],
+          "target_keypoints": [
+            "作用",
+            "配伍",
+            "功效",
+            "托里消毒饮",
+            "金银花"
+          ],
+          "predicted_terms": [
+            "托里消毒饮",
+            "脓未成时可以散",
+            "脓未成时可以散之",
+            "脓已成时则排之",
+            "用于治疗痈疽",
+            "托里消毒饮中的金银花在方",
+            "剂中起什么作用",
+            "脓未成可散",
+            "托里消毒饮中的金银花在治疗痈疽时",
+            "脓未成可散之",
+            "脓已成则排之",
+            "具有解毒和排脓的作用",
+            "疗痈疽时",
+            "疗痈疽时有什么作用",
+            "托里消毒饮主要用于治疗一切痈疽",
+            "六七日未消者。它能促使疮未成即消",
+            "已成即溃",
+            "壮气血",
+            "固脾胃",
+            "使毒气不能内攻",
+            "使毒脓内溃",
+            "肌肉易生",
+            "切痈疽",
+            "六七日未消者"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_34",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "托里消毒饮中的金银花在方剂中起什么作用？",
+            "answer": "托里消毒饮中的金银花主要用于治疗痈疽，脓未成时可以散之，脓已成时则排之。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.951877,
+            "rerank_score": 1.331877,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_575767",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "托里消毒饮中的金银花在治疗痈疽时有什么作用？",
+            "answer": "托里消毒饮中的金银花在治疗痈疽时，脓未成可散之，脓已成则排之，具有解毒和排脓的作用。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.838668,
+            "rerank_score": 1.218668,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_160455",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "托里消毒饮的主要功效是什么？",
+            "answer": "托里消毒饮主要用于治疗一切痈疽，六七日未消者。它能促使疮未成即消，已成即溃，壮气血，固脾胃，使毒气不能内攻，使毒脓内溃，肌肉易生。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.769895,
+            "rerank_score": 1.149895,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_007",
+        "category": "formula_origin",
+        "mode": "qa",
+        "query": "六味地黄丸 出处 原文",
+        "expected_keywords": [
+          "六味地黄丸",
+          "地黄丸",
+          "小儿药证直诀"
+        ],
+        "preferred_terms": [
+          "出处",
+          "原文",
+          "钱乙"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 726.5,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "matched_preferred_any": [
+            "出处"
+          ],
+          "keypoint_precision": 0.4,
+          "keypoint_recall": 0.6667,
+          "keypoint_f1": 0.5,
+          "matched_keypoints": [
+            "出处",
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "target_keypoints": [
+            "出处",
+            "原文",
+            "钱乙",
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "predicted_terms": [
+            "熟地黄出现在哪些经典方",
+            "四物汤",
+            "六味地黄丸",
+            "地黄饮",
+            "左归丸",
+            "大补阴丸",
+            "阳和汤",
+            "知柏地黄丸",
+            "熟地黄出现在哪些经典方剂中？",
+            "桃红四物汤",
+            "都气丸",
+            "麦味地黄丸",
+            "左归饮",
+            "肾气丸",
+            "地黄饮子",
+            "六味地黄丸的出处是哪里？",
+            "六味地黄丸的出处是",
+            "小儿药证直诀",
+            "请问六味地黄丸",
+            "请问六味地黄丸的通用名是什么？"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_2::id_1018988",
+            "collection": "tcm_shard_2",
+            "bucket": "generic_qa",
+            "question_type": "generic_qa",
+            "question": "熟地黄出现在哪些经典方剂中？",
+            "answer": "四物汤、六味地黄丸、地黄饮子、左归丸、大补阴丸、阳和汤、知柏地黄丸、桃红四物汤、都气丸、麦味地黄丸、左归饮、肾气丸。",
+            "formula_text": "熟地黄出现在哪些经典方；四物汤；六味地黄丸；地黄饮；左归丸；大补阴丸；阳和汤；知柏地黄丸",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -96.9079065897035
+          },
+          {
+            "record_id": "tcm_shard_1::id_456729",
+            "collection": "tcm_shard_1",
+            "bucket": "origin_qa",
+            "question_type": "origin",
+            "question": "六味地黄丸的出处是哪里？",
+            "answer": "六味地黄丸的出处是《小儿药证直诀》。",
+            "formula_text": "六味地黄丸",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -78.06980290679668
+          },
+          {
+            "record_id": "tcm_shard_2::id_852890",
+            "collection": "tcm_shard_2",
+            "bucket": "generic_qa",
+            "question_type": "definition_or_explanation",
+            "question": "请问六味地黄丸的通用名是什么？",
+            "answer": "六味地黄丸",
+            "formula_text": "请问六味地黄丸；六味地黄丸",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -78.69670353937477
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 17055.3,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "matched_preferred_any": [
+            "出处"
+          ],
+          "keypoint_precision": 0.4,
+          "keypoint_recall": 0.6667,
+          "keypoint_f1": 0.5,
+          "matched_keypoints": [
+            "出处",
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "target_keypoints": [
+            "出处",
+            "原文",
+            "钱乙",
+            "六味地黄丸",
+            "地黄丸",
+            "小儿药证直诀"
+          ],
+          "predicted_terms": [
+            "六味地黄丸",
+            "六味地黄丸的出处是",
+            "小儿药证直诀",
+            "六味地黄丸的出处是哪里？",
+            "六味地黄丸主要使用熟地",
+            "萸肉",
+            "山药等味浓体重的药物",
+            "以及茯苓",
+            "泽泻等甘淡药物",
+            "旨在通过补阴益精",
+            "并借助甘淡药物帮助气下降",
+            "适用于气每上而不下的阴虚症状",
+            "用是什么",
+            "《博青主女科·产后编》卷上",
+            "博青主女科",
+            "产后编",
+            "卷上",
+            "八味地黄丸",
+            "八味地黄丸出自哪本书？",
+            "八味地黄丸出自哪本书"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_456729",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "六味地黄丸的出处是哪里？",
+            "answer": "六味地黄丸的出处是《小儿药证直诀》。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.831907,
+            "rerank_score": 1.161907,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_248885",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "六味地黄丸的主要成分和作用是什么？",
+            "answer": "六味地黄丸主要使用熟地、萸肉、山药等味浓体重的药物，以及茯苓、泽泻等甘淡药物，旨在通过补阴益精，并借助甘淡药物帮助气下降，适用于气每上而不下的阴虚症状。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.679293,
+            "rerank_score": 1.009293,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_1198109",
+            "collection": "tcm_shard_2",
+            "bucket": null,
+            "question_type": null,
+            "question": "八味地黄丸出自哪本书？",
+            "answer": "《博青主女科·产后编》卷上",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.701282,
+            "rerank_score": 0.931282,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_010",
+        "category": "compare_boundary",
+        "mode": "qa",
+        "query": "四君子汤和六君子汤除了组成差异，适用边界上有什么不同？",
+        "expected_keywords": [
+          "四君子汤",
+          "六君子汤"
+        ],
+        "preferred_terms": [
+          "陈皮",
+          "半夏",
+          "痰",
+          "脾胃气虚"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 1457.2,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "四君子汤",
+            "六君子汤"
+          ],
+          "matched_preferred_any": [
+            "陈皮",
+            "半夏"
+          ],
+          "keypoint_precision": 0.4167,
+          "keypoint_recall": 0.8,
+          "keypoint_f1": 0.5479,
+          "matched_keypoints": [
+            "陈皮",
+            "半夏",
+            "四君子汤",
+            "六君子汤"
+          ],
+          "target_keypoints": [
+            "陈皮",
+            "半夏",
+            "脾胃气虚",
+            "四君子汤",
+            "六君子汤"
+          ],
+          "predicted_terms": [
+            "四君子汤和六君子汤",
+            "四君子汤和六君子汤主要治疗什么？",
+            "疗什么",
+            "四君子汤和六君子汤主要治疗虚劳",
+            "疗虚劳",
+            "治疗小儿脾胃虚弱的方",
+            "法包括使用四君子汤和六君子汤",
+            "四君子汤",
+            "而六君子汤",
+            "子汤",
+            "如何治疗小儿脾胃虚弱？",
+            "如何治疗小儿脾胃虚弱",
+            "白术",
+            "白茯苓",
+            "甘草",
+            "四君子汤的成分有人参",
+            "了陈皮和半夏",
+            "有哪些具体的药方",
+            "治疗噫气的具体药方包括枳壳散",
+            "四味茱连丸",
+            "八味丸",
+            "加味归脾汤和六君子汤",
+            "壳散",
+            "有哪些具体的药方可以治疗噫气？"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_0::id_211760",
+            "collection": "tcm_shard_0",
+            "bucket": "generic_qa",
+            "question_type": "generic_qa",
+            "question": "四君子汤和六君子汤主要治疗什么？",
+            "answer": "四君子汤和六君子汤主要治疗虚劳。",
+            "formula_text": "四君子汤和六君子汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -159.91550022041594
+          },
+          {
+            "record_id": "tcm_shard_0::id_316441",
+            "collection": "tcm_shard_0",
+            "bucket": "generic_qa",
+            "question_type": "definition_or_explanation",
+            "question": "如何治疗小儿脾胃虚弱？",
+            "answer": "治疗小儿脾胃虚弱的方法包括使用四君子汤和六君子汤。四君子汤的成分有人参、白术、白茯苓、甘草，而六君子汤在此基础上增加了陈皮和半夏。",
+            "formula_text": "治疗小儿脾胃虚弱的方；法包括使用四君子汤和六君子汤；四君子汤；而六君子汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -146.59960052816797
+          },
+          {
+            "record_id": "tcm_shard_0::id_80267",
+            "collection": "tcm_shard_0",
+            "bucket": "generic_qa",
+            "question_type": "generic_qa",
+            "question": "有哪些具体的药方可以治疗噫气？",
+            "answer": "治疗噫气的具体药方包括枳壳散、四味茱连丸、八味丸、四君子汤、加味归脾汤和六君子汤等。",
+            "formula_text": "有哪些具体的药方；治疗噫气的具体药方包括枳壳散；四味茱连丸；八味丸；四君子汤；加味归脾汤和六君子汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -97.52639616313698
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 17072.1,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "四君子汤",
+            "六君子汤"
+          ],
+          "matched_preferred_any": [
+            "陈皮",
+            "半夏",
+            "痰",
+            "脾胃气虚"
+          ],
+          "keypoint_precision": 0.55,
+          "keypoint_recall": 1.0,
+          "keypoint_f1": 0.7097,
+          "matched_keypoints": [
+            "陈皮",
+            "半夏",
+            "脾胃气虚",
+            "四君子汤",
+            "六君子汤"
+          ],
+          "target_keypoints": [
+            "陈皮",
+            "半夏",
+            "脾胃气虚",
+            "四君子汤",
+            "六君子汤"
+          ],
+          "predicted_terms": [
+            "六君子汤是在四君子汤",
+            "主要用于治疗脾胃气虚",
+            "症状包括吐泻",
+            "食欲不振",
+            "肌肉消瘦",
+            "以及肺虚痰嗽",
+            "喘促恶寒",
+            "肝虚惊搐等",
+            "础上加入了陈皮和半夏",
+            "六君子汤与四君子汤",
+            "六君子汤与四君子汤有何不同？",
+            "而四君子汤",
+            "础上增加了陈皮和半夏",
+            "痰湿的病症",
+            "单纯的脾胃气虚",
+            "六君子汤和四君子汤",
+            "六君子汤和四君子汤有何区别？",
+            "适用于胸膈饱闷",
+            "呕吐等症状",
+            "础上加入陈皮和半夏"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_471803",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "六君子汤与四君子汤有何不同？",
+            "answer": "六君子汤是在四君子汤的基础上加入了陈皮和半夏，主要用于治疗脾胃气虚，症状包括吐泻、食欲不振、肌肉消瘦，以及肺虚痰嗽、喘促恶寒、肝虚惊搐等。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.907557,
+            "rerank_score": 1.287557,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_43052",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "六君子汤和四君子汤有何区别？",
+            "answer": "六君子汤是在四君子汤的基础上增加了陈皮和半夏，主要用于治疗脾胃气虚兼有痰湿的病症。而四君子汤则主要用于治疗单纯的脾胃气虚。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.902256,
+            "rerank_score": 1.282256,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_21315",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "六君子汤与四君子汤有何不同？",
+            "answer": "六君子汤是在四君子汤的基础上加入陈皮和半夏，适用于胸膈饱闷、呕吐等症状。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.907557,
+            "rerank_score": 1.237557,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_020",
+        "category": "case_syndrome_formula",
+        "mode": "case",
+        "query": "男 42岁 发热恶寒 往来寒热 胸胁苦满 口苦 咽干 脉弦",
+        "expected_keywords": [
+          "往来寒热",
+          "胸胁苦满",
+          "口苦",
+          "咽干",
+          "脉弦"
+        ],
+        "preferred_terms": [
+          "少阳证",
+          "小柴胡汤"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 1727.9,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "往来寒热",
+            "胸胁苦满",
+            "口苦",
+            "咽干",
+            "脉弦"
+          ],
+          "matched_preferred_any": [
+            "小柴胡汤"
+          ],
+          "keypoint_precision": 0.2083,
+          "keypoint_recall": 0.8571,
+          "keypoint_f1": 0.3352,
+          "matched_keypoints": [
+            "小柴胡汤",
+            "往来寒热",
+            "胸胁苦满",
+            "口苦",
+            "咽干",
+            "脉弦"
+          ],
+          "target_keypoints": [
+            "少阳证",
+            "小柴胡汤",
+            "往来寒热",
+            "胸胁苦满",
+            "口苦",
+            "咽干",
+            "脉弦"
+          ],
+          "predicted_terms": [
+            "方投小柴胡汤",
+            "服上方",
+            "小柴胡汤",
+            "中医辨证",
+            "右胁肋部反复疼痛已",
+            "疼痛难忍",
+            "伴发热恶寒",
+            "呕吐",
+            "理气止痛",
+            "清泄湿热",
+            "本案发热恶寒",
+            "胁痛",
+            "伤寒论",
+            "往来寒热",
+            "基于输入的患者医案记录",
+            "直接给出你的疾病诊断",
+            "无需给出原因",
+            "并向右肩部放射",
+            "恶心",
+            "食欲不佳",
+            "口苦",
+            "咽干",
+            "小便黄",
+            "大便秘结"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_3::id_1251298",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你的疾病诊断，无需给出原因。 患者,男,46岁。2004年8月15日就诊。右胁肋部反复疼痛已3年余。近4d来加重,疼痛难忍,并向右肩部放射,伴发热恶寒,恶心,呕吐,食欲不佳,口苦,咽干,小便黄,大便秘结,舌红苔黄厚腻,脉弦滑数。查体:T38.2℃,WBC11.2×109/L,N0.78。B超显示:急性胆囊炎。西医:给予5%葡萄糖氯化钠、菌必治、654-2、左氧氟沙星、甲硝唑注射液治疗3d,诸症不能缓解。中医辨证:此乃邪在少阳,枢机不利。治宜:和解少阳,疏利机枢,理气止痛,清泄湿热。方投小柴胡汤加减:柴胡12g、黄芩12g、半夏10g、蒲公英30g、茵陈20g、郁金10g、枳壳10g、大黄(后入)10g、元胡10g。5剂,水煎服,1剂/d。服上方5剂后,复查上述理化指标均正常。B超示:胆囊大小正常。诸恙悉退,原方再进5剂而痊愈。随访1年未再复发。按:本案发热恶寒,胁痛,口苦咽干,纳食不佳,脉弦。其发病机制符合《伤寒论》中“少阳之为病,口苦咽干,往来寒热,胸胁苦满,⋯⋯小柴胡汤主之”。方中加延胡索、郁金疏利机枢,理气止痛;蒲公英、茵陈清肝胆邪热;大黄、枳壳通腑湿热。诸药合用,和解少阳,疏利机枢,理气止痛,清泄湿热。药症合拍,故收效甚佳。",
+            "answer": "胆囊炎",
+            "formula_text": "方投小柴胡汤；服上方；小柴胡汤",
+            "symptom_text": "右胁肋部反复疼痛已；疼痛难忍；伴发热恶寒；呕吐；理气止痛；清泄湿热；本案发热恶寒；胁痛；伤寒论；往来寒热",
+            "syndrome_text": "中医辨证",
+            "chief_complaint": "",
+            "tongue": "红苔黄厚腻,脉弦滑数",
+            "pulse": "弦滑数",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -102.42489321867345
+          },
+          {
+            "record_id": "tcm_shard_1::id_774967",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "少阳病的基本病机是什么？",
+            "answer": "少阳病是外感热病中期半表半里的病理阶段，以“口苦，咽干，目眩”为提纲。邪犯少阳，正邪分争，枢机不利，胆火内郁，影响脾胃是其基本病机，证见往来寒热、胸胁苦满、默默不欲饮食、心烦喜呕、口苦咽干目眩、舌微红苔白或黄白相间、脉弦细等。",
+            "formula_text": "默默不欲饮",
+            "symptom_text": "少阳病是外感热病中期；证见往来寒热；胸胁苦满；心烦喜呕",
+            "syndrome_text": "证见往来寒热",
+            "chief_complaint": "",
+            "tongue": "微红苔白或黄白相间、脉弦细等",
+            "pulse": "弦细等",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -94.4514043502429
+          },
+          {
+            "record_id": "tcm_shard_3::id_1255631",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你的疾病诊断，无需给出原因。 徐某，女41岁，2017-04-28来诊，反复咳嗽40d。患者诉40d前出现发热恶寒，咳嗽，咳黄痰，当时来院急诊就诊，查胸部CT提示肺部感染，血常规提示白细胞、C-反应蛋白升高，急诊诊断“肺炎”，予“头孢呋辛、氨溴索”静滴抗感染、化痰治疗8d，间断口服“阿斯美、酮替酚”止咳，并予中药口服治疗，其后发热、胸痛，咳痰等症好转，然咳嗽不除。刻诊：咳嗽夜甚，口干口苦，纳不佳，无胸闷气促，无往来寒热，无胸胁苦满，无汗出，无恶心呕吐等症，舌淡苔薄黄，脉弦数。当即予复查胸部CT、血常规等，未见明显异常。患者40d前患肺炎，经西医抗感染等治疗后好转，胸部CT等复查虽未见异常，但仍咳嗽不止，且见口苦、脉弦等，以六经传变而论，当是外邪经太阳而入少阳，即由表而入半表半里，患者咳嗽、口苦、脉弦、默默不欲饮食，当属少阳无疑，结合条文“往来寒热，胸胁苦满，嘿嘿不欲饮食，心烦喜呕或咳者，小柴胡汤主之”，“有柴胡证，但见一证便是，不必悉具”，方证辨证为“小柴胡汤证”。另患者口干明显，故加石膏以清里热。处方柴胡10_x0008_g，黄芩10g，姜半夏10_x0008_g，党参10_x0008_g，甘草9_x0008_g，大枣6_x0008_g，生姜6_x0008_g。石膏30_x0008_g，颗粒剂，5帖，1帖/d，开水400mL冲服，早晚各服200m_x0008_L。后据患者反馈，服药3帖，咳嗽顿减，5d后咳嗽痊愈。近随访，未再复发。按：患者咳嗽、口苦、脉弦、默默不欲饮食，且无脉浮，头项强痛，恶寒之太阳见症，无大热、大渴之阳明见症，无腹满自利太阴见症，无脉微细，但欲寐少阴见症，无上热下寒厥阴见症，辨证当属少阳无疑。邪在太阳，宜疏散之，今入少阳，汗、吐、下均非所宜，治当和解。处方中无一理肺止咳之品，而能收止咳之功，其理安在？盖此类咳嗽，多是外邪内陷少阳，以致少阳枢机不利而化火，胆火犯胃，胃气上逆而作咳，小柴胡汤专为和解少阳而设，柴胡疏肝胆之郁滞，黄芩清少阳之胆火，姜、夏、参、草、枣诸药，长于健脾益气，和胃降逆，肝郁疏，胆火清，胃气降，上下表里既畅，升降出入复常，则咳嗽自止，这也体现培土生金，从脾论治感染后咳嗽的思路。",
+            "answer": "咳嗽",
+            "formula_text": "默默不欲饮；嘿嘿不欲饮；小柴胡汤；故加石膏；宜疏散",
+            "symptom_text": "反复咳嗽；前出现发热恶寒；咳嗽；咳黄痰；止咳；其后发热；胸痛；咳痰等症好转；然咳嗽不除；咳嗽夜甚",
+            "syndrome_text": "有柴胡证；但见一证便是；方证辨证为；小柴胡汤证；辨证当属少阳无疑；肝郁疏",
+            "chief_complaint": "",
+            "tongue": "淡苔薄黄，脉弦数",
+            "pulse": "弦数",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -85.27536536666868
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 37626.0,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 0.4,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "口苦",
+            "脉弦"
+          ],
+          "matched_preferred_any": [
+            "小柴胡汤"
+          ],
+          "keypoint_precision": 0.0833,
+          "keypoint_recall": 0.4286,
+          "keypoint_f1": 0.1395,
+          "matched_keypoints": [
+            "小柴胡汤",
+            "口苦",
+            "脉弦"
+          ],
+          "target_keypoints": [
+            "少阳证",
+            "小柴胡汤",
+            "往来寒热",
+            "胸胁苦满",
+            "口苦",
+            "咽干",
+            "脉弦"
+          ],
+          "predicted_terms": [
+            "治疗方",
+            "小柴胡汤",
+            "生石膏",
+            "诊断",
+            "证型",
+            "胆经郁热证",
+            "治疗方案",
+            "中药",
+            "柴胡20.0",
+            "黄芩10.0",
+            "姜半夏10.0",
+            "党参10.0",
+            "生甘草5.0",
+            "生姜10.0",
+            "大枣10.0",
+            "连翘30.0",
+            "生石膏30.0",
+            "蔓荆子6.5",
+            "柴胡",
+            "黄芩",
+            "姜半夏",
+            "党参",
+            "生甘草",
+            "生姜"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_1452531",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你认为的【治疗方案】：中药、方剂，和【诊断】：证型。\n基本信息: 年龄: 18 性别: 女 主诉: 发热 现病史: 感冒 恶寒 头痛 身痛 咽喉疼痛 侧脑痛 上腹痛(左) 咳嗽 乏力 入睡困难 便硬 小便正常 有汗 口苦 口渴欲饮 高热 寒热往来 纳差 体格检查: 体型中等 面色淡黄 面色黄(轻度) 舌苔白 舌苔厚 舌色淡红",
+            "answer": "诊断: 证型: 胆经郁热证 治疗方案: 方剂: 小柴胡汤 中药: 柴胡20.0 黄芩10.0 姜半夏10.0 党参10.0 生甘草5.0 生姜10.0 大枣10.0 连翘30.0 生石膏30.0 蔓荆子6.5",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.624737,
+            "rerank_score": 1.004737,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_180152",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "寒热往来与发热恶寒有何不同？",
+            "answer": "寒热往来与发热恶寒的不同在于：发热恶寒是同时出现，而寒热往来是寒已方热，热已方寒。此外，寒热往来与疟疾也不同，疟疾的发作时间固定，寒热的长短有规律，而寒热往来则无固定时间，长短不定。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.626539,
+            "rerank_score": 0.956539,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_390889",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "患者自述寒热胁痛，口苦食少，呻吟不寐，已经月余，服药无效，自以为病情严重。诊脉弦急，知其平日情志抑郁，肝木不舒，病似外感，实为内伤。应如何治疗？",
+            "answer": "应与加味逍遥散治疗，一服而效，数服而安。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.617704,
+            "rerank_score": 0.957704,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_028",
+        "category": "open_query",
+        "mode": "qa",
+        "query": "为什么当归补血汤中黄芪量大而当归量小",
+        "expected_keywords": [
+          "当归补血汤",
+          "黄芪",
+          "当归"
+        ],
+        "preferred_terms": [
+          "气旺生血",
+          "补气生血"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 8293.4,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": false,
+          "matched_keywords_any": [
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "matched_preferred_any": [],
+          "keypoint_precision": 0.5714,
+          "keypoint_recall": 0.6,
+          "keypoint_f1": 0.5854,
+          "matched_keypoints": [
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "target_keypoints": [
+            "气旺生血",
+            "补气生血",
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "predicted_terms": [
+            "为什么当归补血汤",
+            "当归补血汤",
+            "用量多于当归",
+            "当归补血汤中黄芪用量多于当归",
+            "是因为有形之血不能自生",
+            "是之谓尔",
+            "当归",
+            "生于无形之气",
+            "内经",
+            "阳生阴长",
+            "用量远大于当归",
+            "当归补血汤中黄芪的用量远大于当归",
+            "而生于无形之气。黄芪补气",
+            "气生则血长",
+            "因此黄芪的用量较大",
+            "大于当归",
+            "而生于无形之气",
+            "黄芪补气",
+            "从而促进血液的生成",
+            "而是生于无形之气",
+            "黄芪的甘味能够补气"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_1::id_543606",
+            "collection": "tcm_shard_1",
+            "bucket": "generic_qa",
+            "question_type": "definition_or_explanation",
+            "question": "为什么当归补血汤中黄芪的用量多于当归？",
+            "answer": "当归补血汤中黄芪用量多于当归，是因为有形之血不能自生，生于无形之气。《内经》曰：阳生阴长，是之谓尔。",
+            "formula_text": "为什么当归补血汤；当归补血汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -270.05307614231873
+          },
+          {
+            "record_id": "tcm_shard_0::id_158075",
+            "collection": "tcm_shard_0",
+            "bucket": "generic_qa",
+            "question_type": "definition_or_explanation",
+            "question": "为什么当归补血汤中黄芪的用量远大于当归？",
+            "answer": "当归补血汤中黄芪的用量远大于当归，是因为有形之血不能自生，而生于无形之气。黄芪补气，气生则血长，因此黄芪的用量较大。",
+            "formula_text": "为什么当归补血汤；当归补血汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -268.43661377848133
+          },
+          {
+            "record_id": "tcm_shard_1::id_487353",
+            "collection": "tcm_shard_1",
+            "bucket": "generic_qa",
+            "question_type": "definition_or_explanation",
+            "question": "为什么当归补血汤中黄芪的用量远大于当归？",
+            "answer": "当归补血汤中黄芪的用量远大于当归，是因为有形之血不能自生，而是生于无形之气。黄芪的甘味能够补气，从而促进血液的生成。",
+            "formula_text": "为什么当归补血汤；当归补血汤",
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -268.43661377848133
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 18040.0,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": true,
+          "topk_hit": true,
+          "coverage_any": 1.0,
+          "preferred_hit": false,
+          "matched_keywords_any": [
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "matched_preferred_any": [],
+          "keypoint_precision": 0.45,
+          "keypoint_recall": 0.6,
+          "keypoint_f1": 0.5143,
+          "matched_keypoints": [
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "target_keypoints": [
+            "气旺生血",
+            "补气生血",
+            "当归补血汤",
+            "黄芪",
+            "当归"
+          ],
+          "predicted_terms": [
+            "当归补血汤",
+            "当归补血汤中黄芪的用量是30g",
+            "当归的用量是6g",
+            "当归的用量是",
+            "的用量分别是多少",
+            "防止阳气浮越散",
+            "当归补血汤中黄芪的作用是补气固表",
+            "防止阳气浮越散亡",
+            "同时还能大补脾肺之气",
+            "以资化源",
+            "使气旺血生",
+            "补气固表",
+            "当归补血汤中黄芪的作用是什么？",
+            "当归味厚",
+            "为阴中之阴",
+            "故能养血",
+            "而黄芪则味甘补气者也",
+            "今黄芪多于当归数倍",
+            "通过补气来促进血的生成",
+            "作用是什么"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_1201510",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "当归补血汤中的黄芪和当归的用量分别是多少？",
+            "answer": "当归补血汤中黄芪的用量是30g，当归的用量是6g。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.830679,
+            "rerank_score": 1.160679,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_1201514",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "当归补血汤中黄芪的作用是什么？",
+            "answer": "当归补血汤中黄芪的作用是补气固表，防止阳气浮越散亡，同时还能大补脾肺之气，以资化源，使气旺血生。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.814895,
+            "rerank_score": 1.144895,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_1201528",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "当归补血汤中当归和黄芪的作用是什么？",
+            "answer": "当归味厚，为阴中之阴，故能养血；而黄芪则味甘补气者也，今黄芪多于当归数倍，通过补气来促进血的生成。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.809591,
+            "rerank_score": 1.139591,
+            "rank_score": null
+          }
+        ]
+      }
+    },
+    {
+      "case": {
+        "case_id": "cqv_031",
+        "category": "case_basic",
+        "mode": "case",
+        "query": "患者女，48岁，近半年工作压力大，情绪抑郁，常胸胁胀闷，纳少乏力，睡眠差，偶口苦，舌稍红，脉弦细，这类病例一般归到什么证候",
+        "expected_keywords": [
+          "胸胁胀闷",
+          "纳少乏力",
+          "睡眠差",
+          "口苦",
+          "脉弦细"
+        ],
+        "preferred_terms": [
+          "肝郁脾虚",
+          "逍遥散"
+        ],
+        "gold_answer_outline": []
+      },
+      "structured": {
+        "available": true,
+        "latency_ms": 4268.1,
+        "retrieval_mode": "structured_nonvector",
+        "metrics": {
+          "top1_hit": false,
+          "topk_hit": true,
+          "coverage_any": 0.4,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "胸胁胀闷",
+            "脉弦细"
+          ],
+          "matched_preferred_any": [
+            "逍遥散"
+          ],
+          "keypoint_precision": 0.0,
+          "keypoint_recall": 0.4286,
+          "keypoint_f1": 0.0,
+          "matched_keypoints": [
+            "逍遥散",
+            "胸胁胀闷",
+            "脉弦细"
+          ],
+          "target_keypoints": [
+            "肝郁脾虚",
+            "逍遥散",
+            "胸胁胀闷",
+            "纳少乏力",
+            "睡眠差",
+            "口苦",
+            "脉弦细"
+          ],
+          "predicted_terms": [
+            "方拟加味知柏地黄汤",
+            "方用知柏地黄汤",
+            "予血府逐瘀汤",
+            "在原方",
+            "阴虚血瘀型",
+            "阴虚火旺",
+            "久之则肝郁血瘀",
+            "在原方基础上随证加减",
+            "刻下偶有潮热汗出",
+            "腰酸",
+            "泽泻",
+            "血海不能按时满溢",
+            "故出现潮热",
+            "则见腰酸",
+            "热降火",
+            "潮热汗出",
+            "腰酸好转",
+            "停经半年",
+            "基于输入的患者医案记录",
+            "直接给出你的疾病诊断",
+            "无需给出原因",
+            "王某",
+            "38岁",
+            "教师"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "tcm_shard_3::id_1261955",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你的疾病诊断，无需给出原因。 王某，38岁，教师，2012年9月12日初诊，主诉：停经半年。平素月经规律，初潮16岁，25～30天一行，色红量中，5天净。末次月经2012年3月12日，经行量中，色红，5天净。近半年工作压力大，常熬夜。刻下偶有潮热汗出，腰酸，面部色素沉着。纳可，二便调，眠欠佳。舌质稍红苔薄，尖有瘀点，舌下脉络细，脉沉细。发现子宫小肌瘤3年。生育史：1－0－2－1。24岁剖宫产，工具避孕，无生育要求。2012年9月12日性激素测定：Ｅ2：93ｐｍｏｌ／Ｌ，ＦＳＨ：45.01ｍＩＵ／ｍｌ，ＬＨ：30.97ｍＩＵ／ｍｌ，ＰＲＬ：3.28ｐg／ｍｌ，ｐ：1.13ｎｍｏｌ／ｌＴ：1.0ｎｍｏｌ／ｌ，Ｂ超：子宫大小正常，内膜双层厚4.3ｍｍ，子宫肌瘤。中医诊断：闭经（阴虚血瘀型），癥瘕；西医诊断：卵巢早衰，子宫肌瘤。治拟滋肾养阴、化瘀调冲。方拟加味知柏地黄汤。知母12g，黄柏5g，生地30g，淮山药20g，山萸肉10g，茯苓15g，泽泻15g，丹皮5g，葛根30g，三七3g，石斛12g，炒白术15g，玫瑰花6g，补骨脂12g，紫河车粉3g，五味子10，百合10g，丹参30g，紫草20g，莪术10g。本例患者职业为教师，用脑过多，压力大，又常熬夜，导致肾中精气暗耗，面部色素逐渐沉着；肾阴亏虚，血海不能按时满溢，经水停闭；阴虚火旺，虚火上炎头面，故出现潮热；腰为肾之外府，肾精亏乏，则见腰酸；肾水不能涵木，影响肝的疏泄，不能正常处理工作压力，久之则肝郁血瘀。金师首先予以情志疏导，叮嘱保持情志舒畅，晚10点前入睡，方用知柏地黄汤滋阴清热降火，石斛、葛根养阴生津，在大队补阴药中加以补骨脂补肾助阳，取阳中求阴之意，白术健脾补养先天之本，取血肉有情之品紫河车补精填髓，玫瑰花疏肝理气，五味子、百合宁心安神，三七、丹参、紫草、莪术凉血活血祛瘀，诸药合用共奏滋肾养阴、化瘀调冲之功。服药月余，药后肾水得养，天癸渐盈，出现蛋清样分泌物，潮热汗出、腰酸好转，睡眠改善，经水于2012年10月20日来潮，经期予以顺势利导，取活血通利之品，予血府逐瘀汤加三七6g，服5剂，经行量中，色红，5天净。经后继以前法补养肾中真阴、化瘀调冲，在原方基础上随证加减，连续治疗2月余。月经恢复正常，ＢＢＴ双向，治疗后第三次月经于2012年12月18日转，色红，量中，如10月22日复查性激素：ＦＳＨ：6.4ＩＵ／ｍｌ，ＬＨ：7.6ｍＩＵ／ｍｌ，Ｅ2：60.3ｐg／ｍｌ。",
+            "answer": "子宫肌瘤",
+            "formula_text": "方拟加味知柏地黄汤；方用知柏地黄汤；予血府逐瘀汤；在原方",
+            "symptom_text": "刻下偶有潮热汗出；腰酸；泽泻；血海不能按时满溢；故出现潮热；则见腰酸；热降火；潮热汗出；腰酸好转",
+            "syndrome_text": "阴虚血瘀型；阴虚火旺；久之则肝郁血瘀；在原方基础上随证加减",
+            "chief_complaint": "停经半年",
+            "tongue": "质稍红苔薄，尖有瘀点，舌下脉络细，脉沉细",
+            "pulse": "络细，脉沉细",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -46.40476873404951
+          },
+          {
+            "record_id": "tcm_shard_3::id_1246813",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你的疾病诊断，无需给出原因。 患者，李某，女，45岁，教师。2010年3月初体检发现甲状腺结节，2010年3月25日在某医院行右甲状腺及峡部切除术。术后病理检查示：右侧甲状腺乳头状癌，2/4只淋巴结转移。术后不规则服用左甲状腺素钠片，未行放化疗。2013年9月初自觉左颈部肿痛，在外院行甲状腺B超提示：甲状腺左叶形态大小正常，回声不均匀，中部可见12.0mm×8.1mm×4.6mm低回声结节，回声欠均匀，CDFI显示结节内可见异常血流信号。行结节穿刺活检，病理示“乳头状癌”，考虑甲状腺癌术后复发，建议手术。因患者为疤痕体质，担心影响美观而不愿再次手术，故于2013年9月25日就诊于陈老师。患者病来颈部肿块质硬，活动度差，遇情绪不佳则颈部胀痛不适明显，伴焦虑，失眠多梦，神疲乏力，常胸胁胀闷不舒，善太息，咽喉梗塞感，咳少量白色黏痰，纳欠佳，月经量少，有血块，舌质暗苔薄腻，脉弦滑。陈老师分析该患者为中学教师，工作压力较大，忧思郁虑，使肝气失于疏泄，气机郁滞。气滞津停则为痰，气机郁滞则血行不畅，瘀血形成，最终气滞、痰浊、瘀血相互搏结于颈前，日久蕴毒而发为“石瘿”。肝郁气滞，故遇情绪抑郁则颈部胀痛加重，胸胁胀闷；气滞痰凝，结于咽颈，故咽喉梗塞感，咳少量白色黏痰；气滞血瘀，故月经量少，有血块；肝郁乘脾，脾运失司，故纳少；肝性失柔，亢阳扰及心神，则焦虑、失眠多梦；舌质暗苔薄腻，脉弦滑，均为肝郁气滞兼痰瘀互结之象。中医辨病属“石瘿”，辨证属肝郁气滞兼痰瘀互结。治以疏肝理气，软坚散结化瘀。拟方：柴胡、炒白芍、炒白术各12g，茯苓15g，当归10g，郁金12g，八月札15g，香附、浙贝母各12g，瓜蒌皮9g，天葵子、龙葵各15g，穿山甲3g（研粉吞服），远志12g，夜交藤15g，合欢皮12g，炙甘草9g。共14剂，水煎服，1天1剂。方取逍遥散为基础加八月札、郁金、香附以疏肝理气、解郁健脾；加浙贝母、瓜蒌皮、天葵子化痰散结；加龙葵、穿山甲活血化瘀、攻坚抗癌；加远志、夜交藤、合欢皮安神；炙甘草调和诸药。同时陈老师耐心开导、告之饮食注意。并嘱继服左旋甲状腺素钠片，定期检测甲状腺功能，及时调整药物剂量。守方加减治疗2个月后患者精神、胃纳、夜寐等均有所改善，颈部胀痛不适明显好转。2013年12月15日复查B超示：甲状腺左叶中部低回声结节较前有所缩小，大小约8.1mm×6.3mm×4.2mm。继续守方加减治疗半年，诸症改善，病情稳定。至2014年6月底复查B超示该结节大小约6.0mm×4.2mm×2.1mm，颈部淋巴结呈正常状态。",
+            "answer": "失眠",
+            "formula_text": "软坚散；方取逍遥散；天葵子化痰散；告之饮；继续守方",
+            "symptom_text": "月初自觉左颈部肿痛；遇情绪不佳则颈部胀痛；常胸胁胀闷不舒；咳少量白色黏痰；故遇情绪抑郁则颈部胀；痛加重；胸胁胀闷；颈部胀痛不适明显好转",
+            "syndrome_text": "气滞津停则为痰；最终气滞；肝郁气滞；气滞痰凝；气滞血瘀；肝郁乘脾；均为肝郁气滞兼痰瘀互结之；辨证属肝郁气滞兼痰瘀互结",
+            "chief_complaint": "",
+            "tongue": "质暗苔薄腻，脉弦滑",
+            "pulse": "弦滑",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -37.62804008935741
+          },
+          {
+            "record_id": "tcm_shard_3::id_1211595",
+            "collection": "tcm_shard_3",
+            "bucket": null,
+            "question_type": null,
+            "question": "基于输入的患者医案记录，直接给出你的疾病诊断，无需给出原因。 黄某，女，27岁，已婚，孕3顺产1人流2，现避孕，暂无孕求。患者因人流术后月经量渐少2年、加重3月于2016年4月5日初诊。平素月经规律，初潮13岁，5～7天／28～35天，月经量、色、质均正常，经期无特殊不适。2年前行无痛人流术后感月经量渐少，未予以治疗，近半年工作压力较大，心情烦躁，熬夜多，面部及背部散在痤疮，3月前因意外怀孕再次行人工流产术，术后月经量较前明显减少，半月前外院行宫腔镜检查提示宫腔轻度粘连，宫腔粘连评分4分。患者未行粘连分解术，要求中药保守治疗。ＬＭＰ：2016年3月26日，3天净，仅第1天量稍多，需2片卫生巾，后2日用护垫即可，色暗红，夹少许血块，经前乳房胀痛明显，经期轻微腰酸腹胀。平素时感疲劳乏力，精神体力欠佳，偶有头晕。白带可，纳食一般，夜寐欠佳，睡后易醒，二便调。舌质淡红，苔薄白，脉弦细。妇科检查，外阴：已婚已产式；阴道：通畅；宫颈：轻度糜烂，无明显接触性出血；子宫：前位，大小正常，质软，活动度可；双附件区未扪及异常。妇科Ｂ超：内膜4ｍｍ，子宫及双附件未见明显异常声像。女性激素6项、抗缪勒氏激素无异常。西医诊断：宫腔粘连，月经不调。中医辨病：月经过少。中医辨证：肝郁血虚证，治法：疏肝解郁、健脾养血，方药：柴胡、人参、熟地黄、白芍、黄芪各15g，法半夏、当归、川芎、茯苓、白术、泽泻、香附、黄芩各10g，生姜3片，大枣3粒，甘草5g。14剂，每日1剂，水煎400ｍＬ，早晚温服。二诊（2016年4月19日）：病史同前，服药后未诉不适，患者诸症较前均有所缓解，精神体力好转，复查Ｂ超提示内膜7ｍｍ。前方去黄芪、香附，加菟丝子、杜仲各15g，巴戟天、紫河车各10g。7剂，每日1剂，水煎400ｍＬ，早晚温服。三诊（2016年4月26日）：患者诉月经于昨日来潮，量较前明显增多，色鲜红。前方去菟丝子、巴戟天、杜仲、紫河车，改白芍为赤芍15g，加用丹参、红藤、鸡血藤、益母草各15g。4剂，每日1剂，水煎400ｍＬ，早晚温服。四诊（2016年4月30日）：患者月经昨日已净，月经来潮5天，前3天量较多，需用4～5片卫生巾／ｄ，色鲜红，无血块，经前乳房胀痛较前明显缓解，经期偶有轻微腹痛。患者服药后月经量较前改善，继服初诊原方14剂，并按此方法治疗3个月经周期。随诊：患者自诉服药后月经量较前明显增多，心烦，面部及背部痤疮好转，经前乳胀亦有所减轻，疲劳乏力缓解，精神体力可。随访6个月，患者月经量明显改善，诸症已基本痊愈。",
+            "answer": "痤疮",
+            "formula_text": "面部及背部散；加用丹；继服初诊原方；并按此方",
+            "symptom_text": "年前行无痛人流术后感；心情烦躁；经前乳房胀痛明显；经期轻微腰酸腹胀；泽泻；经前乳房胀痛较前明显；经期偶有轻微腹痛；心烦；经前乳胀亦有所减轻",
+            "syndrome_text": "中医辨证；肝郁血虚证",
+            "chief_complaint": "",
+            "tongue": "质淡红，苔薄白，脉弦细",
+            "pulse": "弦细",
+            "score": null,
+            "rerank_score": null,
+            "rank_score": -35.5681669352352
+          }
+        ]
+      },
+      "vector": {
+        "available": true,
+        "latency_ms": 14068.7,
+        "retrieval_mode": "native_hnsw_case_qa",
+        "warnings": [],
+        "metrics": {
+          "top1_hit": false,
+          "topk_hit": true,
+          "coverage_any": 0.2,
+          "preferred_hit": true,
+          "matched_keywords_any": [
+            "口苦"
+          ],
+          "matched_preferred_any": [
+            "逍遥散"
+          ],
+          "keypoint_precision": 0.125,
+          "keypoint_recall": 0.5714,
+          "keypoint_f1": 0.2051,
+          "matched_keypoints": [
+            "逍遥散",
+            "胸胁胀闷",
+            "口苦",
+            "脉弦细"
+          ],
+          "target_keypoints": [
+            "肝郁脾虚",
+            "逍遥散",
+            "胸胁胀闷",
+            "纳少乏力",
+            "睡眠差",
+            "口苦",
+            "脉弦细"
+          ],
+          "predicted_terms": [
+            "舌象通常表现为舌质淡或暗",
+            "舌苔白",
+            "脉象表现为脉弦",
+            "象通常如何",
+            "忧思气郁证的临床表现包括胸闷",
+            "胁胀",
+            "情绪低落",
+            "喜太息",
+            "不善交流",
+            "失眠",
+            "多梦",
+            "甚则不寐",
+            "独处不语",
+            "舌质淡或暗",
+            "脉弦",
+            "或伴见少食",
+            "纳呆",
+            "月经不调等",
+            "胸闷",
+            "忧思气郁证的临床表现有哪些？",
+            "治疗应使用加味逍遥散",
+            "诊断为内伤",
+            "一服而效",
+            "数服而安"
+          ]
+        },
+        "rows": [
+          {
+            "record_id": "id_79685",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "忧思气郁证患者的舌象和脉象通常如何？",
+            "answer": "舌象通常表现为舌质淡或暗，舌苔白；脉象表现为脉弦。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.710467,
+            "rerank_score": 1.120467,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_590593",
+            "collection": "tcm_shard_1",
+            "bucket": null,
+            "question_type": null,
+            "question": "忧思气郁证的临床表现有哪些？",
+            "answer": "忧思气郁证的临床表现包括胸闷、胁胀，情绪低落，喜太息，不善交流，失眠、多梦，甚则不寐，独处不语，舌质淡或暗，舌苔白，脉弦，或伴见少食、纳呆，月经不调等。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.700107,
+            "rerank_score": 1.110107,
+            "rank_score": null
+          },
+          {
+            "record_id": "id_175493",
+            "collection": "tcm_shard_0",
+            "bucket": null,
+            "question_type": null,
+            "question": "患者长期情志抑郁，导致肝木不舒，出现寒热胁痛，口苦食少，呻吟不寐等症状，已经月余。诊脉弦急，应如何诊断和治疗？",
+            "answer": "诊断为内伤，治疗应使用加味逍遥散，一服而效，数服而安。",
+            "formula_text": null,
+            "symptom_text": null,
+            "syndrome_text": null,
+            "chief_complaint": null,
+            "tongue": null,
+            "pulse": null,
+            "score": 0.710537,
+            "rerank_score": 1.090537,
+            "rank_score": null
+          }
+        ]
+      }
+    }
+  ]
+}

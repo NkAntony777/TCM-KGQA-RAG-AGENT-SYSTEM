@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 import socket
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -22,12 +24,19 @@ def _load_pymilvus_sdk() -> tuple[Any, Any, Any, Any]:
     with _PYMILVUS_LOCK:
         if _PYMILVUS_SDK is not None:
             return _PYMILVUS_SDK
+        original_milvus_uri = os.environ.get("MILVUS_URI", "")
+        needs_import_workaround = bool(original_milvus_uri and "://" not in original_milvus_uri)
+        if needs_import_workaround:
+            os.environ["MILVUS_URI"] = "http://127.0.0.1:19530"
         try:  # pragma: no cover - optional dependency in local dev
             from pymilvus import AnnSearchRequest, DataType, MilvusClient, RRFRanker
         except Exception:  # pragma: no cover
             _PYMILVUS_SDK = (None, None, None, None)
         else:
             _PYMILVUS_SDK = (AnnSearchRequest, DataType, MilvusClient, RRFRanker)
+        finally:
+            if needs_import_workaround:
+                os.environ["MILVUS_URI"] = original_milvus_uri
     return _PYMILVUS_SDK
 
 
@@ -43,12 +52,13 @@ class OpenAICompatibleClient:
         if not self.is_ready():
             raise RuntimeError("embedding_client_not_configured")
         last_error: Exception | None = None
-        for _ in range(3):
+        max_retries = 6
+        for attempt in range(max_retries):
             try:
                 payload: dict[str, Any] = {"model": model, "input": texts, "encoding_format": "float"}
                 if dimensions and dimensions > 0:
                     payload["dimensions"] = int(dimensions)
-                with httpx.Client(timeout=20.0) as client:
+                with httpx.Client(timeout=45.0, trust_env=False) as client:
                     response = client.post(
                         f"{self.base_url}/embeddings",
                         headers={"Authorization": f"Bearer {self.api_key}"},
@@ -59,12 +69,14 @@ class OpenAICompatibleClient:
                 return [item["embedding"] for item in payload.get("data", [])]
             except Exception as exc:
                 last_error = exc
+                if attempt < max_retries - 1:
+                    time.sleep(min(8.0, 0.8 * (2**attempt)))
         raise RuntimeError(f"embedding_request_failed: {last_error}")
 
     def chat(self, prompt: str, model: str) -> str:
         if not self.is_ready():
             return ""
-        with httpx.Client(timeout=20.0) as client:
+        with httpx.Client(timeout=20.0, trust_env=False) as client:
             response = client.post(
                 f"{self.base_url}/chat/completions",
                 headers={"Authorization": f"Bearer {self.api_key}"},
@@ -175,7 +187,7 @@ class MilvusHybridStore:
         schema.add_field("id", DataType.INT64, is_primary=True, auto_id=True)
         schema.add_field("dense_embedding", DataType.FLOAT_VECTOR, dim=dense_dim)
         schema.add_field("sparse_embedding", DataType.SPARSE_FLOAT_VECTOR)
-        schema.add_field("text", DataType.VARCHAR, max_length=4000)
+        schema.add_field("text", DataType.VARCHAR, max_length=65535)
         schema.add_field("filename", DataType.VARCHAR, max_length=255)
         schema.add_field("file_type", DataType.VARCHAR, max_length=50)
         schema.add_field("file_path", DataType.VARCHAR, max_length=1024)

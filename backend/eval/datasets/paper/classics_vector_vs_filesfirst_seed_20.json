@@ -1,0 +1,722 @@
+[
+  {
+    "case_id": "cvf_001",
+    "category": "origin",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "formula_origin"],
+    "query": "六味地黄丸最早见于哪本书",
+    "expected_books_any": ["小儿药证直诀"],
+    "expected_keywords_any": ["六味地黄丸", "地黄丸", "钱乙"]
+  },
+  {
+    "case_id": "cvf_002",
+    "category": "origin_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "六味地黄丸出自哪本书，请给出处原文",
+    "expected_books_any": ["小儿药证直诀"],
+    "expected_keywords_any": ["地黄丸", "原文", "小儿药证直诀"]
+  },
+  {
+    "case_id": "cvf_003",
+    "category": "formula_role",
+    "difficulty": "medium",
+    "eval_focus": ["keyword_hit", "formula_role"],
+    "query": "托里消毒饮中的金银花在方剂中起什么作用",
+    "expected_books_any": [],
+    "expected_keywords_any": ["托里消毒饮", "金银花", "作用", "配伍"]
+  },
+  {
+    "case_id": "cvf_004",
+    "category": "definition",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "concept_trace"],
+    "query": "黄帝内经里卫气昼行于阳夜行于阴的节律",
+    "expected_books_any": ["黄帝内经", "灵枢"],
+    "expected_keywords_any": ["卫气", "昼行于阳", "夜行于阴"]
+  },
+  {
+    "case_id": "cvf_005",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit"],
+    "query": "逍遥散一个比较适合直接引用的古籍出处片段是什么",
+    "expected_books_any": ["医方集解", "医方论", "删补名医方论"],
+    "expected_keywords_any": ["逍遥散", "出处", "肝郁", "血虚"]
+  },
+  {
+    "case_id": "cvf_006",
+    "category": "formula_summary",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "multi_facet", "summary"],
+    "query": "请从组成、功效、主治、出处四个角度概括六味地黄丸",
+    "expected_books_any": ["小儿药证直诀"],
+    "expected_keywords_any": ["组成", "功效", "主治", "出处", "六味地黄丸"]
+  },
+  {
+    "case_id": "cvf_007",
+    "category": "formula_comparison",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "boundary", "keyword_hit"],
+    "query": "四君子汤和六君子汤除了组成差异，适用边界上有什么不同",
+    "expected_books_any": [],
+    "expected_keywords_any": ["四君子汤", "六君子汤", "陈皮", "半夏", "痰"]
+  },
+  {
+    "case_id": "cvf_008",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "柴胡的性味归经和功效是什么",
+    "expected_books_any": ["本草纲目"],
+    "expected_keywords_any": ["柴胡", "归经", "功效", "肝胆经", "疏肝"]
+  },
+  {
+    "case_id": "cvf_009",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "indication"],
+    "query": "栝楼薤白白酒汤胸痹心痛短气病脉证治的记载",
+    "expected_books_any": ["金匮要略", "祖剂"],
+    "expected_keywords_any": ["栝楼薤白白酒汤", "胸痹", "心痛", "短气"]
+  },
+  {
+    "case_id": "cvf_010",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "formula_definition"],
+    "query": "虚劳里急手足烦热咽干口燥对应的小建中汤条文",
+    "expected_books_any": ["金匮要略", "祖剂"],
+    "expected_keywords_any": ["小建中汤", "虚劳里急", "手足烦热", "咽干口燥"]
+  },
+  {
+    "case_id": "cvf_011",
+    "category": "book_source",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_source"],
+    "query": "黄芪主痈疽久败疮排脓止痛的古籍记载",
+    "expected_books_any": ["神农本草经", "神农本草经百种录"],
+    "expected_keywords_any": ["黄芪", "痈疽", "排脓止痛"]
+  },
+  {
+    "case_id": "cvf_012",
+    "category": "book_source",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "formula_source"],
+    "query": "半夏秫米汤治疗不寐阳不入阴的相关论述",
+    "expected_books_any": ["黄帝内经", "灵枢", "医学摘粹"],
+    "expected_keywords_any": ["半夏秫米汤", "不寐", "阳不入阴"]
+  },
+  {
+    "case_id": "cvf_013",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "source_trace"],
+    "query": "为什么肝郁脾虚常参考逍遥散，请结合治法和古籍出处说明",
+    "expected_books_any": ["医方集解", "医方论", "中医内科学"],
+    "expected_keywords_any": ["肝郁脾虚", "逍遥散", "疏肝", "健脾", "养血"]
+  },
+  {
+    "case_id": "cvf_014",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "path_hint", "keyword_hit"],
+    "query": "胁肋胀痛一般怎么辨到肝郁脾虚，再为什么会参考逍遥散",
+    "expected_books_any": [],
+    "expected_keywords_any": ["胁肋胀痛", "肝郁脾虚", "逍遥散"]
+  },
+  {
+    "case_id": "cvf_015",
+    "category": "source_text",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "source_trace"],
+    "query": "请给逍遥散一个比较适合直接引用的古籍出处片段，并说明它为什么适合肝郁脾虚",
+    "expected_books_any": ["医方集解", "删补名医方论", "医方论"],
+    "expected_keywords_any": ["逍遥散", "肝郁", "血虚", "健脾"]
+  },
+  {
+    "case_id": "cvf_016",
+    "category": "source_text",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "explanation"],
+    "query": "四逆散少阴病四逆原条文和阳郁于里的解释",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["四逆散", "少阴病", "四逆", "阳郁于里"]
+  },
+  {
+    "case_id": "cvf_017",
+    "category": "book_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "theory_trace"],
+    "query": "久病入络与虫类药搜剔络邪的论述",
+    "expected_books_any": ["临证指南医案", "读医随笔"],
+    "expected_keywords_any": ["久病入络", "虫类药", "搜剔络邪"]
+  },
+  {
+    "case_id": "cvf_018",
+    "category": "book_quote",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "quote_hit", "formula_exegesis"],
+    "query": "升阳益胃汤里风药胜湿与黄连并用的论述",
+    "expected_books_any": ["脾胃论", "医方集解"],
+    "expected_keywords_any": ["升阳益胃汤", "黄连", "风药", "胜湿"]
+  },
+  {
+    "case_id": "cvf_019",
+    "category": "formula_comparison",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "book_hit", "differential_diagnosis"],
+    "query": "宣痹汤治疗湿温痹阻和白虎加桂枝汤鉴别",
+    "expected_books_any": ["温病条辨"],
+    "expected_keywords_any": ["宣痹汤", "湿温", "痹阻", "白虎加桂枝汤"]
+  },
+  {
+    "case_id": "cvf_020",
+    "category": "generic",
+    "difficulty": "easy",
+    "eval_focus": ["generic_qa", "keyword_hit"],
+    "query": "为什么远行奔走时脚上会起泡",
+    "expected_books_any": [],
+    "expected_keywords_any": ["起泡", "摩擦"]
+  },
+  {
+    "case_id": "cvf_021",
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": ["composition", "keyword_hit"],
+    "query": "六味地黄丸的组成有哪些药",
+    "expected_books_any": ["小儿药证直诀"],
+    "expected_keywords_any": ["熟地黄", "山药", "山茱萸", "泽泻", "茯苓", "牡丹皮"]
+  },
+  {
+    "case_id": "cvf_022",
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": ["composition", "book_hit"],
+    "query": "小柴胡汤包含哪些药味，方后注里对咳者有什么加减",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["小柴胡汤", "柴胡", "黄芩", "半夏", "若咳者", "五味子", "干姜"]
+  },
+  {
+    "case_id": "cvf_023",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "黄芩的性味归经与功效在古籍中如何记载",
+    "expected_books_any": ["本草纲目", "神农本草经"],
+    "expected_keywords_any": ["黄芩", "苦", "寒", "归经", "清热"]
+  },
+  {
+    "case_id": "cvf_024",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "当归在古籍中常见的功效与主治是什么",
+    "expected_books_any": ["本草纲目", "神农本草经"],
+    "expected_keywords_any": ["当归", "补血", "活血", "调经"]
+  },
+  {
+    "case_id": "cvf_025",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_origin"],
+    "query": "四君子汤出自什么书，主要治疗什么",
+    "expected_books_any": ["太平惠民和剂局方", "医方集解"],
+    "expected_keywords_any": ["四君子汤", "脾胃气虚", "益气健脾"]
+  },
+  {
+    "case_id": "cvf_026",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_origin", "quote_hit"],
+    "query": "真武汤见于哪部经典，主治和病机要点是什么",
+    "expected_books_any": ["伤寒论", "金匮要略"],
+    "expected_keywords_any": ["真武汤", "少阴", "水气", "阳虚"]
+  },
+  {
+    "case_id": "cvf_027",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "formula_definition"],
+    "query": "桂枝汤太阳中风的条文与核心证候",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["桂枝汤", "太阳中风", "发热", "汗出", "恶风"]
+  },
+  {
+    "case_id": "cvf_028",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "formula_definition"],
+    "query": "麻黄汤主治太阳伤寒的条文和证候要点",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["麻黄汤", "太阳伤寒", "恶寒", "无汗", "脉浮紧"]
+  },
+  {
+    "case_id": "cvf_029",
+    "category": "theory_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "theory_trace"],
+    "query": "营卫不和在古籍中的经典表述",
+    "expected_books_any": ["伤寒论", "黄帝内经"],
+    "expected_keywords_any": ["营卫", "不和", "桂枝汤"]
+  },
+  {
+    "case_id": "cvf_030",
+    "category": "theory_quote",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "quote_hit", "concept_trace"],
+    "query": "阳郁于里的古籍解释与四逆散的关系",
+    "expected_books_any": ["伤寒论", "伤寒证治准绳"],
+    "expected_keywords_any": ["阳郁于里", "四逆散", "四逆"]
+  },
+  {
+    "case_id": "cvf_031",
+    "category": "formula_role",
+    "difficulty": "hard",
+    "eval_focus": ["formula_role", "reasoning", "keyword_hit"],
+    "query": "六味地黄丸中泽泻为什么不是单纯泻下药，而是配伍要点之一",
+    "expected_books_any": ["医方论", "医方集解"],
+    "expected_keywords_any": ["六味地黄丸", "泽泻", "配伍", "泻相火", "补泻并用"]
+  },
+  {
+    "case_id": "cvf_032",
+    "category": "formula_role",
+    "difficulty": "hard",
+    "eval_focus": ["formula_role", "reasoning", "keyword_hit"],
+    "query": "小柴胡汤中柴胡与黄芩分别承担什么作用",
+    "expected_books_any": ["伤寒论", "医方考", "医方集解"],
+    "expected_keywords_any": ["小柴胡汤", "柴胡", "黄芩", "少阳", "和解"]
+  },
+  {
+    "case_id": "cvf_033",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "comparison"],
+    "query": "为什么六君子汤比四君子汤更偏向脾虚兼痰",
+    "expected_books_any": ["医方集解", "医方论"],
+    "expected_keywords_any": ["六君子汤", "四君子汤", "陈皮", "半夏", "痰"]
+  },
+  {
+    "case_id": "cvf_034",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "indication"],
+    "query": "为什么当归补血汤用黄芪量大而当归量小",
+    "expected_books_any": ["内外伤辨惑论", "医方集解"],
+    "expected_keywords_any": ["当归补血汤", "黄芪", "当归", "气旺生血"]
+  },
+  {
+    "case_id": "cvf_035",
+    "category": "formula_summary",
+    "difficulty": "medium",
+    "eval_focus": ["summary", "book_hit", "multi_facet"],
+    "query": "请概括逍遥散的组成、功效、主治与出处",
+    "expected_books_any": ["医方集解", "医方论", "删补名医方论"],
+    "expected_keywords_any": ["逍遥散", "组成", "功效", "主治", "出处"]
+  },
+  {
+    "case_id": "cvf_036",
+    "category": "formula_summary",
+    "difficulty": "medium",
+    "eval_focus": ["summary", "book_hit", "multi_facet"],
+    "query": "请概括真武汤的组成、主治、病机与出处",
+    "expected_books_any": ["伤寒论", "金匮要略"],
+    "expected_keywords_any": ["真武汤", "组成", "主治", "病机", "出处"]
+  },
+  {
+    "case_id": "cvf_037",
+    "category": "source_text",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "source_trace"],
+    "query": "请给桂枝汤关于太阳中风的原文片段",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["桂枝汤", "太阳中风", "阳浮而阴弱"]
+  },
+  {
+    "case_id": "cvf_038",
+    "category": "source_text",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "source_trace"],
+    "query": "请给麻黄汤关于太阳伤寒的原文片段",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["麻黄汤", "太阳病", "脉浮紧", "无汗"]
+  },
+  {
+    "case_id": "cvf_039",
+    "category": "book_quote",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "quote_hit", "theory_trace"],
+    "query": "湿温病里白虎加苍术汤与白虎加桂枝汤的差异论述",
+    "expected_books_any": ["温病条辨", "伤寒证治准绳"],
+    "expected_keywords_any": ["湿温", "白虎加苍术汤", "白虎加桂枝汤"]
+  },
+  {
+    "case_id": "cvf_040",
+    "category": "book_quote",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "quote_hit", "theory_trace"],
+    "query": "请找关于少阳咳加减法的小柴胡汤方后注",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["小柴胡汤", "若咳者", "五味子", "干姜"]
+  },
+  {
+    "case_id": "cvf_041",
+    "category": "formula_comparison",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "keyword_hit"],
+    "query": "逍遥散和丹栀逍遥散在适用边界上有什么不同",
+    "expected_books_any": [],
+    "expected_keywords_any": ["逍遥散", "丹栀逍遥散", "化火", "郁热"]
+  },
+  {
+    "case_id": "cvf_042",
+    "category": "formula_comparison",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "keyword_hit"],
+    "query": "理中丸和四逆汤在阳虚寒证中偏重有何不同",
+    "expected_books_any": ["伤寒论", "医方集解"],
+    "expected_keywords_any": ["理中丸", "四逆汤", "脾胃虚寒", "亡阳", "四肢厥逆"]
+  },
+  {
+    "case_id": "cvf_043",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "熟地黄在本草文献中常见的功效与主治是什么",
+    "expected_books_any": ["本草纲目", "神农本草经"],
+    "expected_keywords_any": ["熟地黄", "补血", "滋阴", "肝肾"]
+  },
+  {
+    "case_id": "cvf_044",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "茯苓在本草文献中的归经和功效",
+    "expected_books_any": ["本草纲目", "神农本草经"],
+    "expected_keywords_any": ["茯苓", "健脾", "渗湿", "宁心"]
+  },
+  {
+    "case_id": "cvf_045",
+    "category": "generic",
+    "difficulty": "easy",
+    "eval_focus": ["generic_qa", "book_hit"],
+    "query": "什么叫胸痹，常参考什么方",
+    "expected_books_any": ["金匮要略", "祖剂"],
+    "expected_keywords_any": ["胸痹", "栝楼薤白白酒汤"]
+  },
+  {
+    "case_id": "cvf_046",
+    "category": "generic",
+    "difficulty": "medium",
+    "eval_focus": ["generic_qa", "keyword_hit"],
+    "query": "什么叫肝郁脾虚，为什么常和逍遥散联系在一起",
+    "expected_books_any": ["医方集解", "中医内科学"],
+    "expected_keywords_any": ["肝郁脾虚", "逍遥散", "疏肝", "健脾"]
+  },
+  {
+    "case_id": "cvf_047",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "indication"],
+    "query": "真武汤治疗少阴阳虚水气的条文要点",
+    "expected_books_any": ["伤寒论", "金匮要略"],
+    "expected_keywords_any": ["真武汤", "少阴", "阳虚", "水气"]
+  },
+  {
+    "case_id": "cvf_048",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "indication"],
+    "query": "当归补血汤在古籍中主治什么，核心病机是什么",
+    "expected_books_any": ["内外伤辨惑论", "医方集解"],
+    "expected_keywords_any": ["当归补血汤", "血虚发热", "气旺生血"]
+  },
+  {
+    "case_id": "cvf_049",
+    "category": "book_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "五苓散方后注里“多饮暖水，汗出愈”是什么意思",
+    "expected_books_any": ["伤寒论", "伤寒悬解", "医宗金鉴"],
+    "expected_keywords_any": ["五苓散", "多饮暖水", "汗出愈"],
+    "expected_chapters_any": ["五苓散", "五苓散（十）"],
+    "gold_answer_outline": ["五苓散", "多饮暖水", "汗出愈", "助阳化气或通阳行水"],
+    "notes": "允许命中仲景原文、方后注，或直接解释该方后注的注家条文。"
+  },
+  {
+    "case_id": "cvf_050",
+    "category": "book_quote",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "小柴胡汤方后注里“若咳者，去人参大枣生姜，加五味子干姜”这一条怎么记载",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒缵论"],
+    "expected_keywords_any": ["小柴胡汤", "若咳者", "五味子", "干姜"],
+    "expected_chapters_any": ["小柴胡汤"],
+    "gold_answer_outline": ["小柴胡汤", "方后注", "若咳者", "五味子", "干姜"],
+    "notes": "允许命中原书或收录、解释该加减法的伤寒注家文献。"
+  },
+  {
+    "case_id": "cvf_051",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "formula_definition"],
+    "query": "四逆散原条文主治是什么",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒缵论"],
+    "expected_keywords_any": ["四逆散", "少阴病", "四逆", "咳者"],
+    "expected_chapters_any": ["四逆散"],
+    "gold_answer_outline": ["四逆散", "少阴病", "四逆", "加减法"],
+    "notes": "允许命中仲景原条文、祖方汇编，或注明其少阴四逆与后续加减法的条文。"
+  },
+  {
+    "case_id": "cvf_052",
+    "category": "book_source",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_source"],
+    "query": "当归在古籍中常见的功效与主治是什么",
+    "expected_books_any": ["得配本草", "新修本草", "本草纲目"],
+    "expected_keywords_any": ["当归", "补血", "行血", "调经", "去风散寒"],
+    "expected_chapters_any": ["当归"],
+    "gold_answer_outline": ["当归", "甘辛温", "补血活血", "调经止痛或养营调气"],
+    "notes": "当归条文跨多部本草，评价口径允许命中任一权威本草正文。"
+  },
+  {
+    "case_id": "cvf_053",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "黄芩的性味归经与功效在古籍中如何记载",
+    "expected_books_any": ["得配本草", "本草纲目", "神农本草经"],
+    "expected_keywords_any": ["黄芩", "苦", "寒", "清热", "燥湿"],
+    "expected_chapters_any": ["黄芩"],
+    "gold_answer_outline": ["黄芩", "苦寒", "归经", "清热燥湿或泻火解毒"],
+    "notes": "允许命中经典本草正文或高度概括其性味归经与功效的本草注本。"
+  },
+  {
+    "case_id": "cvf_054",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "indication"],
+    "query": "归脾汤主治什么病证",
+    "expected_books_any": ["严氏济生方", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["归脾汤", "思虑伤脾", "健忘", "怔忡", "不寐"],
+    "expected_chapters_any": ["归脾汤"],
+    "gold_answer_outline": ["归脾汤", "心脾两虚", "思虑伤脾", "健忘怔忡不寐"],
+    "notes": "允许命中方书正文、后世方论，或直接汇总归脾汤主治要点的条文。"
+  },
+  {
+    "case_id": "cvf_055",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "formula_exegesis"],
+    "query": "当归补血汤为什么黄芪多而当归少",
+    "expected_books_any": ["兰室秘藏", "内外伤辨", "医方集解"],
+    "expected_keywords_any": ["当归补血汤", "黄芪", "当归", "气旺生血", "血虚发热"],
+    "expected_chapters_any": ["当归补血汤"],
+    "gold_answer_outline": ["当归补血汤", "黄芪重用", "当归少佐", "补气生血或气旺生血"],
+    "notes": "答案允许偏机制解释或偏方义解释，但核心必须落到黄芪大补气以生血。"
+  },
+  {
+    "case_id": "cvf_056",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "indication"],
+    "query": "黄连阿胶汤治疗虚烦不得眠的记载",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒缵论"],
+    "expected_keywords_any": ["黄连阿胶汤", "虚烦", "不得眠", "少阴"],
+    "expected_chapters_any": ["黄连阿胶汤"],
+    "gold_answer_outline": ["黄连阿胶汤", "少阴热化", "心烦不得眠"],
+    "notes": "允许命中仲景条文或伤寒注家对该少阴烦不得眠条文的完整收录。"
+  },
+  {
+    "case_id": "cvf_057",
+    "category": "book_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "芍药甘草汤主治脚挛急的条文",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["芍药甘草汤", "脚挛急", "芍药", "甘草"],
+    "expected_chapters_any": ["芍药甘草汤"],
+    "gold_answer_outline": ["芍药甘草汤", "脚挛急", "芍药甘草两味相和"],
+    "notes": "条文允许命中仲景原意、伤寒方解，或点明津液不足而筋脉失养的解释。"
+  },
+  {
+    "case_id": "cvf_058",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "source_trace", "formula_origin"],
+    "query": "桂枝加龙骨牡蛎汤治疗失精烦悸的记载",
+    "expected_books_any": ["金匮要略", "祖剂", "金匮方歌括"],
+    "expected_keywords_any": ["桂枝加龙骨牡蛎汤", "失精", "梦交", "脉极虚芤"],
+    "expected_chapters_any": ["桂枝加龙骨牡蛎汤"],
+    "gold_answer_outline": ["桂枝加龙骨牡蛎汤", "男子失精女子梦交", "脉极虚芤"],
+    "notes": "允许命中《金匮》系条文、祖方汇编或金匮歌括类文献。"
+  },
+  {
+    "case_id": "cvf_059",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "indication"],
+    "query": "猪苓汤治疗渴欲饮水、小便不利的条文",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["猪苓汤", "渴欲饮水", "小便不利", "阿胶"],
+    "expected_chapters_any": ["猪苓汤"],
+    "gold_answer_outline": ["猪苓汤", "渴欲饮水", "小便不利", "育阴利水"],
+    "notes": "允许命中仲景条文或后世直接解释该证机的伤寒注本。"
+  },
+  {
+    "case_id": "cvf_060",
+    "category": "book_quote",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "栀子豉汤治疗虚烦不得眠的条文",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["栀子豉汤", "虚烦不得眠", "心中懊憹"],
+    "expected_chapters_any": ["栀子豉汤"],
+    "gold_answer_outline": ["栀子豉汤", "汗吐下后", "虚烦不得眠", "心中懊憹"],
+    "notes": "允许命中仲景原条文或专门解释栀子豉汤主治范围的注家条文。"
+  },
+  {
+    "case_id": "cvf_061",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "indication"],
+    "query": "半夏泻心汤治疗心下痞的条文",
+    "expected_books_any": ["伤寒论", "三因极一病证方论", "伤寒括要"],
+    "expected_keywords_any": ["半夏泻心汤", "心下痞满", "不痛", "寒热错杂"],
+    "expected_chapters_any": ["半夏泻心汤"],
+    "gold_answer_outline": ["半夏泻心汤", "心下痞满而不痛", "寒热平调"],
+    "notes": "允许命中仲景系统方书或明显概括其心下痞证机的后世方书。"
+  },
+  {
+    "case_id": "cvf_062",
+    "category": "formula_composition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "composition", "indication"],
+    "query": "四物汤的组成和主治在古籍中如何记载",
+    "expected_books_any": ["三因极一病证方论", "医方集解", "万氏秘传片玉心书"],
+    "expected_keywords_any": ["四物汤", "当归", "川芎", "白芍", "熟地黄", "月水不调"],
+    "expected_chapters_any": ["四物汤"],
+    "gold_answer_outline": ["四物汤", "四味药", "养血调经或滋养气血"],
+    "notes": "组成允许命中标准四味，也允许检出带加味说明的后世化裁版本。"
+  },
+  {
+    "case_id": "cvf_063",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "formula_exegesis"],
+    "query": "归脾汤为什么能治心脾两虚不寐",
+    "expected_books_any": ["严氏济生方", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["归脾汤", "心脾两虚", "不寐", "健忘", "怔忡"],
+    "expected_chapters_any": ["归脾汤"],
+    "gold_answer_outline": ["归脾汤", "心脾两虚", "益气补血", "养心健脾"],
+    "notes": "答案可偏病机或偏方义，但核心必须落到心脾两虚与养心健脾。"
+  },
+  {
+    "case_id": "cvf_064",
+    "category": "definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "concept_trace"],
+    "query": "少阳病为什么常见口苦、咽干、目眩",
+    "expected_books_any": ["伤寒证治准绳", "证治准绳·伤寒", "伤寒论"],
+    "expected_keywords_any": ["少阳病", "口苦", "咽干", "目眩", "往来寒热"],
+    "expected_chapters_any": ["少阳病"],
+    "gold_answer_outline": ["少阳病", "口苦咽干目眩", "半表半里或枢机不利"],
+    "notes": "允许命中仲景提纲、后世准绳类总结，或少阳提纲性论述。"
+  },
+  {
+    "case_id": "cvf_065",
+    "category": "formula_composition",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "composition", "formula_core"],
+    "query": "桂枝汤的组成有哪些药味",
+    "expected_books_any": ["伤寒论", "三因极一病证方论", "严氏济生方"],
+    "expected_keywords_any": ["桂枝汤", "桂枝", "芍药", "生姜", "大枣", "甘草"],
+    "expected_chapters_any": ["桂枝汤"],
+    "gold_answer_outline": ["桂枝汤", "桂枝", "芍药", "生姜", "大枣", "甘草"],
+    "notes": "允许命中仲景原方或后世沿用该方并明确列出药味的方书。"
+  },
+  {
+    "case_id": "cvf_066",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "indication"],
+    "query": "酸枣仁汤治疗虚烦不得眠的经典记载",
+    "expected_books_any": ["金匮要略", "医宗金鉴", "医学心悟"],
+    "expected_keywords_any": ["酸枣仁汤", "虚烦不得眠", "酸枣仁", "知母", "茯苓"],
+    "expected_chapters_any": ["酸枣仁汤"],
+    "gold_answer_outline": ["酸枣仁汤", "虚烦不得眠", "养血安神", "清热除烦"],
+    "notes": "允许命中《金匮》系条文、歌括或后世明确概括该虚烦不眠证机的条文。"
+  },
+  {
+    "case_id": "cvf_067",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "indication", "water_pattern"],
+    "query": "真武汤主治什么证候",
+    "expected_books_any": ["伤寒论", "伤寒括要", "伤寒缵论"],
+    "expected_keywords_any": ["真武汤", "少阴", "小便不利", "四肢沉重", "阳虚水泛"],
+    "expected_chapters_any": ["真武汤"],
+    "gold_answer_outline": ["真武汤", "少阴阳虚", "水气内停或阳虚水泛"],
+    "notes": "答案允许偏原条文症状群或偏后世总结的阳虚水泛证机。"
+  },
+  {
+    "case_id": "cvf_068",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "boundary"],
+    "query": "补中益气汤主治哪些中气下陷表现",
+    "expected_books_any": ["脾胃论", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["补中益气汤", "中气下陷", "劳倦伤脾", "少气懒言", "升阳举陷"],
+    "expected_chapters_any": ["补中益气汤"],
+    "gold_answer_outline": ["补中益气汤", "中气不足", "升阳举陷", "少气懒言或清阳下陷"],
+    "notes": "允许命中李东垣系统方书，或后世明确总结其主治的经典方论。"
+  },
+  {
+    "case_id": "cvf_069",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "龙胆草在古籍中常见的性味功效与主治",
+    "expected_books_any": ["得配本草", "本草从新", "冯氏锦囊秘录"],
+    "expected_keywords_any": ["龙胆草", "大苦大寒", "泻肝胆火", "下焦湿热"],
+    "expected_chapters_any": ["龙胆草"],
+    "gold_answer_outline": ["龙胆草", "大苦大寒", "泻肝胆火", "除下焦湿热"],
+    "notes": "允许命中任一权威本草条文，只要能覆盖性味与肝胆湿热主治。"
+  },
+  {
+    "case_id": "cvf_070",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "composition", "indication"],
+    "query": "桂枝加龙骨牡蛎汤的组成和主治如何记载",
+    "expected_books_any": ["金匮要略", "祖剂", "金匮方歌括"],
+    "expected_keywords_any": ["桂枝加龙骨牡蛎汤", "龙骨", "牡蛎", "失精", "梦交"],
+    "expected_chapters_any": ["桂枝加龙骨牡蛎汤"],
+    "gold_answer_outline": ["桂枝加龙骨牡蛎汤", "桂枝汤加龙骨牡蛎", "失精梦交"],
+    "notes": "组成允许命中“即桂枝汤加龙骨牡蛎”的简述口径。"
+  },
+  {
+    "case_id": "cvf_071",
+    "category": "reasoning",
+    "difficulty": "hard",
+    "eval_focus": ["reasoning", "book_hit", "formula_exegesis"],
+    "query": "补中益气汤为什么能升阳举陷",
+    "expected_books_any": ["脾胃论", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["补中益气汤", "升阳", "举陷", "黄芪", "升麻", "柴胡"],
+    "expected_chapters_any": ["补中益气汤"],
+    "gold_answer_outline": ["补中益气汤", "黄芪补中", "升麻柴胡升阳", "升阳举陷"],
+    "notes": "答案允许偏组方功能解释或偏中气下陷病机解释。"
+  },
+  {
+    "case_id": "cvf_072",
+    "category": "reasoning",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_exegesis", "generic_qa"],
+    "query": "桂枝汤为什么常被说成调和营卫",
+    "expected_books_any": ["伤寒论", "三因极一病证方论", "医宗金鉴"],
+    "expected_keywords_any": ["桂枝汤", "调和营卫", "自汗", "恶风", "解肌"],
+    "expected_chapters_any": ["桂枝汤"],
+    "gold_answer_outline": ["桂枝汤", "营卫不和", "解肌发表", "调和营卫"],
+    "notes": "允许命中原方主治条文或后世直接点明“调和营卫”的概括性条文。"
+  }
+]

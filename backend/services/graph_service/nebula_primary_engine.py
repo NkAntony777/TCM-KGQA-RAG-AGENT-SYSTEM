@@ -103,130 +103,95 @@ class NebulaPrimaryGraphEngine:
         predicate_blocklist: list[str] | None,
     ) -> dict[str, Any]:
         normalized_name = str(name or "").strip()
+        if not normalized_name:
+            return {}
         predicate_allow_expanded = list(expand_filter_predicates(predicate_allowlist or [])) if predicate_allowlist else []
         source_aware = self._query_has_source_constraint(normalized_name)
         limit_per_entity = self._entity_lookup_limit_per_candidate(
             query_text=normalized_name,
             predicate_allowlist=predicate_allow_expanded,
         )
+        source_books = self._query_source_book_hints(normalized_name) if source_aware else None
 
         exact_candidates = self._resolve_entities_via_primary(normalized_name, exact_only=True)
-        exact_payload = self._entity_lookup_exact_hit_payload(
-            exact_candidates,
+        exact_name = str(exact_candidates[0]).strip() if exact_candidates else ""
+        exact_payload = self._entity_lookup_candidate_payload(
+            candidate_name=exact_name,
             query_text=normalized_name,
             predicate_allowlist=predicate_allow_expanded,
             predicate_blocklist=predicate_blocklist,
             top_k=top_k,
             limit_per_entity=limit_per_entity,
+            source_books=source_books,
         )
         if exact_payload is not None:
             return exact_payload
 
-        candidates = list(exact_candidates)
-        if not source_aware:
-            layered_candidates = self._resolve_entities_via_primary(normalized_name)
-            for item in layered_candidates:
-                if item not in candidates:
-                    candidates.append(item)
-        if not candidates:
+        if not exact_name:
             return {}
-        candidate_names = candidates[:5]
-        vertex_map = self._primary_vertex_map(candidate_names)
-        grouped_rows = self._group_nebula_relations_by_source(
-            candidate_names,
-            predicate_allowlist=predicate_allow_expanded or None,
-            source_books=self._query_source_book_hints(normalized_name) if source_aware else None,
-            limit_per_entity=limit_per_entity,
-            directions=self._entity_lookup_directions(
-                query_text=normalized_name,
-                predicate_allowlist=predicate_allow_expanded or None,
-            ),
-        )
-        candidate_rankings: list[tuple[int, int, int, str, str, list[dict[str, Any]]]] = []
-        for canonical_name in candidate_names:
-            if canonical_name not in vertex_map:
-                continue
-            entity_type = self.fallback_engine.entity_type(canonical_name)
-            relations = self.fallback_engine._select_relation_clusters(
-                self.fallback_engine._filter_relations(
-                    self.fallback_engine._annotate_relation_rows(
-                        grouped_rows.get(canonical_name, []),
-                        anchor_entity_type=entity_type,
-                    ),
-                    predicate_allowlist=predicate_allowlist,
+        # Keep the Nebula path slim: exact hit first, then at most one alias candidate.
+        if not source_aware:
+            alias_candidates = self._resolve_entities_via_primary(normalized_name)
+            for alias_name in alias_candidates:
+                alias_text = str(alias_name).strip()
+                if not alias_text or alias_text == exact_name:
+                    continue
+                alias_payload = self._entity_lookup_candidate_payload(
+                    candidate_name=alias_text,
+                    query_text=normalized_name,
+                    predicate_allowlist=predicate_allow_expanded,
                     predicate_blocklist=predicate_blocklist,
-                ),
-                query_text=name,
-                top_k=max(1, top_k),
-            )
-            if not relations:
-                continue
-            relation_peak = max(self.fallback_engine._relation_score(item, name) for item in relations)
-            predicate_peak = max(int(round(self.fallback_engine._predicate_priority(item) * 100)) for item in relations)
-            exact_name_bonus = 1 if canonical_name == name.strip() else 0
-            candidate_rankings.append(
-                (
-                    relation_peak + exact_name_bonus * 12,
-                    predicate_peak,
-                    len(relations),
-                    canonical_name,
-                    entity_type,
-                    relations,
+                    top_k=top_k,
+                    limit_per_entity=limit_per_entity,
+                    source_books=None,
+                    merged_candidates=[exact_name, alias_text],
                 )
-            )
-        if candidate_rankings:
-            candidate_rankings.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
-            exact_candidate = next((item for item in candidate_rankings if item[3] == name.strip()), None)
-            best_candidate = candidate_rankings[0]
-            best_non_exact = next((item for item in candidate_rankings if item[3] != name.strip()), None)
-            selected_rows: list[dict[str, Any]] = []
-            selected_names: list[str] = []
-            if exact_candidate is not None:
-                selected_rows.extend(grouped_rows.get(exact_candidate[3], []))
-                selected_names.append(exact_candidate[3])
-            if best_candidate[3] not in selected_names:
-                selected_rows.extend(grouped_rows.get(best_candidate[3], []))
-                selected_names.append(best_candidate[3])
-            if best_non_exact is not None and best_non_exact[3] not in selected_names:
-                selected_rows.extend(grouped_rows.get(best_non_exact[3], []))
-                selected_names.append(best_non_exact[3])
-            if selected_rows:
-                primary_entity_name = exact_candidate[3] if exact_candidate is not None else best_candidate[3]
-                primary_entity_type = exact_candidate[4] if exact_candidate is not None else best_candidate[4]
-                merged_relations = self.fallback_engine._select_relation_clusters(
-                    self.fallback_engine._filter_relations(
-                        self.fallback_engine._annotate_relation_rows(
-                            selected_rows,
-                            anchor_entity_type=primary_entity_type,
-                        ),
-                        predicate_allowlist=predicate_allowlist,
-                        predicate_blocklist=predicate_blocklist,
-                    ),
-                    query_text=name,
-                    top_k=max(1, top_k),
-                )
-                return {
-                    "entity": {
-                        "name": name.strip(),
-                        "canonical_name": primary_entity_name,
-                        "entity_type": primary_entity_type,
-                    },
-                    "relations": merged_relations,
-                    "total": len(merged_relations),
-                    "merged_candidates": selected_names,
-                }
-        if candidate_names and candidate_names[0] in vertex_map:
-            entity_type = self.fallback_engine.entity_type(candidate_names[0])
-            return {
-                "entity": {
-                    "name": name.strip(),
-                    "canonical_name": candidate_names[0],
-                    "entity_type": entity_type,
-                },
-                "relations": [],
-                "total": 0,
-            }
-        return {}
+                if alias_payload is not None:
+                    return alias_payload
+                break
+
+        return self._empty_entity_lookup_payload(query_text=normalized_name, canonical_name=exact_name)
+
+    def _entity_lookup_candidate_payload(
+        self,
+        *,
+        candidate_name: str,
+        query_text: str,
+        predicate_allowlist: list[str] | None,
+        predicate_blocklist: list[str] | None,
+        top_k: int,
+        limit_per_entity: int,
+        source_books: list[str] | None,
+        merged_candidates: list[str] | None = None,
+    ) -> dict[str, Any] | None:
+        candidate = str(candidate_name).strip()
+        if not candidate:
+            return None
+        payload = self._entity_lookup_exact_hit_payload(
+            [candidate],
+            query_text=query_text,
+            predicate_allowlist=predicate_allowlist,
+            predicate_blocklist=predicate_blocklist,
+            top_k=top_k,
+            limit_per_entity=limit_per_entity,
+            source_books=source_books,
+        )
+        if payload is None:
+            return None
+        if merged_candidates:
+            payload["merged_candidates"] = [item for item in merged_candidates if str(item).strip()]
+        return payload
+
+    def _empty_entity_lookup_payload(self, *, query_text: str, canonical_name: str) -> dict[str, Any]:
+        return {
+            "entity": {
+                "name": query_text.strip(),
+                "canonical_name": canonical_name,
+                "entity_type": self.fallback_engine.entity_type(canonical_name),
+            },
+            "relations": [],
+            "total": 0,
+        }
 
     def path_query(self, start: str, end: str, max_hops: int = 3, path_limit: int = 5) -> dict[str, Any]:
         start_candidates = self._resolve_entities_via_primary(start, exact_only=True)[:3]
@@ -420,6 +385,7 @@ class NebulaPrimaryGraphEngine:
         predicate_blocklist: list[str] | None,
         top_k: int,
         limit_per_entity: int,
+        source_books: list[str] | None = None,
     ) -> dict[str, Any] | None:
         return _entity_lookup_exact_hit_payload_support(
             self,
@@ -429,6 +395,7 @@ class NebulaPrimaryGraphEngine:
             predicate_blocklist=predicate_blocklist,
             top_k=top_k,
             limit_per_entity=limit_per_entity,
+            source_books=source_books,
         )
 
     def _entity_lookup_limit_per_candidate(self, *, query_text: str, predicate_allowlist: list[str] | None) -> int:

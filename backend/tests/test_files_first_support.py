@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gc
+import re
 import shutil
 import sqlite3
 import tempfile
@@ -8,11 +9,13 @@ import unittest
 from pathlib import Path
 
 from services.retrieval_service.files_first_support import LocalFilesFirstStore
+from services.retrieval_service.files_first_support import _prepare_match_terms
 
 
 class FakeTokenizer:
     def tokenize(self, text: str) -> list[str]:
-        return [token for token in str(text or "").replace("。", " ").replace("：", " ").split() if token]
+        normalized = re.sub(r"[。，“”、；：:（）()\[\]《》]", " ", str(text or ""))
+        return [token for token in normalized.split() if token]
 
 
 class FilesFirstSupportTests(unittest.TestCase):
@@ -87,6 +90,55 @@ class FilesFirstSupportTests(unittest.TestCase):
             gc.collect()
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_prepare_match_terms_strips_prompt_scaffolding(self) -> None:
+        terms = _prepare_match_terms("逍遥散一个比较适合直接引用的古籍出处片段是什么", FakeTokenizer())
+        self.assertIn("逍遥散", terms)
+        self.assertIn("出处", terms)
+        self.assertIn("原文", terms)
+        self.assertFalse(any("一个比较" in item for item in terms))
+        self.assertFalse(any("逍遥散一个比较" in item for item in terms))
+
+    def test_search_prefers_rows_covering_multiple_focus_entities(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = LocalFilesFirstStore(Path(tmp) / "retrieval_local_index.fts.db", tokenizer=FakeTokenizer())
+            rows = [
+                {
+                    "chunk_id": "leaf-1",
+                    "text": "古籍：医宗金鉴\n篇名：托里消毒饮\n托里消毒饮 组成 黄芪 当归 甘草。",
+                    "filename": "医宗金鉴.txt",
+                    "file_path": "classic://医宗金鉴/0001",
+                    "page_number": 1,
+                    "chunk_idx": 1,
+                    "chunk_level": 3,
+                    "parent_chunk_id": "parent-1",
+                    "root_chunk_id": "root-1",
+                },
+                {
+                    "chunk_id": "leaf-2",
+                    "text": "古籍：外科证治全书\n篇名：托里消毒饮加减\n托里消毒饮 金银花 配伍 清热解毒 散结。",
+                    "filename": "外科证治全书.txt",
+                    "file_path": "classic://外科证治全书/0002",
+                    "page_number": 2,
+                    "chunk_idx": 1,
+                    "chunk_level": 3,
+                    "parent_chunk_id": "parent-2",
+                    "root_chunk_id": "root-2",
+                },
+            ]
+            store.rebuild(rows)
+
+            results, mode = store.search(
+                query="托里消毒饮中的金银花在方剂中起什么作用",
+                top_k=3,
+                candidate_k=6,
+                leaf_level=3,
+            )
+
+            self.assertEqual(mode, "fts_local")
+            self.assertTrue(results)
+            self.assertEqual(results[0]["book_name"], "外科证治全书")
+            self.assertIn("金银花", results[0]["text"])
 
 
 if __name__ == "__main__":

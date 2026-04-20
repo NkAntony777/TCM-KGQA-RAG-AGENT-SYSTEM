@@ -41,6 +41,8 @@ class RetrievalServiceSettings:
     leaf_retrieve_level: int
     dense_dim: int
     embedding_batch_size: int
+    embedding_batch_workers: int
+    embedding_show_progress: bool
     chroma_case_db_path: Path
     chroma_case_mirror_path: Path
     chroma_case_collection_prefix: str
@@ -93,6 +95,8 @@ def load_settings() -> RetrievalServiceSettings:
         leaf_retrieve_level=int(_first_env("LEAF_RETRIEVE_LEVEL", default="3")),
         dense_dim=int(_first_env("RETRIEVAL_DENSE_DIM", default="2560")),
         embedding_batch_size=int(_first_env("RETRIEVAL_EMBED_BATCH_SIZE", default="64")),
+        embedding_batch_workers=int(_first_env("RETRIEVAL_EMBED_WORKERS", default="1")),
+        embedding_show_progress=_first_env("RETRIEVAL_EMBED_PROGRESS", default="false").lower() == "true",
         chroma_case_db_path=Path(_first_env("CHROMA_CASE_DB_PATH", default="E:/tcm_vector_db")),
         chroma_case_mirror_path=backend_dir / "storage" / "chroma_case_query_mirror",
         chroma_case_collection_prefix=_first_env("CHROMA_CASE_COLLECTION_PREFIX", default="tcm_shard_"),

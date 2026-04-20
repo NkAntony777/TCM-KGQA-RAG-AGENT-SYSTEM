@@ -1,0 +1,4907 @@
+{
+  "settings": {
+    "dataset_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\eval\\datasets\\paper\\classics_vector_vs_filesfirst_external_validation_12.json",
+    "sqlite_db": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\classics_vector_store.sqlite",
+    "top_k": 3,
+    "candidate_k": 20
+  },
+  "sqlite_health": {
+    "db_path": "D:\\毕业设计数据处理\\langchain-miniopenclaw\\backend\\storage\\classics_vector_store.sqlite",
+    "available": true,
+    "rows": 170319
+  },
+  "files_first": {
+    "label": "files_first",
+    "cases": [
+      {
+        "case": {
+          "case_id": "cvf_e301",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方被说成治胸痹、喘息咳唾、胸背痛、短气，而且还批评世医误用豆蔻木香等药",
+          "expected_books_any": [
+            "成方切用"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "栝蒌薤白白酒汤",
+            "胸痹",
+            "胸背痛",
+            "短气"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 18395.5,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "栝蒌薤白白酒汤",
+            "胸痹",
+            "胸背痛",
+            "短气"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "栝蒌薤白白酒汤",
+            "胸痹",
+            "胸背痛",
+            "短气"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::药征续编::0075::01",
+            "filename": "078-药征续编.txt",
+            "file_path": "classic://药征续编/0075-01",
+            "page_number": 75,
+            "book_name": "药征续编",
+            "chapter_title": "考证",
+            "score": 62.0,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：药征续编\n篇名：考证\n属性：栝蒌薤白白酒汤证曰∶胸痹之病，喘息咳唾，胸背痛，短气。栝蒌薤白半夏汤证曰∶胸痹不得卧，心痛彻痛。因此二方之证，则白酒能治胸背及心痛烦闷。夫前方之证轻，而后方之证重，其义如何？则凡胸痹之为病，喘息咳唾，胸背痛短气是也。今其痛甚，而心痛彻背，则<目录>卷下",
+            "section_summary": "本段通过对比栝蒌薤白白酒汤与栝蒌薤白半夏汤的证候，探讨胸痹病的轻重程度及白酒在其中的治疗作用。前者主治喘息咳唾、胸背痛短气等轻证；后者主治胸痹不得卧、心痛彻背等重证，表明白酒可治胸背及心痛烦闷。"
+          },
+          {
+            "chunk_id": "classic::金匮方歌括::0076::01",
+            "filename": "095-金匮方歌括.txt",
+            "file_path": "classic://金匮方歌括/0076-01",
+            "page_number": 76,
+            "book_name": "金匮方歌括",
+            "chapter_title": "栝蒌薤白白酒汤",
+            "score": 62.0,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：金匮方歌括\n篇名：栝蒌薤白白酒汤\n属性：治胸痹病喘息咳唾。胸背痛。短气。寸口脉沉而迟。关上小紧数者。此汤主之。\n栝蒌实（一枚。捣。） 薤白（半升。） 白酒（七升。）上三味。同煮。取二升。分温再服。\n歌曰 胸为阳位似天空。阴气弥沦痹不通。薤白半升（栝）蒌一个。七升白酒奏奇功。\n孙男心典禀按。胸为气息之路。若阴邪占居其间。则阻其阳气不通。故生喘息咳唾胸背痛",
+            "section_summary": "本段出自《金匮方歌括》，主要论述栝蒌薤白白酒汤治疗胸痹的病机与方药。胸痹因阴邪阻滞胸中阳气，导致喘息咳唾、胸背痛、短气等症状。方用栝蒌实、薤白、白酒三味，通阳散结、行气祛痰。"
+          },
+          {
+            "chunk_id": "classic::医学纲目::0359::01",
+            "filename": "579-医学纲目.txt",
+            "file_path": "classic://医学纲目/0359-01",
+            "page_number": 359,
+            "book_name": "医学纲目",
+            "chapter_title": "短气",
+            "score": 62.0,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：医学纲目\n篇名：短气\n属性：短气者，气短而急，似喘非喘也。（详见诊条。）〔仲〕平人无寒热，短气不足以息者，实也。（丹溪治白云许先生脾疼胯疼短气，用大吐大下者二十余日，凡吐胶痰二大桶，如烂鱼肠，或如地沥青条者数碗而安，详见腹痛。）〔孙〕\\x正元散\\x 治气不接续，气短，兼治滑泄，及小便数。王丞相服之有效。\n蓬莪术（一两） 金铃子（去核一分）上件为末，入硼",
+            "section_summary": "本章节系统论述短气一证，定义其为气短而急、似喘非喘。病因多属饮邪、气虚或阳道不行，治疗以苓桂术甘汤、正元散等方剂为主，并辅以针灸、调摄之法。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e302",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "烦劳内伤、懒言恶食、清阳下陷，一般用哪首补中方",
+          "expected_books_any": [
+            "成方切用"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 10751.9,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.5,
+          "source_ndcg": 0.6309,
+          "matched_books": [
+            "成方切用"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0120::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0120-01",
+            "page_number": 120,
+            "book_name": "医方集解",
+            "chapter_title": "补中益气汤（东垣）",
+            "score": 56.2,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：补中益气汤（东垣）\n属性：治烦劳内伤，身热心烦，头痛恶寒，懒言恶食，脉洪大而虚，或喘或渴，或阳虚自汗（宜本汤加麻黄根、浮小麦，升、柴俱宜蜜水炒过，欲其引参、 至表，故又不可缺），或气虚不能摄血，或疟痢脾虚，久不能愈，一切清阳下陷，中气不足之证（中者，脾胃也，脏腑肢体，皆禀气于脾胃，饥饱劳役，伤其脾胃，则众体无以禀气而皆病矣。阳气下陷，则",
+            "section_summary": "本文阐述补中益气汤主治烦劳内伤、清阳下陷所致诸证，详述其病机、方药组成、加减化裁及鉴别内伤外感之要。强调脾胃为本，以甘温补气升阳为法。"
+          },
+          {
+            "chunk_id": "classic::成方切用::0008::01",
+            "filename": "091-成方切用.txt",
+            "file_path": "classic://成方切用/0008-01",
+            "page_number": 8,
+            "book_name": "成方切用",
+            "chapter_title": "补中益气汤",
+            "score": 56.2,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：成方切用\n篇名：补中益气汤\n属性：（东垣） 治烦劳内伤，身热心烦，头痛恶寒，懒言恶食，脉洪大而虚，气短而渴；或阳虚自汗。（宜本汤加麻黄根浮小麦，升柴俱宜蜜水炒过。）或气虚不能举元，致疟痢脾虚，久不能愈，一切清阳下陷，中气不足之证。\n黄 （蜜炙钱半） 人参 甘草（炙一钱） 白术（土炒） 陈皮（留白） 当归（五分） 升麻 柴胡（三分） 姜三片。枣二枚，〔东",
+            "section_summary": "补中益气汤出自李东垣，主治烦劳内伤、清阳下陷、中气不足诸证。方以黄芪、人参、甘草、白术、当归、升麻、柴胡、陈皮等组成，通过补益脾胃、升举清阳来治疗身热、头痛、自汗、气短、食少、脉虚等症。后世医家如薛立齐、高鼓峰等随证加减，扩展其应用。"
+          },
+          {
+            "chunk_id": "classic::胎产心法::0018::02",
+            "filename": "170-胎产心法.txt",
+            "file_path": "classic://胎产心法/0018-02",
+            "page_number": 18,
+            "book_name": "胎产心法",
+            "chapter_title": "诸痛论（附孕痈）",
+            "score": 49.480000000000004,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：胎产心法\n篇名：诸痛论（附孕痈）\n妊娠负重跌仆，凝血作痛，欲服活血药，则恐伤胎，不服，则所伤之血留而不去，治之者，当先辨胎之死生，如无别证，只用黑糖熬枯，入陈酒、童便调服，细嚼连皮胡桃过口，死者当下，生者其痛即止。若因怒跌仆，或手足抽搐者，紫苏饮加钩藤钩。倘去血过多，八珍汤去茯苓加阿胶、艾叶、黄 。如跌仆余伤未尽，痛未止，用四乌汤加延胡、木香。如伤去而",
+            "section_summary": "本篇论述妊娠期间各类疼痛的病因、辨证与治法，涵盖头痛、心腹痛、胁痛、腰痛、背脊痛等，并附孕痈证治。强调血虚、气滞、外感、劳伤等病机，列四物汤、紫苏饮、补中益气汤等方剂加减应用。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e303",
+          "category": "formula_explanation",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药在本草备要里被强调人只知其能发表，却不知最能和里",
+          "expected_books_any": [
+            "本草备要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡",
+            "和里",
+            "少阳",
+            "厥阴",
+            "补中益气汤",
+            "逍遥散"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 13882.7,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered_all"
+        ],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "本草备要"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草备要::0001::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0001-01",
+            "page_number": 1,
+            "book_name": "本草备要",
+            "chapter_title": "本草备要",
+            "score": 62.0,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草备要\n篇名：本草备要\n书名：本草备要作者：汪昂朝代：清·公元1644-1911年年份：",
+            "section_summary": "本段为《本草备要》的篇首介绍，主要说明该书由清代汪昂编撰，旨在为初学者提供简明实用的药物学知识，强调“备要”即备临床切要之用。"
+          },
+          {
+            "chunk_id": "classic::本草备要::0006::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0006-01",
+            "page_number": 6,
+            "book_name": "本草备要",
+            "chapter_title": "本草备要凡例",
+            "score": 62.0,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草备要\n篇名：本草备要凡例\n内容：（一）注本草者，当先注病证。不然，病之未明，药于何有？从前作者罕明斯义，第云某药入某经治某病而已。浅术视之，盖茫如也。唯李氏《纲目》裒集诸家，附着论说，间及病源；《经疏》因之释药而兼释病，补前人之未备，作后学之指南。兹集祖述二书，更加增订，药性病情，互相阐发，以便资用。若每处皆释，则重复烦琐，反生厌渎，故前后间见，或",
+            "section_summary": "本篇为《本草备要》凡例，阐述编纂原则与方法。强调注本草须先明病证，药性与病情应互相阐发；指出前人著作多笼统言药主治，缺乏禁忌说明；提出药物分类应依据气味形色、经络归属，并引入“十剂”理论；主张详注僻药而略述常见药，力求简明实用，便于读者查阅应用。"
+          },
+          {
+            "chunk_id": "classic::本草从新::0002::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0002-01",
+            "page_number": 2,
+            "book_name": "本草从新",
+            "chapter_title": "原序",
+            "score": 61.0,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草从新\n篇名：原序\n内容：余先世藏书最伙。凡有益于民用者。购之尤亟。以故岐黄家言。亦多海内希见之本。余自髫年。习制举业时。即旁览及焉。遇有会意。辄觉神情开涤。于是尽发所藏而精绎之。迄今四十年矣。夫医学之要。莫先于明理。其次则在辨证。其次则在用药。理不明。证于何辨。证不辨。药于何用。故拙着医学十种。其一曰∶一源必彻。其二曰∶四诊须详。于经义病情。\n必斟",
+            "section_summary": "本文为《本草从新》原序，作者吴仪洛阐述其家学渊源与四十年研习医学之经历，强调医学要旨在明理、辨证、用药。作者评述历代本草著作，认为《本草纲目》稍繁，《本草经疏》有发明，《本草备要》虽广但存承误之失，故重订之以切时用。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e304",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "哪味药被描述为味苦性寒体阴质燥，能解渴除烦、止盗汗、治热毒诸痢",
+          "expected_books_any": [
+            "本草便读"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 9508.2,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered:3->2"
+        ],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "answer_keypoint_precision": 0.5,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.6667,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草从新::0043::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0043-01",
+            "page_number": 43,
+            "book_name": "本草从新",
+            "chapter_title": "黄连",
+            "score": 52.36,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草从新\n篇名：黄连\n内容：\\x泻火燥湿。\\x大苦大寒。入心泻火。（海藏曰∶泻心实泻脾也、实则泻其子。）镇肝凉血。（凡治血、防风为上部之使、黄连为中部之使、地榆为下部之使。）燥湿开郁。解渴除烦。消心瘀。（能去心窍恶血。）止盗汗。（凉心。）治热毒诸痢。（致痢之由不一、若止因湿热而气实者、连为要药、嘉言曰∶治痢必先汗解其外、后调其内、首用辛凉以解表、次用苦",
+            "section_summary": "本章节详细阐述了黄连的性味、功效、主治、禁忌、炮制方法及品种鉴别。黄连大苦大寒，主泻心火、燥湿、凉血、解毒，用于治疗热毒痢疾、心烦、痈疮等症，但虚寒证忌用。文中还介绍了不同产地黄连的形态差异及各种炮制方法以适应不同脏腑火证。"
+          },
+          {
+            "chunk_id": "classic::本草品汇精要::0259::01",
+            "filename": "011-本草品汇精要.txt",
+            "file_path": "classic://本草品汇精要/0259-01",
+            "page_number": 259,
+            "book_name": "本草品汇精要",
+            "chapter_title": "草之草",
+            "score": 48.760000000000005,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草品汇精要\n篇名：草之草\n内容：\\x无毒 丛生\\x麻黄（出神农本经）主中风伤寒头痛温疟发表出汗去邪热气止咳逆上气除寒热破症坚积聚（以上朱字神农本经）五脏邪气缓急风胁痛字乳余疾止好唾通腠理疏伤寒头疼解肌泄邪恶气消赤黑斑毒（以上黑字名医所录）【名】龙沙卑 相卑盐【苗】（图经曰）春生苗至夏五月则长及一尺许稍上有黄花结实如百合瓣而小又似皂荚子味甘可啖皮红仁黑",
+            "section_summary": "本节出自《本草品汇精要》草部，专述麻黄。麻黄性温味苦，主解表发汗，能治中风伤寒、头痛温疟、咳逆上气等症。文中详述其名称、产地、采收、性味归经、炮制方法、主治功效及配伍禁忌。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e305",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "哪味药大苦大寒、沉阴下行，主泻肝胆火并除下焦湿热",
+          "expected_books_any": [
+            "本草便读"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 8992.0,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草从新::0042::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0042-01",
+            "page_number": 42,
+            "book_name": "本草从新",
+            "chapter_title": "龙胆草",
+            "score": 58.11999999999999,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草从新\n篇名：龙胆草\n内容：\\x泻肝胆火、下焦湿热。\\x大苦大寒。沉阴下行。入肝胆而泻火。兼入膀胱肾经。除下焦之湿热。与防己同功。酒浸。\n亦能外行上行。治骨间寒热。（肾主骨。）惊痫邪气。（肝经风火。）时气温热。热痢疸黄。脚肿而痛者、为湿香港脚、宜清热利湿搜风、痛而不肿、挛缩枯细者、名干香港脚、宜养血润燥舒筋。）咽喉风热。赤睛弩肉。（泻肝胆火、能明目、",
+            "section_summary": "本段阐述龙胆草性味苦寒，主入肝胆经，功能泻肝胆实火、清下焦湿热。可治骨间寒热、惊痫、时气温热、湿热黄疸、湿脚气、目赤肿痛及痈疽疮疥等症。但大苦大寒易损胃气，无实火者忌用。"
+          },
+          {
+            "chunk_id": "classic::本草分经::0620::01",
+            "filename": "038-本草分经.txt",
+            "file_path": "classic://本草分经/0620-01",
+            "page_number": 620,
+            "book_name": "本草分经",
+            "chapter_title": "龙胆草",
+            "score": 58.11999999999999,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草分经\n篇名：龙胆草\n内容：大苦大寒，沉阴下行，入肝胆而泻火，兼入膀胱肾经，除下焦湿热，酒浸亦能外行上行。\n<目录>原例（次序略经更定）\\足厥阴肝",
+            "section_summary": "本段论述龙胆草的性味归经与功效。其性大苦大寒，主入肝胆经以泻火，兼入膀胱、肾经，能清除下焦湿热。经酒炮制后，药力可外行上行。"
+          },
+          {
+            "chunk_id": "classic::本草分经::0039::01",
+            "filename": "038-本草分经.txt",
+            "file_path": "classic://本草分经/0039-01",
+            "page_number": 39,
+            "book_name": "本草分经",
+            "chapter_title": "商陆",
+            "score": 56.44,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草分经\n篇名：商陆\n内容：苦寒，沉阴下行，与大戟甘遂同功，疗水肿、胀满、蛊毒、恶疮。\n<目录>原例（次序略经更定）\\通行经络",
+            "section_summary": "本段出自《本草分经》商陆条目，阐述其性味苦寒，药性沉降下行，功效与大戟、甘遂相似，主治水肿、胀满、蛊毒及恶疮等症。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e306",
+          "category": "formula_alias",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "外台秘要里虚劳腹中痛、梦失精、手足烦热、咽干口燥这一条，实际就是仲景哪首方",
+          "expected_books_any": [
+            "外台秘要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "虚劳腹中痛",
+            "手足烦热",
+            "咽干口燥"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6709.4,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "外台秘要"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "小建中汤",
+            "手足烦热",
+            "咽干口燥"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "小建中汤",
+            "虚劳腹中痛",
+            "手足烦热",
+            "咽干口燥"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.5,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::外台秘要::0411::01",
+            "filename": "053-外台秘要.txt",
+            "file_path": "classic://外台秘要/0411-01",
+            "page_number": 411,
+            "book_name": "外台秘要",
+            "chapter_title": "虚劳梦泄精方一十首",
+            "score": 62.0,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：外台秘要\n篇名：虚劳梦泄精方一十首\n内容：病源肾虚为邪所乘。邪客于阴。则梦交接。肾藏精。今肾虚弱不能制于精。故因梦感动而泄也。（出第四卷中）深师韭子丸。疗虚劳梦泄精方。\n韭子（五合熬） 大枣（五枚） 黄 人参 甘草（炙） 干姜 当归 龙骨 半夏（洗）芍药（各三两）上十味捣合下筛。和以白蜜枣膏丸如梧子。服十丸。日三四。忌海藻菘菜羊肉饧。（千金同）又棘刺丸",
+            "section_summary": "本篇论述虚劳梦泄精的病因病机，认为肾虚受邪、梦中交感而致精泄。收录深师韭子丸、棘刺丸、鹿角汤、桂心汤等十首方剂，涵盖汤、丸、散及灸法，体现补肾固精、调和阴阳的治疗思路。"
+          },
+          {
+            "chunk_id": "classic::外台秘要::0433::01",
+            "filename": "053-外台秘要.txt",
+            "file_path": "classic://外台秘要/0433-01",
+            "page_number": 433,
+            "book_name": "外台秘要",
+            "chapter_title": "虚劳心腹痛方二首",
+            "score": 62.0,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：外台秘要\n篇名：虚劳心腹痛方二首\n内容：病源虚劳者。脏气不足。复为风邪所乘。邪正相干。冷热击搏。故令心腹俱痛。（出第三卷中）古今录验疗虚劳。腹中痛。梦失精。四肢酸疼。手足烦热。咽干口燥。并妇人少腹痛芍药汤方。\n芍药（六两） 桂心（三两） 甘草（三两炙） 生姜（四两） 大枣（十二枚擘） 饴糖（一斤）上六味切。以水九升。煮取三升。去滓。下糖。分服七合。日三",
+            "section_summary": "本篇论述虚劳心腹痛的病机与方治。病源为脏气不足，复感风邪，冷热相搏致心腹痛。收录芍药汤与建中黄芪汤两首方剂，分别针对虚劳腹痛、梦失精、四肢烦热及虚劳短气、少腹急痛等证。"
+          },
+          {
+            "chunk_id": "classic::外台秘要::0084::01",
+            "filename": "053-外台秘要.txt",
+            "file_path": "classic://外台秘要/0084-01",
+            "page_number": 84,
+            "book_name": "外台秘要",
+            "chapter_title": "温疟方五首",
+            "score": 62.0,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：外台秘要\n篇名：温疟方五首\n内容：病源夫温疟与寒疟安舍，温疟得之冬，中于风寒，寒气藏于骨髓之中，至春则阳气大发，邪气不能出，因遇大暑，脑髓铄，肌肉消释，腠理发泄，因有所用力，邪气与汗偕出，此邪气先藏于肾，其气先从内出之于外，如是则阴虚而阳盛，盛则病矣，阳衰则气复反入，入则阳虚，阳虚则寒矣，故先热而后寒，名曰温疟，疟先寒而后热者，此由夏伤于大暑，汗大出，",
+            "section_summary": "本篇论述温疟的病因病机、鉴别诊断及治疗方法。温疟多因冬季感受风寒，邪气藏于骨髓，至春夏发为先热后寒之疟疾。文中区分温疟、寒疟、瘅疟，并收录常山汤、白虎加桂心汤等多个方剂。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e307",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方主治积劳虚损、心中虚悸、咽干唇燥、小腹拘急",
+          "expected_books_any": [
+            "备急千金要方"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "心中虚悸",
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 9682.9,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.5,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 0.5,
+          "answer_keypoint_f1": 0.6667,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "千金翼方::0551",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/0551",
+            "page_number": 551,
+            "book_name": "千金翼方",
+            "chapter_title": "枳",
+            "score": 49.12,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：千金翼方\n篇名：枳\n内容：味甘，平，无毒。主头风，小腹拘急。一名木蜜。其木皮∶温，无毒。主五痔，和五脏，以为木屋，屋中酒则味薄，此亦奇物。\n<目录>卷第三·本草中\\木部下品",
+            "section_summary": "本段出自《千金翼方》木部下品，记载枳（又名木蜜）的性味功效。其味甘性平无毒，主治头风与小腹拘急；其木皮性温无毒，主治五痔，能调和五脏。文中还提及用此木建造房屋会使屋内酒味变淡的奇特现象。"
+          },
+          {
+            "chunk_id": "本草品汇精要::0622",
+            "filename": "011-本草品汇精要.txt",
+            "file_path": "classic://本草品汇精要/0622",
+            "page_number": 622,
+            "book_name": "本草品汇精要",
+            "chapter_title": "木之木",
+            "score": 49.12,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草品汇精要\n篇名：木之木\n内容：\\x无毒 植生\\x枳（音止） （音矩）主头风小腹拘急其木皮温无毒主五痔和五脏（名医所录）【名】〔实〕木蜜〔木〕白石【苗】〔图经曰〕木大径尺叶如桑柘叶其子作房似珊瑚核在其端人多食之即诗小雅所谓南山有枸是也陆机云枸枝枸也木似白杨枝枸不直其实八九月熟啖之甘美如饴谓之木蜜本从南方来其木能败酒若以木为屋屋中酒则味薄此亦奇物也【地",
+            "section_summary": "本节出自《本草品汇精要》木部，主要记载枳（又名木蜜、白石）的药用特性。其果实主治头风、小腹拘急，木皮温无毒，主治五痔、调和五脏。文中详细描述了其形态、产地、采收时间、性味归经及使用禁忌。"
+          },
+          {
+            "chunk_id": "三因极一病证方论::0768",
+            "filename": "558-三因极一病证方论.txt",
+            "file_path": "classic://三因极一病证方论/0768",
+            "page_number": 768,
+            "book_name": "三因极一病证方论",
+            "chapter_title": "养荣汤",
+            "score": 46.48,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：三因极一病证方论\n篇名：养荣汤\n属性：治积劳虚损，四肢沉滞，骨肉酸疼，吸吸少气，行动喘咳，小便拘急，腰背强痛，心虚惊悸，咽干唇燥，饮食无味，阴阳衰弱，悲忧惨戚，多卧少起，久者积年，急者百日，渐至瘦削，五脏气竭，难可振复。又治肺与大肠俱虚，咳嗽下利，喘乏少气，呕吐痰涎。\n黄 当归 桂心 甘草(炙) 橘皮 白术 人参（各一两） 白芍药（三两） 熟地黄 五味",
+            "section_summary": "本节出自《三因极一病证方论》，主要论述养荣汤的主治证候、药物组成与用法。该方主治积劳虚损所致的多种虚弱症状，如四肢沉滞、气短喘咳、心虚惊悸等，以及肺与大肠俱虚的咳嗽下利。方药由黄芪、当归、人参等十余味组成，并随证加减。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e308",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方在伤寒寻源里被说成“本太阳表药，一转移而即变为安太阴之制”",
+          "expected_books_any": [
+            "伤寒寻源"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "本太阳表药",
+            "安太阴之制"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 9318.1,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered:3->1"
+        ],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "伤寒寻源"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "小建中汤",
+            "本太阳表药",
+            "安太阴之制"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "小建中汤",
+            "本太阳表药",
+            "安太阴之制"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒寻源::0119::01",
+            "filename": "467-伤寒寻源.txt",
+            "file_path": "classic://伤寒寻源/0119-01",
+            "page_number": 119,
+            "book_name": "伤寒寻源",
+            "chapter_title": "小建中汤",
+            "score": 55.72,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒寻源\n篇名：小建中汤\n属性：桂枝（三两去皮） 芍药（六两） 甘草（二两炙） 生姜（三两切） 胶饴（一升） 大枣（十一枚擘）上六味。以水七升。煮取三升。去滓。纳胶饴。更上微火消解。温服一升。日三服。\n此桂枝汤倍芍药而加胶饴也。本太阳表药。一转移而即变为安太阴之制。神化极矣。伤寒二三日。心中悸而烦者。中土虚馁。都城震恐。桂枝汤本主和营复阳。而但倍芍药加",
+            "section_summary": "本节阐述小建中汤的组成、煎服法及临床应用。该方由桂枝汤倍芍药加胶饴而成，功能转太阳表药为安太阴之剂，主治中土虚馁所致心中悸烦、腹中急痛等证，强调其奠安中土、扶植脾阳的核心作用。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e309",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "张氏医通怎样概括胸痹的治法核心",
+          "expected_books_any": [
+            "张氏医通"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "胸痹",
+            "温通上焦清阳",
+            "阳微阴弦"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 10271.9,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "张氏医通"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "胸痹",
+            "温通上焦清阳",
+            "阳微阴弦"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "胸痹",
+            "温通上焦清阳",
+            "阳微阴弦"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::张氏医通::0052::01",
+            "filename": "605-张氏医通.txt",
+            "file_path": "classic://张氏医通/0052-01",
+            "page_number": 52,
+            "book_name": "张氏医通",
+            "chapter_title": "胸痹",
+            "score": 58.599999999999994,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：张氏医通\n篇名：胸痹\n属性：金匮云。师曰。夫脉当取太过不及。阳微阴弦。即胸痹而痛。所以然者。责其极虚也。今阳虚知在上焦。所以胸痹心痛者。以其阴弦也。\n阳微在胸中气分上看。故曰阳微知在上焦。阴弦在阴脉上看。如阴寒之脉。上于胸中气分。\n则为胸痹。如阴脉上乘于心。则为心痛也。\n平人无寒热。短气不足以息者。实也。\n上条是言不及。此则言太过也。平人。盖言无内困虚",
+            "section_summary": "本篇基于《金匮要略》论述胸痹病机与证治。核心病机为“阳微阴弦”，即上焦阳虚、阴寒上乘。临床表现为喘息咳唾、胸背痛、短气等。治疗以通阳散结、豁痰利气为原则，根据具体证候选用栝蒌薤白白酒汤、栝蒌薤白半夏汤、枳实薤白桂枝汤、人参汤、茯苓杏仁甘草汤、橘皮枳实生姜汤、薏苡附子散、桂枝生姜枳实汤、乌头赤石脂丸等方剂。"
+          },
+          {
+            "chunk_id": "classic::临证指南医案::0029::01",
+            "filename": "367-临证指南医案.txt",
+            "file_path": "classic://临证指南医案/0029-01",
+            "page_number": 29,
+            "book_name": "临证指南医案",
+            "chapter_title": "胸痹",
+            "score": 57.88,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：临证指南医案\n篇名：胸痹\n属性：浦 中阳困顿浊阴凝冱。胃痛彻背。午后为甚。即不嗜饮食。亦是阳伤。温通阳气。在所必施。\n（胸脘清阳不运）薤白（三钱） 半夏（三钱） 茯苓（五钱） 干姜（一钱） 桂枝（五分）华（四六） 因劳。胸痹。阳伤。清气不运。仲景每以辛滑微通其阳。\n薤白 栝蒌皮 茯苓 桂枝 生姜王 胸前附骨板痛。甚至呼吸不通。必捶背稍缓。病来迅速。莫晓",
+            "section_summary": "本篇论述胸痹的病因病机与治法。核心病机为胸中阳虚不运，清阳失展，浊阴凝滞。治疗遵循仲景之法，以辛滑温通为主，常用薤白、桂枝、栝蒌、半夏等药通阳散结，并区分胸痹与胸痞的不同。"
+          },
+          {
+            "chunk_id": "classic::医述::0113::01",
+            "filename": "599-医述.txt",
+            "file_path": "classic://医述/0113-01",
+            "page_number": 113,
+            "book_name": "医述",
+            "chapter_title": "胸痹",
+            "score": 57.88,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：医述\n篇名：胸痹\n属性：\\x哲言\\x胸痹与胸痞不同。胸痞有暴寒郁结于胸者；有火郁于中者；\n有寒热互郁者；有气实填胸而痞者；有气衰而成虚痞者；有肺胃津液枯涩，因燥而痞者；有上焦湿浊弥漫而痞者。若夫胸痹，但因胸中阳虚不运，久而成痹。《内经》未曾详言，惟《金匮》立方俱用辛滑温通，所云∶寸口脉沉而迟，阳微阴弦，是知但有寒证而无热证矣。治法亦惟温通上焦清阳为主。",
+            "section_summary": "本章节论述胸痹的病因病机、鉴别诊断与治法方药。核心病机为胸中阳虚不运，阴气上逆，属寒证而非热证。强调需与胸痞、结胸等鉴别，治法以辛滑温通、宣发胸阳为主，并列举栝蒌薤白白酒汤等系列经方。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e310",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "张氏医通里疟病寒多热少、甚至但寒不热时，偏向哪首和解加减方",
+          "expected_books_any": [
+            "张氏医通"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡桂姜汤",
+            "寒多热少",
+            "但寒无热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 13158.3,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 0.9197,
+          "matched_books": [
+            "张氏医通"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "张氏医通::0001",
+            "filename": "605-张氏医通.txt",
+            "file_path": "classic://张氏医通/0001",
+            "page_number": 1,
+            "book_name": "张氏医通",
+            "chapter_title": "张氏医通",
+            "score": 57.519999999999996,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：张氏医通\n篇名：张氏医通\n书名：张氏医通作者：张璐朝代：清·康熙三十四年年份：公元1695年",
+            "section_summary": "本段为《张氏医通》开篇，主要介绍该书的基本信息，包括书名、篇名、作者张璐、成书于清代康熙三十四年（公元1695年）。"
+          },
+          {
+            "chunk_id": "周慎斋遗书::0002",
+            "filename": "249-周慎斋遗书.txt",
+            "file_path": "classic://周慎斋遗书/0002",
+            "page_number": 2,
+            "book_name": "周慎斋遗书",
+            "chapter_title": "赵序",
+            "score": 48.16,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：周慎斋遗书\n篇名：赵序\n属性：余舅祖琢崖王先生，乾隆甲午，寿届七十有九，病将易箦，手书一编，嘱余曰∶是为明慎斋遗书，开雕未半，子幸竟其事，卒成吾志。余谨受教，唯而退。乃于是年之冬，续刊其余，共成书十卷。雕事毕，为之序曰∶先生讳琦，字载韩，号载庵，又号琢崖，晚年自称胥山老人。未弱冠，补弟子员，即馆余家。先生父松谷公，相与昕夕讨论书史，上下古今，旁及青鸟演",
+            "section_summary": "本文为《周慎斋遗书》赵序，记述了琢崖王先生临终嘱托赵树元完成该书刊刻的经过，介绍了王先生的生平学识、刻书事迹，并说明了《慎斋遗书》的来源、整理过程及其医学价值。"
+          },
+          {
+            "chunk_id": "张氏医通::0152",
+            "filename": "605-张氏医通.txt",
+            "file_path": "classic://张氏医通/0152",
+            "page_number": 152,
+            "book_name": "张氏医通",
+            "chapter_title": "妊娠目病",
+            "score": 48.16,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：张氏医通\n篇名：妊娠目病\n属性：妊娠目病。须分气分血分。气分则有旋胪泛起。瞳神散大等证。血分则有瘀血凝脂等病。盖其阴阳涩滞。与常人不同。内伐恐伤胎泄气。不伐则病又不除。然必善施内护外劫之法。则百发百中矣。\n<目录>卷八\\七窍门上",
+            "section_summary": "本篇论述妊娠目病的辨治要点，强调须区分气分与血分。气分病可见旋胪泛起、瞳神散大；血分病则见瘀血凝脂。因孕妇阴阳涩滞，治疗需兼顾护胎与祛邪，善用内护外劫之法方能奏效。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e311",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "医学三字经怎样概括疟病为什么属少阳，初起主方是什么",
+          "expected_books_any": [
+            "医学三字经"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "疟为病",
+            "属少阳",
+            "小柴胡汤"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 12183.7,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered_all"
+        ],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::备急千金要方::1806::01",
+            "filename": "532-备急千金要方.txt",
+            "file_path": "classic://备急千金要方/1806-01",
+            "page_number": 1806,
+            "book_name": "备急千金要方",
+            "chapter_title": "疟病",
+            "score": 54.28,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：备急千金要方\n篇名：疟病\n属性：列缺 后溪 少泽 前谷 主疟寒热。（又云∶列缺主疟热甚。） 阳谷 主疟，胁痛不得息。 大钟 主多寒少热。 太溪 主热多寒少。（《甲乙》云∶大溪主疟闷甚呕，热多寒少，欲闭户而处，寒厥足热。） 丘墟 主疟振寒。（《甲乙》云∶丘墟主腋下肿。） 昆仑主疟多汗。（《甲乙》云∶主腰痛不能俯仰，目如脱，项如拔。） 然谷 主温疟汗出。\n",
+            "section_summary": "本篇出自《备急千金要方》疟病门，系统论述了通过针灸治疗各类疟疾的方法。内容以经络穴位为纲，详细列举了不同穴位所主的疟疾具体症状，如寒热往来、胁痛、多汗、咳嗽等，体现了中医辨证施治与经络理论的紧密结合。"
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0079::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0079-01",
+            "page_number": 79,
+            "book_name": "太平圣惠方",
+            "chapter_title": "疟病",
+            "score": 54.28,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：太平圣惠方\n篇名：疟病\n内容：恒山（寒微寒） 蜀漆（平微温） 牡蛎（平微寒） 鳖甲（平） 麝香（温） 麻黄（温微温）大青（大寒） 防葵（寒） 猪苓（平） 汉防己（平温） 茵芋（温微温） 巴豆（温生温熟寒） 白头翁梅（平） 雄黄（<目录>卷第二\\诸疾通用药",
+            "section_summary": "本节出自《太平圣惠方》疟病篇，主要列举了治疗疟疾的常用药物及其性味，包括恒山、蜀漆、牡蛎、鳖甲等，为临床用药提供参考。"
+          },
+          {
+            "chunk_id": "classic::普济方·针灸::0477::01",
+            "filename": "316-普济方·针灸.txt",
+            "file_path": "classic://普济方·针灸/0477-01",
+            "page_number": 477,
+            "book_name": "普济方·针灸",
+            "chapter_title": "疟病",
+            "score": 54.28,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：普济方·针灸\n篇名：疟病\n属性：恒山（寒。微寒） 蜀漆（平。微温） 牡蛎（平。微温） 鳖甲（平） 麝香（温） 麻黄（温微温） 大青（大寒） 防葵（寒） 猪苓（平） 汉防己（平。温） 茵芋（温。微温） 巴豆（温。生温。熟寒） 白头翁（温） 女青（平） 芫花（温。微温） 白薇（平。大寒） 菘萝（平） 桃（平） 乌梅（平） 雄黄（平。大温） 菖蒲（温） 莽草",
+            "section_summary": "本章节出自《普济方·针灸》卷十七，主题为疟病。内容主要列举了治疗疟病的常用药物及其性味，如恒山、蜀漆、牡蛎、鳖甲等，为临床用药提供参考。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e312",
+          "category": "formula_definition",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "病人时发热自汗出而不愈，被解释为卫气不和时，宜先用哪首方",
+          "expected_books_any": [
+            "医宗金鉴"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "卫气不和",
+            "桂枝汤",
+            "时发热",
+            "自汗出"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 13642.6,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered:3->1"
+        ],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "卫气不和",
+            "桂枝汤",
+            "时发热",
+            "自汗出"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "卫气不和",
+            "桂枝汤",
+            "时发热",
+            "自汗出"
+          ],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒大白::0034::01",
+            "filename": "481-伤寒大白.txt",
+            "file_path": "classic://伤寒大白/0034-01",
+            "page_number": 34,
+            "book_name": "伤寒大白",
+            "chapter_title": "发热",
+            "score": 55.24,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒大白\n篇名：发热\n属性：发热有翕翕发热，蒸蒸发热。翕翕发热者，身热无汗，恶寒拘紧，如鸟羽之合而不发舒，此邪伤于表，郁于肌肤，表热而里未热，治宜发散表邪。蒸蒸发热者，手足遍身 多汗，热而润泽，此表邪已散，热郁于里，蒸汗时时外出也，治宜清热。若便结腹胀，有下症者，下之。此以表热里热分两大法也。若发热无汗，脉浮紧，此太阳伤营之表症也。冬月西北人，用麻黄汤",
+            "section_summary": "本章系统论述发热的辨证论治，以翕翕发热（表热）与蒸蒸发热（里热）为总纲，详细区分太阳、阳明、少阳三阳经发热的证型、脉象、治法及方药，并强调鉴别诊断，如太阳中风与风温、阳明里热的异同。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e313",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "汗吐下后虚烦不得眠、心中懊憹时，先用哪首栀子豉方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "栀子豉汤",
+            "虚烦不得眠",
+            "心中懊憹"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 10010.3,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered_all"
+        ],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.6667,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 0.9197,
+          "matched_books": [
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "栀子豉汤",
+            "虚烦不得眠",
+            "心中懊憹"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "栀子豉汤",
+            "虚烦不得眠",
+            "心中懊憹"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒寻源::0120::01",
+            "filename": "467-伤寒寻源.txt",
+            "file_path": "classic://伤寒寻源/0120-01",
+            "page_number": 120,
+            "book_name": "伤寒寻源",
+            "chapter_title": "栀子豉汤",
+            "score": 58.36,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒寻源\n篇名：栀子豉汤\n属性：栀子（十二枚擘） 香豉（四两绵裹）上二味。以水四升。先煮栀子。得二升半。纳豉煮取一升半。去滓。分为二服。温进一服。得吐者止后服。\n此非吐法之主方也。因误汗吐下后。正气已伤。邪留上焦。扰动阳气。因生烦热。无论虚烦实烦。皆宜此方取吐。虚烦者。若经中所指虚烦不得眠。反复颠倒。心中懊 。胃中空虚。\n客气动膈。按之心下濡。舌上胎饥",
+            "section_summary": "本章节阐述栀子豉汤的组成、煎服法及主治。该方由栀子、香豉组成，功能宣透上焦郁热，通过涌吐使邪外解。主治误治后邪热留扰胸膈所致的虚烦、实烦证，并强调与结胸、痞证的鉴别及禁忌。"
+          },
+          {
+            "chunk_id": "classic::伤寒悬解::0383::01",
+            "filename": "482-伤寒悬解.txt",
+            "file_path": "classic://伤寒悬解/0383-01",
+            "page_number": 383,
+            "book_name": "伤寒悬解",
+            "chapter_title": "栀子白虎猪苓证十四（阳明六十五）",
+            "score": 58.36,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：伤寒悬解\n篇名：栀子白虎猪苓证十四（阳明六十五）\n属性：阳明病脉浮而紧咽燥口苦腹满而喘发热汗出不恶寒反恶热身重若发汗则躁心愦愦反谵语若加烧针必怵惕烦躁不得眠若下之则胃中空虚客气动膈心中懊 舌上苔者栀子豉汤主之（方在太阳八十九）若渴欲饮水口干舌燥者白虎加人参汤主之（方在太阳三十九）若脉浮发热渴欲饮水小便不利者猪苓汤主之阳明病脉浮而紧有太阳证咽燥舌干有少阳",
+            "section_summary": "本章论述阳明病兼太阳、少阳、太阴证，误用汗、下、烧针后，出现懊憹、口渴、小便不利等变证，分别以栀子豉汤、白虎加人参汤、猪苓汤辨证施治。"
+          },
+          {
+            "chunk_id": "classic::伤寒括要::0184::01",
+            "filename": "477-伤寒括要.txt",
+            "file_path": "classic://伤寒括要/0184-01",
+            "page_number": 184,
+            "book_name": "伤寒括要",
+            "chapter_title": "栀子豉汤",
+            "score": 58.36,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：伤寒括要\n篇名：栀子豉汤\n属性：栀子 香豉汗吐下后。虚烦不得眠。若剧者。必心中懊 。栀子豉汤主之。若少气者。栀子甘草豉汤。若呕者。栀子生姜豉汤。邪气自表传里。留于胸中。为邪在高分。则可吐也。所吐之症不同。如未经汗下。邪郁于膈者。乃实邪也。以瓜蒂散吐之。若汗吐下后。邪气乘虚。留于胸者。乃虚烦也。以栀子豉汤吐之。经曰。酸苦涌泄为阴。涌者。吐也。涌吐虚烦。必",
+            "section_summary": "本章节论述栀子豉汤及其变方的主治与方义。主要针对汗吐下后，邪热留扰胸膈所致的虚烦不得眠、心中懊憹等症。阐明其病机为邪在高分，可用吐法，并区分了虚烦与实邪的不同治法。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e314",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "渴欲饮水而小便不利时，偏向哪首兼顾育阴利水的方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利",
+            "阿胶"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 10497.7,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.5,
+          "source_ndcg": 0.6309,
+          "matched_books": [
+            "伤寒寻源"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.7059,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::三因极一病证方论::0533::01",
+            "filename": "558-三因极一病证方论.txt",
+            "file_path": "classic://三因极一病证方论/0533-01",
+            "page_number": 533,
+            "book_name": "三因极一病证方论",
+            "chapter_title": "文蛤散",
+            "score": 47.32,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：三因极一病证方论\n篇名：文蛤散\n属性：治渴欲饮水不止。\n文蛤(即五倍子，最能回津，《本草》在海蛤文甚失其性，识者当自知之)上一味为末。以水饮任调方寸匕，不以时。\n<目录>卷之十\\三消治法",
+            "section_summary": "本章节出自《三因极一病证方论》卷之十，专论三消治法中的文蛤散。该方剂主治渴欲饮水不止之症，仅用文蛤（即五倍子）一味研末，以水或饮任意调服方寸匕，不拘时服用。文中特别指出文蛤最能回津，并纠正了《本草》中将其归为海蛤的错误。"
+          },
+          {
+            "chunk_id": "classic::伤寒寻源::0187::01",
+            "filename": "467-伤寒寻源.txt",
+            "file_path": "classic://伤寒寻源/0187-01",
+            "page_number": 187,
+            "book_name": "伤寒寻源",
+            "chapter_title": "白头翁汤",
+            "score": 47.32,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：伤寒寻源\n篇名：白头翁汤\n属性：白头翁（二两） 黄连 黄柏 秦皮（各三两）上四味。以水七升。煮取二升。去滓。温服一升。不愈。再服一升。\n按此方寒以胜热。苦以坚阴。用治热利下重欲饮水者。盖下重则热邪奔迫。欲饮水则津液为热所伤矣。或通或涩。皆所不宜。但清其热而利自止。\n<目录>下集",
+            "section_summary": "本节阐述白头翁汤的组成、用法与主治。该方由白头翁、黄连、黄柏、秦皮组成，功能清热燥湿、凉肝解毒，主治热毒深陷血分，下迫大肠所致的热利下重、渴欲饮水之证。"
+          },
+          {
+            "chunk_id": "classic::医宗金鉴::0285::01",
+            "filename": "575-医宗金鉴.txt",
+            "file_path": "classic://医宗金鉴/0285-01",
+            "page_number": 285,
+            "book_name": "医宗金鉴",
+            "chapter_title": "五苓散方",
+            "score": 47.32,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：医宗金鉴\n篇名：五苓散方\n属性：（见痰饮中）@@@脉浮发热，渴欲饮水，小便不利者，猪苓汤主之。\n【注】此与上条文同义异。文同者，脉浮小便不利，发热、微热、渴欲饮水、消渴也。而义异者，一以五苓散利水发汗，一以猪苓汤利水滋干也。审其所以义异之意，必在有汗、无汗之间也。何以知之？一以发汗为主，其因无汗可知；一以滋干为主，其因有汗可知。故文同而义异，病同而治别",
+            "section_summary": "本段出自《医宗金鉴》消渴小便利淋病篇，主要对比五苓散与猪苓汤的证治异同。两者均治脉浮发热、渴欲饮水、小便不利，但五苓散侧重利水发汗，适用于无汗者；猪苓汤侧重利水滋干，适用于有汗者。强调仲景书言外寓意，需学者意会。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e315",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "男子失精、女子梦交而脉极虚芤时，宜先用哪首桂枝加味方",
+          "expected_books_any": [
+            "金匮要略",
+            "祖剂",
+            "金匮方歌括"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "桂枝加龙骨牡蛎汤",
+            "失精",
+            "梦交",
+            "脉极虚芤"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 12621.0,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.25,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "失精"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "失精"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 0.25,
+          "answer_keypoint_f1": 0.4,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::三因极一病证方论::0969::01",
+            "filename": "558-三因极一病证方论.txt",
+            "file_path": "classic://三因极一病证方论/0969-01",
+            "page_number": 969,
+            "book_name": "三因极一病证方论",
+            "chapter_title": "菊花丸",
+            "score": 62.0,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：三因极一病证方论\n篇名：菊花丸\n属性：治脾肺气虚，忧思过度，荣卫枯耗，唇裂沉紧；或口吻生疮，容色枯悴，男子失精，女子血衰，悉主之。\n甘菊花 枸杞子 肉苁蓉(酒浸，洗切) 巴戟(去心，各等分)上为末，蜜丸，梧子大。每服三五十丸，米汤下。\n<目录>卷之十六\\唇病证治",
+            "section_summary": "菊花丸主治脾肺气虚、忧思过度所致荣卫枯耗，症见唇裂沉紧、口吻生疮、容色枯悴，兼治男子失精、女子血衰。方由甘菊花、枸杞子、肉苁蓉、巴戟天等分蜜丸，米汤送服。"
+          },
+          {
+            "chunk_id": "classic::外台秘要::0409::01",
+            "filename": "053-外台秘要.txt",
+            "file_path": "classic://外台秘要/0409-01",
+            "page_number": 409,
+            "book_name": "外台秘要",
+            "chapter_title": "虚劳失精方五首",
+            "score": 58.599999999999994,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：外台秘要\n篇名：虚劳失精方五首\n内容：病源肾气虚损。不能藏精。故精漏失。其病少腹弦急。阴头寒。目眶痛。发落。诊其脉数而散者。失精脉也。凡脉芤动微紧。男子失精。（出第四卷中）深师人参丸。疗虚劳失精方。\n人参（二两） 桂心 牡蛎（熬） 薯蓣 黄柏 细辛 附子（炮） 苦参（各三分） 泽泻（五分） 麦门冬（去心） 干姜 干地黄（各四分） 菟丝子（二分）上十三味",
+            "section_summary": "本篇论述虚劳失精的病因病机、脉象及治疗方药。病源为肾气虚损不能藏精，症状见少腹弦急、阴头寒等。收录深师人参丸、三物天雄散、灸法及黄芪汤等五首方剂，涵盖丸、散、汤及灸法。"
+          },
+          {
+            "chunk_id": "classic::世医得效方::1071::01",
+            "filename": "069-世医得效方.txt",
+            "file_path": "classic://世医得效方/1071-01",
+            "page_number": 1071,
+            "book_name": "世医得效方",
+            "chapter_title": "唇病",
+            "score": 56.67999999999999,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：世医得效方\n篇名：唇病\n属性：治脾肺气虚，忧思过度，营卫不和，唇裂沈紧，或口吻生疮，容色枯悴。男子失精子血衰，悉宜服之。\n甘菊花 肉苁蓉（酒浸，洗切） 枸杞子 巴戟（去心。各等分）上为末，炼蜜丸，梧桐子大。每服三五十丸，米汤下。\n<目录>卷第十七\\口齿兼咽喉科",
+            "section_summary": "本节出自《世医得效方》唇病篇，论述因脾肺气虚、忧思过度导致营卫不和，出现唇裂、口疮、面色枯悴及男子失精血衰等症，并给出以甘菊花、肉苁蓉、枸杞子、巴戟天四味药组成的蜜丸方进行调治。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e316",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "劳倦伤脾、中气下陷、少气懒言时，常用哪首升阳举陷方",
+          "expected_books_any": [
+            "脾胃论",
+            "一草亭目科全书",
+            "医方集解"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "补中益气汤",
+            "中气下陷",
+            "少气懒言",
+            "升阳举陷"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 12874.2,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.3333,
+          "source_ndcg": 0.5,
+          "matched_books": [
+            "一草亭目科全书"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "补中益气汤",
+            "少气懒言",
+            "升阳举陷"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "补中益气汤",
+            "少气懒言",
+            "升阳举陷"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.4615,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "温疫论::0070",
+            "filename": "522-温疫论.txt",
+            "file_path": "classic://温疫论/0070",
+            "page_number": 70,
+            "book_name": "温疫论",
+            "chapter_title": "论轻疫误治每成痼疾",
+            "score": 53.919999999999995,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：温疫论\n篇名：论轻疫误治每成痼疾\n属性：凡客邪皆有轻重之分，惟疫邪感受轻者，人所不识，往往误治而成痼疾。假令患痢，昼夜无度，水谷不进，人皆知其危痢也。其有感之轻者，昼夜虽行四五度，饮食如常，起居如故，人亦知其轻痢，未尝误以他病治之者，凭有积滞耳。至如温疫感之重者，身热如火、头疼身痛、胸腹胀满、苔刺谵语、斑黄狂躁，人皆知其危疫也。其有感之浅者，微有头疼身",
+            "section_summary": "本篇论述温疫感受轻微时，因证候不显，易被医家误认为劳倦、阴虚、火郁或旧病加重，误用补益、滋阴、寒凉或旧方，反致邪气壅滞，迁延成痼疾甚至危殆。强调审察微疫的重要性。"
+          },
+          {
+            "chunk_id": "三十年临证经验集::三十年临证经验集",
+            "filename": "684-三十年临证经验集.txt",
+            "file_path": "classic://三十年临证经验集/0001-112",
+            "page_number": 1,
+            "book_name": "三十年临证经验集",
+            "chapter_title": "三十年临证经验集",
+            "score": 50.32,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：三十年临证经验集\n篇名：三十年临证经验集\n例二南汇盐仓乡周某，于1992年7月病发热不退，住县医院。凡可行之检查，悉以行之，无法明确诊断；可用之药俱以用之，发热终不能清。至1993年1月，病已七阅月，化费达万余元，病仍未解。经友人介绍，迎余为诊，询知发热多在38～39℃之间，用西药后可退至38℃以下，然不用则升。有时可自行退净三、四日，但数日后必定复热",
+            "section_summary": "例二南汇盐仓乡周某，于1992年7月病发热不退，住县医院。凡可行之检查，悉以行之，无法明确诊断；可用之药俱以用之，发热终不能清。至1993年1月，病已七阅月，化费达万余元，病仍未解。经友人介绍，迎余为诊，询知发热多在38～39℃之间，用西药后可退至38℃以下，然不用则升。有时可自行退净三、四日，但数日后必定复热如故。问其症则无以得对，盖并无明显之症状，原有咳"
+          },
+          {
+            "chunk_id": "一草亭目科全书::0039",
+            "filename": "307-一草亭目科全书.txt",
+            "file_path": "classic://一草亭目科全书/0039",
+            "page_number": 39,
+            "book_name": "一草亭目科全书",
+            "chapter_title": "补中益气汤",
+            "score": 49.12,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：一草亭目科全书\n篇名：补中益气汤\n属性：治劳倦伤脾，中气不足等症。\n黄 （一钱五分，蜜炙） 人参（去芦，一钱） 甘草（一钱，炙） 归身（酒洗，一钱） 白术（土炒，一钱） 陈皮（去白，五分） 升麻（三分） 柴胡（三分）上咀片，姜枣水煎服。\n一富家子，忽病视正物皆以为斜，凡物必更移令斜，自以为正。其父求医，一医留其子，盛达旦酒醒，遗之归家。前日斜视之物，皆",
+            "section_summary": "本节出自《一草亭目科全书》，主要介绍补中益气汤的组成、功效及主治，并附有两则眼科医案。第一则讲述醉酒导致视物歪斜的趣案，第二则论述孕妇目昏作痛的病因与治法。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e317",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药被称为“血中气药”，能行血和血、养营调气、去风散寒",
+          "expected_books_any": [
+            "得配本草",
+            "新修本草",
+            "本草纲目"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 17634.5,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "得配本草"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "得配本草::0150",
+            "filename": "036-得配本草.txt",
+            "file_path": "classic://得配本草/0150",
+            "page_number": 150,
+            "book_name": "得配本草",
+            "chapter_title": "当归",
+            "score": 61.83999999999999,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：得配本草\n篇名：当归\n内容：畏菖蒲、生姜、海藻、牡蒙。恶 茹、湿面。制雄黄。\n甘，辛，温。入手少阴、足厥阴、太阴经血分，血中气药。行血和血，养营调气，去风散寒。疗疟痢痘疹，痈疽疮疡，止头痛、心腹、腰脊、肢节，筋骨诸痛。（皆活血之功。）得茯苓，降气。配白芍，养营。配人参、黄 ，补阴中之阳。配红花，治月经逆行。（从口鼻出，先以好京墨磨汁服，止之。）君黄 ，",
+            "section_summary": "本节详细阐述当归的性味归经、功效主治、配伍应用、炮制方法及使用禁忌。当归为血中气药，能行血和血、养营调气，广泛用于治疗多种血证及痛证，并强调其不同部位（头、身、尾）及炮制方法对功效的影响，同时明确指出六种禁用情况。"
+          },
+          {
+            "chunk_id": "金疮秘传禁方::0005",
+            "filename": "251-金疮秘传禁方.txt",
+            "file_path": "classic://金疮秘传禁方/0005",
+            "page_number": 5,
+            "book_name": "金疮秘传禁方",
+            "chapter_title": "箭吸筒药",
+            "score": 48.16,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：金疮秘传禁方\n篇名：箭吸筒药\n属性：夏枯草 千层楼 乌 树皮 铁骨稍（如无不用） 血见愁 山水牛 上水二碗刮薄薄苦竹筒服去风散及搽生肌散。\n一治箭入皮肉用麻药定整骨，取出箭头，名曰昏昏散。山黄花 香附子 川芎 黄土上共为细末，每服一钱五分，酒调服，以草乌自然汁解之，或醋调冷水解之。\n治火燎。粪淬苦竹筌者，或被苦竹枪杀伤有火毒走痛肿痛，服诸药不效，此药大",
+            "section_summary": "本章节出自《金疮秘传禁方》之“箭吸筒药”，主要记载治疗箭伤、火燎等外伤的方剂。包括用于拔箭后外敷的“去风散”与“生肌散”，用于麻醉取箭的“昏昏散”，以及治疗火毒肿痛的“无价千金散”。"
+          },
+          {
+            "chunk_id": "伤寒指掌::0090",
+            "filename": "494-伤寒指掌.txt",
+            "file_path": "classic://伤寒指掌/0090",
+            "page_number": 90,
+            "book_name": "伤寒指掌",
+            "chapter_title": "吐血（新法）",
+            "score": 45.519999999999996,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：伤寒指掌\n篇名：吐血（新法）\n属性：伤寒吐血。每因失治所致。有因太阳感寒。无汗恶寒。头痛发热。寒邪外束。法当发汗。若失于表散。阳气不得外泄。则逆走阳络。络血妄行。则致吐血。或由其人素有血症。寒邪犯肺而咳。震伤血络。亦致咳血。均当以清疏营卫。表散寒邪为治。古人皆以麻黄桂枝等汤治血症是也。然未免太峻。当小其制。用羌活、苏叶、荆防、薄荷等。以去风散寒。橘红、",
+            "section_summary": "本节论述伤寒吐血的病因病机与治法。主要因外感寒邪失于表散，郁而化热入里伤络，或内有伏火外感寒邪，或风温误汗动血所致。治疗需辨证，分别采用辛温解表、辛凉清解、清络化瘀等法，并指出下厥上竭、内溃等危重证候为不治之症。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e318",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药苦寒而入手太阴、少阳、阳明经，长于清热燥湿泻火",
+          "expected_books_any": [
+            "得配本草",
+            "本草纲目",
+            "神农本草经"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "黄芩",
+            "苦寒",
+            "清热燥湿",
+            "泻火"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 7971.7,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "得配本草"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "黄芩",
+            "苦寒",
+            "清热燥湿",
+            "泻火"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "黄芩",
+            "苦寒",
+            "清热燥湿",
+            "泻火"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::得配本草::0130::01",
+            "filename": "036-得配本草.txt",
+            "file_path": "classic://得配本草/0130-01",
+            "page_number": 130,
+            "book_name": "得配本草",
+            "chapter_title": "黄芩",
+            "score": 58.599999999999994,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：得配本草\n篇名：黄芩\n内容：\\x旧根中空而枯者名片芩，又名枯芩。新根内实者名子芩，又名条芩。\\x龙骨、山茱萸为之使。畏丹砂、牡丹、藜芦。恶葱。\n苦，寒。入手太阴、少阳、阳明经气分。泻三焦实火，祛肌表邪热，利气郁，消膈痰，解喉腥，化斑疹，治疮疡，通肠闭，止热痛，凉血安胎。得黄 、白蔹、赤小豆，治鼠 。得浓朴、川连，止腹痛。得白芍，治下痢。得桑白皮，泻肺火",
+            "section_summary": "本节详细介绍了黄芩的性味归经、功效主治、炮制方法、配伍禁忌及临床应用。黄芩苦寒，入肺、胆、胃经，能清热燥湿、泻火解毒、凉血安胎。文中区分了枯芩与条芩的功效侧重，并列举了多种配伍方剂。"
+          },
+          {
+            "chunk_id": "classic::得配本草::0208::01",
+            "filename": "036-得配本草.txt",
+            "file_path": "classic://得配本草/0208-01",
+            "page_number": 208,
+            "book_name": "得配本草",
+            "chapter_title": "小青",
+            "score": 56.44,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：得配本草\n篇名：小青\n内容：微苦，寒。入手足阳明经。治血痢腹痛，敷痈肿疮疖。得白芷，治蛇螫伤毒。配沙糖，治中暑神昏。\n<目录>卷三\\草部",
+            "section_summary": "本章节介绍小青的性味归经与功效。其性微苦寒，归手足阳明经，主治血痢腹痛、痈肿疮疖，并记载了与白芷配伍治蛇伤、配沙糖治中暑的方剂应用。"
+          },
+          {
+            "chunk_id": "classic::得配本草::0051::01",
+            "filename": "036-得配本草.txt",
+            "file_path": "classic://得配本草/0051-01",
+            "page_number": 51,
+            "book_name": "得配本草",
+            "chapter_title": "云母",
+            "score": 53.8,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：得配本草\n篇名：云母\n内容：泽泻为之使。畏 甲、矾石、东流水、百草上露、茅屋溜水。恶徐长卿、羊血。制汞。伏丹砂。甘，平。入手太阴经气分。能入阴逐邪达表，入肠除垢止痢，坚肌续绝。得蜀漆、龙骨，治牝疟多寒。得黄丹熬膏，贴痈肿。黄黑者浓而顽，赤色者并不中用，须要光莹如水色者为上。\n<目录>卷一\\石部",
+            "section_summary": "本节论述云母的药性、归经、功效及配伍禁忌。其味甘性平，归手太阴经气分，能驱邪达表、除垢止痢、坚肌续绝。配伍蜀漆、龙骨可治牝疟，配黄丹可外贴痈肿。并记载了其炮制禁忌与药材品质鉴别。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e319",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药大苦大寒、沉阴下行，专泻肝胆火并除下焦湿热",
+          "expected_books_any": [
+            "本草从新",
+            "得配本草",
+            "冯氏锦囊秘录"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 8938.1,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.3333,
+          "source_ndcg": 0.5,
+          "matched_books": [
+            "本草从新"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草分经::0620::01",
+            "filename": "038-本草分经.txt",
+            "file_path": "classic://本草分经/0620-01",
+            "page_number": 620,
+            "book_name": "本草分经",
+            "chapter_title": "龙胆草",
+            "score": 58.11999999999999,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草分经\n篇名：龙胆草\n内容：大苦大寒，沉阴下行，入肝胆而泻火，兼入膀胱肾经，除下焦湿热，酒浸亦能外行上行。\n<目录>原例（次序略经更定）\\足厥阴肝",
+            "section_summary": "本段论述龙胆草的性味归经与功效。其性大苦大寒，主入肝胆经以泻火，兼入膀胱、肾经，能清除下焦湿热。经酒炮制后，药力可外行上行。"
+          },
+          {
+            "chunk_id": "classic::本草分经::0039::01",
+            "filename": "038-本草分经.txt",
+            "file_path": "classic://本草分经/0039-01",
+            "page_number": 39,
+            "book_name": "本草分经",
+            "chapter_title": "商陆",
+            "score": 56.44,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草分经\n篇名：商陆\n内容：苦寒，沉阴下行，与大戟甘遂同功，疗水肿、胀满、蛊毒、恶疮。\n<目录>原例（次序略经更定）\\通行经络",
+            "section_summary": "本段出自《本草分经》商陆条目，阐述其性味苦寒，药性沉降下行，功效与大戟、甘遂相似，主治水肿、胀满、蛊毒及恶疮等症。"
+          },
+          {
+            "chunk_id": "classic::本草从新::0042::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0042-01",
+            "page_number": 42,
+            "book_name": "本草从新",
+            "chapter_title": "龙胆草",
+            "score": 54.519999999999996,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草从新\n篇名：龙胆草\n内容：\\x泻肝胆火、下焦湿热。\\x大苦大寒。沉阴下行。入肝胆而泻火。兼入膀胱肾经。除下焦之湿热。与防己同功。酒浸。\n亦能外行上行。治骨间寒热。（肾主骨。）惊痫邪气。（肝经风火。）时气温热。热痢疸黄。脚肿而痛者、为湿香港脚、宜清热利湿搜风、痛而不肿、挛缩枯细者、名干香港脚、宜养血润燥舒筋。）咽喉风热。赤睛弩肉。（泻肝胆火、能明目、",
+            "section_summary": "本段阐述龙胆草性味苦寒，主入肝胆经，功能泻肝胆实火、清下焦湿热。可治骨间寒热、惊痫、时气温热、湿热黄疸、湿脚气、目赤肿痛及痈疽疮疥等症。但大苦大寒易损胃气，无实火者忌用。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e320",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "思虑伤脾、健忘怔忡、寤而不寐时，常用哪首方",
+          "expected_books_any": [
+            "严氏济生方",
+            "一草亭目科全书",
+            "医方集解"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 13104.6,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "一草亭目科全书"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::一草亭目科全书::0027::01",
+            "filename": "307-一草亭目科全书.txt",
+            "file_path": "classic://一草亭目科全书/0027-01",
+            "page_number": 27,
+            "book_name": "一草亭目科全书",
+            "chapter_title": "归脾汤",
+            "score": 56.2,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：一草亭目科全书\n篇名：归脾汤\n属性：治思虑伤脾，不能摄血，或健忘怔忡，惊悸盗汗，寤而不寐，或心脾作痛，嗜卧少食，大便不调，或肢体重痛，月经不调，赤白带下等症。\n人参（一钱） 白术（一钱） 茯神（一钱） 枣仁（一钱） 远志（一钱） 归身（一钱） 黄（一钱） 木香（三分） 甘草（三分）上咀片水煎，龙眼肉三个为引。心藏神而主血，肝藏魂而藏血，脾藏意而统血。若",
+            "section_summary": "本节阐述归脾汤主治思虑伤脾所致诸症，如健忘怔忡、惊悸盗汗、失眠、心脾疼痛、食少、月经不调等。方剂组成以人参、白术、茯神等补益心脾，旨在调和气血，使血归经。"
+          },
+          {
+            "chunk_id": "classic::女科经纶::0063::01",
+            "filename": "149-女科经纶.txt",
+            "file_path": "classic://女科经纶/0063-01",
+            "page_number": 63,
+            "book_name": "女科经纶",
+            "chapter_title": "妇人经闭属于心事不足思虑伤脾论",
+            "score": 54.519999999999996,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：女科经纶\n篇名：妇人经闭属于心事不足思虑伤脾论\n属性：徐春甫曰∶心属阳而主血，脾裹血以行气。若月经不通，未必不由心事不足，思虑伤脾，有所劳倦，谷气不输，肺金失养，肾水无滋，经血枯涸，以致三五不调，渐致闭绝。虚损内热，骨蒸劳瘵之证作，而率难以治。唯养心则血生，脾健则气布，二者和则气畅血行，而调经之要至矣。\n<目录>卷一\\月经门",
+            "section_summary": "本段论述妇人经闭的病因病机，认为心事不足、思虑伤脾可致气血生化失常，进而影响肺肾，导致经血枯涸、月经不调乃至闭经，并指出养心健脾为调经关键。"
+          },
+          {
+            "chunk_id": "classic::时方歌括::0025::01",
+            "filename": "093-时方歌括.txt",
+            "file_path": "classic://时方歌括/0025-01",
+            "page_number": 25,
+            "book_name": "时方歌括",
+            "chapter_title": "归脾汤",
+            "score": 52.535,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：时方歌括\n篇名：归脾汤\n属性：治思虑伤脾。不能摄血。致血妄行。或健忘怔忡。惊怪盗汗。嗜卧少食。或大便不调。\n心脾疼痛。疟痢郁结。或因病用药失宜。克伐伤脾。以致变症者。最宜之。\n归脾汤内术 神。（白术黄 炙茯神各二钱。）参志香甘与枣仁。（人参酸枣仁炒研各二钱。远志木香各五分。甘草炙一钱。）龙眼当归十味外。（龙眼肉五枚。当归二钱。）若加熟地失其真。（本方只",
+            "section_summary": "本章节阐述归脾汤主治思虑伤脾所致诸症，如失血、健忘、盗汗等，并详述其药物组成与方义。陈修园批评时医加入熟地黄的“黑归脾汤”做法，认为此举违背原方纯补脾阴的宗旨，反致壅滞伤脾。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e321",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "脚挛急、津液不荣经脉时，偏向哪首仅两味药相和的方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 10305.5,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "伤寒寻源"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒寻源::0174::01",
+            "filename": "467-伤寒寻源.txt",
+            "file_path": "classic://伤寒寻源/0174-01",
+            "page_number": 174,
+            "book_name": "伤寒寻源",
+            "chapter_title": "芍药甘草汤",
+            "score": 55.480000000000004,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒寻源\n篇名：芍药甘草汤\n属性：芍药（四两） 甘草（四两炙）上二味。以水三升。煮取一升五合。去滓。分温再服。\n按阳越于上。既用甘草干姜汤以复其阳。而挛急未解。明是津液不荣经脉。但以芍药甘草和之。而脚即伸。亦正所以救桂枝之逆也。此法试之颇验。不可以其平易而忽之。\n<目录>下集",
+            "section_summary": "本节阐述芍药甘草汤的组成、用法及主治。该方由芍药、甘草组成，用于治疗津液不荣经脉所致的挛急，尤其适用于阳越于上后脚挛急未解之证，可救桂枝汤之逆，临床验证有效。"
+          },
+          {
+            "chunk_id": "classic::伤寒六书::0205::01",
+            "filename": "470-伤寒六书.txt",
+            "file_path": "classic://伤寒六书/0205-01",
+            "page_number": 205,
+            "book_name": "伤寒六书",
+            "chapter_title": "四肢拘急",
+            "score": 50.92,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：伤寒六书\n篇名：四肢拘急\n属性：拘急者，手足不能自如，屈伸不便，如蜷卧恶风之貌。四肢者，诸阳之本。盖因发汗亡阳，阳虚，是有其证也。\n伤寒，脉浮，自汗出，小便数，心烦恶寒，脚挛急，芍药甘草汤；小便难者，桂枝加附子。\n太阳病，发汗，遂不止，恶风，小便难，四肢微急，难以屈伸，桂枝加附子汤。\n吐利汗出，发热恶寒，四肢拘急，手足厥冷，四逆汤。\n<目录>伤寒明理续",
+            "section_summary": "本篇论述四肢拘急的病机与治法。拘急表现为手足屈伸不利，如蜷卧恶风。病机多为发汗过度导致阳气虚损。根据具体症状，分别用芍药甘草汤、桂枝加附子汤、四逆汤治疗。"
+          },
+          {
+            "chunk_id": "classic::退思集类方歌注::0049::01",
+            "filename": "102-退思集类方歌注.txt",
+            "file_path": "classic://退思集类方歌注/0049-01",
+            "page_number": 49,
+            "book_name": "退思集类方歌注",
+            "chapter_title": "芍药甘草汤",
+            "score": 50.92,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：退思集类方歌注\n篇名：芍药甘草汤\n属性：治伤寒脉浮，自汗出，小便数，心烦，微恶寒，脚挛急者；并治腹中不和而痛芍药（四两） 甘草（四两炙） 水三升，煮一升五合，分温再服。\n<目录>退思集类方歌注\\桂枝汤类",
+            "section_summary": "本章节介绍了芍药甘草汤的组成、用法与主治。该方由芍药、甘草两味药组成，主治伤寒脉浮、自汗出、小便数、心烦、微恶寒、脚挛急，以及腹中不和而痛等症。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e322",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "hard",
+          "query": "发热微恶寒、肢节烦疼、微呕、心下支结时，偏向哪首太阳少阳并病方",
+          "expected_books_any": [
+            "伤寒论",
+            "医宗金鉴",
+            "古今名医方论"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡桂枝汤",
+            "太阳少阳并病",
+            "肢节烦疼",
+            "心下支结"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 14496.4,
+        "retrieval_mode": "fts_local",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.3333,
+          "source_ndcg": 0.5,
+          "matched_books": [
+            "医宗金鉴"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "柴胡桂枝汤",
+            "肢节烦疼",
+            "心下支结"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "柴胡桂枝汤",
+            "肢节烦疼",
+            "心下支结"
+          ],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒大白::0033::01",
+            "filename": "481-伤寒大白.txt",
+            "file_path": "classic://伤寒大白/0033-01",
+            "page_number": 33,
+            "book_name": "伤寒大白",
+            "chapter_title": "恶寒",
+            "score": 50.44,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒大白\n篇名：恶寒\n属性：秦子曰∶恶寒恶风，以一症而分轻重。恶风者，见风则恶，无风即止；恶寒者，即无风亦恶寒。恶寒、恶风、发热皆是表邪，虽里症悉具，若有一些恶寒、头疼、身痛、手足冷，即是表邪，宜先解表，不宜清里攻下。然恶寒有阴症阳症分别，不发热，脉沉迟，口不干，神清便清，阴症恶寒，治宜温经。发热脉数，头痛心烦，阳症恶寒，治宜散表。然温经散表各有分别，",
+            "section_summary": "本篇论述恶寒一症，区分恶寒与恶风，强调恶寒为表邪，需先解表。辨析阴症与阳症恶寒，详述三阳经（太阳、阳明、少阳）及过汗亡阳、阴症恶寒的治法与方剂，并引用仲景条文阐释病机与治则。"
+          },
+          {
+            "chunk_id": "classic::伤寒大白::0034::02",
+            "filename": "481-伤寒大白.txt",
+            "file_path": "classic://伤寒大白/0034-02",
+            "page_number": 34,
+            "book_name": "伤寒大白",
+            "chapter_title": "发热",
+            "score": 50.44,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：伤寒大白\n篇名：发热\n太阳病，发热汗出者，此为营弱卫强，故使汗出。欲救邪风者，宜桂枝汤主之。\n此申发热汗出之症，营血无邪而弱，卫气有邪而强，故宜用桂枝汤。\n病患脏无他病，时发热自汗出而不愈者，此为卫气不和也，先其时发汗则愈。宜桂枝汤主之。\n按发热自汗有三症∶有太阳风伤卫之症，用桂枝汤以解肌；有阳明发热自汗之里热症，用白虎汤以清里；有春三月发热自汗之风温",
+            "section_summary": "本章系统论述发热的辨证论治，以翕翕发热（表热）与蒸蒸发热（里热）为总纲，详细区分太阳、阳明、少阳三阳经发热的证型、脉象、治法及方药，并强调鉴别诊断，如太阳中风与风温、阳明里热的异同。"
+          },
+          {
+            "chunk_id": "classic::医宗金鉴::0699::01",
+            "filename": "575-医宗金鉴.txt",
+            "file_path": "classic://医宗金鉴/0699-01",
+            "page_number": 699,
+            "book_name": "医宗金鉴",
+            "chapter_title": "少阳可吐可汗可下",
+            "score": 50.199999999999996,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：医宗金鉴\n篇名：少阳可吐可汗可下\n属性：14. 胸满热烦栀子豉, 痞硬冲喉瓜蒂平, 发热恶寒肢烦痛, 微呕支结柴桂宁. 郁郁微烦呕不止, 心下痛硬大柴攻. 误下柴胡证仍在, 复与柴胡振汗生.【注】上言其禁, 恐失宜也； 此言其可, 贵变通也. 胸满烦热, 太阳少阳轻邪也, 宜栀子豉汤涌之. 胸满痞硬, 气上冲喉不得息者, 太阳,少阳重邪也, 宜瓜蒂散吐",
+            "section_summary": "本篇论述少阳病在不同证候下的可吐、可汗、可下治法。强调治疗需灵活变通，根据邪气轻重、表里兼夹情况，分别选用栀子豉汤、瓜蒂散、柴胡桂枝汤、大柴胡汤等方剂，并说明误下后柴胡证仍在的处理原则。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e323",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "心下痞满而不痛、寒热错杂时，常用哪首泻心汤",
+          "expected_books_any": [
+            "伤寒论",
+            "三因极一病证方论",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "半夏泻心汤",
+            "心下痞满",
+            "不痛",
+            "寒热错杂"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 11749.0,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered_all"
+        ],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.25,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "寒热错杂"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "寒热错杂"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.25,
+          "answer_keypoint_f1": 0.3636,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::白喉全生集::0014::01",
+            "filename": "313-白喉全生集.txt",
+            "file_path": "classic://白喉全生集/0014-01",
+            "page_number": 14,
+            "book_name": "白喉全生集",
+            "chapter_title": "白喉寒热错杂证治法",
+            "score": 53.32,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：白喉全生集\n篇名：白喉寒热错杂证治法\n属性：寒热二证既明。复有一种寒热错杂证。宜细详之。初起畏寒微热。疲倦。咳嗽。迨至数日。热愈大。夜间尤甚。喉内渐起白点。日见长大。虽通身大热如火。足趾必冷如冰。或腹痛自利。阴寒犯足太阴牌也。或心胸吵乱作呕者。\n混杂之邪。扰于脾胃欲成霍乱也。或鼻出浊涕。且见血丝者。风热熏蒸鼻窍也。或齿牙红肿出血。火毒炽于胃腑也。\n此证",
+            "section_summary": "本文论述白喉寒热错杂证的辨证与治法。该证初起畏寒微热，后转为夜间热甚，喉生白点，兼见足冷、腹痛自利、鼻衄齿衄等寒热错杂之象。脉象两寸浮洪而数，两尺沉细无神。治疗忌纯用寒凉或温燥，应上疏风清燥、中调利湿、下温散邪，主用辛夷散、苏子降气汤、藿香正气散加减。"
+          },
+          {
+            "chunk_id": "classic::白喉全生集::0022::01",
+            "filename": "313-白喉全生集.txt",
+            "file_path": "classic://白喉全生集/0022-01",
+            "page_number": 22,
+            "book_name": "白喉全生集",
+            "chapter_title": "白喉寒热错杂证吹药",
+            "score": 48.040000000000006,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：白喉全生集\n篇名：白喉寒热错杂证吹药\n属性：\\x三仙丹\\x 即离宫回生丹（一分） 坎宫回生丹（一分） 艮宫除害丹（五厘） 临时和匀。\n吹法照前。吹完再根据分两对用。",
+            "section_summary": "本节介绍白喉寒热错杂证的吹药方剂三仙丹，由离宫回生丹、坎宫回生丹、艮宫除害丹按比例混合而成，用于吹喉治疗。"
+          },
+          {
+            "chunk_id": "classic::丹溪手镜::0098::01",
+            "filename": "588-丹溪手镜.txt",
+            "file_path": "classic://丹溪手镜/0098-01",
+            "page_number": 98,
+            "book_name": "丹溪手镜",
+            "chapter_title": "小便不利数（七十四）",
+            "score": 47.32,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：丹溪手镜\n篇名：小便不利数（七十四）\n属性：小便不利数，热宜五苓承气，湿宜姜附，寒热宜柴胡桂枝干姜汤也。数宜干姜甘草芍药汤、承气类也。\n<目录>卷之上",
+            "section_summary": "本节论述小便不利与小便频数的辨证论治。指出小便不利属热证宜用五苓散、承气汤类，属湿证宜用姜附类，属寒热错杂证宜用柴胡桂枝干姜汤。小便频数则宜用干姜甘草芍药汤或承气类方剂。"
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e324",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "为什么少阳病常以口苦、咽干、目眩为提纲",
+          "expected_books_any": [
+            "伤寒证治准绳",
+            "证治准绳·伤寒",
+            "伤寒论"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 12888.9,
+        "retrieval_mode": "fts_local",
+        "warnings": [
+          "lexical_sanity_filtered_all"
+        ],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "伤寒证治准绳",
+            "证治准绳·伤寒",
+            "伤寒论"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::伤寒证治准绳::0046::01",
+            "filename": "473-伤寒证治准绳.txt",
+            "file_path": "classic://伤寒证治准绳/0046-01",
+            "page_number": 46,
+            "book_name": "伤寒证治准绳",
+            "chapter_title": "少阳病",
+            "score": 62.0,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：伤寒证治准绳\n篇名：少阳病\n属性：（口苦咽干 眩 往来寒热 胸胁痛 胸满 胸痛 耳聋）少阳经治法虽悉属和解然有误汗谵语属胃一证宜调胃下之少阳虽无汗解之法然有小柴胡加姜桂者亦温解微汗之意又此经本证胸胁痛耳聋寒热往来干呕或呕苦水宜小柴胡汤和解之倘不解者却宜大柴胡汤下之若胸胁多痰瓜蒂散吐之斯仲景之微旨也和解 小柴胡汤 小柴胡加桂汤吐 瓜蒂散下 调胃承气汤 大",
+            "section_summary": "本篇阐述少阳病的主证、治法与禁忌。主证为口苦、咽干、目眩、往来寒热、胸胁痛、耳聋等。治法以和解为主，主方为小柴胡汤，兼证可随证选用大柴胡汤、瓜蒂散、调胃承气汤等。明确指出少阳病禁用汗、吐、下三法，误治可致谵语、悸、惊等变证。"
+          },
+          {
+            "chunk_id": "classic::证治准绳·伤寒::0046::01",
+            "filename": "633-证治准绳·伤寒.txt",
+            "file_path": "classic://证治准绳·伤寒/0046-01",
+            "page_number": 46,
+            "book_name": "证治准绳·伤寒",
+            "chapter_title": "少阳病",
+            "score": 62.0,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：证治准绳·伤寒\n篇名：少阳病\n属性：（口苦咽干 眩 往来寒热 胸胁痛 胸满 胸痛 耳聋）少阳经治法虽悉属和解然有误汗谵语属胃一证宜调胃下之少阳虽无汗解之法然有小柴胡加姜桂者亦温解微汗之意又此经本证胸胁痛耳聋寒热往来干呕或呕苦水宜小柴胡汤和解之倘不解者却宜大柴胡汤下之若胸胁多痰瓜蒂散吐之斯仲景之微旨也和解 小柴胡汤 小柴胡加桂汤吐 瓜蒂散下 调胃承气汤 ",
+            "section_summary": "本章论述少阳病的脉证并治。少阳病主证为口苦、咽干、目眩、往来寒热、胸胁痛、耳聋等。治法以和解为主，主方为小柴胡汤。强调少阳病禁用汗、吐、下三法，但有变通，如误汗致谵语可调胃承气汤下之，胸胁多痰可用瓜蒂散吐之，不解者可用大柴胡汤下之。"
+          },
+          {
+            "chunk_id": "classic::伤寒论条辨::0011::01",
+            "filename": "471-伤寒论条辨.txt",
+            "file_path": "classic://伤寒论条辨/0011-01",
+            "page_number": 11,
+            "book_name": "伤寒论条辨",
+            "chapter_title": "辨少阳病脉证并治第五",
+            "score": 59.559999999999995,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：伤寒论条辨\n篇名：辨少阳病脉证并治第五\n属性：\\x凡九条方无\\x少阳主半表半里。半。不也。不表不里者。隙地也。夫以表实则可汗。里实则可下。上实则可吐。隙无实可言。故汗下吐皆无其法。而其合并之病。又皆已杂出于太阳阳明篇中。所以本篇条目少。无可攻之道也。无可攻者。一则界限也。故表里分先后。自此而终始。然则隙地反当要冲。无治最有关系。谓小柴胡汤为通行套药。不",
+            "section_summary": "本篇阐述少阳病的病机、脉证及治法禁忌。少阳主半表半里，为“隙地”，故汗、吐、下三法皆非所宜。核心症状为口苦、咽干、目眩，兼见耳聋、目赤、胸满烦等。误治可致谵语、惊悸等变证。小柴胡汤为少阳病主方，但需辨证施用，不可滥用。"
+          }
+        ]
+      }
+    ],
+    "avg_latency_ms": 11649.5,
+    "p95_latency_ms": 17634.5,
+    "top1_book_hit_rate": 0.4583,
+    "top1_chapter_hit_rate": null,
+    "top1_keyword_hit_rate": 0.8333,
+    "top1_evidence_hit_rate": null,
+    "topk_book_hit_rate": 0.6667,
+    "topk_chapter_hit_rate": null,
+    "topk_keyword_hit_rate": 0.875,
+    "topk_evidence_hit_rate": null,
+    "top1_provenance_hit_rate": 0.4583,
+    "topk_provenance_hit_rate": 0.6667,
+    "top1_answer_hit_rate": 0.8333,
+    "topk_answer_hit_rate": 0.875,
+    "top1_answer_provenance_hit_rate": 0.3333,
+    "topk_answer_provenance_hit_rate": 0.5833,
+    "avg_source_mrr": 0.5417,
+    "avg_source_ndcg": 0.5667,
+    "avg_book_hit_rate_case": 0.4305,
+    "avg_chapter_hit_rate_case": null,
+    "avg_keyword_hit_rate_case": 0.75,
+    "avg_evidence_hit_rate_case": null,
+    "avg_answer_keypoint_precision": 0.6042,
+    "avg_answer_keypoint_recall": 0.7604,
+    "avg_answer_keypoint_f1": 0.6069
+  },
+  "vector": {
+    "label": "vector_sqlite",
+    "cases": [
+      {
+        "case": {
+          "case_id": "cvf_e301",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方被说成治胸痹、喘息咳唾、胸背痛、短气，而且还批评世医误用豆蔻木香等药",
+          "expected_books_any": [
+            "成方切用"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "栝蒌薤白白酒汤",
+            "胸痹",
+            "胸背痛",
+            "短气"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6320.8,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.5,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "胸痹",
+            "短气"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "胸痹",
+            "短气"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 0.5,
+          "answer_keypoint_f1": 0.6667,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::太平圣惠方::0811::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0811-01",
+            "page_number": 811,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治胸痹短气诸方",
+            "score": 0.032266458495966696,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治胸痹短气诸方\n内容：夫胸痹短气者。由脏腑虚弱。阴阳不和。风冷邪气。攻注胸中。其脉太过与不及。阳微阴强而又气盛\\x治胸痹短气。喘息不利。心膈壅闷。宜服细辛散方。\\x细辛（一两） 生干地黄（一两） 甘草（半两炙微赤锉） 桂心（一两半） 赤茯苓（一两）枳实上件药。捣筛为散。每服三钱。以水一中盏。煎至六分。去滓。不计时候。温服。\n\\x治胸痹短气。脏腑久寒。脐腹疼痛。两胁胀满。心膈不利。宜服草豆蔻散方。\\x草豆蔻（一两去皮） 当归（一两锉微炒） 白术（一两） ",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0951::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0951-01",
+            "page_number": 951,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治久癖诸方",
+            "score": 0.03131881575727918,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治久癖诸方\n内容：夫久 癖气者。本因邪气所生。不离阴阳之气。结蓄而成也。此皆由脏腑不调。脾胃虚弱。\n时\\x治久 癖气。心腹胀满。时时筑心背痛。宿食不消。呕逆。不思饮食。休息气痢\\x\\x。喘促黄瘦京三棱（三分微煨锉） 鳖甲（一两涂醋炙令黄去裙 ） 川大黄（一两半锉碎微炒） 木香（半茱萸（半两炒微黄）神上件药。捣罗为末。炼蜜和捣五七百杵。丸如梧桐子大。每服不计时候。以粥饮下三十丸。\n\\x治久 癖气。腹内积聚。邪气往来。厥逆抢心。心胸痹闷。吐逆饮食。乌头丸方",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0809::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0809-01",
+            "page_number": 809,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治胸痹诸方",
+            "score": 0.031054405392392875,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治胸痹诸方\n内容：夫寒气客于五脏六腑。因虚而发。上冲于胸间。则为胸痹。胸痹之候者。胸中 如满。\n噎仰而\\x治胸痹喘急不通。利膈散方。\\x人参（一两去芦头） 前胡（一两去芦头） 甘草（半两炙微赤锉） 诃黎勒皮（三分）陈橘皮（（一两）上件药。捣筛为散。每服五钱。以水一大盏。入生姜半分。煎至五分。去滓。温温频服。\n\\x治胸痹疼痛痰逆。心膈不利方。\\x栝蒌（一枚） 枳实（一两麸炒微黄） 半夏（一两汤洗七遍去滑）上件药。捣筛为散。每服五钱。以水一大盏。入生姜半分",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e302",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "烦劳内伤、懒言恶食、清阳下陷，一般用哪首补中方",
+          "expected_books_any": [
+            "成方切用"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5091.9,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.5,
+          "source_ndcg": 0.6309,
+          "matched_books": [
+            "成方切用"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "补中益气汤",
+            "烦劳内伤",
+            "懒言恶食",
+            "清阳下陷"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0120::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0120-01",
+            "page_number": 120,
+            "book_name": "医方集解",
+            "chapter_title": "补中益气汤（东垣）",
+            "score": 0.03252247488101534,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：补中益气汤（东垣）\n属性：治烦劳内伤，身热心烦，头痛恶寒，懒言恶食，脉洪大而虚，或喘或渴，或阳虚自汗（宜本汤加麻黄根、浮小麦，升、柴俱宜蜜水炒过，欲其引参、 至表，故又不可缺），或气虚不能摄血，或疟痢脾虚，久不能愈，一切清阳下陷，中气不足之证（中者，脾胃也，脏腑肢体，皆禀气于脾胃，饥饱劳役，伤其脾胃，则众体无以禀气而皆病矣。阳气下陷，则阴火上乘，故热而烦，非实热也；头者诸阳之会，清阳不升，则浊气上逆，故头痛，其痛或作或止，非如外感头痛不休也；阳虚不能卫外",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::成方切用::0008::01",
+            "filename": "091-成方切用.txt",
+            "file_path": "classic://成方切用/0008-01",
+            "page_number": 8,
+            "book_name": "成方切用",
+            "chapter_title": "补中益气汤",
+            "score": 0.03200204813108039,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：成方切用\n篇名：补中益气汤\n属性：（东垣） 治烦劳内伤，身热心烦，头痛恶寒，懒言恶食，脉洪大而虚，气短而渴；或阳虚自汗。（宜本汤加麻黄根浮小麦，升柴俱宜蜜水炒过。）或气虚不能举元，致疟痢脾虚，久不能愈，一切清阳下陷，中气不足之证。\n黄 （蜜炙钱半） 人参 甘草（炙一钱） 白术（土炒） 陈皮（留白） 当归（五分） 升麻 柴胡（三分） 姜三片。枣二枚，〔东垣原方。黄 只有一钱，其余各三分。\n立齐常用参 钱半，白术当归一钱，陈皮七分，升柴五分。如病甚者，参 或三钱五钱，随证加",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::杂病心法要诀::0022::01",
+            "filename": "213-杂病心法要诀.txt",
+            "file_path": "classic://杂病心法要诀/0022-01",
+            "page_number": 22,
+            "book_name": "杂病心法要诀",
+            "chapter_title": "虚劳治法",
+            "score": 0.03047794966520434,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：杂病心法要诀\n篇名：虚劳治法\n属性：后天之治本血气，先天之治法阴阳，肾肝心肺治在后，脾损之法同内伤。\n【注】后天脾胃水谷生化荣卫，故治法本乎气血。先天肾脏精气生化之原，故治法本乎阴阳。五脏虚损治法，俱在于后，而脾脏虚损治法已载内伤，故曰同内伤也。\n\\x拯阴理劳汤\\x阴虚火动用拯阴，皮寒骨蒸咳嗽侵，食少痰多烦少气，生脉归芍地版贞。薏苡橘丹连合草，汗多不寐加枣仁，燥痰桑贝湿苓半，阿胶咳血骨热深。\n【注】此方即人参、麦冬、五味、当归、白芍、生地、龟版、女贞、薏苡、橘红、丹皮、",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e303",
+          "category": "formula_explanation",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药在本草备要里被强调人只知其能发表，却不知最能和里",
+          "expected_books_any": [
+            "本草备要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡",
+            "和里",
+            "少阳",
+            "厥阴",
+            "补中益气汤",
+            "逍遥散"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 531.1,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "本草备要"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草备要::0401::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0401-01",
+            "page_number": 401,
+            "book_name": "本草备要",
+            "chapter_title": "百沸汤",
+            "score": 0.029418126757516764,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草备要\n篇名：百沸汤\n内容：宣，助阳气助阳气，行经络（汪颖曰∶汤须百沸者佳。寇宗 曰∶患风冷气痹，人以汤淋脚至膝，浓复取汗，然别有药，特假阳气而行耳。四时暴泻痢，四肢、脐、腹冷，坐深汤中，浸至腹上，生阳之药，无速于此。张从正曰∶凡伤风寒、酒食，初起无病，便饮太和汤。或酸荠水揉肚探吐，汗出即已。昂按∶感冒风寒，而以热汤澡浴，亦发散之一法。故《内经》亦有可汤熨、可浴及摩之、浴之之文。《备急方》治心腹卒胀痛，欲死，煮热汤以渍手足，冷即易之）。\n<目录>金石水土部",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草备要::0281::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0281-01",
+            "page_number": 281,
+            "book_name": "本草备要",
+            "chapter_title": "雷丸",
+            "score": 0.028594771241830064,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草备要\n篇名：雷丸\n内容：泻，消积，杀虫苦寒有小毒。入胃、大肠经。功专消积杀虫（杨 得异疾，每发语，腹中有小声应之，久渐声大。有道士曰∶此应声虫也，但读本草，取不应者治之。读至雷丸，不应，服之而愈）。竹之余气，得霹雳而生，故名。大小如栗，竹刀刮去黑皮。甘草水浸一宿，酒拌蒸，或炮用。浓朴、芫花为使。恶葛根。\n<目录>木部",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草衍义::0037::01",
+            "filename": "007-本草衍义.txt",
+            "file_path": "classic://本草衍义/0037-01",
+            "page_number": 37,
+            "book_name": "本草衍义",
+            "chapter_title": "石膏",
+            "score": 0.02750455373406193,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草衍义\n篇名：石膏\n内容：二书纷辨不决，未悉厥理。详《本经》元无方解石之说，正缘《唐本》注石膏、方解石大体相似。因此一说，后人遂惑。经曰∶生齐山山谷，及齐卢山、鲁蒙山。采无时，即知他处者为非。今《图经》中又以汾州者编入，前后人都不详。经中所言细理白泽者良，故知不如是，则非石膏也。下有理石条中经云∶如石膏顺理而细，又可明矣。今之所言，石膏、方解石，二者何等有顺理细纹又白泽者。有是，则石膏也；无是，则非石膏也。仍须是经中所言州土者，方可入药，余皆偏见，可略不取。仲景白虎汤",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e304",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "哪味药被描述为味苦性寒体阴质燥，能解渴除烦、止盗汗、治热毒诸痢",
+          "expected_books_any": [
+            "本草便读"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6708.7,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.3333,
+          "source_ndcg": 0.5,
+          "matched_books": [
+            "本草便读"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "黄连",
+            "解渴除烦",
+            "止盗汗",
+            "治热毒诸痢"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草从新::0043::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0043-01",
+            "page_number": 43,
+            "book_name": "本草从新",
+            "chapter_title": "黄连",
+            "score": 0.03177805800756621,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草从新\n篇名：黄连\n内容：\\x泻火燥湿。\\x大苦大寒。入心泻火。（海藏曰∶泻心实泻脾也、实则泻其子。）镇肝凉血。（凡治血、防风为上部之使、黄连为中部之使、地榆为下部之使。）燥湿开郁。解渴除烦。消心瘀。（能去心窍恶血。）止盗汗。（凉心。）治热毒诸痢。（致痢之由不一、若止因湿热而气实者、连为要药、嘉言曰∶治痢必先汗解其外、后调其内、首用辛凉以解表、次用苦寒以清里。痢有虚实寒热之分、白属气分、红属血分、红热白寒之说非也、须凭脉证、而为凉泻温补。）痞满嘈杂。吞酸吐酸。（因肝火",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草备要::0107::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0107-01",
+            "page_number": 107,
+            "book_name": "本草备要",
+            "chapter_title": "黄连",
+            "score": 0.031754032258064516,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草备要\n篇名：黄连\n内容：泻火，燥湿大苦大寒。入心泻火（王海藏曰∶泻心，实泻脾也。实则泻其子），镇肝凉血（凡治血，防风为上部之使，黄连为中部之使，地榆为下部之使），燥湿开郁，解渴（单用能治消渴）除烦，益肝胆，浓肠胃，消心瘀（能去心窍恶血），止盗汗（凉心）。\n治肠 泻痢（便血曰 ，有脏连丸。湿热郁而为痢，黄连治痢要药。噤口者，热壅上焦，同人参煎汤呷之，但得下咽便好。喻嘉言曰∶下痢，必先汗解其外，后调其内。首用辛凉以解表，次用苦寒以攻里。《机要》云∶后重宜下，腹痛宜和，身",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草便读::0033::01",
+            "filename": "031-本草便读.txt",
+            "file_path": "classic://本草便读/0033-01",
+            "page_number": 33,
+            "book_name": "本草便读",
+            "chapter_title": "黄连",
+            "score": 0.028790389395194696,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草便读\n篇名：黄连\n内容：\\r黄连\\pq10a1.bmp\\r味苦性寒。体阴质燥。能化心脾湿热。蕴留之痞满全消。可除痢疫虫疮。\n粘腻之热邪悉去。伏梁成积。可破可宣。目赤攀睛。能清能降。瘀郁火邪均解退。口疳鼻尽蠲除。（黄连味极苦。性极寒。质极燥。专入心脾。清有余之实火。而化湿邪。治上焦则酒炒。治中焦用姜汁炒。治下焦以盐水炒。欲其治何脏腑之湿火。则加各经引导之药。然苦降之性为多。即其治痢治目治痞等法。非有湿热实火者不可轻用。出川中雅州者更胜。气味俱浓。惟心脾有湿热瘀积者为宜",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e305",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "哪味药大苦大寒、沉阴下行，主泻肝胆火并除下焦湿热",
+          "expected_books_any": [
+            "本草便读"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 4648.9,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.3333,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "龙胆草"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "龙胆草"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.3333,
+          "answer_keypoint_f1": 0.4444,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0224::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0224-01",
+            "page_number": 224,
+            "book_name": "医方集解",
+            "chapter_title": "茵陈蒿汤",
+            "score": 0.0315136476426799,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：茵陈蒿汤\n属性：（仲景）治伤寒阳明病，但头汗出，腹满口渴，二便不利，湿热发黄，脉沉实者（经曰∶阳明病发必发但头内汗濡泄便溏茵陈（六两） 大黄（二两，酒浸） 栀子（十四枚，炒。）此足阳明药也。成无己曰∶小热凉以和之，大热寒以彻之。发黄者，湿热甚也，非大寒不能彻其热，故以茵陈为君（茵陈发汗利水，以泄太阴阳明之湿热，故为治黄主药），栀子为臣，大黄为佐，分泄前后，则腹得利而解矣茵陈、栀子能导湿热由小便出，大黄能导湿热由大便出本方大黄易黄连，名茵陈三物汤∶治同。本",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::医方集解::0259::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0259-01",
+            "page_number": 259,
+            "book_name": "医方集解",
+            "chapter_title": "当归龙荟丸",
+            "score": 0.030158730158730156,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：医方集解\n篇名：当归龙荟丸\n属性：（《宣明》）治一切肝胆之火，神志不宁，惊悸搐搦，躁扰狂越，头晕目眩，耳鸣耳聋，胸膈痞塞，咽嗌不利，肠胃燥涩，两胁痛引少腹，肝移热于肺而咳嗽（肝属风木，主筋、主怒、主惊，故搐搦惊狂，皆属肝火；目为肝窍，胆脉络于耳，二经火盛，故目眩耳鸣；心脉挟咽历膈，肾脉贯膈循喉咙，水衰火盛，故膈咽不利；两胁少腹，皆肝胆经所循，故相引而痛。五脏六腑皆有咳，然必传以与肺，肝之移邪，则为肝咳）；亦治盗汗（盗汗属热，此与当归六黄汤同意）。\n当归（酒洗） 龙胆草（",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::古今名医方论::0145::01",
+            "filename": "082-古今名医方论.txt",
+            "file_path": "classic://古今名医方论/0145-01",
+            "page_number": 145,
+            "book_name": "古今名医方论",
+            "chapter_title": "当归龙荟丸",
+            "score": 0.02724014336917563,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：古今名医方论\n篇名：当归龙荟丸\n属性：治肝经实火，大便秘结，小便涩滞，或胸膈作痛，阴囊肿胀。凡属肝经实火，皆宜服之。\n当归 龙胆草 黄连 黄芩 栀子仁（各一两） 大黄 芦荟 青黛（各五钱） 木香（二钱上为末，炒神曲糊丸。每服二十丸，姜汤下。\n柯韵伯曰∶肝为相火，有泻无补。青黛禀东方之色，入通于肝，大寒之性，所以泻其实火也泻火必克旺则此火剂中须也<目录>卷四",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e306",
+          "category": "formula_alias",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "外台秘要里虚劳腹中痛、梦失精、手足烦热、咽干口燥这一条，实际就是仲景哪首方",
+          "expected_books_any": [
+            "外台秘要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "虚劳腹中痛",
+            "手足烦热",
+            "咽干口燥"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5519.7,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::太平圣惠方::0318::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0318-01",
+            "page_number": 318,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒狐惑诸方",
+            "score": 0.029709507042253523,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒狐惑诸方\n内容：夫狐惑之为病。初得状如伤寒。或因伤寒而变成斯疾也。其状。默默欲眠。虽目瞑而不得眠。起卧不安。虫蚀于咽喉为惑。蚀于阴者为狐。恶饮食。不欲闻食气。其人面目。或赤或黑\\x治伤寒狐惑。病脉数者。不可灸。或因火为邪。即加烦热。故血妄行于脉中。火\\x\\x气内盛茯神（一两） 半夏（三分汤洗七遍去滑） 黄芩（一两） 人参（一两去芦头） 麦门冬（一两去心焙） 黄连（一两去须） 甘草（三分炙微赤锉） 知母（三分）上件药。捣粗罗为散。每服五钱。以水一大",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0329::02",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0329-02",
+            "page_number": 329,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒后夹劳诸方",
+            "score": 0.028474711270410194,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒后夹劳诸方\n\\x治伤寒后夹劳。胸膈痰壅。不思饮食。气攻背膊。腰脊酸疼。宜服旋复花散方。\\x旋复花（一两） 半夏（三分汤洗七遍去滑） 麦门冬（半两去心） 知母（半两） 甘草（半两炙汤浸去白瓤焙） 百部（半两） 赤茯苓（三分） 前胡（一两去芦头）上件捣筛为散。每服五钱。以水一大盏。入生姜半分。煎至五分。去滓。不计时候温服\\x治伤寒后夹劳。四肢无力。脾胃气弱。饮食无味。肩背疼痛。宜服木香丸方。\\x木香（半两） 鳖甲（一两涂醋炙令黄去裙 ） 白茯苓（三分",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0408::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0408-01",
+            "page_number": 408,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治热病后虚劳诸方",
+            "score": 0.028298204527712725,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治热病后虚劳诸方\n内容：夫热病新瘥。脏腑犹虚。血气未复。若食过度。喜怒无恒。澡浴梳头。言语思虑。则生寒热寒热\\x治热病后。体气尚虚。用力太早。遂生寒热四肢乏力。宜服鳖甲饮子方。\\x鳖甲（半两涂醋炙令微黄去裙 ） 柴胡（一两去苗） 人参（一分去芦头） 甘草〔半分（两）炙微赤锉〕 豉（一合） 白术（一分） 雄鼠粪（七枚微炒别研）上件药。细锉。拌令匀。分为二服。每服。以水二大盏。入生姜二分。葱白三茎。煎至一盏。去滓。入研了鼠粪搅匀。不计时候。分温二服。\n\\x",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e307",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方主治积劳虚损、心中虚悸、咽干唇燥、小腹拘急",
+          "expected_books_any": [
+            "备急千金要方"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "心中虚悸",
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6755.5,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "心中虚悸",
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "心中虚悸",
+            "咽干唇燥",
+            "小腹拘急"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.4615,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::圣济总录::0672::01",
+            "filename": "060-圣济总录.txt",
+            "file_path": "classic://圣济总录/0672-01",
+            "page_number": 672,
+            "book_name": "圣济总录",
+            "chapter_title": "虚劳口干燥",
+            "score": 0.02788769549651404,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：圣济总录\n篇名：虚劳口干燥\n属性：论曰水性润下，阳与之升，故津液相成，神乃自生，今肾居下焦，膀胱为表，膀胱者，津液之府，若其人劳伤，阴阳断隔，不能升降，下焦虚寒，上焦生热，热即水不胜火，津液涸竭，致有口舌干燥之候。\n治五劳七伤，小腹拘急，脐下膨胀，两胁胀满，腰脊引痛，鼻口干燥，目视 ，忽忽不乐，胸中气逆，不下饮食，茎中痛，小便赤黄而有余沥，夜梦失精，惊恐虚乏。建中汤方黄 （锉） 远志（去心） 芍药 龙骨（各一两） 甘草（炙锉半两）上五味，粗捣筛，每用六钱匕，水一盏半，枣",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::石室秘录::0018::01",
+            "filename": "587-石室秘录.txt",
+            "file_path": "classic://石室秘录/0018-01",
+            "page_number": 18,
+            "book_name": "石室秘录",
+            "chapter_title": "全治法",
+            "score": 0.02604430914933198,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：石室秘录\n篇名：全治法\n属性：\\x论治痨病 论虚痨 论治痨虫\\x天师曰∶全治者，乃人病痨瘵之症也。痨病用不得霸药，宜用通身清火之味治之。（〔批〕痨症与虚损症，外症大相似而治实不同。虚损者，阴阳两虚∶痨症阴虚阳亢，故虚损可用温补，痨症用清补，而忌用温也。辨证法不必凭脉，只看人着复衣，此着单衣者为痨；人着单衣，此着复衣者为虚损。一骨蒸而热，一营卫虚而热故也。李子永识。）方用熟地五钱，地骨皮五钱，药虽多而功用平和也，丹皮二钱，元参一钱，人参三钱，白术三分，桑叶五片，麦冬二钱，",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::名师垂教::0001::62",
+            "filename": "669-名师垂教.txt",
+            "file_path": "classic://名师垂教/0001-62",
+            "page_number": 1,
+            "book_name": "名师垂教",
+            "chapter_title": "名师垂教",
+            "score": 0.025243000145074714,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：名师垂教\n篇名：名师垂教\n老师：《伤寒论》中说，\"发汗后，不可更行桂枝汤，汗出而喘，无大热者，可与麻黄杏仁甘草石膏汤\"。以方测证，其喘逆为邪气闭肺，故用麻黄配杏仁宣肺开闭，其汗出为郁热壅肺，故用麻黄配石膏宣肺泄热。全方辛凉宣泄，肃肺平喘，乃为实热喘咳而设。本例喘咳初期服之有效时，必具有此等证侯。但停药复发，且日渐加重；虽仍见咳喘气紧，但已不仅仅是出冷汗，而是冷汗淋漓，且伴见一派心阳虚惫的证侯，说明已由实喘转化为虚喘。若见前方有效而步其后尘，再用麻杏石甘汤，必犯\"虚虚\"之",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e308",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪首方在伤寒寻源里被说成“本太阳表药，一转移而即变为安太阴之制”",
+          "expected_books_any": [
+            "伤寒寻源"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "小建中汤",
+            "本太阳表药",
+            "安太阴之制"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 4861.2,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": false,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": false,
+          "matched_answer_keypoints": [],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.0,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::重庆堂随笔::0005::01",
+            "filename": "394-重庆堂随笔.txt",
+            "file_path": "classic://重庆堂随笔/0005-01",
+            "page_number": 5,
+            "book_name": "重庆堂随笔",
+            "chapter_title": "卷上",
+            "score": 0.03128054740957967,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：重庆堂随笔\n篇名：卷上\n属性：伤寒，外感之总名也；《伤寒论》，统论外感之书也。\n（注）《难经》云∶伤寒有五。则五种外感，昔人皆谓之伤寒矣。《伤寒论》有治风、治温、治喝。治湿诸法，则非专论一伤寒矣。\n《伤寒论》云∶太阳病，或已发热，或未发热，必恶寒，体痛呕逆，脉阴阳俱紧者，名曰伤寒。是正伤寒病也。\n（注）伤寒无不发热者，此云或未发热者，乃身热未发之时，先见恶寒等证，所谓“无热恶寒发于阴”。\n寒为阴邪，故往往先恶寒而后发热也。脉阴阳俱紧，即尺寸皆紧，紧为坎中满之象，坎为寒水",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::侣山堂类辩::0060::01",
+            "filename": "366-侣山堂类辩.txt",
+            "file_path": "classic://侣山堂类辩/0060-01",
+            "page_number": 60,
+            "book_name": "侣山堂类辩",
+            "chapter_title": "《伤寒论》编次辩",
+            "score": 0.03028233151183971,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：侣山堂类辩\n篇名：《伤寒论》编次辩\n属性：仲祖《伤寒论》，其中条绪井井，原系本文，非叔和所能编次。盖谓断简残篇者，是因讹传讹也。如、湿、渴三种，非伤寒之病，因病在太阳而与伤寒相似，故先提出于《太阳篇》外。温病风温，原因伤寒所致，然非卒病之风寒，故先分别于《太阳篇》中。\n太阳为诸阳主气，故首提太阳之为病，次中风，（风即寒中鼓动之气，故篇名《伤寒论》而反先提中风。）次伤寒，次传经，次桂枝汤证，次麻黄汤证。如六经篇首，则曰某经之为病，若六经所概论者，总归于太阳之首篇。其间条分",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::热病衡正::0001::47",
+            "filename": "402-热病衡正.txt",
+            "file_path": "classic://热病衡正/0001-47",
+            "page_number": 1,
+            "book_name": "热病衡正",
+            "chapter_title": "热病衡正",
+            "score": 0.030090497737556562,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：热病衡正\n篇名：热病衡正\n二，辨卫气营血与伤寒异卫气营血的辨证方法，最早开始运用者为张仲景，如《伤寒论》53条明文指出：“病常自汗出者，此为营气和，营气租者，外不谐，以卫气不共营气谐和故尔”，所以时逸人说：“太阳篇中，已包括营卫气血，不能将营卫气血，剔出于太阳范围之外。”在这一问题上，叶氏也具有同样的看法，故尽管叶派中人，为与仲景学说分庭抗礼而颇多刻意罗织、甚不顾事实之议论(如鞠通及朱彬、汪廷珍等人，都硬说《伤寒论》只是一部论狭义伤寒的书等)，但叶氏承认仲景也用卫气营血",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e309",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "张氏医通怎样概括胸痹的治法核心",
+          "expected_books_any": [
+            "张氏医通"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "胸痹",
+            "温通上焦清阳",
+            "阳微阴弦"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5543.1,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.3333,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "胸痹"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "胸痹"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 0.3333,
+          "answer_keypoint_f1": 0.5,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::备急千金要方::0909::01",
+            "filename": "532-备急千金要方.txt",
+            "file_path": "classic://备急千金要方/0909-01",
+            "page_number": 909,
+            "book_name": "备急千金要方",
+            "chapter_title": "治中汤",
+            "score": 0.028693528693528692,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：备急千金要方\n篇名：治中汤\n属性：治胸痹方（方见二十卷膀胱腑霍乱门）。\n<目录>卷十三心脏方\\胸痹第七",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::绛雪园古方选注::0156::01",
+            "filename": "088-绛雪园古方选注.txt",
+            "file_path": "classic://绛雪园古方选注/0156-01",
+            "page_number": 156,
+            "book_name": "绛雪园古方选注",
+            "chapter_title": "枳实薤白桂枝汤",
+            "score": 0.028693528693528692,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：绛雪园古方选注\n篇名：枳实薤白桂枝汤\n属性：枳实四枚 浓朴四两 薤白半斤 桂枝一两 栝蒌实一枚（捣）上五味，以水五升，先煮枳实、浓朴取二升，去滓，纳诸药，煮数沸，分温三服。\n胸痹三方，皆用栝蒌实、薤白，按其治法却微分三焦。《内经》言∶淫气喘息，痹聚在肺。\n喘息之气和胃无足较<目录>中卷\\内科",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0809::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0809-01",
+            "page_number": 809,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治胸痹诸方",
+            "score": 0.02803379416282642,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治胸痹诸方\n内容：夫寒气客于五脏六腑。因虚而发。上冲于胸间。则为胸痹。胸痹之候者。胸中 如满。\n噎仰而\\x治胸痹喘急不通。利膈散方。\\x人参（一两去芦头） 前胡（一两去芦头） 甘草（半两炙微赤锉） 诃黎勒皮（三分）陈橘皮（（一两）上件药。捣筛为散。每服五钱。以水一大盏。入生姜半分。煎至五分。去滓。温温频服。\n\\x治胸痹疼痛痰逆。心膈不利方。\\x栝蒌（一枚） 枳实（一两麸炒微黄） 半夏（一两汤洗七遍去滑）上件药。捣筛为散。每服五钱。以水一大盏。入生姜半分",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e310",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "张氏医通里疟病寒多热少、甚至但寒不热时，偏向哪首和解加减方",
+          "expected_books_any": [
+            "张氏医通"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡桂姜汤",
+            "寒多热少",
+            "但寒无热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6192.2,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.6667,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "柴胡桂姜汤",
+            "寒多热少"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "柴胡桂姜汤",
+            "寒多热少"
+          ],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.6667,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::古今医统大全::1402::01",
+            "filename": "617-古今医统大全.txt",
+            "file_path": "classic://古今医统大全/1402-01",
+            "page_number": 1402,
+            "book_name": "古今医统大全",
+            "chapter_title": "药方",
+            "score": 0.03200204813108039,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：古今医统大全\n篇名：药方\n属性：（《济生》）\\x清脾饮\\x 治瘅疟，脉来弦数，但热不寒，或热多寒少，口苦咽干，小便赤涩。\n青皮 浓朴（姜制） 白术 黄芩 草果 柴胡 茯苓 半夏 甘草（炙。各等分）每服五钱，水盏半，姜五片，煎七分，温服不拘时。\n（仲景）\\x小柴胡二陈汤\\x 治热痰作疟，用此和解。（方见伤寒门。）（《活人》）\\x白虎加桂枝汤\\x 治疟但热不寒及有汗者。\n知母 桂枝 甘草（炙） 粳米（各一钱） 石膏（五钱）上咀，水盏半煎一盏，去滓温服。\n（《局方》）\\x参苏",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::时病论::0082::01",
+            "filename": "528-时病论.txt",
+            "file_path": "classic://时病论/0082-01",
+            "page_number": 82,
+            "book_name": "时病论",
+            "chapter_title": "备用成方",
+            "score": 0.028629032258064516,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：时病论\n篇名：备用成方\n属性：\\x小柴胡汤\\x∶治伤寒少阳证，往来寒热，口苦耳聋，胁痛脉弦，疟发寒热，及妇人伤寒热入血室等证。\n柴胡 半夏 黄芩 人参 甘草加姜、枣，煎服。\n丰按∶此方专治寒热往来，邪在少阳之疟也。倘恶寒甚者，兼太阳也，宜加羌活。发热甚者，兼阳明也，宜加葛根。\n\\x景岳木贼煎\\x∶凡疟疾形实气强，多湿多痰者，宜此截之大效。\n木贼草 小青皮 制浓朴 制半夏 槟榔 苍术水煎露一宿，于未发之先二时温服。能饮者，酒煎最妙。\n丰按∶此方用木贼，取其入肝经气分，盖肝",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::金匮方歌括::0033::01",
+            "filename": "095-金匮方歌括.txt",
+            "file_path": "classic://金匮方歌括/0033-01",
+            "page_number": 33,
+            "book_name": "金匮方歌括",
+            "chapter_title": "牡蛎汤",
+            "score": 0.02862400327131466,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：金匮方歌括\n篇名：牡蛎汤\n属性：治牡疟。\n牡蛎 麻黄（各四两。） 甘草（二两。） 蜀漆（三两。）上四味。以水八升。先煮蜀漆、麻黄。去上沫。得六升。内诸药。煮取二升。温服一升。\n若歌曰 先煎三（两蜀）漆四（两）麻黄。四（两牡）蛎二甘后煮良。邪郁胸中须吐越。\n驱寒散结并（犀） 按。疟多寒者名牡疟。是痰饮填塞胸中。阻心阳之气不得外通故也。赵氏云。\n牡蛎柴胡去半夏加栝蒌根汤 治疟病发渴者。亦治劳疟。\n柴胡（八两。） 人参 黄芩 甘草（各三两。） 栝蒌根（四两。） 生姜（三两。）",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e311",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "easy",
+          "query": "医学三字经怎样概括疟病为什么属少阳，初起主方是什么",
+          "expected_books_any": [
+            "医学三字经"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "疟为病",
+            "属少阳",
+            "小柴胡汤"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6316.3,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": true,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": true,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 1.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.3333,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 1.0,
+          "source_ndcg": 1.0,
+          "matched_books": [
+            "医学三字经"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "小柴胡汤"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "小柴胡汤"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.3333,
+          "answer_keypoint_f1": 0.4444,
+          "top1_answer_provenance_hit": true,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医学三字经::0032::01",
+            "filename": "592-医学三字经.txt",
+            "file_path": "classic://医学三字经/0032-01",
+            "page_number": 32,
+            "book_name": "医学三字经",
+            "chapter_title": "疟疾方",
+            "score": 0.032266458495966696,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医学三字经\n篇名：疟疾方\n属性：\\x小柴胡汤\\x 一切疟病俱治。\n方见《伤寒》。\n<目录>卷之三",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::时病论::0082::01",
+            "filename": "528-时病论.txt",
+            "file_path": "classic://时病论/0082-01",
+            "page_number": 82,
+            "book_name": "时病论",
+            "chapter_title": "备用成方",
+            "score": 0.030536130536130537,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：时病论\n篇名：备用成方\n属性：\\x小柴胡汤\\x∶治伤寒少阳证，往来寒热，口苦耳聋，胁痛脉弦，疟发寒热，及妇人伤寒热入血室等证。\n柴胡 半夏 黄芩 人参 甘草加姜、枣，煎服。\n丰按∶此方专治寒热往来，邪在少阳之疟也。倘恶寒甚者，兼太阳也，宜加羌活。发热甚者，兼阳明也，宜加葛根。\n\\x景岳木贼煎\\x∶凡疟疾形实气强，多湿多痰者，宜此截之大效。\n木贼草 小青皮 制浓朴 制半夏 槟榔 苍术水煎露一宿，于未发之先二时温服。能饮者，酒煎最妙。\n丰按∶此方用木贼，取其入肝经气分，盖肝",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::金匮方歌括::0033::01",
+            "filename": "095-金匮方歌括.txt",
+            "file_path": "classic://金匮方歌括/0033-01",
+            "page_number": 33,
+            "book_name": "金匮方歌括",
+            "chapter_title": "牡蛎汤",
+            "score": 0.03007688828584351,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：金匮方歌括\n篇名：牡蛎汤\n属性：治牡疟。\n牡蛎 麻黄（各四两。） 甘草（二两。） 蜀漆（三两。）上四味。以水八升。先煮蜀漆、麻黄。去上沫。得六升。内诸药。煮取二升。温服一升。\n若歌曰 先煎三（两蜀）漆四（两）麻黄。四（两牡）蛎二甘后煮良。邪郁胸中须吐越。\n驱寒散结并（犀） 按。疟多寒者名牡疟。是痰饮填塞胸中。阻心阳之气不得外通故也。赵氏云。\n牡蛎柴胡去半夏加栝蒌根汤 治疟病发渴者。亦治劳疟。\n柴胡（八两。） 人参 黄芩 甘草（各三两。） 栝蒌根（四两。） 生姜（三两。）",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e312",
+          "category": "formula_definition",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "病人时发热自汗出而不愈，被解释为卫气不和时，宜先用哪首方",
+          "expected_books_any": [
+            "医宗金鉴"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "卫气不和",
+            "桂枝汤",
+            "时发热",
+            "自汗出"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 3812.2,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.5,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "桂枝汤",
+            "自汗出"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "桂枝汤",
+            "自汗出"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.5,
+          "answer_keypoint_f1": 0.4,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::太平圣惠方::0297::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0297-01",
+            "page_number": 297,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒心悸诸方",
+            "score": 0.03036576949620428,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒心悸诸方\n内容：夫伤寒悸者。谓心下悸动也。此由伤寒病。发汗以后。因又下之。内有虚热则渴。渴则饮水必苦里急。夫脉洪数。法当汗出而愈。而下之则身体重。心必悸也。不可发其汗。当自汗出而解\\x治伤寒二三日。心中悸。呕吐不止。心急郁郁微烦者。尚未解。可与大柴胡汤方。\\x柴胡（二两去苗） 黄芩（一两） 赤芍药 半夏（汤洗七遍去滑） 枳实（麸炒令黄）槟榔白术 赤茯苓（以上各一两）上件药。捣粗罗为散。每服四钱。以水一中盏。入生姜半分。枣三枚。煎至六分。去滓。不计",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0281::02",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0281-02",
+            "page_number": 281,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒阴阳刚柔痉病诸方",
+            "score": 0.02832415420928403,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒阴阳刚柔痉病诸方\n\\x治伤寒阳痉。通身热。仰目头痛。宜服石膏散方。\\x石膏（二两） 龙齿（一两） 犀角屑（半两） 前胡（半两去芦头） 秦艽（一两去苗）上件药。捣筛为散。每服五钱。以水一大盏。入豉五十粒。葱白七寸。煎至五分。去滓。入牛黄末一字。搅令匀。不计时候温服之。\n\\x治伤寒阳痉。壮热不歇。筋脉拘急。牙关急痛。宜服防风散方。\\x防风（一两去芦头） 木通（一两锉） 麦门冬（一两去心） 川升麻（一两） 甘草（三分炙微赤锉） 虎杖（一两锉） 石膏（二",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草思辨录::0004::02",
+            "filename": "029-本草思辨录.txt",
+            "file_path": "classic://本草思辨录/0004-02",
+            "page_number": 4,
+            "book_name": "本草思辨录",
+            "chapter_title": "石膏",
+            "score": 0.02786377708978328,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草思辨录\n篇名：石膏\n石膏甘淡入胃，辛入肺，体重易碎，亦升亦降，则入三焦。以清肃之寒，涤蒸郁之热，只在三经气分而不入于血，其为胃药非脾药亦由于是。然则腹中坚痛，必苦寒入血如大黄，方克胜任，即枳朴芍药，亦只堪用为臣使，石膏断不能攻坚而止痛。本经腹中坚痛四字，必是后仲圣方石膏麻黄并用，与大黄协附子变其性为温药相似。更设多方以增损而轩轾之，觉变幻纷纭，令人目眩。然只认定麻黄散寒发汗，石膏泄热止汗，相为制还相为用。推此以求，何方不可解，何方不可通。大青龙汤，咸以为发汗之猛剂矣",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e313",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "汗吐下后虚烦不得眠、心中懊憹时，先用哪首栀子豉方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "栀子豉汤",
+            "虚烦不得眠",
+            "心中懊憹"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 3960.2,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.6667,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "栀子豉汤",
+            "虚烦不得眠"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "栀子豉汤",
+            "虚烦不得眠"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.6667,
+          "answer_keypoint_f1": 0.4444,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草衍义::0230::01",
+            "filename": "007-本草衍义.txt",
+            "file_path": "classic://本草衍义/0230-01",
+            "page_number": 230,
+            "book_name": "本草衍义",
+            "chapter_title": "栀子",
+            "score": 0.032018442622950824,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草衍义\n篇名：栀子\n内容：仲景治发汗吐下后，虚烦不得眠，若剧者，必反复颠倒，心中懊 ，栀子豉汤治之。\n虚，故不用大黄，有寒毒故也。栀子虽寒无毒，治胃中热气，既亡血、亡津液，腑脏无润养，内生虚热，非此物不可去，张仲景《伤寒论》已着。又治心经留热，小便赤涩，去皮山栀子、火炮大黄、连翘、甘草炙，等分，末之，水煎三二钱匕，服之无不效。\n<目录>卷十四",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::汤液本草::0172::01",
+            "filename": "008-汤液本草.txt",
+            "file_path": "classic://汤液本草/0172-01",
+            "page_number": 172,
+            "book_name": "汤液本草",
+            "chapter_title": "栀子",
+            "score": 0.0315136476426799,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：汤液本草\n篇名：栀子\n内容：气寒，味微苦。味苦，性大寒，味薄，阴中阳也。无毒。入手太阴经。\n《象》云∶治心烦，懊 而不得眠，心神颠倒欲绝，血滞，小便不利。杵细用。\n《心》云∶去心中客热，除烦躁，与豉同用。\n《珍》云∶止渴，去心懊 烦躁。\n《本草》云∶主五内邪气，胃中热气，面赤，酒 渣鼻，白癞、赤癞，疮疡。疗目热赤痛，胸心大小肠大热，心中烦闷，胃中热气。仲景用栀子治烦，胸为至高之分也。故易老云∶轻浮而象肺也，色赤而象火，故能泻肺中之火。《本草》不言吐，仲景用此为吐药。栀子",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0188::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0188-01",
+            "page_number": 188,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治心胸烦热诸方",
+            "score": 0.027783137179239824,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治心胸烦热诸方\n内容：夫心气盛实，气血壅涩，阴阳不通，荣卫隔塞，上焦壅滞，故令心胸烦热也。（按∶以下第一方缺方名及症状。）地骨皮（一两） 葳蕤（一两） 玄参（一两） 黄 （一两锉） 子芩（一两） 麦门冬（一两去心） 川升麻（一两） 甘草（半两炙微赤锉）上件药，捣粗罗为散。每服三钱，用水一中盏，入竹叶七片，煎至五分，去滓，入生地黄汁、蜜各半合，更煎一两沸，不计时候温服。\n\\x治心胸烦热，渴逆头痛，宜服羚羊角散方。\\x羚羊角屑（一两） 葛根（半两锉） 黄芩",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e314",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "渴欲饮水而小便不利时，偏向哪首兼顾育阴利水的方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利",
+            "阿胶"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 1675.1,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利",
+            "阿胶"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "猪苓汤",
+            "渴欲饮水",
+            "小便不利",
+            "阿胶"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0207::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0207-01",
+            "page_number": 207,
+            "book_name": "医方集解",
+            "chapter_title": "五苓散",
+            "score": 0.03028233151183971,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：五苓散\n属性：治太阳病发汗后，大汗出，胃中干，烦躁不得眠，欲饮水者，少少与之，令胃气和则愈；若脉浮，小便不利，微热消渴者，此汤主之（脉浮为表证仍在，便秘热渴为腑证已急，用此两解表里）；及中风发热，六七日不解而烦，有表里证，渴欲饮水，水入即吐，名曰水逆（表以外证未罢言，里以烦渴属腑言，邪热挟积饮上逆，故外水格而不入）；及伤寒痞满，服泻心汤不解，渴而烦躁，小便不利（功擅荡热滋燥，导饮生津，故亦为消痞良方。程郊倩曰∶邪在上焦而治在下焦者，使浊阴出下窍，而清阳之",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::医方集解::0208::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0208-01",
+            "page_number": 208,
+            "book_name": "医方集解",
+            "chapter_title": "猪苓汤",
+            "score": 0.029551337359792925,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：医方集解\n篇名：猪苓汤\n属性：（仲景）治阳明病脉浮发热，渴欲饮水，小便不通（成氏曰∶脉浮发热，上焦热也；渴欲饮水，中焦热也；小便不利，热结下焦，津液不通也。《准绳》曰∶此浮字误也，是脉字下脱一不字也泽寒不昂明篇，亦用治少阴渴利，取其降火行水，则利自止，烦渴自退，乃泻少阴之腑，以安少阴之经药乎？且改脉浮为不浮，方书中无此文法）∶少阴病下利六七日，咳而呕渴，心烦不得眠下利不渴者，里寒也；渴者，阳邪入里；心烦不眠，知挟热也；咳而渴呕，有停饮也；渴而（下利，知小便必不利，是热邪",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::普济方::0682::02",
+            "filename": "074-普济方.txt",
+            "file_path": "classic://普济方/0682-02",
+            "page_number": 682,
+            "book_name": "普济方",
+            "chapter_title": "伤寒烦渴（附论）",
+            "score": 0.029437229437229435,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：普济方\n篇名：伤寒烦渴（附论）\n切戒太阳证无汗而渴者。不可与白虎汤。仲景云。渴欲饮水。无表证者。白虎加人参汤。脉浮。发热无汗。是表未解也。不可与白虎汤。意以小柴胡去半夏。加栝蒌人参也。伤寒四五日。身热恶风。胁下不满。手足温而渴者。小柴胡去半夏。加栝蒌、人参也。阳明证。汗多而渴者。不可与五苓散。汗多胃中燥者。苓。复利小便故也。意以竹叶汤与之。仲景云。阳明病发作者。有时汗出。多言。急下之。然太阳病渴。终不可与白虎耶。太阳证。得汗后。\n脉洪大而渴者。方可与之也。阳明病渴。终不",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e315",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "男子失精、女子梦交而脉极虚芤时，宜先用哪首桂枝加味方",
+          "expected_books_any": [
+            "金匮要略",
+            "祖剂",
+            "金匮方歌括"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "桂枝加龙骨牡蛎汤",
+            "失精",
+            "梦交",
+            "脉极虚芤"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5403.1,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.25,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "失精"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "失精"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.25,
+          "answer_keypoint_f1": 0.2857,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::千金翼方::1502::01",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/1502-01",
+            "page_number": 1502,
+            "book_name": "千金翼方",
+            "chapter_title": "镇心丸",
+            "score": 0.02938045560996381,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：千金翼方\n篇名：镇心丸\n内容：主男子女人虚损，梦寐惊悸失精，女人赤白注漏，或月水不通，风邪鬼疰，寒热往来，腹中积聚，忧恚结气，诸疾皆悉主之方∶紫石英 茯苓 菖蒲 苁蓉 远志（去心） 麦门冬（去心） 当归 细辛 卷柏 干姜大豆卷 防风 大黄（各五分） 虫（十二枚，熬） 大枣（五十枚，擘） 干地黄（三两） 人参泽泻 丹参 秦艽（各一两半） 芍药 石膏（研） 乌头（炮，去皮） 柏子仁 桔梗桂心（各三分） 半夏（洗） 白术（各二两） 铁精 白蔹 银屑 前胡 牛黄（各半两） 薯蓣",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::千金翼方::1265::01",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/1265-01",
+            "page_number": 1265,
+            "book_name": "千金翼方",
+            "chapter_title": "人参丸",
+            "score": 0.027119252873563218,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：千金翼方\n篇名：人参丸\n内容：主产后大虚，心悸，志意不安，恍惚不自觉，心中畏恐，夜不得眠，虚烦少气人参 茯苓 麦门冬（去心） 甘草（炙，各三两） 桂心（一两） 大枣（五十枚，作膏）菖蒲 泽泻 薯蓣 干姜（各二两）上一十味，捣筛为末，炼蜜枣膏和丸如梧子大。空腹酒下二十丸，日三夜一服，不知稍增至三十丸。若有远志得二两纳之为善。气绝纳当归独活各三两更善。此方亦治男子虚心悸不定，至良。\n<目录>卷第七·妇人三\\虚乏第一",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平惠民和剂局方::0369::01",
+            "filename": "059-太平惠民和剂局方.txt",
+            "file_path": "classic://太平惠民和剂局方/0369-01",
+            "page_number": 369,
+            "book_name": "太平惠民和剂局方",
+            "chapter_title": "上丹",
+            "score": 0.02661064425770308,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平惠民和剂局方\n篇名：上丹\n内容：养五脏，补不足，固真元，调二气，和荣卫，保神守中，久服轻身耐老，健力美降心火，交肾水，益精气。男子绝阳，庶事不兴。女子绝阴，不能妊娠。腰膝重痛败，面色黧黑，心劳志昏，寤寐恍惚，烦愦多倦，余沥梦遗，膀胱邪热，五劳七伤瘦，上热下冷，难任补药，服之半月，阴阳自和，容色肌肉光润悦泽。开心意，安饮食，养胃气。\n五味子（半斤） 蛇床子 百部根（酒浸一宿） 菟丝子（酒浸，别研） 白茯苓 肉苁蓉（药远志（去上为末，蜜丸如梧桐子大。食前温酒、盐汤任下三",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e316",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "劳倦伤脾、中气下陷、少气懒言时，常用哪首升阳举陷方",
+          "expected_books_any": [
+            "脾胃论",
+            "一草亭目科全书",
+            "医方集解"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "补中益气汤",
+            "中气下陷",
+            "少气懒言",
+            "升阳举陷"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 21121.6,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.25,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "补中益气汤"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "补中益气汤"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 0.25,
+          "answer_keypoint_f1": 0.2857,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方证治汇编歌诀::0002::09",
+            "filename": "096-医方证治汇编歌诀.txt",
+            "file_path": "classic://医方证治汇编歌诀/0002-09",
+            "page_number": 2,
+            "book_name": "医方证治汇编歌诀",
+            "chapter_title": "通治方",
+            "score": 0.030834914611005692,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方证治汇编歌诀\n篇名：通治方\n或再解表，或谓不治。此表里俱虚，气不归元，而阳浮于外，所以再发热，非六神散入粳米煎，和其胃气，则收阳气归内而身凉矣。”方内粳米不可少。）加银（柴）胡芩（黄芩），银白汤治续热盛。（热甚者，加银柴胡、黄芩，名银白健脾（丸）参（人参）术（白术）与陈皮，枳实山楂麦 （即麦芽）随。曲糊作丸米饮下，消补兼行宜。（参、术土炒各二两，陈皮、麦芽炒各一两，山楂一两半，枳实麸炒三两。）枳术丸（李东垣《内外伤辨惑论》引张洁古方）亦消兼补，（白术二两，枳实麸炒一",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::时方歌括::0009::01",
+            "filename": "093-时方歌括.txt",
+            "file_path": "classic://时方歌括/0009-01",
+            "page_number": 9,
+            "book_name": "时方歌括",
+            "chapter_title": "补中益气汤",
+            "score": 0.03055037313432836,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：时方歌括\n篇名：补中益气汤\n属性：治阴虚内热。头痛口渴。表热自汗。不任风寒脉洪大。心烦不安。四肢困倦。懒于言语。\n无补中参草术归陈。 得升柴用更神。（黄 蜜炙钱半。人参甘草炙白术各一钱。陈皮归身各五分。升麻柴胡各三分。加姜枣煎。）劳倦内伤功独擅。阳虚外感亦堪珍。\n柯韵伯曰。仲景有建中理中二法。风木内干于中气。用建中汤。寒水内凌于中气。用理中汤。至若劳倦形气衰少。阴虚而生内热。（阴者。太阴也。）表症颇同外感。惟东垣知其为劳倦伤脾。谷气不盛。阳气下陷于阴而发热。故制补中之剂",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::成方切用::0011::01",
+            "filename": "091-成方切用.txt",
+            "file_path": "classic://成方切用/0011-01",
+            "page_number": 11,
+            "book_name": "成方切用",
+            "chapter_title": "补脾胃泻阴火升阳汤",
+            "score": 0.030536130536130537,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：成方切用\n篇名：补脾胃泻阴火升阳汤\n属性：（东垣） 治饮食伤胃，劳倦伤脾，火邪乘之，而生大热。右关脉缓弱，（脾虚）或弦，（木克土）或浮数。（东垣曰∶湿热相合，阳气日虚，不能上升。脾胃之气，下流肝肾，是有秋冬而无春夏也。惟泻阴火升阳气，用味薄风药升发，则阴不病而阳气生矣。）黄 苍术（泔浸炒） 甘草（炙） 羌活（一两） 升麻（八钱） 柴胡（两半） 黄连（酒炒五钱）柴胡升麻羌活，助阳益胃，以升清气。人参苍术黄 甘草，益气除湿，以补脾胃。黄芩黄连<目录>卷一上\\治气门",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e317",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药被称为“血中气药”，能行血和血、养营调气、去风散寒",
+          "expected_books_any": [
+            "得配本草",
+            "新修本草",
+            "本草纲目"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 6215.8,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": true,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.3333,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.5,
+          "source_ndcg": 0.6309,
+          "matched_books": [
+            "得配本草"
+          ],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "当归",
+            "血中气药",
+            "养营调气",
+            "去风散寒"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.8,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": true
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草求真::0007::01",
+            "filename": "025-本草求真.txt",
+            "file_path": "classic://本草求真/0007-01",
+            "page_number": 7,
+            "book_name": "本草求真",
+            "chapter_title": "温中",
+            "score": 0.02654569892473118,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草求真\n篇名：温中\n内容：（芳草）当归（专入心）。辛甘温润。诸书载为入心生血上品。缘脉为血府。诸脉皆属于心。心无血养。则脉不通。血无气附。则血滞而不行。当归气味辛甘。既不虑其过散。复不虑其过缓。得其温中之润。阴中之阳。故能通心而血生。号为血中气药。故凡一切血症阴虚。阳无所附。\n而见血枯血燥血闭血脱等症。则当用此主治。按当归头则止血上行。身则养血中守。尾则破血下流。全则活血不走。（出东垣）古方合白芍芎 地黄同用。名为四物汤总剂。盖谓得芎以为长养生发之机。地黄以为滋补化源",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::得配本草::0150::01",
+            "filename": "036-得配本草.txt",
+            "file_path": "classic://得配本草/0150-01",
+            "page_number": 150,
+            "book_name": "得配本草",
+            "chapter_title": "当归",
+            "score": 0.025165372447512224,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：得配本草\n篇名：当归\n内容：畏菖蒲、生姜、海藻、牡蒙。恶 茹、湿面。制雄黄。\n甘，辛，温。入手少阴、足厥阴、太阴经血分，血中气药。行血和血，养营调气，去风散寒。疗疟痢痘疹，痈疽疮疡，止头痛、心腹、腰脊、肢节，筋骨诸痛。（皆活血之功。）得茯苓，降气。配白芍，养营。配人参、黄 ，补阴中之阳。配红花，治月经逆行。（从口鼻出，先以好京墨磨汁服，止之。）君黄 ，治血虚发热。（症似白虎，但脉不长实，误服白虎汤即死。）佐荆芥，治产后中风。佐柴、葛，散表。入泻白散，活痰。入失笑散，破血",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草征要::0098::01",
+            "filename": "015-本草征要.txt",
+            "file_path": "classic://本草征要/0098-01",
+            "page_number": 98,
+            "book_name": "本草征要",
+            "chapter_title": "（一）气血兼理",
+            "score": 0.02501906941266209,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草征要\n篇名：（一）气血兼理\n内容：味辛，性温，无毒。入肺、肝二经。酒炒。\n活血利气，止腹痛心疼。调经利产，主血晕崩淋。\n行血中气滞，气中血滞，理通身诸痛，疗疝舒筋，乃破血利气之良药也。\n\\x玄胡索走而不守，惟有瘀滞者宜之，若经事先期，虚而崩漏，产后血虚而晕，则不\\x\\x可服\\x\\x。\\x<目录>第一卷·通治部分\\气血兼理药与理气药",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e318",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药苦寒而入手太阴、少阳、阳明经，长于清热燥湿泻火",
+          "expected_books_any": [
+            "得配本草",
+            "本草纲目",
+            "神农本草经"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "黄芩",
+            "苦寒",
+            "清热燥湿",
+            "泻火"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 1232.4,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "黄芩",
+            "苦寒",
+            "泻火"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "黄芩",
+            "苦寒",
+            "泻火"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.8571,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::本草从新::0045::01",
+            "filename": "021-本草从新.txt",
+            "file_path": "classic://本草从新/0045-01",
+            "page_number": 45,
+            "book_name": "本草从新",
+            "chapter_title": "黄芩",
+            "score": 0.027984344422700584,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：本草从新\n篇名：黄芩\n内容：\\x泻火除湿。\\x苦入心。寒胜热。泻中焦实火。除脾家湿热。治 痢腹痛。（寒痛忌用、凡腹痛、有寒热、虚实、食积、瘀血、痰湿之不同、寒宜温、热宜清、虚宜补、实宜攻、食宜消导、瘀血宜行散、湿痰宜化痰利湿、痛时手不可按者、为实痛、按之痛止者、为虚痛。）寒热往来。（邪在少阳。）黄胆五淋血闭。（实热在血分。）气逆痈疽疮疡。及诸失血。降痰。（丹溪曰∶黄芩降痰、假其降火也、痰因火动、当先降火。）解渴安胎。（胎孕宜清热凉血、血不妄行、则胎安。）酒炒则上行。泻肺",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草备要::0107::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0107-01",
+            "page_number": 107,
+            "book_name": "本草备要",
+            "chapter_title": "黄连",
+            "score": 0.02782608695652174,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草备要\n篇名：黄连\n内容：泻火，燥湿大苦大寒。入心泻火（王海藏曰∶泻心，实泻脾也。实则泻其子），镇肝凉血（凡治血，防风为上部之使，黄连为中部之使，地榆为下部之使），燥湿开郁，解渴（单用能治消渴）除烦，益肝胆，浓肠胃，消心瘀（能去心窍恶血），止盗汗（凉心）。\n治肠 泻痢（便血曰 ，有脏连丸。湿热郁而为痢，黄连治痢要药。噤口者，热壅上焦，同人参煎汤呷之，但得下咽便好。喻嘉言曰∶下痢，必先汗解其外，后调其内。首用辛凉以解表，次用苦寒以攻里。《机要》云∶后重宜下，腹痛宜和，身",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草备要::0106::01",
+            "filename": "018-本草备要.txt",
+            "file_path": "classic://本草备要/0106-01",
+            "page_number": 106,
+            "book_name": "本草备要",
+            "chapter_title": "黄芩",
+            "score": 0.027598020555767037,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：本草备要\n篇名：黄芩\n内容：泻火，除湿苦入心，寒胜热。泻中焦实火，除脾家湿热。\n治 痢腹痛（便血曰 ，寒痛忌用。凡腹痛有寒热、虚实、食积，瘀血、痰湿之不同。\n寒宜温，热宜清，虚宜补，实宜下，食宜消导，瘀血宜行散，痰湿宜化痰利湿。痛时手不可按者为实痛，按之痛止者为虚痛），寒热往来（邪在少阳），黄胆五淋，血闭（实热在血分）气逆，痈疽疮疡，及诸失血。消痰（丹溪以黄芩降痰，假其降火也。按痰因火动，当先降火）利水，解渴安胎（胎孕宜清热凉血，血不妄行则胎安），养阴退阳，补膀胱水。\n",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e319",
+          "category": "herb_property",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "哪味药大苦大寒、沉阴下行，专泻肝胆火并除下焦湿热",
+          "expected_books_any": [
+            "本草从新",
+            "得配本草",
+            "冯氏锦囊秘录"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "龙胆草",
+            "泻肝胆火",
+            "下焦湿热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 4274.5,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.3333,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "龙胆草"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "龙胆草"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.3333,
+          "answer_keypoint_f1": 0.4444,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0224::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0224-01",
+            "page_number": 224,
+            "book_name": "医方集解",
+            "chapter_title": "茵陈蒿汤",
+            "score": 0.032018442622950824,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：茵陈蒿汤\n属性：（仲景）治伤寒阳明病，但头汗出，腹满口渴，二便不利，湿热发黄，脉沉实者（经曰∶阳明病发必发但头内汗濡泄便溏茵陈（六两） 大黄（二两，酒浸） 栀子（十四枚，炒。）此足阳明药也。成无己曰∶小热凉以和之，大热寒以彻之。发黄者，湿热甚也，非大寒不能彻其热，故以茵陈为君（茵陈发汗利水，以泄太阴阳明之湿热，故为治黄主药），栀子为臣，大黄为佐，分泄前后，则腹得利而解矣茵陈、栀子能导湿热由小便出，大黄能导湿热由大便出本方大黄易黄连，名茵陈三物汤∶治同。本",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::医方集解::0259::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0259-01",
+            "page_number": 259,
+            "book_name": "医方集解",
+            "chapter_title": "当归龙荟丸",
+            "score": 0.031099324975891997,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：医方集解\n篇名：当归龙荟丸\n属性：（《宣明》）治一切肝胆之火，神志不宁，惊悸搐搦，躁扰狂越，头晕目眩，耳鸣耳聋，胸膈痞塞，咽嗌不利，肠胃燥涩，两胁痛引少腹，肝移热于肺而咳嗽（肝属风木，主筋、主怒、主惊，故搐搦惊狂，皆属肝火；目为肝窍，胆脉络于耳，二经火盛，故目眩耳鸣；心脉挟咽历膈，肾脉贯膈循喉咙，水衰火盛，故膈咽不利；两胁少腹，皆肝胆经所循，故相引而痛。五脏六腑皆有咳，然必传以与肺，肝之移邪，则为肝咳）；亦治盗汗（盗汗属热，此与当归六黄汤同意）。\n当归（酒洗） 龙胆草（",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::古今名医方论::0145::01",
+            "filename": "082-古今名医方论.txt",
+            "file_path": "classic://古今名医方论/0145-01",
+            "page_number": 145,
+            "book_name": "古今名医方论",
+            "chapter_title": "当归龙荟丸",
+            "score": 0.02749266862170088,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：古今名医方论\n篇名：当归龙荟丸\n属性：治肝经实火，大便秘结，小便涩滞，或胸膈作痛，阴囊肿胀。凡属肝经实火，皆宜服之。\n当归 龙胆草 黄连 黄芩 栀子仁（各一两） 大黄 芦荟 青黛（各五钱） 木香（二钱上为末，炒神曲糊丸。每服二十丸，姜汤下。\n柯韵伯曰∶肝为相火，有泻无补。青黛禀东方之色，入通于肝，大寒之性，所以泻其实火也泻火必克旺则此火剂中须也<目录>卷四",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e320",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "思虑伤脾、健忘怔忡、寤而不寐时，常用哪首方",
+          "expected_books_any": [
+            "严氏济生方",
+            "一草亭目科全书",
+            "医方集解"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5697.0,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "归脾汤",
+            "健忘",
+            "怔忡",
+            "寤而不寐"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::古方汇精::0016::01",
+            "filename": "113-古方汇精.txt",
+            "file_path": "classic://古方汇精/0016-01",
+            "page_number": 16,
+            "book_name": "古方汇精",
+            "chapter_title": "归脾汤（十二）",
+            "score": 0.0293236301369863,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：古方汇精\n篇名：归脾汤（十二）\n属性：（治思虑伤脾。不能摄血。致血妄行。或健忘怔忡。惊悸盗汗。嗜卧少食。或大便溏心脾疼痛。疟痢郁结。或因病用药失宜。克伐伤脾。以致变症者。俱宜服之。）党参（焙） 黄 （蜜炙） 炒白术（各一钱五分） 当归 茯苓（各一钱） 炒枣仁（一钱二分）引加圆眼肉七枚。煎成。食远服。如无痛郁等症。去木香。如燥热多汗。并去远志。加柴胡<目录>卷一\\内症门",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::古今名医方论::0007::01",
+            "filename": "082-古今名医方论.txt",
+            "file_path": "classic://古今名医方论/0007-01",
+            "page_number": 7,
+            "book_name": "古今名医方论",
+            "chapter_title": "归脾汤",
+            "score": 0.028814262023217248,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：古今名医方论\n篇名：归脾汤\n属性：治思虑伤脾，或健忘，怔忡，惊悸，盗汗，寤而不寐；或心脾作痛，嗜卧，少食，月经不调人参 黄 甘草 白术 茯苓 木香 龙眼肉 酸枣仁 当归 远志姜三片，水煎服。\n罗东逸曰∶方中龙眼、枣仁、当归，所以补心也；参、 、术、苓、草，所以补脾也。\n立斋神，意虑见于交。\n以必甚，故耳！张路玉曰∶补中益气与归脾，同出保元，并加归、术，而有升举胃气，滋补脾阴之不同。\n此减食者，以其纯阴无阳，不能输化药力故耳！\n<目录>卷一",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::时方歌括::0025::01",
+            "filename": "093-时方歌括.txt",
+            "file_path": "classic://时方歌括/0025-01",
+            "page_number": 25,
+            "book_name": "时方歌括",
+            "chapter_title": "归脾汤",
+            "score": 0.027799227799227798,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：时方歌括\n篇名：归脾汤\n属性：治思虑伤脾。不能摄血。致血妄行。或健忘怔忡。惊怪盗汗。嗜卧少食。或大便不调。\n心脾疼痛。疟痢郁结。或因病用药失宜。克伐伤脾。以致变症者。最宜之。\n归脾汤内术 神。（白术黄 炙茯神各二钱。）参志香甘与枣仁。（人参酸枣仁炒研各二钱。远志木香各五分。甘草炙一钱。）龙眼当归十味外。（龙眼肉五枚。当归二钱。）若加熟地失其真。（本方只十味。薛氏加山栀丹皮各一钱。名为加味归脾汤。治脾虚发热颇效。近医加熟地黄。名黑归脾汤。则支离甚矣。）陈修园曰。此方汇集补",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e321",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "脚挛急、津液不荣经脉时，偏向哪首仅两味药相和的方",
+          "expected_books_any": [
+            "伤寒论",
+            "伤寒寻源",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 3022.3,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "芍药甘草汤",
+            "脚挛急",
+            "芍药",
+            "甘草"
+          ],
+          "answer_keypoint_precision": 0.3333,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 0.5,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::千金翼方::1389::01",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/1389-01",
+            "page_number": 1389,
+            "book_name": "千金翼方",
+            "chapter_title": "发汗吐下后病状第五",
+            "score": 0.03177805800756621,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：千金翼方\n篇名：发汗吐下后病状第五\n内容：\\x三十证，方一十五首\\x发汗后，水药不得入口，为逆。\n未持脉时，病患手叉自冒心，师因教试令咳，而不即咳者，此必两耳无所闻也，所以然者，重发其汗，虚故也。\n发汗后身热，又重发其汗，胃中虚冷，必反吐也。\n大下后发汗，其人小便不利，此亡津液，勿治，其小便利，必自愈。\n病患脉数，数为热，当消谷引食，而反吐者，以医发其汗，阳气微，膈气虚，脉则为数，数为客热，不能消谷，胃中虚冷，故吐也。\n病者有寒，复发其汗，胃中冷，必吐蛔。（一云吐逆。）",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::本草易读::0074::01",
+            "filename": "016-本草易读.txt",
+            "file_path": "classic://本草易读/0074-01",
+            "page_number": 74,
+            "book_name": "本草易读",
+            "chapter_title": "腰脚部六十九",
+            "score": 0.031099324975891997,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：本草易读\n篇名：腰脚部六十九\n内容：腰痛卒然（鳖甲三百八十，验方五。）肾虚腰痛（猪肾三百九十二，验方六。）闪腰痛久（猪肾三百九十二，验方七。）老人腰俯（狗脊十一，主治。）冷气腰痛（元胡三十八，验方十三。）肾虚腰痛（故纸六十三，验方一。）坠打腰痛（故纸六十三，验方九。）积年腰痛（地肤一百一十五，验方四。）湿气腰痛（车前一百十九，验方六。）腰脊引痛（蒺藜一百二十五，验方十二。）卒然腰痛（黑豆二百零七，验方八。）腰脊胀痛（白芥二百二十四，验方十五。）腰痛不止（丝瓜二百三十九，",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::千金翼方::0303::01",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/0303-01",
+            "page_number": 303,
+            "book_name": "千金翼方",
+            "chapter_title": "防己",
+            "score": 0.03036576949620428,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：千金翼方\n篇名：防己\n内容：味辛苦，平，温，无毒。主风寒，温疟，热气，诸痫，除邪，利大小便。疗水肿去膀胱热，伤寒，寒热邪气，中风手脚挛急，止泻，散痈肿恶结，诸蜗疥癣虫疮，通腠理，利九窍。一名解离，文如车辐理解者良。生汉中川谷，二月八月采根，阴干。\n<目录>卷第二·本草上\\草部中品之下",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e322",
+          "category": "formula_indication",
+          "task_family": "retrieval",
+          "difficulty": "hard",
+          "query": "发热微恶寒、肢节烦疼、微呕、心下支结时，偏向哪首太阳少阳并病方",
+          "expected_books_any": [
+            "伤寒论",
+            "医宗金鉴",
+            "古今名医方论"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "柴胡桂枝汤",
+            "太阳少阳并病",
+            "肢节烦疼",
+            "心下支结"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 5341.4,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": false,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.5,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "柴胡桂枝汤",
+            "肢节烦疼"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": false,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "柴胡桂枝汤",
+            "肢节烦疼"
+          ],
+          "answer_keypoint_precision": 0.0,
+          "answer_keypoint_recall": 0.5,
+          "answer_keypoint_f1": 0.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::太平圣惠方::0280::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0280-01",
+            "page_number": 280,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒中风诸方",
+            "score": 0.031754032258064516,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒中风诸方\n内容：夫伤寒中风之候。阳浮热自发。阴弱汗自出。涩涩恶寒。翕翕发热。鼻鸣干呕。此其候也。\n虚语微闻为\\x治伤寒中风。头疼。腰膝痛。四肢不利。壮热。取汗不出而喘。宜服麻黄汤方。\\x麻黄（三两去根节） 桂心（一两） 甘草（半两炙微赤锉） 杏仁（半两汤浸去皮尖双仁麸炒微黄）上件药。捣粗罗为散。每服四钱。以水一中盏。煎至六分。去滓。温温频服之。汗出为度。\n\\x治伤寒中风。项背强急。涩涩汗不出者。宜服葛根汤方。\\x葛根（二两锉） 麻黄〔二（一）两去",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0274::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0274-01",
+            "page_number": 274,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒五日候诸方",
+            "score": 0.031099324975891997,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒五日候诸方\n内容：夫伤寒五日。少阴受病。少阴者肾之经也。其脉贯于肾。络于舌。故得病五日。口热舌干。渴而引饮也。其病在肠。故可下而愈也。\n\\x治伤寒五日。舌干而渴。烦热不解。大小肠皆涩。宜服柴胡汤方。\\x柴胡（一两去苗） 犀角屑（一两） 赤芍药（三分） 黄芩（一两） 栀子仁（十四枚） 川大黄（一两锉碎微炒） 川朴硝（一两半）上件药。捣筛为散。每服四钱。以水一中盏。入竹叶二七片。煎至六分。去滓。不计时候温服。如人行四五里再服。以利为度。\n\\x治伤寒五",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::太平圣惠方::0275::01",
+            "filename": "055-太平圣惠方.txt",
+            "file_path": "classic://太平圣惠方/0275-01",
+            "page_number": 275,
+            "book_name": "太平圣惠方",
+            "chapter_title": "治伤寒六日候诸方",
+            "score": 0.031054405392392875,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：太平圣惠方\n篇名：治伤寒六日候诸方\n内容：夫伤寒六日。足厥阴受病。厥阴者肝之经也。其脉循阴。络于肝。故得病六日。烦满而阴缩也。此则阴阳俱受病。毒瓦斯在胃。故可下而愈也。\n\\x治伤寒病六日。其病深结在脏。是三阴三阳俱受病。若五脏六腑荣卫皆不通。其\\x\\x人难治柴胡（二两去苗） 黄芩（一两） 赤芍药（一两） 半夏（半两汤洗七遍去滑） 枳实（半两麸炒微黄） 人参〔一（二）两去芦头〕 甘草（半两炙微赤锉）上件药。捣筛为散。每服四钱。以水一中盏。入生姜半分。煎至六分。去滓。不计时",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e323",
+          "category": "formula_reverse_lookup",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "心下痞满而不痛、寒热错杂时，常用哪首泻心汤",
+          "expected_books_any": [
+            "伤寒论",
+            "三因极一病证方论",
+            "伤寒括要"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "半夏泻心汤",
+            "心下痞满",
+            "不痛",
+            "寒热错杂"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 4235.4,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 0.75,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "半夏泻心汤",
+            "心下痞满",
+            "不痛"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "半夏泻心汤",
+            "心下痞满",
+            "不痛"
+          ],
+          "answer_keypoint_precision": 0.6667,
+          "answer_keypoint_recall": 0.75,
+          "answer_keypoint_f1": 0.7059,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::医方集解::0254::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0254-01",
+            "page_number": 254,
+            "book_name": "医方集解",
+            "chapter_title": "半夏泻心汤",
+            "score": 0.03278688524590164,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：医方集解\n篇名：半夏泻心汤\n属性：（仲景）治伤寒下之早，胸满而不痛者为痞，身寒而呕，饮食不下，非柴胡证（经曰∶伤寒五六日，呕血发热，柴胡证具，而以他药下之，柴胡证仍在者，复与柴胡汤；此虽已下之，不为逆，必蒸蒸而振，却发热汗出而解。若心下满而硬痛者，此为结胸也，大陷胸汤主之；若满而不痛者，此为痞，柴胡不中与也，宜半夏泻心汤。凡用泻心者，皆属误下之证，非传经热邪也。\n半夏（半升） 黄连（一两） 黄芩 甘草（炙） 人参 干姜（三两） 大枣（十二枚。）此手少阴、足太阴药也。成氏",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::医方集解::0253::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0253-01",
+            "page_number": 253,
+            "book_name": "医方集解",
+            "chapter_title": "附子泻心汤",
+            "score": 0.03225806451612903,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：医方集解\n篇名：附子泻心汤\n属性：（仲景）治伤寒心下痞，而复恶寒汗出者（伤寒心下满 而痛者，为结胸，为实；硬满而不痛者，为痞，附子后复满，从外大黄（二两） 黄连 黄芩（一两） 附子（一枚，炮，去皮，破，别煮取汁）此足太阳、手少阴药也。吴鹤皋曰∶心下痞，故用三黄以泻痞；恶寒汗出，故用附子以固阳此邪汤以类而表故东因甚药本方去附子，名三黄泻心汤（见前）。再去黄芩，名大黄黄连泻心汤（仲景）∶治伤寒心下痞，按之濡（音软，）关上脉浮（沉为实热，浮为虚热。经曰∶按之自濡，但气痞耳。周",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::医方集解::0176::01",
+            "filename": "087-医方集解.txt",
+            "file_path": "classic://医方集解/0176-01",
+            "page_number": 176,
+            "book_name": "医方集解",
+            "chapter_title": "理中汤",
+            "score": 0.029957522915269395,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：医方集解\n篇名：理中汤\n属性：（仲景）治伤寒太阴病，自利不渴，寒多而呕，腹痛粪溏，脉沉无力；或厥冷拘急；或结胸、吐蛔；及感寒霍乱（太阴、脾经也。腹满而吐，食不下，自利腹痛，为太阴病。自利渴者为热，不渴者为寒，喜呕、腹痛、便溏，皆虚寒所致；寒彻于外；则手足厥冷拘急；寒凝于中，则结胸、泄泻、吐蛔。霍乱者阴阳不和而挥霍撩乱，或吐或泻，亦有寒热二证，若阴寒所致者，宜此汤。三阳传阴经而下利者，为邪热利；阴寒直中阴经而下利者，为寒利；外邪传里而腹痛者，其痛不常；阴寒在内而腹痛者，痛",
+            "section_summary": null
+          }
+        ]
+      },
+      {
+        "case": {
+          "case_id": "cvf_e324",
+          "category": "theory_summary",
+          "task_family": "retrieval",
+          "difficulty": "medium",
+          "query": "为什么少阳病常以口苦、咽干、目眩为提纲",
+          "expected_books_any": [
+            "伤寒证治准绳",
+            "证治准绳·伤寒",
+            "伤寒论"
+          ],
+          "expected_chapters_any": [],
+          "expected_keywords_any": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "preferred_terms": [],
+          "gold_answer_outline": [],
+          "gold_evidence_any": []
+        },
+        "latency_ms": 496.7,
+        "retrieval_mode": "sqlite_vector_hybrid",
+        "warnings": [],
+        "metrics": {
+          "top1_book_hit": false,
+          "top1_chapter_hit": null,
+          "top1_keyword_hit": true,
+          "top1_evidence_hit": null,
+          "topk_book_hit": false,
+          "topk_chapter_hit": null,
+          "topk_keyword_hit": true,
+          "topk_evidence_hit": null,
+          "top1_provenance_hit": false,
+          "topk_provenance_hit": false,
+          "book_hit_rate_case": 0.0,
+          "chapter_hit_rate_case": null,
+          "keyword_hit_rate_case": 1.0,
+          "evidence_hit_rate_case": null,
+          "source_mrr": 0.0,
+          "source_ndcg": 0.0,
+          "matched_books": [],
+          "matched_chapters": [],
+          "matched_keywords": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "matched_evidence": [],
+          "top1_answer_hit": true,
+          "topk_answer_hit": true,
+          "matched_answer_keypoints": [
+            "少阳病",
+            "口苦",
+            "咽干",
+            "目眩",
+            "往来寒热"
+          ],
+          "answer_keypoint_precision": 1.0,
+          "answer_keypoint_recall": 1.0,
+          "answer_keypoint_f1": 1.0,
+          "top1_answer_provenance_hit": false,
+          "topk_answer_provenance_hit": false
+        },
+        "rows": [
+          {
+            "chunk_id": "classic::普济方::0636::01",
+            "filename": "074-普济方.txt",
+            "file_path": "classic://普济方/0636-01",
+            "page_number": 636,
+            "book_name": "普济方",
+            "chapter_title": "辨少阳病脉证并治第九",
+            "score": 0.031099324975891997,
+            "rrf_rank": 1,
+            "match_snippet": "古籍：普济方\n篇名：辨少阳病脉证并治第九\n属性：少阳之为病。口苦咽干目眩也。\n（足少阳胆经也。内经曰。有病口苦者。名曰胆瘅。甲乙经曰。胆者。中精之腑。五脏取决少阳中风。两耳无所闻。目赤。胸中满而烦者。不可吐下吐下则悸而惊。\n（少阳之脉。起于目 。走于耳中。其支者。下胸中贯膈。风伤气。风则为热。少阳中风。\n虚者伤寒脉弦细。头病发热者。属少阳。少阳不可发汗。发汗则谵语。此属胃。胃和则愈。\n胃不（经曰。三部俱弦者。少阳受病。脉细者。邪渐传里。虽头痛发热。为表未解。以邪客少阳谵语本太",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::千金翼方::1369::01",
+            "filename": "051-千金翼方.txt",
+            "file_path": "classic://千金翼方/1369-01",
+            "page_number": 1369,
+            "book_name": "千金翼方",
+            "chapter_title": "少阳病状第九",
+            "score": 0.031054405392392875,
+            "rrf_rank": 2,
+            "match_snippet": "古籍：千金翼方\n篇名：少阳病状第九\n内容：\\x九证\\x少阳之为病，口苦咽干目眩也。\n少阳中风，两耳无所闻，目赤，胸中满而烦，不可吐下，吐下则悸而惊。\n伤寒病，脉弦细，头痛而发热，此为属少阳。少阳不可发汗，发汗则谵语，为属胃。胃和即愈，不和烦而悸。\n太阳病不解，转入少阳，胁下坚满，干呕不能食饮，往来寒热，而未吐下，其脉沉紧，可与小柴胡汤。若已吐下发汗温针，谵语，柴胡证罢，此为坏病。知犯何逆，以法治之。\n三阳脉浮大，上关上，但欲寐，目合则汗。\n伤寒六七日，无大热，其人躁烦，此为阳",
+            "section_summary": null
+          },
+          {
+            "chunk_id": "classic::长沙方歌括::0092::01",
+            "filename": "094-长沙方歌括.txt",
+            "file_path": "classic://长沙方歌括/0092-01",
+            "page_number": 92,
+            "book_name": "长沙方歌括",
+            "chapter_title": "小柴胡汤方",
+            "score": 0.031024531024531024,
+            "rrf_rank": 3,
+            "match_snippet": "古籍：长沙方歌括\n篇名：小柴胡汤方\n属性：（本论无方。此方列于太阳篇中。今补其方名。）论以口苦咽干目眩为提纲。言少阳之上。相火主之。少阳为甲木。诸风掉眩。皆属于木。\n主论云。少阳中风。两耳无所闻。目赤。胸中满而烦。不可吐下。吐下则悸而惊。此言少阳自论云。脉弦细头痛发热者属少阳。少阳不可发汗。发汗则谵语。此属胃。胃和则愈。胃不和论云。本太阳病不解转入少阳者。胁下硬满。干呕不能食。往来寒热。尚未吐下。脉沉紧者论云。若已吐下发汗。温针谵语。柴胡证罢。此为坏病。知犯何逆。以法治之。此",
+            "section_summary": null
+          }
+        ]
+      }
+    ],
+    "avg_latency_ms": 5207.4,
+    "p95_latency_ms": 6755.5,
+    "top1_book_hit_rate": 0.0833,
+    "top1_chapter_hit_rate": null,
+    "top1_keyword_hit_rate": 0.75,
+    "top1_evidence_hit_rate": null,
+    "topk_book_hit_rate": 0.2083,
+    "topk_chapter_hit_rate": null,
+    "topk_keyword_hit_rate": 0.875,
+    "topk_evidence_hit_rate": null,
+    "top1_provenance_hit_rate": 0.0833,
+    "topk_provenance_hit_rate": 0.2083,
+    "top1_answer_hit_rate": 0.75,
+    "topk_answer_hit_rate": 0.875,
+    "top1_answer_provenance_hit_rate": 0.0417,
+    "topk_answer_provenance_hit_rate": 0.1667,
+    "avg_source_mrr": 0.1389,
+    "avg_source_ndcg": 0.1567,
+    "avg_book_hit_rate_case": 0.1806,
+    "avg_chapter_hit_rate_case": null,
+    "avg_keyword_hit_rate_case": 0.5799,
+    "avg_evidence_hit_rate_case": null,
+    "avg_answer_keypoint_precision": 0.5417,
+    "avg_answer_keypoint_recall": 0.5799,
+    "avg_answer_keypoint_f1": 0.5017
+  }
+}

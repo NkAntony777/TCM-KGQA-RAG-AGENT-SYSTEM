@@ -651,6 +651,91 @@ class TestNebulaDirectPathPayload(unittest.TestCase):
         self.assertEqual(result["relations"][0]["predicate"], "使用药材")
         self.assertEqual(result["relations"][0]["target"], "熟地黄")
 
+    def test_nebula_entity_lookup_uses_single_alias_fallback_when_exact_has_no_relations(self) -> None:
+        class StubPrimaryStore:
+            def ready(self) -> bool:
+                return True
+
+            def exact_entity_names(self, query: str, preferred_types=None) -> list[str]:
+                return ["六味地黄丸"] if query == "六味地黄丸" else []
+
+            def alias_candidates(self, entity_name: str, *, preferred_types=None, limit: int = 8) -> list[str]:
+                if entity_name == "六味地黄丸":
+                    return ["六味丸", "地黄丸"][:limit]
+                return []
+
+            def batch_neighbors(self, entity_names, *, reverse=False, predicates=None, target_types=None, source_books=None, limit_per_entity=64):
+                rows = []
+                for name in entity_names:
+                    if reverse:
+                        continue
+                    if name == "六味丸":
+                        rows.append(
+                            {
+                                "source_vid": f"vid::{name}",
+                                "neighbor_name": "熟地黄",
+                                "neighbor_type": "herb",
+                                "predicate": "使用药材",
+                                "source_book": "小儿药证直诀",
+                                "source_chapter": "卷下",
+                                "fact_id": "f1",
+                                "fact_ids": "[]",
+                                "source_text": "六味丸用熟地黄。",
+                                "confidence": 0.95,
+                            }
+                        )
+                    if name == "地黄丸":
+                        rows.append(
+                            {
+                                "source_vid": f"vid::{name}",
+                                "neighbor_name": "山药",
+                                "neighbor_type": "herb",
+                                "predicate": "使用药材",
+                                "source_book": "医方考",
+                                "source_chapter": "卷上",
+                                "fact_id": "f2",
+                                "fact_ids": "[]",
+                                "source_text": "地黄丸用山药。",
+                                "confidence": 0.90,
+                            }
+                        )
+                return rows
+
+        class StubFallbackEngine:
+            class store:
+                @staticmethod
+                def source_book_exists(name: str) -> bool:
+                    return False
+
+            def entity_lookup(self, name: str, top_k: int = 12, predicate_allowlist=None, predicate_blocklist=None) -> dict[str, Any]:
+                return {}
+
+            def entity_type(self, entity_name: str) -> str:
+                return "formula"
+
+            def _annotate_relation_rows(self, rows: list[dict[str, Any]], *, anchor_entity_type: str) -> list[dict[str, Any]]:
+                return rows
+
+            def _filter_relations(self, rows: list[dict[str, Any]], *, predicate_allowlist=None, predicate_blocklist=None) -> list[dict[str, Any]]:
+                return rows
+
+            def _select_relation_clusters(self, rows: list[dict[str, Any]], *, query_text: str, top_k: int) -> list[dict[str, Any]]:
+                return rows[:top_k]
+
+            def _query_fragments(self, query_text: str) -> list[str]:
+                return [query_text]
+
+            def _query_mentions_source_book(self, query_text: str, source_book: str) -> bool:
+                return False
+
+        engine = NebulaPrimaryGraphEngine(primary_store=StubPrimaryStore(), fallback_engine=StubFallbackEngine())
+
+        result = engine.entity_lookup("六味地黄丸", top_k=5, predicate_allowlist=["使用药材"])
+
+        self.assertEqual(result["entity"]["canonical_name"], "六味丸")
+        self.assertEqual(result["relations"][0]["target"], "熟地黄")
+        self.assertEqual(result["merged_candidates"], ["六味地黄丸", "六味丸"])
+
     def test_nebula_syndrome_chain_prefers_primary_result_over_local(self) -> None:
         class StubPrimaryStore:
             def ready(self) -> bool:

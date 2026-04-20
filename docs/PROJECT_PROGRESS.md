@@ -1,6 +1,179 @@
 # 项目进展
 
-更新时间：2026-04-13
+更新时间：2026-04-19
+
+## 2026-04-19 论文实验脚本、数据集与实验文档检查完成
+
+### 当前结论
+
+- `langchain-miniopenclaw` 里已经具备一套可直接用于论文撰写的实验资产，不再只是零散脚本。
+- 当前实验脚本覆盖：
+  - 论文主实验
+  - baseline matrix
+  - external validation
+  - debug / failed-case review
+  - ablation
+- 当前数据集规模已经**够支撑毕业论文当前范围内的主实验与对照实验**，不属于“只能跑 smoke”或“只能做 demo”的状态。
+- 但如果后续要主张更强的跨任务泛化能力，仍不建议只靠现有题量继续上纲到“大规模通用评测”。
+
+### 已确认的论文实验脚本
+
+- `backend/paper_experiments/run_classics_vector_vs_filesfirst.py`
+  - 古籍 `files-first` 非向量检索 vs SQLite 向量/混合检索
+- `backend/paper_experiments/run_classics_baseline_matrix.py`
+  - `files_first_internal / external_bm25 / vector_sqlite / external_dense` 四路基线矩阵
+- `backend/paper_experiments/run_caseqa_vector_vs_structured.py`
+  - 病例 QA 向量检索 vs 结构化非向量索引
+- `backend/eval/ablations/*.py`
+  - 当前已具备 `files_first_ablation`、`graph_filesfirst_synergy`、`graph_first_vs_text_first`、`deep_hardening_ablation` 等消融脚本
+- `backend/eval/runners/*.py`
+  - 已具备 smoke、release gate、retrieval eval、QA probe 等回归脚本
+
+### 当前数据集检查结果
+
+- 古籍主实验集：
+  - `backend/eval/datasets/paper/classics_vector_vs_filesfirst_seed_20.json`
+  - 当前实际规模 `72`
+- 古籍外部验证集：
+  - `backend/eval/datasets/paper/classics_vector_vs_filesfirst_external_validation_12.json`
+  - 当前实际规模 `24`
+- 古籍 debug 集：
+  - `backend/eval/datasets/paper/classics_vector_vs_filesfirst_debug_12.json`
+  - 当前实际规模 `12`
+- 古籍 stress 集：
+  - `backend/eval/datasets/paper/classics_vector_vs_filesfirst_stress_16.json`
+  - 当前实际规模 `16`
+- 病例 QA 主实验集：
+  - `backend/eval/datasets/paper/caseqa_vector_vs_structured_seed_12.json`
+  - 当前实际规模 `48`
+- 病例 QA debug 集：
+  - `backend/eval/datasets/paper/caseqa_vector_vs_structured_debug_8.json`
+  - 当前实际规模 `8`
+- Traceable classics benchmark：
+  - `master = 136`
+  - `debug = 14`
+  - `dev = 32`
+  - `test = 90`
+  - `unique_subjects = 68`
+  - `unique_books = 25`
+
+### 对“数据集够不够用”的当前判断
+
+- 够用的范围：
+  - 论文主结果表
+  - 外部验证表
+  - 失败案例分析
+  - 消融实验对比
+  - traceable benchmark 的 debug / dev / test 分层
+- 不建议过度声称的范围：
+  - 超出当前古籍问答与病例 QA 任务族的大范围泛化
+  - 细粒度到每个小题型都做很强统计显著性结论
+- 当前更合理的策略不是继续盲目扩题，而是：
+  - 保持主实验集规模稳定
+  - 优先补弱项题族
+  - 继续做失败集与 traceable benchmark 的针对性增量
+
+### 最新实验结果核对
+
+#### 1. 病例 QA：结构化非向量已经可以作为论文主结论之一
+
+- `docs/CaseQA_Vector_vs_Structured_Latest.md` 当前结果：
+  - structured `top1_hit_rate = 0.875`
+  - vector `top1_hit_rate = 0.8542`
+  - structured `topk_hit_rate = 0.9375`
+  - vector `topk_hit_rate = 0.9375`
+  - structured `avg_coverage_any = 0.7625`
+  - vector `avg_coverage_any = 0.6844`
+  - structured `avg_latency_ms = 4174.2`
+  - vector `avg_latency_ms = 20152.2`
+- 当前判断：
+  - 在病例 QA 主实验集上，结构化非向量索引已经不只是“能替代”，而是整体上优于旧向量链路，且延迟明显更低。
+
+#### 2. 古籍主实验：files-first 仍是当前更稳的主链
+
+- `docs/Classics_Vector_vs_FilesFirst_Latest.md` 当前结果：
+  - files-first `topk_book = 0.375`
+  - vector `topk_book = 0.1944`
+  - files-first `avg_latency_ms = 10112.8`
+  - vector `avg_latency_ms = 5151.4`
+- `docs/Classics_Vector_vs_FilesFirst_External_Validation_Latest.md` 当前结果：
+  - files-first `topk_book = 0.6667`
+  - vector `topk_book = 0.2083`
+  - files-first `avg_source_mrr = 0.5417`
+  - vector `avg_source_mrr = 0.1389`
+- 当前判断：
+  - 对论文当前更关心的书籍级来源命中与外部验证稳定性，`files-first` 仍然明显强于现有古籍向量实验后端。
+
+#### 3. 古籍 baseline matrix：files-first internal 是当前更合理的正式基线
+
+- `docs/Classics_Baseline_Matrix_Latest.md` 当前结果：
+  - `files_first_internal topk_book = 0.375`
+  - `external_bm25_docs topk_book = 0.2222`
+  - `vector_sqlite_internal topk_book = 0.1806`
+  - `external_dense_candidates topk_book = 0.0833`
+- `docs/Classics_Baseline_Matrix_External_Validation_Latest.md` 当前结果：
+  - `files_first_internal topk_book = 0.6667`
+  - `external_bm25_docs topk_book = 0.5833`
+  - `vector_sqlite_internal topk_book = 0.2083`
+  - `external_dense_candidates topk_book = 0.1667`
+- 当前判断：
+  - 若论文需要给出“古籍检索正式基线”，目前最合适的是 `files_first_internal`，而不是外部 dense 或外部 BM25。
+
+#### 4. Traceable benchmark：数据集是够用的，但也清楚暴露了当前硬伤
+
+- `docs/Traceable_Classics_Benchmark_Test_Eval_Fused_v2.md` 当前结果显示：
+  - files-first `topk_answer = 0.4444`
+  - vector `topk_answer = 0.4444`
+  - files-first `topk_answer+prov = 0.1778`
+  - vector `topk_answer+prov = 0.1778`
+  - files-first `topk_evidence = 0.1111`
+  - vector `topk_evidence = 0.0889`
+- 当前判断：
+  - 这套 benchmark 已经足够揭示“回答对了”和“证据真正可追溯”之间仍有明显缺口。
+  - 当前不是数据集不够，而是系统在 `evidence / provenance` 这层确实还有真实短板。
+  - 但论文正式汇报时，不应再把“单一 gold 书章完全一致”当成唯一正确标准。
+
+#### 4.1 Traceable benchmark 的正式汇报口径
+
+- `raw eval` 保留：
+  - 用于说明系统在严格 `evidence / provenance` 口径下仍有短板
+  - 适合写进误差分析和局限性讨论
+- `regraded eval` 作为论文主表口径：
+  - 结果文件：
+    - `docs/Traceable_Classics_Benchmark_Test_Regraded_Fused_v2.md`
+    - `backend/eval/paper/traceable_classics_benchmark_test_regraded_fused_v2.json`
+  - 判分原则：
+    - 只要返回内容指向同一实体
+    - 且答案落在项目现有知识资产可支持的多书答案集合内
+    - 即视为可接受成功
+- 当前 `regraded` 结果更能对应真实临床可接受性与项目资产覆盖范围：
+  - files-first `top1_regraded_success_rate = 0.8111`
+  - files-first `topk_regraded_success_rate = 0.8889`
+  - vector `top1_regraded_success_rate = 0.7111`
+  - vector `topk_regraded_success_rate = 0.8889`
+- 当前判断：
+  - `raw eval` 用来揭示“严格可追溯性缺口”
+  - `regraded eval` 用来汇报“项目资产约束下的真实可接受正确率”
+  - 两者同时保留，论文论证会更完整，也更有说服力
+
+#### 5. files-first 内部消融：query rewrite 和 rerank 仍然有保留价值
+
+- `docs/Files_First_Ablation_Latest.md` 当前结果：
+  - 关闭 `query rewrite` 后 `topk_keyword` 从 `0.9861` 降到 `0.9306`
+  - 关闭 `chapter/book rerank bonus` 后 `topk_keyword` 从 `0.9861` 降到 `0.9583`
+- 当前判断：
+  - 这说明 `files-first` 当前表现不是偶然命中，内部增强项确实在起作用。
+
+### 当前最重要的下一步
+
+- 不需要再为了“题量焦虑”继续无边界扩 dataset。
+- 论文阶段更值得继续做的是：
+  - 固定正式实验矩阵并重跑全部论文级实验
+  - 对 traceable benchmark 同时输出 `raw + regraded` 两套结果
+  - 针对 traceable benchmark 的低通过家族补弱
+  - 对 `herb_effect / herb_channel / formula_indication_*` 做定向增题
+  - 保持主实验、外部验证、debug/test 的拆分稳定
+  - 把已存在的最新实验文档继续作为论文写作引用基线
 
 ## 2026-04-13 Nebula Path Query 七项优化完成
 

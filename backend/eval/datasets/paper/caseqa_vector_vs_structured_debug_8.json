@@ -1,0 +1,82 @@
+[
+  {
+    "case_id": "cqv_001",
+    "category": "case_basic",
+    "difficulty": "easy",
+    "eval_focus": ["symptom_recall", "basic_case_match"],
+    "mode": "case",
+    "query": "女 45岁 口苦 胁痛 舌红 脉弦",
+    "expected_keywords": ["口苦", "胁痛", "舌红", "脉弦"],
+    "preferred_terms": ["肝郁", "肝郁脾虚", "逍遥散"]
+  },
+  {
+    "case_id": "cqv_004",
+    "category": "case_syndrome_formula",
+    "difficulty": "medium",
+    "eval_focus": ["case_to_syndrome", "formula_reference"],
+    "mode": "case",
+    "query": "如果患者见胁肋胀痛、食少乏力、口苦、失眠，常见什么证候，可参考什么方剂？",
+    "expected_keywords": ["胁肋胀痛", "食少乏力", "口苦", "失眠"],
+    "preferred_terms": ["肝郁脾虚", "逍遥散"]
+  },
+  {
+    "case_id": "cqv_006",
+    "category": "formula_role",
+    "difficulty": "medium",
+    "eval_focus": ["qa_knowledge", "formula_role"],
+    "mode": "qa",
+    "query": "托里消毒饮中的金银花在方剂中起什么作用",
+    "expected_keywords": ["托里消毒饮", "金银花"],
+    "preferred_terms": ["作用", "配伍", "功效"]
+  },
+  {
+    "case_id": "cqv_007",
+    "category": "formula_origin",
+    "difficulty": "medium",
+    "eval_focus": ["qa_knowledge", "source_trace"],
+    "mode": "qa",
+    "query": "六味地黄丸 出处 原文",
+    "expected_keywords": ["六味地黄丸", "地黄丸", "小儿药证直诀"],
+    "preferred_terms": ["出处", "原文", "钱乙"]
+  },
+  {
+    "case_id": "cqv_010",
+    "category": "compare_boundary",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "boundary"],
+    "mode": "qa",
+    "query": "四君子汤和六君子汤除了组成差异，适用边界上有什么不同？",
+    "expected_keywords": ["四君子汤", "六君子汤"],
+    "preferred_terms": ["陈皮", "半夏", "痰", "脾胃气虚"]
+  },
+  {
+    "case_id": "cqv_020",
+    "category": "case_syndrome_formula",
+    "difficulty": "hard",
+    "eval_focus": ["case_to_syndrome", "formula_reference", "reasoning"],
+    "mode": "case",
+    "query": "男 42岁 发热恶寒 往来寒热 胸胁苦满 口苦 咽干 脉弦",
+    "expected_keywords": ["往来寒热", "胸胁苦满", "口苦", "咽干", "脉弦"],
+    "preferred_terms": ["少阳证", "小柴胡汤"]
+  },
+  {
+    "case_id": "cqv_028",
+    "category": "open_query",
+    "difficulty": "hard",
+    "eval_focus": ["open_qa", "reasoning"],
+    "mode": "qa",
+    "query": "为什么当归补血汤中黄芪量大而当归量小",
+    "expected_keywords": ["当归补血汤", "黄芪", "当归"],
+    "preferred_terms": ["气旺生血", "补气生血"]
+  },
+  {
+    "case_id": "cqv_031",
+    "category": "case_basic",
+    "difficulty": "hard",
+    "eval_focus": ["noise_robustness", "basic_case_match"],
+    "mode": "case",
+    "query": "患者女，48岁，近半年工作压力大，情绪抑郁，常胸胁胀闷，纳少乏力，睡眠差，偶口苦，舌稍红，脉弦细，这类病例一般归到什么证候",
+    "expected_keywords": ["胸胁胀闷", "纳少乏力", "睡眠差", "口苦", "脉弦细"],
+    "preferred_terms": ["肝郁脾虚", "逍遥散"]
+  }
+]

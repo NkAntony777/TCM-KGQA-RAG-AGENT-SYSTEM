@@ -35,7 +35,7 @@ class SparseLexiconStore:
         english_pattern = re.compile(r"[a-zA-Z]+")
 
         if jieba is not None and normalized:
-            _prime_jieba_runtime_words(self.runtime_graph_db_path)
+            prime_jieba_runtime_words(self.runtime_graph_db_path)
             for token in jieba.cut_for_search(normalized):
                 cleaned = str(token or "").strip()
                 if len(cleaned) >= 2 and cleaned not in seen:

@@ -1,0 +1,218 @@
+[
+  {
+    "case_id": "cvf_e301",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "reverse_lookup"],
+    "query": "哪首方被说成治胸痹、喘息咳唾、胸背痛、短气，而且还批评世医误用豆蔻木香等药",
+    "expected_books_any": ["成方切用"],
+    "expected_keywords_any": ["栝蒌薤白白酒汤", "胸痹", "胸背痛", "短气"]
+  },
+  {
+    "case_id": "cvf_e302",
+    "category": "formula_indication",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_match"],
+    "query": "烦劳内伤、懒言恶食、清阳下陷，一般用哪首补中方",
+    "expected_books_any": ["成方切用"],
+    "expected_keywords_any": ["补中益气汤", "烦劳内伤", "懒言恶食", "清阳下陷"]
+  },
+  {
+    "case_id": "cvf_e303",
+    "category": "formula_explanation",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "formula_role"],
+    "query": "哪味药在本草备要里被强调人只知其能发表，却不知最能和里",
+    "expected_books_any": ["本草备要"],
+    "expected_keywords_any": ["柴胡", "和里", "少阳", "厥阴", "补中益气汤", "逍遥散"]
+  },
+  {
+    "case_id": "cvf_e304",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "reverse_lookup"],
+    "query": "哪味药被描述为味苦性寒体阴质燥，能解渴除烦、止盗汗、治热毒诸痢",
+    "expected_books_any": ["本草便读"],
+    "expected_keywords_any": ["黄连", "解渴除烦", "止盗汗", "治热毒诸痢"]
+  },
+  {
+    "case_id": "cvf_e305",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "reverse_lookup"],
+    "query": "哪味药大苦大寒、沉阴下行，主泻肝胆火并除下焦湿热",
+    "expected_books_any": ["本草便读"],
+    "expected_keywords_any": ["龙胆草", "泻肝胆火", "下焦湿热"]
+  },
+  {
+    "case_id": "cvf_e306",
+    "category": "formula_alias",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "alias_hit", "source_trace"],
+    "query": "外台秘要里虚劳腹中痛、梦失精、手足烦热、咽干口燥这一条，实际就是仲景哪首方",
+    "expected_books_any": ["外台秘要"],
+    "expected_keywords_any": ["小建中汤", "虚劳腹中痛", "手足烦热", "咽干口燥"]
+  },
+  {
+    "case_id": "cvf_e307",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_cluster"],
+    "query": "哪首方主治积劳虚损、心中虚悸、咽干唇燥、小腹拘急",
+    "expected_books_any": ["备急千金要方"],
+    "expected_keywords_any": ["小建中汤", "心中虚悸", "咽干唇燥", "小腹拘急"]
+  },
+  {
+    "case_id": "cvf_e308",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "quote_hit"],
+    "query": "哪首方在伤寒寻源里被说成“本太阳表药，一转移而即变为安太阴之制”",
+    "expected_books_any": ["伤寒寻源"],
+    "expected_keywords_any": ["小建中汤", "本太阳表药", "安太阴之制"]
+  },
+  {
+    "case_id": "cvf_e309",
+    "category": "theory_summary",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "theory_trace"],
+    "query": "张氏医通怎样概括胸痹的治法核心",
+    "expected_books_any": ["张氏医通"],
+    "expected_keywords_any": ["胸痹", "温通上焦清阳", "阳微阴弦"]
+  },
+  {
+    "case_id": "cvf_e310",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "boundary"],
+    "query": "张氏医通里疟病寒多热少、甚至但寒不热时，偏向哪首和解加减方",
+    "expected_books_any": ["张氏医通"],
+    "expected_keywords_any": ["柴胡桂姜汤", "寒多热少", "但寒无热"]
+  },
+  {
+    "case_id": "cvf_e311",
+    "category": "theory_summary",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "disease_summary"],
+    "query": "医学三字经怎样概括疟病为什么属少阳，初起主方是什么",
+    "expected_books_any": ["医学三字经"],
+    "expected_keywords_any": ["疟为病", "属少阳", "小柴胡汤"]
+  },
+  {
+    "case_id": "cvf_e312",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "quote_hit"],
+    "query": "病人时发热自汗出而不愈，被解释为卫气不和时，宜先用哪首方",
+    "expected_books_any": ["医宗金鉴"],
+    "expected_keywords_any": ["卫气不和", "桂枝汤", "时发热", "自汗出"]
+  },
+  {
+    "case_id": "cvf_e313",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "source_trace"],
+    "query": "汗吐下后虚烦不得眠、心中懊憹时，先用哪首栀子豉方",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["栀子豉汤", "虚烦不得眠", "心中懊憹"]
+  },
+  {
+    "case_id": "cvf_e314",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_match"],
+    "query": "渴欲饮水而小便不利时，偏向哪首兼顾育阴利水的方",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["猪苓汤", "渴欲饮水", "小便不利", "阿胶"]
+  },
+  {
+    "case_id": "cvf_e315",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "source_trace"],
+    "query": "男子失精、女子梦交而脉极虚芤时，宜先用哪首桂枝加味方",
+    "expected_books_any": ["金匮要略", "祖剂", "金匮方歌括"],
+    "expected_keywords_any": ["桂枝加龙骨牡蛎汤", "失精", "梦交", "脉极虚芤"]
+  },
+  {
+    "case_id": "cvf_e316",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "boundary"],
+    "query": "劳倦伤脾、中气下陷、少气懒言时，常用哪首升阳举陷方",
+    "expected_books_any": ["脾胃论", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["补中益气汤", "中气下陷", "少气懒言", "升阳举陷"]
+  },
+  {
+    "case_id": "cvf_e317",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "reverse_lookup"],
+    "query": "哪味药被称为“血中气药”，能行血和血、养营调气、去风散寒",
+    "expected_books_any": ["得配本草", "新修本草", "本草纲目"],
+    "expected_keywords_any": ["当归", "血中气药", "养营调气", "去风散寒"]
+  },
+  {
+    "case_id": "cvf_e318",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "reverse_lookup"],
+    "query": "哪味药苦寒而入手太阴、少阳、阳明经，长于清热燥湿泻火",
+    "expected_books_any": ["得配本草", "本草纲目", "神农本草经"],
+    "expected_keywords_any": ["黄芩", "苦寒", "清热燥湿", "泻火"]
+  },
+  {
+    "case_id": "cvf_e319",
+    "category": "herb_property",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "reverse_lookup"],
+    "query": "哪味药大苦大寒、沉阴下行，专泻肝胆火并除下焦湿热",
+    "expected_books_any": ["本草从新", "得配本草", "冯氏锦囊秘录"],
+    "expected_keywords_any": ["龙胆草", "泻肝胆火", "下焦湿热"]
+  },
+  {
+    "case_id": "cvf_e320",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_cluster"],
+    "query": "思虑伤脾、健忘怔忡、寤而不寐时，常用哪首方",
+    "expected_books_any": ["严氏济生方", "一草亭目科全书", "医方集解"],
+    "expected_keywords_any": ["归脾汤", "健忘", "怔忡", "寤而不寐"]
+  },
+  {
+    "case_id": "cvf_e321",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "quote_hit"],
+    "query": "脚挛急、津液不荣经脉时，偏向哪首仅两味药相和的方",
+    "expected_books_any": ["伤寒论", "伤寒寻源", "伤寒括要"],
+    "expected_keywords_any": ["芍药甘草汤", "脚挛急", "芍药", "甘草"]
+  },
+  {
+    "case_id": "cvf_e322",
+    "category": "formula_indication",
+    "difficulty": "hard",
+    "eval_focus": ["book_hit", "formula_hit", "boundary"],
+    "query": "发热微恶寒、肢节烦疼、微呕、心下支结时，偏向哪首太阳少阳并病方",
+    "expected_books_any": ["伤寒论", "医宗金鉴", "古今名医方论"],
+    "expected_keywords_any": ["柴胡桂枝汤", "太阳少阳并病", "肢节烦疼", "心下支结"]
+  },
+  {
+    "case_id": "cvf_e323",
+    "category": "formula_reverse_lookup",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_match"],
+    "query": "心下痞满而不痛、寒热错杂时，常用哪首泻心汤",
+    "expected_books_any": ["伤寒论", "三因极一病证方论", "伤寒括要"],
+    "expected_keywords_any": ["半夏泻心汤", "心下痞满", "不痛", "寒热错杂"]
+  },
+  {
+    "case_id": "cvf_e324",
+    "category": "theory_summary",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "theory_trace"],
+    "query": "为什么少阳病常以口苦、咽干、目眩为提纲",
+    "expected_books_any": ["伤寒证治准绳", "证治准绳·伤寒", "伤寒论"],
+    "expected_keywords_any": ["少阳病", "口苦", "咽干", "目眩", "往来寒热"]
+  }
+]

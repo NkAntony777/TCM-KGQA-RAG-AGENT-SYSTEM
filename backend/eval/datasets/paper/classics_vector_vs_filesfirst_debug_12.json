@@ -1,0 +1,110 @@
+[
+  {
+    "case_id": "cvf_s201",
+    "category": "formula_indication",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_match"],
+    "query": "太平惠民和剂局方里的藿香正气散主要治哪些病证",
+    "expected_books_any": ["太平惠民和剂局方"],
+    "expected_keywords_any": ["藿香正气散", "伤寒头疼", "憎寒壮热", "霍乱", "上喘咳嗽"]
+  },
+  {
+    "case_id": "cvf_s202",
+    "category": "formula_indication",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "formula_hit", "symptom_match"],
+    "query": "太平惠民和剂局方中二陈汤主要针对哪些痰饮症状",
+    "expected_books_any": ["太平惠民和剂局方"],
+    "expected_keywords_any": ["二陈汤", "痰饮", "呕吐恶心", "头眩心悸", "中脘不快"]
+  },
+  {
+    "case_id": "cvf_s203",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "acute_use"],
+    "query": "太平惠民和剂局方里苏合香丸适合治哪些急证和怪病",
+    "expected_books_any": ["太平惠民和剂局方"],
+    "expected_keywords_any": ["苏合香丸", "卒心痛", "霍乱吐利", "鬼魅", "瘴疟", "惊痫"]
+  },
+  {
+    "case_id": "cvf_s204",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "gynecology"],
+    "query": "太平惠民和剂局方里的四物汤主治哪些妇人血证",
+    "expected_books_any": ["太平惠民和剂局方"],
+    "expected_keywords_any": ["四物汤", "月水不调", "崩中漏下", "胎动不安", "恶露"]
+  },
+  {
+    "case_id": "cvf_s205",
+    "category": "formula_explanation",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "pathogenesis"],
+    "query": "医方考怎样解释二陈汤为什么能治风盛痰壅",
+    "expected_books_any": ["医方考"],
+    "expected_keywords_any": ["二陈汤", "风盛痰壅", "燥湿", "渗湿", "补脾", "利气"]
+  },
+  {
+    "case_id": "cvf_s206",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "chronic_case"],
+    "query": "医方考里补中益气汤为什么能治疟疾经年不愈",
+    "expected_books_any": ["医方考"],
+    "expected_keywords_any": ["补中益气汤", "疟疾经年不愈", "气血皆虚", "柴胡", "升麻", "陈皮"]
+  },
+  {
+    "case_id": "cvf_s207",
+    "category": "formula_indication",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "formula_hit", "kidney_lung"],
+    "query": "医方考里六味地黄丸为什么可以治肾虚移热于肺的咳嗽",
+    "expected_books_any": ["医方考"],
+    "expected_keywords_any": ["六味地黄丸", "肾虚移热于肺", "咳嗽", "熟地黄", "山茱萸", "泽泻", "牡丹皮"]
+  },
+  {
+    "case_id": "cvf_s208",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "本草从新里黄连的主要功用有哪些",
+    "expected_books_any": ["本草从新"],
+    "expected_keywords_any": ["黄连", "泻火燥湿", "解渴除烦", "止盗汗", "治热毒诸痢", "杀蛔"]
+  },
+  {
+    "case_id": "cvf_s209",
+    "category": "herb_property",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "keyword_hit", "herb_property"],
+    "query": "本草从新里龙胆草主要泻哪两类火和湿热",
+    "expected_books_any": ["本草从新"],
+    "expected_keywords_any": ["龙胆草", "泻肝胆火", "下焦湿热", "咽喉风热", "赤睛弩肉"]
+  },
+  {
+    "case_id": "cvf_s210",
+    "category": "formula_alias",
+    "difficulty": "easy",
+    "eval_focus": ["book_hit", "alias_hit", "formula_extension"],
+    "query": "古今名医方论里四君子汤加陈皮和半夏后分别叫什么",
+    "expected_books_any": ["古今名医方论"],
+    "expected_keywords_any": ["四君子汤", "五味异功散", "六君子汤", "陈皮", "半夏"]
+  },
+  {
+    "case_id": "cvf_s211",
+    "category": "formula_explanation",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "keyword_hit", "formula_role"],
+    "query": "古今名医方论里逍遥散主治哪些肝郁血虚表现",
+    "expected_books_any": ["古今名医方论"],
+    "expected_keywords_any": ["逍遥散", "头痛", "目眩", "口苦", "抑郁不乐", "两胁作痛"]
+  },
+  {
+    "case_id": "cvf_s212",
+    "category": "formula_definition",
+    "difficulty": "medium",
+    "eval_focus": ["book_hit", "quote_hit", "source_trace"],
+    "query": "古今名医方论里桂枝汤主要适用于哪类表证",
+    "expected_books_any": ["古今名医方论"],
+    "expected_keywords_any": ["桂枝汤", "脉浮弱", "自汗出", "头痛发热", "恶风恶寒", "鼻鸣干呕"]
+  }
+]

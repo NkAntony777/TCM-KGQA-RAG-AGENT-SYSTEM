@@ -14,6 +14,7 @@ def entity_lookup_exact_hit_payload(
     predicate_blocklist: list[str] | None,
     top_k: int,
     limit_per_entity: int,
+    source_books: list[str] | None = None,
 ) -> dict[str, Any] | None:
     if not exact_candidates:
         return None
@@ -21,7 +22,7 @@ def entity_lookup_exact_hit_payload(
     grouped_rows = engine._group_nebula_relations_by_source(
         [exact_name],
         predicate_allowlist=predicate_allowlist,
-        source_books=engine._query_source_book_hints(query_text),
+        source_books=source_books if source_books is not None else engine._query_source_book_hints(query_text),
         limit_per_entity=limit_per_entity,
         directions=engine._entity_lookup_directions(
             query_text=query_text,

@@ -77,6 +77,13 @@ backend/services/retrieval_service/data/herb2_modern_corpus.manifest.json
 backend/storage/*report*.json
 backend/storage/qa_*.json
 backend/storage/section_summary_cache.json
+backend/_tmp_test/
+backend/eval/datasets/paper/_tmp_traceable_*
+backend/storage/nav_group_cache/
+backend/storage/paper_milvus_import_sessions/
+backend/storage/paper_sqlite_import_sessions/
+backend/storage/retrieval_local_index.fts.db.state.json
+backend/eval/ablations/archive_20260419/
 frontend/.next/
 frontend/node_modules/
 frontend/.npm-cache/

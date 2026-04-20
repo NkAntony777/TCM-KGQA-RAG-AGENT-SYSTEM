@@ -17,7 +17,7 @@ def main() -> None:
     args, unknown = parser.parse_known_args()
     __import__("sys").argv = [
         "benchmark_path_query_backends.py",
-        "--output",
+        "--output-json",
         str(args.output_json),
         *unknown,
     ]

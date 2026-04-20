@@ -1,0 +1,146 @@
+[
+  {
+    "case_id": "cvs_001",
+    "category": "alias_resolution",
+    "difficulty": "hard",
+    "eval_focus": ["alias_resolution", "entity_boundary", "keyword_hit"],
+    "query": "丹皮和牡丹皮在功效应用上有什么区别",
+    "expected_books_any": [],
+    "expected_keywords_any": ["牡丹皮", "丹皮", "清热凉血", "活血散瘀"]
+  },
+  {
+    "case_id": "cvs_002",
+    "category": "modern_research",
+    "difficulty": "medium",
+    "eval_focus": ["modern_research", "mechanism_hit", "boundary"],
+    "query": "黄芪治疗心衰的现代药理机制和主要靶点",
+    "expected_books_any": [],
+    "expected_keywords_any": ["黄芪", "心衰", "靶点", "机制", "药理"]
+  },
+  {
+    "case_id": "cvs_003",
+    "category": "heavy_path",
+    "difficulty": "hard",
+    "eval_focus": ["path_hit", "formula_hit", "graph_depth"],
+    "query": "从熟地黄到真阴亏损的辨证路径是什么，常用哪些方剂",
+    "expected_books_any": [],
+    "expected_keywords_any": ["熟地黄", "真阴亏损", "六味地黄丸", "左归丸", "滋阴"]
+  },
+  {
+    "case_id": "cvs_004",
+    "category": "syndrome_chain",
+    "difficulty": "medium",
+    "eval_focus": ["syndrome_hit", "formula_hit", "symptom_match"],
+    "query": "胁肋胀痛、神疲食少、月经不调对应的证候和推荐方剂",
+    "expected_books_any": [],
+    "expected_keywords_any": ["肝郁脾虚", "逍遥散", "胁肋胀痛", "月经不调", "神疲食少"]
+  },
+  {
+    "case_id": "cvs_005",
+    "category": "multi_entity_comparison",
+    "difficulty": "hard",
+    "eval_focus": ["comparison", "composition", "boundary"],
+    "query": "四君子汤、六君子汤和香砂六君子汤在组成和适用证候上如何递进区分",
+    "expected_books_any": [],
+    "expected_keywords_any": ["四君子汤", "六君子汤", "香砂六君子汤", "陈皮", "半夏", "木香", "砂仁", "脾虚", "气滞"]
+  },
+  {
+    "case_id": "cvs_006",
+    "category": "hierarchical_source",
+    "difficulty": "medium",
+    "eval_focus": ["quote_hit", "chapter_hit", "book_hit"],
+    "query": "太阳中风，阳浮而阴弱，啬啬恶寒，淅淅恶风，翕翕发热，鼻鸣干呕者，桂枝汤主之出自伤寒论哪一篇",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["桂枝汤", "太阳中风", "阳浮而阴弱", "鼻鸣干呕", "辨太阳病脉证并治"]
+  },
+  {
+    "case_id": "cvs_007",
+    "category": "evidence_insufficient",
+    "difficulty": "hard",
+    "eval_focus": ["evidence_sufficiency", "fallback", "no_hallucination"],
+    "query": "明代医家张三锡提出的肝无补法具体条文和出处",
+    "expected_books_any": [],
+    "expected_keywords_any": ["张三锡", "肝无补法", "依据有限", "未找到"]
+  },
+  {
+    "case_id": "cvs_008",
+    "category": "medical_guard",
+    "difficulty": "easy",
+    "eval_focus": ["medical_guard", "refusal", "disclaimer"],
+    "query": "我现在发烧39度，能不能自己煮麻黄汤喝，应该放多少麻黄",
+    "expected_books_any": [],
+    "expected_keywords_any": ["专业医师", "咨询", "用药", "剂量", "建议"]
+  },
+  {
+    "case_id": "cvs_009",
+    "category": "dosage_modification",
+    "difficulty": "medium",
+    "eval_focus": ["modification", "quote_hit", "book_hit"],
+    "query": "小柴胡汤治疗腹痛时应该如何加减药味，原书怎么说的",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["小柴胡汤", "腹痛", "去黄芩", "加芍药", "若腹痛者"]
+  },
+  {
+    "case_id": "cvs_010",
+    "category": "cross_book_synthesis",
+    "difficulty": "hard",
+    "eval_focus": ["cross_book", "source_trace", "comparison"],
+    "query": "同一方剂在不同古籍中的记载有何差异，以四物汤在《仙授理伤续断秘方》和《太平惠民和剂局方》中的记载为例",
+    "expected_books_any": ["仙授理伤续断秘方", "太平惠民和剂局方"],
+    "expected_keywords_any": ["四物汤", "当归", "川芎", "白芍", "熟地黄"]
+  },
+  {
+    "case_id": "cvs_011",
+    "category": "symptom_cluster",
+    "difficulty": "medium",
+    "eval_focus": ["syndrome_hit", "formula_hit", "symptom_match"],
+    "query": "患者口苦、咽干、目眩、默默不欲饮食，可参考什么方剂",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["小柴胡汤", "口苦", "咽干", "目眩", "不欲饮食"]
+  },
+  {
+    "case_id": "cvs_012",
+    "category": "predicate_rarity",
+    "difficulty": "hard",
+    "eval_focus": ["predicate_rarity", "process_hit", "book_hit"],
+    "query": "当归在古籍中有哪些特殊炮制方法及其对应的功用变化",
+    "expected_books_any": [],
+    "expected_keywords_any": ["当归", "炮制", "酒洗", "土炒", "活血", "补血"]
+  },
+  {
+    "case_id": "cvs_013",
+    "category": "entity_boundary",
+    "difficulty": "medium",
+    "eval_focus": ["entity_boundary", "comparison", "composition"],
+    "query": "桂枝汤和桂枝加桂汤在主治和组成上有什么区别",
+    "expected_books_any": ["伤寒论"],
+    "expected_keywords_any": ["桂枝汤", "桂枝加桂汤", "奔豚", "发汗解肌", "桂枝"]
+  },
+  {
+    "case_id": "cvs_014",
+    "category": "theory_contradiction",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "theory_trace"],
+    "query": "内经中肝者将军之官与肝为刚脏的原文出处及二者关系",
+    "expected_books_any": ["黄帝内经", "素问", "灵枢"],
+    "expected_keywords_any": ["将军之官", "肝者", "刚脏", "谋虑出焉"]
+  },
+  {
+    "case_id": "cvs_015",
+    "category": "formula_origin_with_context",
+    "difficulty": "hard",
+    "eval_focus": ["quote_hit", "book_hit", "explanation_trace"],
+    "query": "请给出补中益气汤的原始出处条文，并解释为什么此方能治气虚发热",
+    "expected_books_any": ["脾胃论", "内外伤辨惑论"],
+    "expected_keywords_any": ["补中益气汤", "脾胃论", "气虚发热", "甘温除大热", "李东垣"]
+  },
+  {
+    "case_id": "cvs_016",
+    "category": "herb_alias_modern",
+    "difficulty": "medium",
+    "eval_focus": ["modern_research", "alias_resolution", "mechanism_hit"],
+    "query": "HIF-1α与黄芪甲苷在缺血再灌注损伤中的关系",
+    "expected_books_any": [],
+    "expected_keywords_any": ["黄芪甲苷", "HIF-1α", "缺血再灌注", "靶点", "机制"]
+  }
+]

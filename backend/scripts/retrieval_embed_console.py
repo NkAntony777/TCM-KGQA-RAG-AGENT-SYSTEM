@@ -81,6 +81,22 @@ def _iter_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _iter_jsonl_stream(path: Path):
+    if not path.exists():
+        return
+    with path.open("r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, dict):
+                yield payload
+
+
 def _append_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
@@ -97,8 +113,10 @@ class SessionConfig:
     session_name: str
     include_sample: bool
     include_modern: bool
+    include_classic: bool
     workers: int
     batch_size: int
+    batch_retries: int
     target_store: str
 
 
@@ -131,7 +149,9 @@ class EmbedConsoleSession:
         if isinstance(state, dict) and state.get("session_name") == self.config.session_name:
             state.setdefault("workers", self.config.workers)
             state.setdefault("batch_size", self.config.batch_size)
+            state.setdefault("batch_retries", self.config.batch_retries)
             state.setdefault("status", "idle")
+            state.setdefault("include_classic", self.config.include_classic)
             return state
         state = {
             "session_name": self.config.session_name,
@@ -140,9 +160,11 @@ class EmbedConsoleSession:
             "status": "idle",
             "workers": self.config.workers,
             "batch_size": self.config.batch_size,
+            "batch_retries": self.config.batch_retries,
             "target_store": self.config.target_store,
             "include_sample": self.config.include_sample,
             "include_modern": self.config.include_modern,
+            "include_classic": self.config.include_classic,
             "completed_docs": 0,
             "completed_batches": 0,
             "total_docs": 0,
@@ -164,6 +186,8 @@ class EmbedConsoleSession:
             paths.append(self.settings.sample_corpus_path)
         if self.config.include_modern and self.settings.modern_corpus_path.exists():
             paths.append(self.settings.modern_corpus_path)
+        if self.config.include_classic and self.settings.classic_corpus_path.exists():
+            paths.append(self.settings.classic_corpus_path)
         return paths
 
     def _load_docs(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -211,6 +235,7 @@ class EmbedConsoleSession:
             "status": self._state.get("status", "idle"),
             "include_sample": self.config.include_sample,
             "include_modern": self.config.include_modern,
+            "include_classic": self.config.include_classic,
             "corpus_paths": [str(path) for path in self._corpus_paths()],
             "workers": int(self._state.get("workers", self.config.workers)),
             "batch_size": int(self._state.get("batch_size", self.config.batch_size)),
@@ -233,16 +258,21 @@ class EmbedConsoleSession:
         remaining = int(payload["remaining_docs"])
         workers = int(payload["workers"])
         batch_size = int(payload["batch_size"])
+        batch_retries = int(self._state.get("batch_retries", self.config.batch_retries))
         print("")
         print("=" * 72)
         print(f"Session      : {payload['session_name']}")
         print(f"Status       : {payload['status']}")
-        print(f"Corpus       : sample={payload['include_sample']} modern={payload['include_modern']}")
+        print(
+            f"Corpus       : sample={payload['include_sample']} "
+            f"modern={payload['include_modern']} classic={payload.get('include_classic', True)}"
+        )
         print(f"Corpus Paths : {', '.join(payload['corpus_paths']) if payload['corpus_paths'] else '(none)'}")
         print(f"Embed Model  : {payload['embedding_model']}")
         print(f"Dense Dim    : {payload['dense_dim']}")
         print(f"Workers      : {workers}")
         print(f"Batch size   : {batch_size}")
+        print(f"Batch retry  : {batch_retries}")
         print(f"Target Store : {payload['target_store']}")
         print(f"Progress     : {_progress_bar(done, total)} {done}/{total} remaining={remaining}")
         print(f"Rows file    : {payload['rows_path']}")
@@ -309,6 +339,25 @@ class EmbedConsoleSession:
             )
         return rows
 
+    def _embed_batch_with_retry(self, batch_docs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        max_retries = max(0, int(self._state.get("batch_retries", self.config.batch_retries)))
+        last_error: Exception | None = None
+        chunk_preview = str(batch_docs[0].get("chunk_id", "")) if batch_docs else "empty"
+        for attempt in range(max_retries + 1):
+            try:
+                return self._embed_batch(batch_docs)
+            except Exception as exc:
+                last_error = exc
+                if attempt >= max_retries:
+                    raise
+                delay = min(12.0, 1.0 * (2**attempt))
+                self._log(
+                    f"batch retry {attempt + 1}/{max_retries} in {delay:.1f}s "
+                    f"for {chunk_preview}: {exc}"
+                )
+                time.sleep(delay)
+        raise RuntimeError(f"embed_batch_retry_exhausted:{last_error}")
+
     def run(self, *, resume: bool = True) -> None:
         if not self.engine.embedding_client.is_ready():
             raise RuntimeError("embedding_client_not_configured")
@@ -342,7 +391,7 @@ class EmbedConsoleSession:
             with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="embed-worker") as executor:
                 while next_batch_idx < len(pending_batches) and len(futures) < workers:
                     batch_docs = pending_batches[next_batch_idx]
-                    futures[executor.submit(self._embed_batch, batch_docs)] = len(batch_docs)
+                    futures[executor.submit(self._embed_batch_with_retry, batch_docs)] = len(batch_docs)
                     next_batch_idx += 1
 
                 while futures:
@@ -368,7 +417,7 @@ class EmbedConsoleSession:
                         self._log(line)
                         if next_batch_idx < len(pending_batches):
                             batch_docs = pending_batches[next_batch_idx]
-                            futures[executor.submit(self._embed_batch, batch_docs)] = len(batch_docs)
+                            futures[executor.submit(self._embed_batch_with_retry, batch_docs)] = len(batch_docs)
                             next_batch_idx += 1
         except KeyboardInterrupt:
             self._state["status"] = "interrupted"
@@ -391,12 +440,29 @@ class EmbedConsoleSession:
         status = self.status()
         if int(status["completed_docs"]) < int(status["total_docs"]):
             raise RuntimeError("session_not_complete")
-        rows = _iter_jsonl(self.rows_path)
-        if not rows:
+        if not self.rows_path.exists():
             raise RuntimeError("no_rows_to_finalize")
-        self.engine.local_store.save(rows)
+        target_path = self.engine.settings.local_index_path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
+
+        count = 0
+        with temp_path.open("w", encoding="utf-8") as f:
+            f.write("[\n")
+            first = True
+            for row in _iter_jsonl_stream(self.rows_path):
+                if not first:
+                    f.write(",\n")
+                f.write(json.dumps(row, ensure_ascii=False))
+                first = False
+                count += 1
+                if count % 5000 == 0:
+                    self._log(f"finalize progress: {count} rows written")
+            f.write("\n]\n")
+
+        temp_path.replace(target_path)
         self._log(
-            f"local index finalized: rows={len(rows)} path={self.engine.settings.local_index_path}"
+            f"local index finalized: rows={count} path={self.engine.settings.local_index_path}"
         )
 
 
@@ -405,8 +471,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--session", default="configured-corpora")
     parser.add_argument("--exclude-sample", action="store_true")
     parser.add_argument("--exclude-modern", action="store_true")
+    parser.add_argument("--exclude-classic", action="store_true")
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--batch-retries", type=int, default=3)
     parser.add_argument("--target-store", choices=["session_only", "local_json"], default="session_only")
     parser.add_argument("--run-now", action="store_true", help="Start embedding immediately, then enter console.")
     parser.add_argument("--non-interactive", action="store_true", help="Run once and exit.")
@@ -420,6 +488,7 @@ def _print_help() -> None:
     print("  run                    alias of resume")
     print("  set workers <n>        update worker count for next run")
     print("  set batch <n>          update batch size for next run")
+    print("  set retries <n>        update batch retry count for next run")
     print("  finalize               write completed rows into retrieval_local_index.json")
     print("  reset                  delete current session state and rows")
     print("  help                   show this help")
@@ -466,6 +535,14 @@ def _interactive_loop(session: EmbedConsoleSession) -> None:
             except Exception as exc:
                 print(f"invalid batch size: {exc}")
             continue
+        if raw.startswith("set retries "):
+            try:
+                session._state["batch_retries"] = max(0, int(raw.split()[-1]))
+                session._save_state()
+                session._log(f"batch_retries updated to {session._state['batch_retries']}")
+            except Exception as exc:
+                print(f"invalid retries: {exc}")
+            continue
         print("unknown command; type 'help'")
 
 
@@ -476,13 +553,20 @@ def main() -> int:
         session_name=_clean_session_name(args.session),
         include_sample=not args.exclude_sample,
         include_modern=not args.exclude_modern,
+        include_classic=not args.exclude_classic,
         workers=max(1, args.workers),
         batch_size=max(1, args.batch_size),
+        batch_retries=max(0, args.batch_retries),
         target_store=args.target_store,
     )
     session = EmbedConsoleSession(config)
-    session.set_workers(config.workers)
-    session.set_batch_size(config.batch_size)
+    session._state["workers"] = config.workers
+    session._state["batch_size"] = config.batch_size
+    session._state["batch_retries"] = config.batch_retries
+    session._state["include_sample"] = config.include_sample
+    session._state["include_modern"] = config.include_modern
+    session._state["include_classic"] = config.include_classic
+    session._save_state()
     if args.run_now or args.non_interactive:
         session.run(resume=True)
         if args.target_store == "local_json":
