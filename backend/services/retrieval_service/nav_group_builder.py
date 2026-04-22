@@ -6,6 +6,7 @@ import sqlite3
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from statistics import median
 from typing import Any, Callable
 
 SECTION_KEY_PATTERN = re.compile(r"^(?P<book>.+?)::(?P<section>\d{4})$")
@@ -115,6 +116,28 @@ def _jaccard(left: set[str], right: set[str]) -> float:
     return len(left & right) / max(1, len(left | right))
 
 
+def _node_entity_similarity(left: SectionNode, right: SectionNode) -> float:
+    return _jaccard(set(left.entity_tags), set(right.entity_tags))
+
+
+def _node_topic_similarity(left: SectionNode, right: SectionNode) -> float:
+    return _jaccard(set(left.topic_tags), set(right.topic_tags))
+
+
+def _book_similarity_floor(sections: list[SectionNode]) -> float:
+    if len(sections) < 2:
+        return 0.18
+    entity_similarities = [
+        _node_entity_similarity(sections[idx], sections[idx + 1])
+        for idx in range(len(sections) - 1)
+    ]
+    non_zero = [value for value in entity_similarities if value > 0.0]
+    if not non_zero:
+        return 0.18
+    # Use the book-internal median as a robust adaptive split floor.
+    return round(min(0.32, max(0.12, float(median(non_zero)))), 3)
+
+
 def _infer_question_types(*, title: str, topic_tags: list[str], entity_tags: list[str]) -> list[str]:
     joined = " ".join([title, *topic_tags, *entity_tags])
     kinds: list[str] = []
@@ -199,7 +222,15 @@ def _section_nodes_from_corpus(*, corpus_rows: list[dict[str, Any]], summary_cac
     return grouped
 
 
-def _should_split_group(*, current: list[SectionNode], nxt: SectionNode, min_size: int, target_size: int, max_size: int) -> bool:
+def _should_split_group(
+    *,
+    current: list[SectionNode],
+    nxt: SectionNode,
+    min_size: int,
+    target_size: int,
+    max_size: int,
+    similarity_floor: float,
+) -> bool:
     if not current:
         return False
     if len(current) >= max_size:
@@ -217,7 +248,7 @@ def _should_split_group(*, current: list[SectionNode], nxt: SectionNode, min_siz
         return True
     if current_kind != next_kind and len(current) >= target_size:
         return True
-    if similarity < 0.18 and len(current) >= target_size:
+    if similarity < similarity_floor and len(current) >= target_size:
         return True
     return False
 
@@ -301,6 +332,7 @@ def build_nav_groups(
             micro_ratio=micro_ratio,
         )
         min_size, target_size, max_size = _group_params(archetype)
+        similarity_floor = _book_similarity_floor(sections)
         groups_for_book: list[dict[str, Any]] = []
 
         if archetype == "coarse_book":
@@ -310,7 +342,14 @@ def build_nav_groups(
             current: list[SectionNode] = []
             group_id = 1
             for node in sections:
-                if _should_split_group(current=current, nxt=node, min_size=min_size, target_size=target_size, max_size=max_size):
+                if _should_split_group(
+                    current=current,
+                    nxt=node,
+                    min_size=min_size,
+                    target_size=target_size,
+                    max_size=max_size,
+                    similarity_floor=similarity_floor,
+                ):
                     groups_for_book.append(_aggregate_group(book_name, group_id, archetype, current))
                     group_id += 1
                     current = []
@@ -358,6 +397,7 @@ def build_nav_groups(
                 "leaf_count": sum(item.leaf_count for item in sections),
                 "avg_leafs_per_section": round(avg_leafs, 3),
                 "micro_ratio": round(micro_ratio, 3),
+                "similarity_floor": similarity_floor,
                 "nav_group_count": len(groups_for_book),
                 "avg_sections_per_group": round(chapter_count / max(1, len(groups_for_book)), 3),
             }

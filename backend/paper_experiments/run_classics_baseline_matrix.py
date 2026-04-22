@@ -16,6 +16,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from paper_experiments.classics_vector_sqlite_store import blob_to_dense
+from paper_experiments.experiment_env import collect_experiment_environment
 from paper_experiments.run_classics_vector_vs_filesfirst import (
     DEFAULT_SQLITE_DB,
     _build_engine,
@@ -342,6 +343,18 @@ def main() -> None:
             "top_k": max(1, int(args.top_k)),
             "candidate_k": max(1, int(args.candidate_k)),
         },
+        "environment": collect_experiment_environment(
+            extra={
+                "script": "run_classics_baseline_matrix.py",
+                "dataset_path": str(args.dataset),
+                "sqlite_db": str(args.sqlite_db),
+                "top_k": max(1, int(args.top_k)),
+                "candidate_k": max(1, int(args.candidate_k)),
+                "latency_semantics": "single-run wall-clock per case on the current local machine; intended for relative comparison within the same rerun",
+                "cache_state": "warm process, prebuilt local indexes reused, no explicit cold-start reset between methods",
+                "concurrency": "single-process sequential method and case execution",
+            }
+        ),
         "files_first": files_first,
         "external_bm25": external_bm25,
         "vector_sqlite": vector_sqlite,

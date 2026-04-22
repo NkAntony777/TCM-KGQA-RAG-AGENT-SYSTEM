@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -19,6 +20,13 @@ from services.qa_service.skill_registry import clear_runtime_skills_cache
 from tools.skills_scanner import refresh_snapshot
 
 
+def _env_enabled(name: str, *, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings = get_settings()
@@ -26,7 +34,8 @@ async def lifespan(_: FastAPI):
     clear_runtime_skills_cache()
     agent_manager.initialize(settings.backend_dir)
     memory_indexer.configure(settings.backend_dir)
-    memory_indexer.rebuild_index()
+    if not _env_enabled("SKIP_MEMORY_INDEX_STARTUP_REBUILD", default=False):
+        memory_indexer.rebuild_index()
     yield
 
 

@@ -20,6 +20,7 @@ if str(BACKEND_ROOT) not in sys.path:
 from services.retrieval_service.engine import RetrievalEngine
 from services.retrieval_service.settings import load_settings
 from services.retrieval_service.qa_structured_store import StructuredQAIndex, StructuredQAIndexSettings
+from paper_experiments.experiment_env import collect_experiment_environment
 
 
 DEFAULT_INDEX_PATH = BACKEND_ROOT / "storage" / "qa_structured_index.sqlite"
@@ -515,6 +516,18 @@ def run_experiment(
             "top_k": top_k,
             "candidate_k": candidate_k,
         },
+        "environment": collect_experiment_environment(
+            extra={
+                "script": "run_caseqa_vector_vs_structured.py",
+                "dataset_path": str(dataset_path),
+                "index_path": str(index_path),
+                "top_k": top_k,
+                "candidate_k": candidate_k,
+                "latency_semantics": "single-run wall-clock per case on the current local machine; intended for relative comparison within the same rerun",
+                "cache_state": "warm process, local structured index and vector backend reused, no explicit cold-start reset between cases",
+                "concurrency": "single-process sequential case execution",
+            }
+        ),
         "health": {
             "structured": index.health(),
             "retrieval_engine": engine_health,

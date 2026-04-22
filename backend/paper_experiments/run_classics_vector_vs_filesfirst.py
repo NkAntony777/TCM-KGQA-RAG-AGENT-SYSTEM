@@ -17,6 +17,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from paper_experiments.classics_vector_sqlite_store import ClassicsVectorSQLiteStore
+from paper_experiments.experiment_env import collect_experiment_environment
 from services.qa_service.alias_service import get_runtime_alias_service
 from services.retrieval_service.engine import RetrievalEngine
 from services.retrieval_service.settings import load_settings
@@ -659,6 +660,18 @@ def main() -> None:
             "top_k": max(1, int(args.top_k)),
             "candidate_k": max(1, int(args.candidate_k)),
         },
+        "environment": collect_experiment_environment(
+            extra={
+                "script": "run_classics_vector_vs_filesfirst.py",
+                "dataset_path": str(args.dataset),
+                "sqlite_db": str(args.sqlite_db),
+                "top_k": max(1, int(args.top_k)),
+                "candidate_k": max(1, int(args.candidate_k)),
+                "latency_semantics": "single-run wall-clock per case on the current local machine; intended for relative comparison within the same rerun",
+                "cache_state": "warm process, prebuilt local indexes reused, no explicit cold-start reset between cases",
+                "concurrency": "single-process sequential case execution",
+            }
+        ),
         "sqlite_health": sqlite_health,
         "files_first": files_first_report,
         "vector": vector_report,

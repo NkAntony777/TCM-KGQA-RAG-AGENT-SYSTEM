@@ -50,6 +50,18 @@
   - 目的：
     - 在不依赖 Milvus 的情况下稳定承载古籍向量实验
     - 为论文中的“古籍向量化 vs files-first”实验提供本地可复现向量检索后端
+- `analyze_paired_significance.py`
+  - 对论文实验 JSON 做 paired bootstrap / sign test 分析
+  - 当前支持：
+    - `classics_vector_vs_filesfirst_latest.json`
+    - `caseqa_vector_vs_structured_latest.json`
+    - `classics_baseline_matrix_latest.json`（可指定 pair）
+- `run_end_to_end_qa_paper_eval.py`
+  - 论文版 end-to-end QA 评测入口
+  - 直接调用 `/api/qa/answer`，检查最终回答、route、证据书籍和 tool trace
+- `run_medical_guard_eval.py`
+  - 论文版医疗边界/拒答评测
+  - 对 `medical_guard` 规则做正式数据集评测并输出 JSON/Markdown
 
 ## 推荐论文实验顺序
 
@@ -61,6 +73,12 @@
    - 做检索增强消融
 4. 复用 `benchmark_path_query_backends.py`
    - 做图谱后端实验
+5. `run_end_to_end_qa_paper_eval.py`
+   - 补最终回答层与 route/evidence 一体化评测
+6. `run_medical_guard_eval.py`
+   - 补安全边界实验
+7. `analyze_paired_significance.py`
+   - 补统计显著性与区间分析
 
 ## 数据集建议
 

@@ -32,7 +32,7 @@ class GroundedAnswerLLMClient:
             "Content-Type": "application/json",
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+        async with httpx.AsyncClient(timeout=self.timeout_seconds, trust_env=False) as client:
             response = await client.post(url, headers=headers, json=payload)
             response.raise_for_status()
             body = response.json()

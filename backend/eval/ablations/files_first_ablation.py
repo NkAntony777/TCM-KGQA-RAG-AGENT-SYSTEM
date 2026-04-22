@@ -23,11 +23,23 @@ DEFAULT_OUTPUT_JSON = BACKEND_ROOT / "eval" / "ablations" / "files_first_ablatio
 DEFAULT_OUTPUT_MD = BACKEND_ROOT.parent.parent / "docs" / "Files_First_Ablation_Latest.md"
 
 ABLATIONS: tuple[tuple[str, str, dict[str, str]], ...] = (
-    ("baseline", "完整 files-first", {}),
-    ("direct_recall_off", "关闭 direct recall", {"FILES_FIRST_DIRECT_RECALL_ENABLED": "false"}),
-    ("lexical_sanity_off", "关闭 lexical sanity", {"FILES_FIRST_LEXICAL_SANITY_ENABLED": "false"}),
-    ("query_rewrite_off", "关闭 query rewrite", {"FILES_FIRST_QUERY_REWRITE_ENABLED": "false"}),
-    ("rerank_bonus_off", "关闭 chapter/book rerank bonus", {"FILES_FIRST_RERANK_BONUS_ENABLED": "false"}),
+    ("baseline", "默认主链（关闭 direct recall）", {"FILES_FIRST_DIRECT_RECALL_ENABLED": "false"}),
+    ("direct_recall_on_negative", "开启 direct recall（阴性案例）", {"FILES_FIRST_DIRECT_RECALL_ENABLED": "true"}),
+    (
+        "lexical_sanity_off",
+        "关闭 lexical sanity",
+        {"FILES_FIRST_DIRECT_RECALL_ENABLED": "false", "FILES_FIRST_LEXICAL_SANITY_ENABLED": "false"},
+    ),
+    (
+        "query_rewrite_off",
+        "关闭 query rewrite",
+        {"FILES_FIRST_DIRECT_RECALL_ENABLED": "false", "FILES_FIRST_QUERY_REWRITE_ENABLED": "false"},
+    ),
+    (
+        "rerank_bonus_off",
+        "关闭 chapter/book rerank bonus",
+        {"FILES_FIRST_DIRECT_RECALL_ENABLED": "false", "FILES_FIRST_RERANK_BONUS_ENABLED": "false"},
+    ),
 )
 
 
