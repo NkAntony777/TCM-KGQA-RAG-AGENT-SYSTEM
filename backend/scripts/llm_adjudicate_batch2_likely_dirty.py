@@ -20,7 +20,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 from config import get_settings
-from scripts.tcm_triple_console import PipelineConfig, TCMTriplePipeline, _extract_json_block
+from services.triple_pipeline_service import PipelineConfig, TCMTriplePipeline, _extract_json_block
 from services.common.evidence_payloads import normalize_source_chapter_label
 
 

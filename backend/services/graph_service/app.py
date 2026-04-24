@@ -29,6 +29,7 @@ class SyndromeChainRequest(BaseModel):
 app = FastAPI(title="TCM Graph Service", version="0.1.0")
 
 
+@app.get("/health")
 @app.get("/api/v1/graph/health")
 def health(x_trace_id: str | None = Header(default=None, alias="X-Trace-Id")):
     return success(get_graph_engine().health(), trace_id=x_trace_id)

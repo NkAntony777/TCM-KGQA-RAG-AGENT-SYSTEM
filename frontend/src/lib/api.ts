@@ -152,31 +152,8 @@ export type StreamHandlers = {
   onEvent: (event: ChatStreamEvent) => void;
 };
 
-export type QAAnswerResponse = {
-  code: number;
-  message: string;
-  trace_id: string;
-  data: {
-    answer: string;
-    mode: "quick" | "deep";
-    status: string;
-    route: RouteEvent;
-    query_analysis: Record<string, unknown>;
-    retrieval_strategy: Record<string, unknown>;
-    evidence_paths: string[];
-    factual_evidence: EvidenceItem[];
-    case_references: EvidenceItem[];
-    citations: string[];
-    book_citations?: string[];
-    planner_steps?: PlannerStep[];
-    deep_trace?: DeepTraceStep[];
-    evidence_bundle?: EvidenceBundle;
-    service_trace_ids: Record<string, string | null>;
-    service_backends: Record<string, string | null>;
-    tool_trace?: Array<{ tool: string; meta?: Record<string, unknown> }>;
-    notes?: string[];
-    session_title?: string;
-  };
+export type StreamChatOptions = {
+  signal?: AbortSignal;
 };
 
 const JSON_HEADERS = {
@@ -189,11 +166,7 @@ function getApiBase() {
     return configuredBase.replace(/\/+$/, "");
   }
 
-  if (typeof window === "undefined") {
-    return "http://127.0.0.1:8002/api";
-  }
-
-  return `http://${window.location.hostname}:8002/api`;
+  return `${window.location.protocol}//${window.location.hostname}:8002/api`;
 }
 
 function createJsonRequest(init?: RequestInit): RequestInit {
@@ -218,7 +191,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function parseSseBlock(block: string): ChatStreamEvent | null {
-  const lines = block.split("\n");
+  const lines = block.replace(/\r\n/g, "\n").split("\n");
   let event: ChatStreamEventName = "token";
   const dataLines: string[] = [];
 
@@ -237,8 +210,21 @@ function parseSseBlock(block: string): ChatStreamEvent | null {
 
   return {
     event,
-    data: JSON.parse(dataLines.join("\n")) as Record<string, unknown>
+    data: parseSseJson(dataLines.join("\n"), event)
   };
+}
+
+function parseSseJson(payload: string, event: ChatStreamEventName): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(payload) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    return { value: parsed };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Malformed SSE ${event} event: ${message}`);
+  }
 }
 
 export async function listSessions() {
@@ -319,10 +305,12 @@ export async function streamChat(
     mode: "quick" | "deep";
     top_k?: number;
   },
-  handlers: StreamHandlers
+  handlers: StreamHandlers,
+  options: StreamChatOptions = {}
 ) {
   const response = await fetch(`${getApiBase()}/chat`, createJsonRequest({
     method: "POST",
+    signal: options.signal,
     body: JSON.stringify({
       ...payload,
       stream: true
@@ -364,16 +352,4 @@ export async function streamChat(
       break;
     }
   }
-}
-
-export async function answerQuestion(payload: {
-  query: string;
-  mode: "quick" | "deep";
-  top_k?: number;
-  session_id?: string;
-}) {
-  return request<QAAnswerResponse>("/qa/answer", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
 }

@@ -6,8 +6,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from graph.agent import agent_manager
 from graph.memory_indexer import memory_indexer
+from services.app_context import require_backend_dir
 from services.qa_service.skill_registry import clear_runtime_skills_cache, get_runtime_skills
 from tools.skills_scanner import refresh_snapshot, scan_skills
 
@@ -33,16 +33,15 @@ class SkillRecord(BaseModel):
 
 
 def _resolve_path(relative_path: str) -> Path:
-    if agent_manager.base_dir is None:
-        raise HTTPException(status_code=503, detail="Agent manager is not initialized")
+    base_dir = _backend_dir_or_503()
 
     normalized = relative_path.replace("\\", "/").strip("/")
     if normalized not in ALLOWED_ROOT_FILES and not normalized.startswith(ALLOWED_PREFIXES):
         raise HTTPException(status_code=400, detail="Path is not in the editable whitelist")
 
-    candidate = (agent_manager.base_dir / normalized).resolve()
-    base_dir = agent_manager.base_dir.resolve()
-    if base_dir not in candidate.parents and candidate != base_dir:
+    candidate = (base_dir / normalized).resolve()
+    resolved_base_dir = base_dir.resolve()
+    if resolved_base_dir not in candidate.parents and candidate != resolved_base_dir:
         raise HTTPException(status_code=400, detail="Path traversal detected")
     return candidate
 
@@ -68,7 +67,7 @@ async def save_file(payload: SaveFileRequest) -> dict[str, Any]:
     if normalized == "memory/MEMORY.md":
         memory_indexer.rebuild_index()
     if normalized.startswith("skills/"):
-        refresh_snapshot(agent_manager.base_dir)
+        refresh_snapshot(_backend_dir_or_503())
         clear_runtime_skills_cache()
 
     return {"ok": True, "path": normalized}
@@ -76,11 +75,10 @@ async def save_file(payload: SaveFileRequest) -> dict[str, Any]:
 
 @router.get("/skills", response_model=list[SkillRecord])
 async def list_skills() -> list[SkillRecord]:
-    if agent_manager.base_dir is None:
-        raise HTTPException(status_code=503, detail="Agent manager is not initialized")
+    base_dir = _backend_dir_or_503()
     runtime_skills = get_runtime_skills()
     records: list[SkillRecord] = []
-    for skill in scan_skills(agent_manager.base_dir):
+    for skill in scan_skills(base_dir):
         runtime_skill = runtime_skills.get(skill.name)
         records.append(
             SkillRecord(
@@ -94,3 +92,10 @@ async def list_skills() -> list[SkillRecord]:
             )
         )
     return records
+
+
+def _backend_dir_or_503() -> Path:
+    try:
+        return require_backend_dir()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="Application context is not initialized") from exc

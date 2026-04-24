@@ -1,27 +1,13 @@
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from services.common.evidence_payloads import normalize_source_chapter_label
 from services.graph_service.nebulagraph_store import NebulaGraphStore
-from services.graph_service.nebula_entity_support import entity_lookup_directions as _entity_lookup_directions_support
-from services.graph_service.nebula_entity_support import entity_lookup_exact_hit_payload as _entity_lookup_exact_hit_payload_support
-from services.graph_service.nebula_entity_support import entity_lookup_limit_per_candidate as _entity_lookup_limit_per_candidate_support
-from services.graph_service.nebula_neighbor_support import adjacent_names as _adjacent_names_support
-from services.graph_service.nebula_neighbor_support import collect_nebula_relations as _collect_nebula_relations_support
-from services.graph_service.nebula_neighbor_support import group_nebula_relations_by_source as _group_nebula_relations_by_source_support
-from services.graph_service.nebula_neighbor_support import primary_batch_neighbors as _primary_batch_neighbors_support
-from services.graph_service.nebula_neighbor_support import primary_vertex_map as _primary_vertex_map_support
-from services.graph_service.nebula_neighbor_support import primary_vid as _primary_vid_support
-from services.graph_service.nebula_neighbor_support import resolve_entities_via_primary as _resolve_entities_via_primary_support
-from services.graph_service.nebula_neighbor_support import source_vid_name_map as _source_vid_name_map_support
-from services.graph_service.nebula_payload_support import build_payload_from_nebula_path_row as _build_payload_from_nebula_path_row_support
-from services.graph_service.nebula_payload_support import build_payload_from_nebula_skeleton as _build_payload_from_nebula_skeleton_support
-from services.graph_service.nebula_payload_support import evidence_payload_from_row as _evidence_payload_from_row_support
-from services.graph_service.nebula_payload_support import extract_nebula_path_skeleton as _extract_nebula_path_skeleton_support
 from services.graph_service.graph_relation_ranking import apply_rrf_scores as _apply_rrf_scores_support
 from services.graph_service.graph_relation_ranking import build_relation_clusters as _build_relation_clusters_support
 from services.graph_service.graph_relation_ranking import diversify_relation_clusters as _diversify_relation_clusters_support
@@ -30,16 +16,6 @@ from services.graph_service.graph_relation_ranking import predicate_priority as 
 from services.graph_service.graph_relation_ranking import relation_score as _relation_score_support
 from services.graph_service.graph_relation_ranking import select_relation_clusters as _select_relation_clusters_support
 from services.graph_service.nebula_primary_engine import NebulaPrimaryGraphEngine as _NebulaPrimaryGraphEngineImpl
-from services.graph_service.nebula_query_support import direct_path_query_via_nebula as _direct_path_query_via_nebula_support
-from services.graph_service.nebula_query_support import fallback_ranked_path_search as _fallback_ranked_path_search_support
-from services.graph_service.nebula_query_support import path_query_mode as _path_query_mode_support
-from services.graph_service.nebula_query_support import path_query_relation_rows as _path_query_relation_rows_support
-from services.graph_service.nebula_query_support import should_prefer_nebula_path as _should_prefer_nebula_path_support
-from services.graph_service.nebula_query_support import syndrome_chain_via_nebula as _syndrome_chain_via_nebula_support
-from services.graph_service.nebula_query_support import use_primary as _use_primary_support
-from services.graph_service.nebula_entity_support import query_has_source_constraint as _query_has_source_constraint_support
-from services.graph_service.nebula_entity_support import query_source_book_hints as _query_source_book_hints_support
-from services.graph_service.path_search import ordered_path_neighbors as _ordered_path_neighbors
 from services.graph_service.path_search import search_ranked_paths as _search_ranked_paths
 from services.graph_service.query_text import query_fragments as _query_fragments_from_text
 from services.graph_service.query_text import query_mentions_source_book as _query_mentions_source_book_text
@@ -403,19 +379,22 @@ class GraphQueryEngine:
 NebulaPrimaryGraphEngine = _NebulaPrimaryGraphEngineImpl
 
 _graph_engine: GraphQueryEngine | NebulaPrimaryGraphEngine | None = None
+_graph_engine_lock = threading.Lock()
 
 
 def get_graph_engine() -> GraphQueryEngine | NebulaPrimaryGraphEngine:
     global _graph_engine
     if _graph_engine is None:
-        selected_backend = os.getenv("GRAPH_BACKEND", "sqlite").strip().lower()
-        fallback_engine = GraphQueryEngine()
-        if selected_backend in {"nebula", "sqlite"}:
-            _graph_engine = NebulaPrimaryGraphEngine(
-                primary_store=NebulaGraphStore(),
-                fallback_engine=fallback_engine,
-            )
-        else:
-            _graph_engine = fallback_engine
+        with _graph_engine_lock:
+            if _graph_engine is None:
+                selected_backend = os.getenv("GRAPH_BACKEND", "sqlite").strip().lower()
+                fallback_engine = GraphQueryEngine()
+                if selected_backend in {"nebula", "sqlite"}:
+                    _graph_engine = NebulaPrimaryGraphEngine(
+                        primary_store=NebulaGraphStore(),
+                        fallback_engine=fallback_engine,
+                    )
+                else:
+                    _graph_engine = fallback_engine
     return _graph_engine
 

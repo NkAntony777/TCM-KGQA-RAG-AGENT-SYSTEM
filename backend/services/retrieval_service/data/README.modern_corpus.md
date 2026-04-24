@@ -15,5 +15,5 @@ Index bundled corpora together with:
 
 ```powershell
 cd backend
-python services/retrieval_service/index_configured_corpora.py --reset
+uv run python scripts/retrieval_maintenance/index_configured_corpora.py --reset
 ```

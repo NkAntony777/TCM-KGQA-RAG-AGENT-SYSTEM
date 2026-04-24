@@ -26,19 +26,26 @@ from services.qa_service.skill_registry import get_runtime_skills
 from tools.tcm_evidence_tools import EvidenceNavigator
 from tools.tcm_route_tool import TCMRouteSearchTool
 
+__all__ = [
+    "QAService",
+    "get_qa_service",
+    "_apply_origin_action_policy",
+    "_factual_evidence_from_payload",
+    "_identify_evidence_gaps",
+    "_plan_followup_actions",
+]
+
 
 class QAService:
     def __init__(
         self,
         *,
         route_tool: TCMRouteSearchTool | None = None,
-        agent_manager_ref=None,
         settings: QAServiceSettings | None = None,
         answer_generator=None,
         evidence_navigator: EvidenceNavigator | None = None,
     ) -> None:
         self.route_tool = route_tool or TCMRouteSearchTool()
-        self.agent_manager = agent_manager_ref
         self.settings = settings or QAServiceSettings()
         self.answer_generator = answer_generator or GroundedAnswerLLMClient()
         self.evidence_navigator = evidence_navigator or EvidenceNavigator()

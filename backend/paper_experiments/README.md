@@ -59,6 +59,7 @@
 - `run_end_to_end_qa_paper_eval.py`
   - 论文版 end-to-end QA 评测入口
   - 直接调用 `/api/qa/answer`，检查最终回答、route、证据书籍和 tool trace
+  - 现支持 `--workers` 多并发评测；传 `--workers 0` 时会按 `--auto-workers` 自动设定并发
 - `run_medical_guard_eval.py`
   - 论文版医疗边界/拒答评测
   - 对 `medical_guard` 规则做正式数据集评测并输出 JSON/Markdown

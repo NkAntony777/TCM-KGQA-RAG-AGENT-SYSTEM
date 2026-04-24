@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from scripts.tcm_triple_console import (
+from services.triple_pipeline_service import (
     DEFAULT_BOOKS_DIR,
     DEFAULT_OUTPUT_DIR,
     ChunkTask,

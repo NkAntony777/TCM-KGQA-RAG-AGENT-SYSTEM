@@ -23,6 +23,7 @@ DEFAULT_DATASETS = [
 ]
 DEFAULT_OUTPUT_JSON = BACKEND_ROOT / "eval" / "paper" / "end_to_end_qa_eval_latest.json"
 DEFAULT_OUTPUT_MD = BACKEND_ROOT.parent / "docs" / "End_to_End_QA_Eval_Latest.md"
+DEFAULT_AUTO_WORKERS = 8
 
 
 def _atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> None:
@@ -34,6 +35,10 @@ def _atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> 
 
 def _render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
+    requested_workers = int(report["settings"].get("requested_workers", report["settings"]["workers"]))
+    requested_workers_text = "auto" if requested_workers <= 0 else str(requested_workers)
+    base_urls = report["settings"].get("base_urls", [])
+    backend_count = len(base_urls) if isinstance(base_urls, list) and base_urls else 1
     lines = [
         "# End-to-End QA Paper Evaluation",
         "",
@@ -42,10 +47,12 @@ def _render_markdown(report: dict[str, Any]) -> str:
         "| Field | Value |",
         "| --- | --- |",
         f"| base_url | {report['settings']['base_url']} |",
+        f"| backend_count | {backend_count} |",
         f"| modes | {', '.join(report['settings']['modes'])} |",
         f"| top_k | {report['settings']['top_k']} |",
         f"| timeout_s | {report['settings']['timeout_s']} |",
-        f"| workers | {report['settings']['workers']} |",
+        f"| requested_workers | {requested_workers_text} |",
+        f"| effective_workers | {report['settings']['workers']} |",
         f"| total | {summary['total']} |",
         f"| passed | {summary['passed']} |",
         f"| failed | {summary['failed']} |",
@@ -76,18 +83,36 @@ def _render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _resolve_eval_workers(requested_workers: int, *, total_runs: int, auto_workers: int) -> int:
+    bounded_total_runs = max(1, int(total_runs))
+    if int(requested_workers) > 0:
+        return max(1, min(int(requested_workers), bounded_total_runs))
+    return max(1, min(int(auto_workers), bounded_total_runs))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the paper-facing end-to-end QA evaluation suite.")
     parser.add_argument("--datasets", type=Path, nargs="+", default=DEFAULT_DATASETS)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--base-urls", nargs="+", default=None, help="Optional backend URL pool for round-robin distribution.")
     parser.add_argument("--modes", nargs="+", default=["quick", "deep"])
     parser.add_argument("--top-k", type=int, default=12)
     parser.add_argument("--timeout", type=float, default=120.0)
-    parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--workers", type=int, default=0, help="Parallel workers. Use 0 to auto-size.")
+    parser.add_argument("--auto-workers", type=int, default=DEFAULT_AUTO_WORKERS, help="Worker count used when --workers=0.")
     parser.add_argument("--output-json", type=Path, default=DEFAULT_OUTPUT_JSON)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
+    resolved_base_urls = [str(item).strip() for item in (args.base_urls or []) if str(item).strip()]
+
+    loaded_datasets = [(dataset_path, load_dataset(dataset_path)) for dataset_path in args.datasets]
+    total_requested_runs = sum(len(dataset) * max(1, len(args.modes)) for _, dataset in loaded_datasets)
+    effective_workers = _resolve_eval_workers(
+        int(args.workers),
+        total_runs=total_requested_runs,
+        auto_workers=max(1, int(args.auto_workers)),
+    )
 
     dataset_reports: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
@@ -96,14 +121,15 @@ def main() -> int:
     total = 0
     passed = 0
 
-    for dataset_path in args.datasets:
+    for dataset_path, dataset_rows in loaded_datasets:
         summary = run_probe(
-            dataset=load_dataset(dataset_path),
+            dataset=dataset_rows,
             base_url=args.base_url,
+            base_urls=resolved_base_urls or None,
             modes=list(args.modes),
             top_k=max(1, int(args.top_k)),
             timeout=float(args.timeout),
-            workers=max(1, int(args.workers)),
+            workers=effective_workers,
             warning_issue_prefixes=[
                 "route_mismatch:",
                 "executed_route_missing_any:",
@@ -137,18 +163,23 @@ def main() -> int:
         "settings": {
             "datasets": [str(path) for path in args.datasets],
             "base_url": args.base_url,
+            "base_urls": resolved_base_urls or [args.base_url],
             "modes": list(args.modes),
             "top_k": max(1, int(args.top_k)),
             "timeout_s": float(args.timeout),
-            "workers": max(1, int(args.workers)),
+            "requested_workers": int(args.workers),
+            "auto_workers": max(1, int(args.auto_workers)),
+            "workers": effective_workers,
         },
         "environment": collect_experiment_environment(
             extra={
                 "script": "run_end_to_end_qa_paper_eval.py",
                 "base_url": args.base_url,
+                "base_urls": resolved_base_urls or [args.base_url],
                 "datasets": [str(path) for path in args.datasets],
                 "modes": list(args.modes),
-                "workers": max(1, int(args.workers)),
+                "requested_workers": int(args.workers),
+                "effective_workers": effective_workers,
                 "evaluation_scope": "HTTP end-to-end QA answers, route metadata, evidence books, and tool traces",
             }
         ),

@@ -14,8 +14,8 @@ from api.qa import router as qa_router
 from api.sessions import router as sessions_router
 from api.tokens import router as tokens_router
 from config import get_settings
-from graph.agent import agent_manager
 from graph.memory_indexer import memory_indexer
+from services.app_context import initialize_app_context
 from services.qa_service.skill_registry import clear_runtime_skills_cache
 from tools.skills_scanner import refresh_snapshot
 
@@ -27,12 +27,30 @@ def _env_enabled(name: str, *, default: bool = False) -> bool:
     return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _parse_cors_origins() -> tuple[list[str], bool]:
+    configured = os.getenv("BACKEND_CORS_ORIGINS", "").strip()
+    if configured:
+        origins = [item.strip().rstrip("/") for item in configured.split(",") if item.strip()]
+    else:
+        origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+
+    allow_credentials = _env_enabled("BACKEND_CORS_ALLOW_CREDENTIALS", default=True)
+    if "*" in origins and allow_credentials:
+        allow_credentials = False
+    return origins, allow_credentials
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings = get_settings()
     refresh_snapshot(settings.backend_dir)
     clear_runtime_skills_cache()
-    agent_manager.initialize(settings.backend_dir)
+    initialize_app_context(settings.backend_dir)
     memory_indexer.configure(settings.backend_dir)
     if not _env_enabled("SKIP_MEMORY_INDEX_STARTUP_REBUILD", default=False):
         memory_indexer.rebuild_index()
@@ -45,10 +63,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+cors_origins, cors_allow_credentials = _parse_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

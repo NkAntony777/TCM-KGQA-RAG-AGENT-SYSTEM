@@ -174,7 +174,9 @@ Example:
   --base-url http://127.0.0.1:8002 `
   --modes quick deep `
   --top-k 12 `
-  --timeout 120
+  --timeout 120 `
+  --workers 0 `
+  --auto-workers 8
 ```
 
 ## Ready-to-Use Examples

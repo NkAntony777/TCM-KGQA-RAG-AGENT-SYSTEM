@@ -5,19 +5,13 @@ pipeline_server.py  —  TCM 三元组提取流水线 Web 控制台（后端）
 """
 from __future__ import annotations
 
-import asyncio
-from collections import deque
-import hashlib
 import json
 import os
-import re
 import sys
 import threading
-import time
-import traceback
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, as_completed, wait
-from dataclasses import asdict
-from datetime import datetime, timedelta
+import time  # noqa: F401 - dynamic helper/test compatibility for runtime_metrics patching
+from collections import deque
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -35,23 +29,38 @@ load_dotenv(_BACKEND_DIR / ".env")
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field
+from fastapi.staticfiles import StaticFiles
 
-from scripts.tcm_triple_console import (
+from scripts.pipeline_console import auto_batch
+from scripts.pipeline_console import book_status
+from scripts.pipeline_console import books_api
+from scripts.pipeline_console import chunk_execution  # noqa: F401 - used dynamically by extraction_job_runner
+from scripts.pipeline_console import chunk_attempts
+from scripts.pipeline_console import diagnostics_api
+from scripts.pipeline_console import extraction_completion  # noqa: F401 - used dynamically by extraction_job_runner
+from scripts.pipeline_console import extraction_finalizers  # noqa: F401 - used dynamically by extraction_job_runner
+from scripts.pipeline_console import extraction_job_runner
+from scripts.pipeline_console import extraction_planning  # noqa: F401 - used dynamically by extraction_job_runner
+from scripts.pipeline_console import extraction_state  # noqa: F401 - used dynamically by extraction_job_runner
+from scripts.pipeline_console import graph_admin
+from scripts.pipeline_console import job_requests
+from scripts.pipeline_console import job_state
+from scripts.pipeline_console import pipeline_factory
+from scripts.pipeline_console import run_artifacts
+from scripts.pipeline_console import runtime_metrics
+from scripts.pipeline_console import runs_api
+from scripts.pipeline_console.models import GraphBookDeleteRequest, ResumeRunRequest, StartJobRequest
+from scripts.pipeline_console.publish_queue import PublishQueueRuntime
+from services.triple_pipeline_service import (
     DEFAULT_BOOKS_DIR,
     DEFAULT_GRAPH_BASE,
     DEFAULT_GRAPH_TARGET,
     DEFAULT_OUTPUT_DIR,
-    GRAPH_RUNTIME_IO_LOCK,
     PipelineConfig,
     TCMTriplePipeline,
     TripleRecord,
-    _dedupe_evidence_rows,
     _extract_payload_triples,
-    _extract_fact_ids,
     _load_json_file,
-    _load_json_file_strict,
-    _load_jsonl_rows,
     _normalize_provider_configs,
     _provider_to_dict,
     _write_text_atomic,
@@ -65,15 +74,30 @@ from scripts.triple_benchmark_lab import router as benchmark_router
 # 全局状态
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _pipeline_cors_origins() -> list[str]:
+    configured = os.getenv("PIPELINE_CORS_ORIGINS", "").strip()
+    if configured:
+        return [item.strip().rstrip("/") for item in configured.split(",") if item.strip()]
+    return [
+        "http://localhost:7800",
+        "http://127.0.0.1:7800",
+    ]
+
+
 app = FastAPI(title="TCM Triple Pipeline Console", version="1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_pipeline_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.include_router(benchmark_router)
 app.include_router(chunk_benchmark_router)
+app.mount(
+    "/static/pipeline_console",
+    StaticFiles(directory=_SCRIPTS_DIR / "pipeline_console" / "assets"),
+    name="pipeline_console_static",
+)
 
 # 当前运行状态（单例任务模型）
 _run_lock = threading.Lock()
@@ -86,7 +110,6 @@ _job_cancelled = threading.Event()         # 用于取消信号
 _publish_lock = threading.RLock()
 _nebula_publish_threads: dict[str, threading.Thread] = {}
 _publish_queue: deque[dict[str, Any]] = deque()
-_publish_worker_thread: threading.Thread | None = None
 _publish_worker_wakeup = threading.Event()
 _active_publish_task: dict[str, Any] | None = None
 _book_status_lock = threading.RLock()
@@ -98,23 +121,22 @@ PROVIDER_MONITOR_LOG_INTERVAL = 10
 
 
 def _log(level: str, msg: str, **extra: Any) -> None:
-    entry = {"ts": datetime.now().isoformat(timespec="seconds"), "level": level, "msg": msg, **extra}
-    with _run_lock:
-        _job_log.append(entry)
-        if _job_log_file is not None:
-            with _job_log_file.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    job_state.append_job_log(
+        lock=_run_lock,
+        job_log=_job_log,
+        log_file=_job_log_file,
+        level=level,
+        msg=msg,
+        extra=extra,
+    )
 
 
 def _cleanup_job_log_file() -> None:
     global _job_log_file, _job_log_file_path
-    with _run_lock:
-        _job_log_file = None
-        try:
-            if _job_log_file_path and _job_log_file_path.exists():
-                _job_log_file_path.unlink()
-        except Exception:
-            pass
+    _job_log_file, _job_log_file_path = job_state.cleanup_job_log_file(
+        lock=_run_lock,
+        log_file_path=_job_log_file_path,
+    )
 
 
 def _is_job_thread_alive() -> bool:
@@ -139,6 +161,23 @@ def _runtime_graph_store() -> RuntimeGraphStore:
     )
 
 
+_publish_runtime = PublishQueueRuntime(
+    output_dir_provider=lambda: DEFAULT_OUTPUT_DIR,
+    load_json_file=_load_json_file,
+    write_json_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    runtime_graph_store=_runtime_graph_store,
+    runtime_graph_mutation_lock=_runtime_graph_mutation_lock,
+    resolve_run_publish_source=lambda run_dir: _resolve_run_publish_source(run_dir),
+    now_iso=lambda: _now_iso(),
+    describe_exception=lambda exc: _describe_exception(exc),
+    nebula_health_detail=lambda health: _nebula_health_detail(health),
+)
+_publish_lock = _publish_runtime.lock
+_nebula_publish_threads = _publish_runtime.nebula_publish_threads
+_publish_queue = _publish_runtime.queue
+_publish_worker_wakeup = _publish_runtime.worker_wakeup
+
+
 def _write_state(state_path: Path, state: dict[str, Any]) -> None:
     _write_text_atomic(state_path, json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -159,303 +198,71 @@ def _describe_exception(exc: Exception) -> str:
 
 
 def _publish_status_path(run_dir: Path) -> Path:
-    return run_dir / "publish_status.json"
+    return _publish_runtime.publish_status_path(run_dir)
 
 
 def _normalize_publish_status(payload: Any) -> dict[str, Any]:
-    base = payload if isinstance(payload, dict) else {}
-    json_status = base.get("json")
-    nebula_status = base.get("nebula")
-    if not isinstance(json_status, dict):
-        json_status = {}
-    if not isinstance(nebula_status, dict):
-        nebula_status = {}
-    return {
-        "json": {
-            "status": str(json_status.get("status", "idle") or "idle"),
-            "published": bool(json_status.get("published", False)),
-            "published_at": str(json_status.get("published_at", "") or ""),
-            "updated_at": str(json_status.get("updated_at", "") or ""),
-            "started_at": str(json_status.get("started_at", "") or ""),
-            "finished_at": str(json_status.get("finished_at", "") or ""),
-            "target": str(json_status.get("target", "") or ""),
-            "graph_triples": int(json_status.get("graph_triples", 0) or 0),
-            "evidence_count": int(json_status.get("evidence_count", 0) or 0),
-            "error": str(json_status.get("error", "") or ""),
-        },
-        "nebula": {
-            "status": str(nebula_status.get("status", "idle") or "idle"),
-            "published": bool(nebula_status.get("published", False)),
-            "published_at": str(nebula_status.get("published_at", "") or ""),
-            "updated_at": str(nebula_status.get("updated_at", "") or ""),
-            "started_at": str(nebula_status.get("started_at", "") or ""),
-            "finished_at": str(nebula_status.get("finished_at", "") or ""),
-            "target": str(nebula_status.get("target", "") or ""),
-            "source_path": str(nebula_status.get("source_path", "") or ""),
-            "space": str(nebula_status.get("space", "") or ""),
-            "graph_triples": int(nebula_status.get("graph_triples", 0) or 0),
-            "progress_current": int(nebula_status.get("progress_current", 0) or 0),
-            "progress_total": int(nebula_status.get("progress_total", 0) or 0),
-            "progress_pct": float(nebula_status.get("progress_pct", 0.0) or 0.0),
-            "ok_count": int(nebula_status.get("ok_count", 0) or 0),
-            "fail_count": int(nebula_status.get("fail_count", 0) or 0),
-            "error": str(nebula_status.get("error", "") or ""),
-        },
-    }
+    return _publish_runtime.normalize_status(payload)
 
 
 def _load_publish_status(run_dir: Path) -> dict[str, Any]:
-    with _publish_lock:
-        path = _publish_status_path(run_dir)
-        payload = _load_json_file(path, {}) if path.exists() else {}
-        return _normalize_publish_status(payload)
+    return _publish_runtime.load_status(run_dir)
 
 
 def _write_publish_status(run_dir: Path, payload: dict[str, Any]) -> dict[str, Any]:
-    normalized = _normalize_publish_status(payload)
-    _write_text_atomic(
-        _publish_status_path(run_dir),
-        json.dumps(normalized, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    return normalized
+    return _publish_runtime.write_status(run_dir, payload)
 
 
 def _update_publish_status(run_dir: Path, section: str, patch: dict[str, Any]) -> dict[str, Any]:
-    if section not in {"json", "nebula"}:
-        raise ValueError(f"unsupported_publish_section: {section}")
-    with _publish_lock:
-        payload = _load_publish_status(run_dir)
-        section_payload = payload.get(section, {})
-        if not isinstance(section_payload, dict):
-            section_payload = {}
-        section_payload.update(patch)
-        section_payload["updated_at"] = _now_iso()
-        payload[section] = section_payload
-        return _write_publish_status(run_dir, payload)
+    return _publish_runtime.update_status(run_dir, section, patch)
 
 
 def _publish_task_covers(task_kind: str, requested_kind: str) -> bool:
-    return task_kind == requested_kind or (task_kind == "nebula" and requested_kind == "json")
+    return _publish_runtime.task_covers(task_kind, requested_kind)
 
 
 def _set_json_publish_queued(run_dir: Path) -> dict[str, Any]:
-    return _update_publish_status(
-        run_dir,
-        "json",
-        {
-            "status": "queued",
-            "published": False,
-            "published_at": "",
-            "started_at": "",
-            "finished_at": "",
-            "error": "",
-        },
-    )
+    return _publish_runtime.set_json_queued(run_dir)
 
 
 def _set_nebula_publish_queued(run_dir: Path) -> dict[str, Any]:
-    return _update_publish_status(
-        run_dir,
-        "nebula",
-        {
-            "status": "queued",
-            "published": False,
-            "published_at": "",
-            "started_at": "",
-            "finished_at": "",
-            "progress_current": 0,
-            "progress_total": 0,
-            "progress_pct": 0.0,
-            "ok_count": 0,
-            "fail_count": 0,
-            "error": "",
-        },
-    )
+    return _publish_runtime.set_nebula_queued(run_dir)
 
 
 def _reset_json_publish_to_idle_if_unpublished(run_dir: Path) -> dict[str, Any]:
-    current = _load_publish_status(run_dir).get("json", {})
-    if current.get("published"):
-        return _update_publish_status(
-            run_dir,
-            "json",
-            {
-                "status": "completed",
-                "error": "",
-            },
-        )
-    return _update_publish_status(
-        run_dir,
-        "json",
-        {
-            "status": "idle",
-            "published": False,
-            "published_at": "",
-            "started_at": "",
-            "finished_at": "",
-            "error": "",
-        },
-    )
+    return _publish_runtime.reset_json_to_idle_if_unpublished(run_dir)
 
 
 def _publish_worker_loop() -> None:
-    global _active_publish_task
-    while True:
-        _publish_worker_wakeup.wait()
-        while True:
-            with _publish_lock:
-                if not _publish_queue:
-                    _active_publish_task = None
-                    _publish_worker_wakeup.clear()
-                    break
-                task = _publish_queue.popleft()
-                _active_publish_task = dict(task)
-            try:
-                if task.get("kind") == "nebula":
-                    _run_nebula_publish_job(str(task.get("run_name") or ""))
-                else:
-                    _run_json_publish_job(
-                        str(task.get("run_name") or ""),
-                        replace=bool(task.get("replace", False)),
-                    )
-            except Exception:
-                pass
-            finally:
-                with _publish_lock:
-                    if _active_publish_task == task:
-                        _active_publish_task = None
+    _publish_runtime.worker_loop()
 
 
 def _ensure_publish_worker_locked() -> None:
-    global _publish_worker_thread
-    if _publish_worker_thread is not None and _publish_worker_thread.is_alive():
-        return
-    _publish_worker_thread = threading.Thread(
-        target=_publish_worker_loop,
-        name="publish-queue-worker",
-        daemon=True,
-    )
-    _publish_worker_thread.start()
+    _publish_runtime.ensure_worker_locked()
 
 
 def _enqueue_publish_task(run_name: str, *, kind: str, replace: bool = False) -> tuple[bool, dict[str, Any]]:
-    run_dir = DEFAULT_OUTPUT_DIR / run_name
-    if not run_dir.exists():
-        raise FileNotFoundError("run_not_found")
-
-    with _publish_lock:
-        active = _active_publish_task or {}
-        active_run = str(active.get("run_name", "") or "")
-        active_kind = str(active.get("kind", "") or "")
-        if active_run == run_name and _publish_task_covers(active_kind, kind):
-            return False, _load_publish_status(run_dir)
-
-        queued_task: dict[str, Any] | None = None
-        for task in _publish_queue:
-            if str(task.get("run_name", "") or "") == run_name:
-                queued_task = task
-                break
-
-        if queued_task is not None:
-            queued_kind = str(queued_task.get("kind", "") or "")
-            if _publish_task_covers(queued_kind, kind):
-                return False, _load_publish_status(run_dir)
-            if kind == "nebula" and queued_kind == "json":
-                queued_task["kind"] = "nebula"
-                queued_task["replace"] = False
-                _reset_json_publish_to_idle_if_unpublished(run_dir)
-                status = _set_nebula_publish_queued(run_dir)
-                _ensure_publish_worker_locked()
-                _publish_worker_wakeup.set()
-                return True, status
-            return False, _load_publish_status(run_dir)
-
-        _publish_queue.append(
-            {
-                "run_name": run_name,
-                "kind": kind,
-                "replace": bool(replace),
-                "queued_at": _now_iso(),
-            }
-        )
-        status = _set_nebula_publish_queued(run_dir) if kind == "nebula" else _set_json_publish_queued(run_dir)
-        _ensure_publish_worker_locked()
-        _publish_worker_wakeup.set()
-        return True, status
+    return _publish_runtime.enqueue(run_name, kind=kind, replace=replace)
 
 
 def _iter_run_dirs_desc() -> list[Path]:
-    if not DEFAULT_OUTPUT_DIR.exists():
-        return []
-    return sorted((path for path in DEFAULT_OUTPUT_DIR.iterdir() if path.is_dir()), reverse=True)
+    return _publish_runtime.iter_run_dirs_desc()
 
 
 def _eligible_for_bulk_publish(run_dir: Path, *, kind: str) -> bool:
-    manifest = _load_json_file(run_dir / "manifest.json", {})
-    state = _load_json_file(run_dir / "state.json", {})
-    if bool(manifest.get("dry_run", False)):
-        return False
-    status = str(state.get("status", "")).strip().lower()
-    if status not in {"completed", "partial"}:
-        return False
-    publish_status = _load_publish_status(run_dir)
-    json_status = publish_status.get("json", {})
-    nebula_status = publish_status.get("nebula", {})
-    if kind == "json":
-        return not bool(json_status.get("published")) and str(json_status.get("status", "")) not in {"queued", "running"}
-    return not bool(nebula_status.get("published")) and str(nebula_status.get("status", "")) not in {"queued", "running"}
+    return _publish_runtime.eligible_for_bulk_publish(run_dir, kind=kind)
 
 
 def _bulk_enqueue_unpublished_runs(kind: str) -> dict[str, Any]:
-    if kind not in {"json", "nebula"}:
-        raise ValueError(f"unsupported_bulk_publish_kind: {kind}")
-    scanned = 0
-    eligible = 0
-    enqueued_runs: list[str] = []
-    skipped_runs: list[str] = []
-    failed_runs: list[dict[str, str]] = []
-    for run_dir in _iter_run_dirs_desc():
-        scanned += 1
-        if not _eligible_for_bulk_publish(run_dir, kind=kind):
-            skipped_runs.append(run_dir.name)
-            continue
-        eligible += 1
-        try:
-            enqueued, _ = _enqueue_publish_task(run_dir.name, kind=kind, replace=False)
-            if enqueued:
-                enqueued_runs.append(run_dir.name)
-            else:
-                skipped_runs.append(run_dir.name)
-        except Exception as exc:
-            failed_runs.append({"run_dir": run_dir.name, "error": str(exc)})
-    return {
-        "kind": kind,
-        "scanned": scanned,
-        "eligible": eligible,
-        "enqueued": enqueued_runs,
-        "skipped": skipped_runs,
-        "failed": failed_runs,
-    }
+    return _publish_runtime.bulk_enqueue_unpublished(kind)
 
 
 def _mark_cancel_requested() -> None:
-    run_dir = None
-    state_snapshot: dict[str, Any] | None = None
-    with _run_lock:
-        if not _current_job:
-            return
-        _current_job["status"] = "cancelling"
-        _current_job["phase"] = "cancelling"
-        _current_job["cancel_requested_at"] = datetime.now().isoformat(timespec="seconds")
-        run_dir = _current_job.get("run_dir")
-        state_snapshot = dict(_current_job)
-    if run_dir and state_snapshot:
-        state_path = Path(str(run_dir)) / "state.json"
-        try:
-            _write_state(state_path, state_snapshot)
-        except Exception:
-            pass
+    job_state.mark_cancel_requested(
+        lock=_run_lock,
+        current_job=_current_job,
+        write_state=_write_state,
+    )
 
 
 def _append_checkpoint(
@@ -469,89 +276,68 @@ def _append_checkpoint(
     triples_count: int | None = None,
     success_override: bool | None = None,
 ) -> None:
-    row = {
-        "ts": datetime.now().isoformat(timespec="seconds"),
-        "book": task.book_name,
-        "chapter": task.chapter_name,
-        "chunk_index": task.chunk_index,
-        "sequence": task.sequence,
-        "success": (error is None) if success_override is None else bool(success_override),
-        "error": error,
-        "triples_count": triples_count if triples_count is not None else len(_extract_payload_triples(payload)),
-        "attempt": attempt,
-        "resumed": resumed,
-    }
-    with checkpoint_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    run_artifacts.append_checkpoint(
+        checkpoint_path,
+        task=task,
+        error=error,
+        payload=payload,
+        attempt=attempt,
+        resumed=resumed,
+        extract_payload_triples=_extract_payload_triples,
+        now_iso=_now_iso,
+        triples_count=triples_count,
+        success_override=success_override,
+    )
 
 
 def _count_jsonl_rows(path: Path) -> int:
-    if not path.exists():
-        return 0
-    with path.open("r", encoding="utf-8") as f:
-        return sum(1 for line in f if line.strip())
+    return run_artifacts.count_jsonl_rows(path)
 
 
 def _load_book_status_overrides() -> dict[str, list[str]]:
-    with _book_status_lock:
-        payload = _load_json_file(_book_status_override_path(), {})
-        if not isinstance(payload, dict):
-            payload = {}
-        force_unprocessed: list[str] = []
-        for item in payload.get("force_unprocessed", []) if isinstance(payload.get("force_unprocessed"), list) else []:
-            value = str(item).strip()
-            if value and value not in force_unprocessed:
-                force_unprocessed.append(value)
-        return {"force_unprocessed": sorted(force_unprocessed)}
+    return book_status.load_overrides(
+        lock=_book_status_lock,
+        path=_book_status_override_path(),
+        load_json_file=_load_json_file,
+    )
 
 
 def _write_book_status_overrides(payload: dict[str, list[str]]) -> dict[str, list[str]]:
-    with _book_status_lock:
-        normalized = _load_book_status_overrides()
-        normalized["force_unprocessed"] = sorted(
-            {
-                str(item).strip()
-                for item in payload.get("force_unprocessed", [])
-                if str(item).strip()
-            }
-        )
-        path = _book_status_override_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        _write_text_atomic(path, json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8")
-        return normalized
+    return book_status.write_overrides(
+        lock=_book_status_lock,
+        path=_book_status_override_path(),
+        payload=payload,
+        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    )
 
 
 def _mark_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
-    with _book_status_lock:
-        payload = _load_book_status_overrides()
-        merged = sorted(
-            set(payload.get("force_unprocessed", []))
-            | {str(name).strip() for name in book_names if str(name).strip()}
-        )
-        return _write_book_status_overrides({"force_unprocessed": merged})
+    return book_status.mark_force_unprocessed(
+        lock=_book_status_lock,
+        path=_book_status_override_path(),
+        book_names=book_names,
+        load_json_file=_load_json_file,
+        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    )
 
 
 def _clear_books_force_unprocessed(book_names: list[str]) -> dict[str, list[str]]:
-    with _book_status_lock:
-        to_remove = {str(name).strip() for name in book_names if str(name).strip()}
-        payload = _load_book_status_overrides()
-        kept = [name for name in payload.get("force_unprocessed", []) if name not in to_remove]
-        return _write_book_status_overrides({"force_unprocessed": kept})
+    return book_status.clear_force_unprocessed(
+        lock=_book_status_lock,
+        path=_book_status_override_path(),
+        book_names=book_names,
+        load_json_file=_load_json_file,
+        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    )
 
 
 def _publish_queue_busy_marker() -> str | None:
-    active = _active_publish_task or {}
+    active = _active_publish_task or _publish_runtime.active_task or {}
     active_run = str(active.get("run_name", "") or "").strip()
     active_kind = str(active.get("kind", "") or "").strip()
     if active_run and active_kind:
         return f"{active_run}:{active_kind}"
-    if _publish_queue:
-        queued = _publish_queue[0]
-        queued_run = str(queued.get("run_name", "") or "").strip()
-        queued_kind = str(queued.get("kind", "") or "").strip()
-        if queued_run and queued_kind:
-            return f"{queued_run}:{queued_kind}"
-    return None
+    return _publish_runtime.publish_queue_busy_marker()
 
 
 def _delete_books_from_runtime_graph(
@@ -560,122 +346,36 @@ def _delete_books_from_runtime_graph(
     sync_nebula: bool = True,
     mark_unprocessed: bool = True,
 ) -> dict[str, Any]:
-    books = sorted({str(name).strip() for name in book_names if str(name).strip()})
-    if not books:
-        raise ValueError("book_names_required")
-
-    with _runtime_graph_mutation_lock:
-        with _publish_lock:
-            busy_marker = _publish_queue_busy_marker()
-            if busy_marker:
-                raise RuntimeError(f"publish_queue_busy: {busy_marker}")
-        store = _runtime_graph_store()
-        delete_result = store.delete_books(books)
-        removed_rows = delete_result.get("removed_rows", [])
-        removed_triples = int(delete_result.get("removed_triples", 0) or 0)
-        orphan_entities = list(delete_result.get("orphan_entities", []))
-        remaining_evidence = int(delete_result.get("remaining_evidence", 0) or 0)
-        override_payload: dict[str, list[str]] | None = _mark_books_force_unprocessed(books) if mark_unprocessed else None
-
-    nebula_result: dict[str, Any] | None = None
-    if sync_nebula:
-        if removed_rows:
-            from services.graph_service.nebulagraph_store import NebulaGraphStore
-
-            store = NebulaGraphStore()
-            nebula_result = store.delete_rows(removed_rows, orphan_entity_names=orphan_entities)
-        else:
-            nebula_result = {"mode": "delete_rows", "deleted_edges": 0, "deleted_vertices": 0, "skipped": "no_matching_runtime_rows"}
-
-    return {
-        "books": books,
-        "removed_triples": removed_triples,
-        "remaining_triples": int(delete_result.get("remaining_triples", 0) or 0),
-        "removed_evidence": int(delete_result.get("removed_evidence", 0) or 0),
-        "remaining_evidence": remaining_evidence,
-        "orphan_entities": orphan_entities,
-        "force_unprocessed": (override_payload or _load_book_status_overrides()).get("force_unprocessed", []),
-        "nebula": nebula_result,
-    }
+    return graph_admin.delete_books_from_runtime_graph(
+        book_names,
+        runtime_graph_store=_runtime_graph_store,
+        runtime_graph_mutation_lock=_runtime_graph_mutation_lock,
+        publish_busy_marker=_publish_queue_busy_marker,
+        load_book_status_overrides=_load_book_status_overrides,
+        mark_books_force_unprocessed=_mark_books_force_unprocessed,
+        sync_nebula=sync_nebula,
+        mark_unprocessed=mark_unprocessed,
+    )
 
 
 def _load_existing_triple_records(path: Path) -> list[TripleRecord]:
-    rows: list[TripleRecord] = []
-    if not path.exists():
-        return rows
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            payload = json.loads(line.lstrip("\ufeff"))
-            rows.append(
-                TripleRecord(
-                    subject=str(payload.get("subject", "")),
-                    predicate=str(payload.get("predicate", "")),
-                    object=str(payload.get("object", "")),
-                    subject_type=str(payload.get("subject_type", "")),
-                    object_type=str(payload.get("object_type", "")),
-                    source_book=str(payload.get("source_book", "")),
-                    source_chapter=str(payload.get("source_chapter", "")),
-                    source_text=str(payload.get("source_text", "")),
-                    confidence=float(payload.get("confidence", 0.0)),
-                    raw_predicate=str(payload.get("raw_predicate", payload.get("predicate", ""))),
-                    raw_subject_type=str(payload.get("raw_subject_type", payload.get("subject_type", ""))),
-                    raw_object_type=str(payload.get("raw_object_type", payload.get("object_type", ""))),
-                )
-            )
-    return rows
+    return run_artifacts.load_existing_triple_records(path, triple_record_cls=TripleRecord)
 
 
 def _load_completed_chunk_keys(run_dir: Path) -> set[tuple[str, int]]:
-    completed: set[tuple[str, int]] = set()
-    checkpoint_path = run_dir / "chunks.checkpoint.jsonl"
-    if checkpoint_path.exists():
-        latest_status: dict[tuple[str, int], bool] = {}
-        with checkpoint_path.open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                row = json.loads(line.lstrip("\ufeff"))
-                key = (str(row.get("book", "")), int(row.get("chunk_index", 0)))
-                latest_status[key] = row.get("success") is True
-        for key, is_success in latest_status.items():
-            if is_success:
-                completed.add(key)
-        return completed
-
-    raw_jsonl = run_dir / "triples.raw.jsonl"
-    if not raw_jsonl.exists():
-        return completed
-
-    with raw_jsonl.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            row = json.loads(line.lstrip("\ufeff"))
-            error = row.get("error")
-            if "error" in row and error not in (None, ""):
-                continue
-            completed.add((str(row.get("book", "")), int(row.get("chunk_index", 0))))
-    return completed
+    return run_artifacts.load_completed_chunk_keys(run_dir)
 
 
 def _low_yield_retry_error(triples_count: int) -> str:
-    return f"low_yield_retry: triples_count={triples_count}"
+    return chunk_attempts.low_yield_retry_error(triples_count)
 
 
 def _is_low_yield_retry_error(error: str | None) -> bool:
-    return isinstance(error, str) and error.startswith("low_yield_retry:")
+    return chunk_attempts.is_low_yield_retry_error(error)
 
 
 def _extract_payload_meta(payload: Any) -> dict[str, Any]:
-    if not isinstance(payload, dict):
-        return {}
-    meta = payload.get("__meta__")
-    return meta if isinstance(meta, dict) else {}
+    return chunk_attempts.extract_payload_meta(payload)
 
 
 def _build_raw_chunk_record(
@@ -685,64 +385,16 @@ def _build_raw_chunk_record(
     error: str | None,
     rows_count: int,
 ) -> dict[str, Any]:
-    meta = _extract_payload_meta(payload)
-    usage = meta.get("usage") if isinstance(meta.get("usage"), dict) else {}
-    completion_tokens = int(usage.get("completion_tokens", 0) or 0)
-    record = {
-        "book": task.book_name,
-        "chapter": task.chapter_name,
-        "chunk_index": task.chunk_index,
-        "payload": payload,
-        "error": error,
-        "llm_raw_text": str(meta.get("raw_text", "")) if meta else "",
-        "llm_usage": usage,
-        "llm_finish_reason": meta.get("finish_reason"),
-        "llm_response_format_mode": meta.get("response_format_mode"),
-        "llm_provider_name": meta.get("provider_name"),
-        "llm_provider_model": meta.get("provider_model"),
-        "llm_provider_base_url": meta.get("provider_base_url"),
-        "llm_provider_latency_ms": meta.get("provider_latency_ms"),
-    }
-    if completion_tokens >= 1000 and rows_count <= 1:
-        record["diagnostic"] = "high_completion_low_yield"
-    return record
-
-
-EMPTY_ACCEPT_PATTERNS = (
-    "電子版序",
-    "电子版序",
-    "前言",
-    "凡例",
-    "原序",
-    "校補",
-    "校补",
-    "題簽",
-    "题签",
-    "民間中醫網",
-    "民间中医网",
-    "中醫經典古籍電子叢書",
-    "中医经典古籍电子丛书",
-    "【闡釋】",
-    "【阐释】",
-    "鄭論：",
-    "郑论：",
-    "論曰：",
-    "论曰：",
-)
+    return chunk_attempts.build_raw_chunk_record(
+        task=task,
+        payload=payload,
+        error=error,
+        rows_count=rows_count,
+    )
 
 
 def _should_accept_empty_chunk(task: Any, rows: list[TripleRecord], error: str | None) -> bool:
-    if error is not None or rows:
-        return False
-    text = str(getattr(task, "text_chunk", "") or "")
-    if not text.strip():
-        return True
-    has_formula_like_title = re.search(r"[一-龥]{2,16}[汤丸散饮丹膏煎方]", text) is not None
-    if has_formula_like_title:
-        return False
-    chapter_name = str(getattr(task, "chapter_name", "") or "")
-    combined = f"{chapter_name}\n{text[:1200]}"
-    return any(pattern in combined for pattern in EMPTY_ACCEPT_PATTERNS)
+    return chunk_attempts.should_accept_empty_chunk(task, rows, error)
 
 
 def _evaluate_chunk_attempt(
@@ -752,16 +404,14 @@ def _evaluate_chunk_attempt(
     payload: dict[str, Any],
     error: str | None,
 ) -> tuple[list[TripleRecord], str | None]:
-    rows = pipeline.normalize_triples(
+    rows, attempt_error = chunk_attempts.evaluate_chunk_attempt(
+        pipeline,
+        task=task,
         payload=payload,
-        book_name=task.book_name,
-        chapter_name=task.chapter_name,
+        error=error,
+        low_yield_retry_triple_threshold=LOW_YIELD_RETRY_TRIPLE_THRESHOLD,
     )
-    if _should_accept_empty_chunk(task, rows, error):
-        return rows, None
-    if error is None and len(rows) <= LOW_YIELD_RETRY_TRIPLE_THRESHOLD:
-        return rows, _low_yield_retry_error(len(rows))
-    return rows, error
+    return rows, attempt_error
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -769,183 +419,62 @@ def _evaluate_chunk_attempt(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_pipeline(cfg_override: dict[str, Any] | None = None) -> TCMTriplePipeline:
-    cfg = cfg_override or {}
-    # 前端显式传入的值优先；只有为空时才 fallback 到环境变量
-    model = cfg.get("model") or _first_env("TRIPLE_LLM_MODEL", "LLM_MODEL", default="mimo-v2-pro")
-    api_key_raw = cfg.get("api_key")
-    if not api_key_raw:
-        api_key_raw = _first_env("TRIPLE_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY")
-    api_key = api_key_raw
-    base_url = cfg.get("base_url") or _first_env(
-        "TRIPLE_LLM_BASE_URL", "LLM_BASE_URL", "OPENAI_BASE_URL",
-        default="https://api.siliconflow.cn/v1"
+    return pipeline_factory.build_pipeline(
+        cfg_override=cfg_override,
+        pipeline_config_cls=PipelineConfig,
+        pipeline_cls=TCMTriplePipeline,
+        default_books_dir=DEFAULT_BOOKS_DIR,
+        default_output_dir=DEFAULT_OUTPUT_DIR,
+        first_env=_first_env,
+        normalize_provider_configs=_normalize_provider_configs,
     )
-    providers = _normalize_provider_configs(
-        cfg.get("providers", []),
-        fallback_model=model,
-        fallback_api_key=api_key or "",
-        fallback_base_url=base_url,
-    )
-    config = PipelineConfig(
-        books_dir=Path(cfg.get("books_dir") or DEFAULT_BOOKS_DIR),
-        output_dir=Path(cfg.get("output_dir") or DEFAULT_OUTPUT_DIR),
-        model=model,
-        api_key=api_key or "dummy_for_dry_run",
-        base_url=base_url,
-        providers=providers,
-        request_timeout=float(cfg.get("request_timeout", 314.0)),
-        max_chunk_chars=int(cfg.get("max_chunk_chars", 800)),
-        chunk_overlap=int(cfg.get("chunk_overlap", 200)),
-        max_retries=int(cfg.get("max_retries", 2)),
-        request_delay=float(cfg.get("request_delay", 1.1)),
-        parallel_workers=max(1, int(cfg.get("parallel_workers", 11))),
-        retry_backoff_base=float(cfg.get("retry_backoff_base", 2.0)),
-        chunk_strategy=str(cfg.get("chunk_strategy", "body_first")),
-    )
-    return TCMTriplePipeline(config)
 
 
 def _is_full_completed_run(manifest: dict[str, Any], state: dict[str, Any]) -> bool:
-    if bool(manifest.get("dry_run", False)):
-        return False
-    if str(state.get("status", "")).strip().lower() != "completed":
-        return False
-
-    manifest_cfg = manifest.get("config", {}) if isinstance(manifest.get("config"), dict) else {}
-    if not _manifest_has_full_book_scope(manifest_cfg):
-        return False
-    return True
+    return auto_batch.is_full_completed_run(manifest, state)
 
 
 def _manifest_has_full_book_scope(manifest_cfg: dict[str, Any]) -> bool:
-    if manifest_cfg.get("max_chunks_per_book") not in (None, "", 0):
-        return False
-    if int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0) != 0:
-        return False
-    if any(str(item).strip() for item in (manifest_cfg.get("chapter_excludes") or [])):
-        return False
-    return True
+    return auto_batch.manifest_has_full_book_scope(manifest_cfg)
 
 
 def _collect_completed_book_stems_from_run(manifest: dict[str, Any], state: dict[str, Any], run_dir: Path) -> set[str]:
-    processed: set[str] = set()
-    if bool(manifest.get("dry_run", False)):
-        return processed
-
-    manifest_cfg = manifest.get("config", {}) if isinstance(manifest.get("config"), dict) else {}
-    if not _manifest_has_full_book_scope(manifest_cfg):
-        return processed
-
-    book_paths = [Path(item) for item in manifest.get("books", []) if str(item).strip()]
-    if not book_paths:
-        return processed
-
-    run_status = str(state.get("status", "")).strip().lower()
-    if run_status == "completed":
-        return {path.stem for path in book_paths}
-    if run_status not in {"partial", "completed"}:
-        return processed
-
-    completed_chunk_keys = _load_completed_chunk_keys(run_dir)
-    if not completed_chunk_keys:
-        return processed
-
-    pipeline = TCMTriplePipeline(
-        PipelineConfig(
-            books_dir=book_paths[0].parent if book_paths else DEFAULT_BOOKS_DIR,
-            output_dir=run_dir,
-            model=str(manifest.get("model", "") or "mimo-v2-pro"),
-            api_key="dummy_for_processed_scan",
-            base_url=str(manifest.get("base_url", "") or "https://api.siliconflow.cn/v1"),
-            max_chunk_chars=int(manifest_cfg.get("max_chunk_chars", 800) if manifest_cfg.get("max_chunk_chars", None) is not None else 800),
-            chunk_overlap=int(manifest_cfg.get("chunk_overlap", 200) if manifest_cfg.get("chunk_overlap", None) is not None else 200),
-            chunk_strategy=str(manifest_cfg.get("chunk_strategy", "body_first")),
-            parallel_workers=1,
-            request_delay=0.0,
-            max_retries=0,
-        )
+    return auto_batch.collect_completed_book_stems_from_run(
+        manifest,
+        state,
+        run_dir,
+        pipeline_cls=TCMTriplePipeline,
+        pipeline_config_cls=PipelineConfig,
+        default_books_dir=DEFAULT_BOOKS_DIR,
+        load_completed_chunk_keys=_load_completed_chunk_keys,
     )
-
-    chapter_excludes = list(manifest_cfg.get("chapter_excludes", []))
-    skip_initial_chunks = int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0)
-    chunk_strategy = str(manifest_cfg.get("chunk_strategy", "body_first"))
-
-    for book_path in book_paths:
-        if not book_path.exists():
-            continue
-        try:
-            tasks = pipeline.schedule_book_chunks(
-                book_path=book_path,
-                chapter_excludes=chapter_excludes or None,
-                max_chunks_per_book=None,
-                skip_initial_chunks_per_book=skip_initial_chunks,
-                chunk_strategy=chunk_strategy,
-            )
-        except Exception:
-            continue
-        if tasks and all((task.book_name, task.chunk_index) in completed_chunk_keys for task in tasks):
-            processed.add(book_path.stem)
-    return processed
 
 
 def _get_processed_book_stems() -> set[str]:
     """扫描历史 run，收集已完整处理过的书目 stems。"""
-    processed: set[str] = set()
-    output_dir = DEFAULT_OUTPUT_DIR
-    if not output_dir.exists():
-        return processed
-    for run_dir in output_dir.iterdir():
-        if not run_dir.is_dir():
-            continue
-        manifest_path = run_dir / "manifest.json"
-        state_path = run_dir / "state.json"
-        if not manifest_path.exists() or not state_path.exists():
-            continue
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            state = json.loads(state_path.read_text(encoding="utf-8"))
-            processed.update(_collect_completed_book_stems_from_run(manifest, state, run_dir))
-        except Exception:
-            continue
-    processed -= set(_load_book_status_overrides().get("force_unprocessed", []))
-    return processed
+    return auto_batch.get_processed_book_stems(
+        output_dir=DEFAULT_OUTPUT_DIR,
+        load_book_status_overrides=_load_book_status_overrides,
+        pipeline_cls=TCMTriplePipeline,
+        pipeline_config_cls=PipelineConfig,
+        default_books_dir=DEFAULT_BOOKS_DIR,
+        load_completed_chunk_keys=_load_completed_chunk_keys,
+    )
 
 
 def _resolve_start_selected_books(pipeline: TCMTriplePipeline, raw_selected_books: list[str]) -> list[Path]:
-    books = pipeline.discover_books()
-    selected: list[Path] = []
-    if raw_selected_books:
-        for token in raw_selected_books:
-            token = token.strip()
-            if token.isdigit():
-                idx = int(token)
-                if 1 <= idx <= len(books):
-                    selected.append(books[idx - 1])
-            else:
-                selected.extend([b for b in books if token in b.stem])
-        seen: set[Path] = set()
-        deduped = []
-        for path in selected:
-            if path not in seen:
-                seen.add(path)
-                deduped.append(path)
-        return deduped
-    return books
+    return auto_batch.resolve_start_selected_books(pipeline, raw_selected_books)
 
 
 def _exclude_processed_books_for_new_run(selected_books: list[Path]) -> tuple[list[Path], list[str]]:
-    processed_stems = _get_processed_book_stems()
-    skipped = [path.stem for path in selected_books if path.stem in processed_stems]
-    kept = [path for path in selected_books if path.stem not in processed_stems]
-    return kept, skipped
+    return auto_batch.exclude_processed_books_for_new_run(
+        selected_books,
+        processed_stems=_get_processed_book_stems(),
+    )
 
 
 def _sanitize_auto_batch_size(batch_size: int | None) -> int:
-    try:
-        value = int(batch_size or DEFAULT_AUTO_BOOK_BATCH_SIZE)
-    except (TypeError, ValueError):
-        value = DEFAULT_AUTO_BOOK_BATCH_SIZE
-    return max(1, value)
+    return auto_batch.sanitize_auto_batch_size(batch_size, default_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE)
 
 
 def _ordered_unprocessed_books_for_new_run(
@@ -953,27 +482,12 @@ def _ordered_unprocessed_books_for_new_run(
     *,
     batch_size: int | None = None,
 ) -> tuple[list[Path], list[str]]:
-    books = pipeline.discover_books()
-    processed_stems = _get_processed_book_stems()
-    skipped = [path.stem for path in books if path.stem in processed_stems]
-    remaining = [path for path in books if path.stem not in processed_stems]
-    if not remaining:
-        return [], skipped
-
-    ordered: list[Path] = []
-    seen: set[Path] = set()
-    recommended = pipeline.recommend_books(limit=max(len(books), _sanitize_auto_batch_size(batch_size)))
-    for path in recommended:
-        if path.stem in processed_stems or path in seen:
-            continue
-        ordered.append(path)
-        seen.add(path)
-    for path in remaining:
-        if path in seen:
-            continue
-        ordered.append(path)
-        seen.add(path)
-    return ordered, skipped
+    return auto_batch.ordered_unprocessed_books_for_new_run(
+        pipeline,
+        processed_stems=_get_processed_book_stems(),
+        batch_size=batch_size,
+        default_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+    )
 
 
 def _select_auto_start_books(
@@ -981,24 +495,16 @@ def _select_auto_start_books(
     *,
     batch_size: int = DEFAULT_AUTO_BOOK_BATCH_SIZE,
 ) -> tuple[list[Path], list[str]]:
-    ordered, skipped = _ordered_unprocessed_books_for_new_run(pipeline, batch_size=batch_size)
-    return ordered[:_sanitize_auto_batch_size(batch_size)], skipped
+    return auto_batch.select_auto_start_books(
+        pipeline,
+        processed_stems=_get_processed_book_stems(),
+        batch_size=batch_size,
+        default_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+    )
 
 
 def _resolve_run_publish_source(run_dir: Path) -> tuple[Path, Path | None]:
-    cleaned_graph_jsonl_path = run_dir / "graph_facts.cleaned.jsonl"
-    if cleaned_graph_jsonl_path.exists():
-        evidence_path = run_dir / "evidence_metadata.jsonl"
-        return cleaned_graph_jsonl_path, evidence_path if evidence_path.exists() else None
-    cleaned_graph_path = run_dir / "graph_facts.cleaned.json"
-    if cleaned_graph_path.exists():
-        evidence_path = run_dir / "evidence_metadata.jsonl"
-        return cleaned_graph_path, evidence_path if evidence_path.exists() else None
-    graph_import_path = run_dir / "graph_import.json"
-    if not graph_import_path.exists():
-        raise FileNotFoundError("graph_import.json not found in run dir")
-    evidence_path = run_dir / "evidence_metadata.jsonl"
-    return graph_import_path, evidence_path if evidence_path.exists() else None
+    return run_artifacts.resolve_run_publish_source(run_dir)
 
 
 def _record_json_publish_status(
@@ -1008,204 +514,24 @@ def _record_json_publish_status(
     graph_triples: int,
     evidence_count: int,
 ) -> dict[str, Any]:
-    return _update_publish_status(
+    return _publish_runtime.record_json_publish_status(
         run_dir,
-        "json",
-        {
-            "status": "completed",
-            "published": True,
-            "published_at": _now_iso(),
-            "finished_at": _now_iso(),
-            "target": str(target),
-            "graph_triples": graph_triples,
-            "evidence_count": evidence_count,
-            "error": "",
-        },
+        target=target,
+        graph_triples=graph_triples,
+        evidence_count=evidence_count,
     )
 
 
 def _publish_json_for_run(run_dir: Path, *, replace: bool = False) -> dict[str, Any]:
-    graph_import_path, evidence_path = _resolve_run_publish_source(run_dir)
-    store = _runtime_graph_store()
-    with _runtime_graph_mutation_lock:
-        if replace:
-            raise RuntimeError("sqlite_runtime_replace_not_supported")
-        stats = store.import_run(graph_path=graph_import_path, evidence_path=evidence_path)
-        target = store.settings.db_path
-    _record_json_publish_status(
-        run_dir,
-        target=target,
-        graph_triples=int(stats["total_triples"]),
-        evidence_count=int(stats["evidence_count"]),
-    )
-    return {
-        "target": target,
-        "graph_triples": int(stats["total_triples"]),
-        "evidence_count": int(stats["evidence_count"]),
-    }
+    return _publish_runtime.publish_json_for_run(run_dir, replace=replace)
 
 
 def _run_json_publish_job(run_name: str, *, replace: bool = False) -> dict[str, Any]:
-    run_dir = DEFAULT_OUTPUT_DIR / run_name
-    if not run_dir.exists():
-        raise FileNotFoundError("run_not_found")
-    try:
-        _update_publish_status(
-            run_dir,
-            "json",
-            {
-                "status": "running",
-                "published": False,
-                "published_at": "",
-                "started_at": _now_iso(),
-                "finished_at": "",
-                "error": "",
-            },
-        )
-        return _publish_json_for_run(run_dir, replace=replace)
-    except Exception as exc:
-        _update_publish_status(
-            run_dir,
-            "json",
-            {
-                "status": "error",
-                "published": False,
-                "published_at": "",
-                "finished_at": _now_iso(),
-                "error": _describe_exception(exc),
-            },
-        )
-        raise
+    return _publish_runtime.run_json_publish_job(run_name, replace=replace)
 
 
 def _run_nebula_publish_job(run_name: str) -> None:
-    run_dir = DEFAULT_OUTPUT_DIR / run_name
-    try:
-        if not run_dir.exists():
-            raise FileNotFoundError("run_not_found")
-
-        _update_publish_status(
-            run_dir,
-            "nebula",
-            {
-                "status": "running",
-                "published": False,
-                "started_at": _now_iso(),
-                "finished_at": "",
-                "published_at": "",
-                "progress_current": 0,
-                "progress_total": 0,
-                "progress_pct": 0.0,
-                "ok_count": 0,
-                "fail_count": 0,
-                "error": "",
-            },
-        )
-        json_result = _run_json_publish_job(run_name, replace=False)
-        target = Path(str(json_result["target"]))
-
-        graph_import_path, evidence_path = _resolve_run_publish_source(run_dir)
-        from services.graph_service.nebulagraph_store import NebulaGraphStore, load_graph_rows
-
-        rows_with_evidence = load_graph_rows(graph_import_path, evidence_path)
-        store = NebulaGraphStore()
-        health = store.health()
-        if not store.client_available():
-            raise RuntimeError(_nebula_health_detail(health))
-
-        stmts = store.build_schema_statements() + store.build_import_statements(rows_with_evidence)
-        total = len(stmts)
-        _update_publish_status(
-            run_dir,
-            "nebula",
-            {
-                "status": "running",
-                "published": False,
-                "target": str(target),
-                "source_path": str(graph_import_path),
-                "space": store.settings.space,
-                "graph_triples": int(json_result["graph_triples"]),
-                "progress_current": 0,
-                "progress_total": total,
-                "progress_pct": 0.0,
-                "ok_count": 0,
-                "fail_count": 0,
-                "error": "",
-            },
-        )
-
-        from nebula3.gclient.net import ConnectionPool
-        from nebula3.Config import Config as NebulaConfig
-
-        config = NebulaConfig()
-        config.max_connection_pool_size = 2
-        config.timeout = 30000
-        pool = ConnectionPool()
-        pool.init([(store.settings.host, store.settings.port)], config)
-        session = pool.get_session(store.settings.user, store.settings.password)
-
-        ok_count = 0
-        fail_count = 0
-        last_error = ""
-        try:
-            for idx, stmt in enumerate(stmts, start=1):
-                result = session.execute(f"USE `{store.settings.space}`; {stmt}")
-                if result.is_succeeded():
-                    ok_count += 1
-                else:
-                    fail_count += 1
-                    last_error = str(result.error_msg() or "")
-
-                if idx == 1 or idx == total or idx % 10 == 0:
-                    _update_publish_status(
-                        run_dir,
-                        "nebula",
-                        {
-                            "status": "running",
-                            "progress_current": idx,
-                            "progress_total": total,
-                            "progress_pct": round((idx / total) * 100, 1) if total else 100.0,
-                            "ok_count": ok_count,
-                            "fail_count": fail_count,
-                            "error": last_error if fail_count else "",
-                        },
-                    )
-        finally:
-            session.release()
-            pool.close()
-
-        final_status = "completed" if fail_count == 0 else "error"
-        _update_publish_status(
-            run_dir,
-            "nebula",
-            {
-                "status": final_status,
-                "published": fail_count == 0,
-                "published_at": _now_iso() if fail_count == 0 else "",
-                "finished_at": _now_iso(),
-                "progress_current": total,
-                "progress_total": total,
-                "progress_pct": 100.0,
-                "ok_count": ok_count,
-                "fail_count": fail_count,
-                "error": "" if fail_count == 0 else (last_error or f"nebula_fail_count={fail_count}"),
-            },
-        )
-    except Exception as exc:
-        if run_dir.exists():
-            _update_publish_status(
-                run_dir,
-                "nebula",
-                {
-                    "status": "error",
-                    "published": False,
-                    "finished_at": _now_iso(),
-                    "error": _describe_exception(exc),
-                },
-            )
-    finally:
-        with _publish_lock:
-            _nebula_publish_threads.pop(run_name, None)
+    _publish_runtime.run_nebula_publish_job(run_name)
 
 
 def _nebula_health_detail(health: dict[str, Any]) -> str:
@@ -1218,18 +544,7 @@ def _nebula_health_detail(health: dict[str, Any]) -> str:
 
 
 def _fmt_eta(remaining_secs: float) -> str:
-    if remaining_secs <= 0:
-        return "完成"
-    td = timedelta(seconds=int(remaining_secs))
-    h, rem = divmod(td.seconds, 3600)
-    m, s = divmod(rem, 60)
-    if td.days > 0:
-        return f"{td.days}天{h}小时{m}分"
-    if h > 0:
-        return f"{h}小时{m}分{s}秒"
-    if m > 0:
-        return f"{m}分{s}秒"
-    return f"{s}秒"
+    return runtime_metrics.fmt_eta(remaining_secs)
 
 
 def _update_runtime_metrics(
@@ -1240,26 +555,17 @@ def _update_runtime_metrics(
     total_chunks_done: int,
     total_chunks_all: int,
 ) -> None:
-    elapsed = time.time() - start_ts
-    state["elapsed_secs"] = int(elapsed)
-    state["chunks_completed"] = total_chunks_done
-    if session_chunks_done <= 0 or total_chunks_all <= 0:
-        state["speed_chunks_per_min"] = 0.0
-        state["eta"] = ""
-        return
-    rate = session_chunks_done / max(elapsed, 1)
-    remaining = max(0, (total_chunks_all - total_chunks_done) / rate)
-    state["eta"] = _fmt_eta(remaining)
-    state["speed_chunks_per_min"] = round(rate * 60, 1)
+    runtime_metrics.update_runtime_metrics(
+        state,
+        start_ts=start_ts,
+        session_chunks_done=session_chunks_done,
+        total_chunks_done=total_chunks_done,
+        total_chunks_all=total_chunks_all,
+    )
 
 
 def _derive_retry_parallel_workers(parallel_workers: Any) -> int:
-    try:
-        workers = int(parallel_workers)
-    except (TypeError, ValueError):
-        workers = 1
-    workers = max(1, workers)
-    return max(1, workers // 2)
+    return runtime_metrics.derive_retry_parallel_workers(parallel_workers)
 
 
 RESUME_FIXED_FIELDS = {
@@ -1275,6 +581,38 @@ RESUME_FIXED_FIELDS = {
 # ─────────────────────────────────────────────────────────────────────────────
 # 核心后台任务
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _build_extraction_job_context() -> extraction_job_runner.ExtractionJobContext:
+    return extraction_job_runner.ExtractionJobContext(
+        current_job=_current_job,
+        run_lock=_run_lock,
+        job_cancelled=_job_cancelled,
+        build_pipeline=_build_pipeline,
+        load_completed_chunk_keys=_load_completed_chunk_keys,
+        count_jsonl_rows=_count_jsonl_rows,
+        derive_retry_parallel_workers=_derive_retry_parallel_workers,
+        now_iso=_now_iso,
+        provider_to_dict=_provider_to_dict,
+        write_state=_write_state,
+        log=_log,
+        load_existing_triple_records=_load_existing_triple_records,
+        clear_books_force_unprocessed=_clear_books_force_unprocessed,
+        evaluate_chunk_attempt=_evaluate_chunk_attempt,
+        build_raw_chunk_record=_build_raw_chunk_record,
+        append_checkpoint=_append_checkpoint,
+        update_runtime_metrics=_update_runtime_metrics,
+        is_low_yield_retry_error=_is_low_yield_retry_error,
+        enqueue_publish_task=_enqueue_publish_task,
+        cleanup_job_log_file=_cleanup_job_log_file,
+        describe_exception=_describe_exception,
+        job_state=job_state,
+        extraction_state=extraction_state,
+        extraction_planning=extraction_planning,
+        chunk_execution=chunk_execution,
+        extraction_finalizers=extraction_finalizers,
+        extraction_completion=extraction_completion,
+    )
+
 
 def _run_extraction_job(
     *,
@@ -1293,792 +631,24 @@ def _run_extraction_job(
     resume_run_dir: Path | None = None,
     cleanup_job_log_file: bool = True,
 ) -> None:
-    """在独立线程中运行完整的提取→清洗→发布流程，实时更新 _current_job。"""
-    global _current_job
+    return extraction_job_runner.run_extraction_job(
+        job_id=job_id,
+        selected_books=selected_books,
+        label=label,
+        dry_run=dry_run,
+        cfg_override=cfg_override,
+        chapter_excludes=chapter_excludes,
+        max_chunks_per_book=max_chunks_per_book,
+        skip_initial_chunks=skip_initial_chunks,
+        chunk_strategy=chunk_strategy,
+        auto_clean=auto_clean,
+        auto_publish=auto_publish,
+        max_chunk_retries=max_chunk_retries,
+        resume_run_dir=resume_run_dir,
+        cleanup_job_log_file=cleanup_job_log_file,
+        context=_build_extraction_job_context(),
+    )
 
-    pipeline = _build_pipeline(cfg_override)
-    resume_mode = resume_run_dir is not None
-    run_dir = resume_run_dir or pipeline.create_run_dir(label=label)
-    run_dir.mkdir(parents=True, exist_ok=True)
-
-    start_ts = time.time()
-    checkpoint_path = run_dir / "chunks.checkpoint.jsonl"
-    triples_jsonl = run_dir / "triples.normalized.jsonl"
-    raw_jsonl = run_dir / "triples.raw.jsonl"
-    state_path = run_dir / "state.json"
-    completed_chunk_keys = _load_completed_chunk_keys(run_dir) if resume_mode else set()
-    total_chunks_done = len(completed_chunk_keys)
-    session_chunks_done = 0
-    total_chunks_all = 0
-    total_triples = _count_jsonl_rows(triples_jsonl)
-    chunk_errors = 0
-    retry_parallel_workers = _derive_retry_parallel_workers(pipeline.config.parallel_workers)
-    completed_book_stems: set[str] = set()
-    incomplete_books: list[str] = []
-    last_provider_monitor_attempts = 0
-    last_provider_monitor_failures = 0
-
-    state: dict[str, Any] = {
-        "job_id": job_id,
-        "status": "running",
-        "phase": "scheduling",
-        "books_total": len(selected_books),
-        "books_completed": 0,
-        "chunks_total": 0,
-        "chunks_completed": 0,
-        "total_triples": 0,
-        "chunk_errors": 0,
-        "chunk_retries": 0,
-        "current_book": "",
-        "current_chapter": "",
-        "elapsed_secs": 0,
-        "eta": "",
-        "run_dir": str(run_dir),
-        "started_at": datetime.now().isoformat(timespec="seconds"),
-        "finished_at": None,
-        "dry_run": dry_run,
-        "model": pipeline.config.model,
-        "speed_chunks_per_min": 0.0,
-        "resumed": resume_mode,
-        "resumed_run_dir": run_dir.name if resume_mode else "",
-        "resume_skipped_chunks": len(completed_chunk_keys),
-        "retry_parallel_workers": retry_parallel_workers,
-        "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
-        "provider_metrics": pipeline.get_provider_metrics(),
-    }
-
-    def refresh_provider_monitor(*, force_log: bool = False) -> None:
-        metrics = pipeline.get_provider_metrics()
-        state["provider_metrics"] = metrics
-        if force_log:
-            return
-
-    with _run_lock:
-        _current_job.update(state)
-    _write_state(state_path, state)
-    refresh_provider_monitor(force_log=True)
-
-    _log("info", f"任务启动 job_id={job_id}，共 {len(selected_books)} 本书")
-
-    # 新任务写 manifest；续跑必须保留原 run 的 manifest，避免固定配置被污染
-    if not resume_mode:
-        pipeline.save_manifest(run_dir, {
-            "job_id": job_id,
-            "created_at": datetime.now().isoformat(),
-            "books": [str(p) for p in selected_books],
-            "model": pipeline.config.model,
-            "base_url": pipeline.config.base_url,
-            "dry_run": dry_run,
-            "resume_run_dir": str(resume_run_dir) if resume_run_dir else "",
-            "config": {
-                "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
-                "max_chunk_chars": pipeline.config.max_chunk_chars,
-                "chunk_overlap": pipeline.config.chunk_overlap,
-                "chapter_excludes": chapter_excludes,
-                "skip_initial_chunks_per_book": skip_initial_chunks,
-                "chunk_strategy": chunk_strategy,
-                "parallel_workers": pipeline.config.parallel_workers,
-                "request_timeout": pipeline.config.request_timeout,
-                "max_retries": pipeline.config.max_retries,
-                "request_delay": pipeline.config.request_delay,
-                "retry_backoff_base": pipeline.config.retry_backoff_base,
-                "max_chunks_per_book": max_chunks_per_book,
-                "max_chunk_retries": max_chunk_retries,
-            },
-        })
-    all_rows = _load_existing_triple_records(triples_jsonl) if resume_mode else []
-    cancel_logged = False
-    results: dict[tuple[str, int], dict[str, Any]] = {}
-
-    def result_key(task: Any) -> tuple[str, int]:
-        return (str(task.book_name), int(task.chunk_index))
-
-    def note_cancelling() -> None:
-        nonlocal cancel_logged
-        state["status"] = "cancelling"
-        state["phase"] = "cancelling"
-        with _run_lock:
-            _current_job.update(state)
-        _write_state(state_path, state)
-        if not cancel_logged:
-            _log("warn", "收到取消信号，等待当前进行中的请求结束并停止后续调度")
-            cancel_logged = True
-
-    def run_retry_batch(failed_items: list[dict[str, Any]], retry_count: int) -> None:
-        nonlocal total_triples, total_chunks_done, session_chunks_done
-
-        if retry_parallel_workers <= 1 or len(failed_items) <= 1:
-            for result in failed_items:
-                if _job_cancelled.is_set():
-                    note_cancelling()
-                    break
-                task = result["task"]
-                result["_retried"] = result.get("_retried", 0) + 1
-                state["current_chapter"] = task.chapter_name
-                state["current_chunk_index"] = task.chunk_index
-                with _run_lock:
-                    _current_job.update(state)
-                try:
-                    payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
-                    result["payload"] = payload
-                    result["error"] = None
-                    _log("ok", f"  chunk {task.chunk_index} 重试成功 ✓")
-                except Exception as exc:
-                    payload = {"triples": []}
-                    result["payload"] = payload
-                    result["error"] = str(exc)
-                    _log("error", f"  chunk {task.chunk_index} 重试仍失败: {str(exc)[:80]}")
-                rows, effective_error = _evaluate_chunk_attempt(
-                    pipeline,
-                    task=task,
-                    payload=payload,
-                    error=result["error"],
-                )
-                result["error"] = effective_error
-                result["rows"] = rows
-                if effective_error is None and not result.get("_written"):
-                    for row in rows:
-                        pipeline.append_jsonl(triples_jsonl, asdict(row))
-                    result["_written"] = True
-                    total_triples += len(rows)
-                    state["total_triples"] = total_triples
-                if result["error"] is None:
-                    completed_chunk_keys.add((task.book_name, task.chunk_index))
-                pipeline.append_jsonl(
-                    raw_jsonl,
-                    _build_raw_chunk_record(
-                        task=task,
-                        payload=payload,
-                        error=result["error"],
-                        rows_count=len(rows),
-                    ),
-                )
-                _append_checkpoint(
-                    checkpoint_path,
-                    task=task,
-                    error=result["error"],
-                    payload=payload,
-                    attempt=result.get("_retried", 0),
-                    resumed=resume_mode,
-                    triples_count=len(rows),
-                )
-                total_chunks_done += 1
-                session_chunks_done += 1
-                _update_runtime_metrics(
-                    state,
-                    start_ts=start_ts,
-                    session_chunks_done=session_chunks_done,
-                    total_chunks_done=total_chunks_done,
-                    total_chunks_all=total_chunks_all,
-                )
-                refresh_provider_monitor()
-                with _run_lock:
-                    _current_job.update(state)
-                _write_state(state_path, state)
-            return
-
-        worker_count = min(retry_parallel_workers, len(failed_items))
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            future_map = {}
-            for result in failed_items:
-                result["_retried"] = result.get("_retried", 0) + 1
-                future_map[executor.submit(pipeline.extract_chunk_payload, result["task"], dry_run)] = result
-            _log("info", f"  [retry] 第 {retry_count} 轮提交 {len(failed_items)} 个 chunk，retry_parallel_workers={worker_count}")
-
-            for future in as_completed(future_map):
-                if _job_cancelled.is_set():
-                    note_cancelling()
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    break
-                result = future_map[future]
-                task = result["task"]
-                state["current_chapter"] = task.chapter_name
-                state["current_chunk_index"] = task.chunk_index
-                try:
-                    payload = future.result()
-                    result["payload"] = payload
-                    result["error"] = None
-                    _log("ok", f"  chunk {task.chunk_index} 重试成功 ✓")
-                except Exception as exc:
-                    payload = {"triples": []}
-                    result["payload"] = payload
-                    result["error"] = str(exc)
-                    _log("error", f"  chunk {task.chunk_index} 重试仍失败: {str(exc)[:80]}")
-                rows, effective_error = _evaluate_chunk_attempt(
-                    pipeline,
-                    task=task,
-                    payload=payload,
-                    error=result["error"],
-                )
-                result["error"] = effective_error
-                result["rows"] = rows
-                if effective_error is None and not result.get("_written"):
-                    for row in rows:
-                        pipeline.append_jsonl(triples_jsonl, asdict(row))
-                    result["_written"] = True
-                    total_triples += len(rows)
-                    state["total_triples"] = total_triples
-                if result["error"] is None:
-                    completed_chunk_keys.add((task.book_name, task.chunk_index))
-                pipeline.append_jsonl(
-                    raw_jsonl,
-                    _build_raw_chunk_record(
-                        task=task,
-                        payload=payload,
-                        error=result["error"],
-                        rows_count=len(rows),
-                    ),
-                )
-                _append_checkpoint(
-                    checkpoint_path,
-                    task=task,
-                    error=result["error"],
-                    payload=payload,
-                    attempt=result.get("_retried", 0),
-                    resumed=resume_mode,
-                    triples_count=len(rows),
-                )
-                total_chunks_done += 1
-                session_chunks_done += 1
-                _update_runtime_metrics(
-                    state,
-                    start_ts=start_ts,
-                    session_chunks_done=session_chunks_done,
-                    total_chunks_done=total_chunks_done,
-                    total_chunks_all=total_chunks_all,
-                )
-                _log(
-                    "info",
-                    f"  [retry] progress {session_chunks_done} session_done | chunk={task.chunk_index} | "
-                    f"triples={len(rows)} | total_triples={total_triples} | error={result['error'] or '-'}",
-                )
-                refresh_provider_monitor()
-                with _run_lock:
-                    _current_job.update(state)
-                _write_state(state_path, state)
-
-    def finalize_exhausted_low_yield_chunks(results: dict[tuple[str, int], dict[str, Any]]) -> int:
-        finalized = 0
-        for result in results.values():
-            error = result.get("error")
-            if not _is_low_yield_retry_error(error):
-                continue
-            if int(result.get("_retried", 0) or 0) < max_chunk_retries:
-                continue
-
-            task = result["task"]
-            rows = result.get("rows") or []
-            drop_error = f"dropped_after_low_yield_retries: {error}"
-            result["error"] = None
-            result["rows"] = []
-            result["_written"] = True
-            completed_chunk_keys.add((task.book_name, task.chunk_index))
-            _append_checkpoint(
-                checkpoint_path,
-                task=task,
-                error=drop_error,
-                payload=result.get("payload") or {"triples": []},
-                attempt=int(result.get("_retried", 0) or 0),
-                resumed=resume_mode,
-                triples_count=0,
-                success_override=True,
-            )
-            _log("info", f"  chunk {task.chunk_index} 低产出重试耗尽，按空结果完成 | triples=0")
-            finalized += 1
-
-        if finalized > 0:
-            with _run_lock:
-                _current_job.update(state)
-            _write_state(state_path, state)
-        return finalized
-
-    def finalize_exhausted_failed_chunks(results: dict[tuple[str, int], dict[str, Any]]) -> int:
-        finalized = 0
-        for result in results.values():
-            error = str(result.get("error") or "").strip()
-            if not error:
-                continue
-            if _is_low_yield_retry_error(error):
-                continue
-            if int(result.get("_retried", 0) or 0) < max_chunk_retries:
-                continue
-
-            task = result["task"]
-            payload = result.get("payload") or {"triples": []}
-            rows = result.get("rows") or []
-            drop_error = f"dropped_after_retries: {error}"
-            result["error"] = None
-            result["rows"] = []
-            result["_written"] = True
-            completed_chunk_keys.add((task.book_name, task.chunk_index))
-            _append_checkpoint(
-                checkpoint_path,
-                task=task,
-                error=drop_error,
-                payload=payload,
-                attempt=int(result.get("_retried", 0) or 0),
-                resumed=resume_mode,
-                triples_count=len(rows),
-                success_override=True,
-            )
-            _log("warn", f"  chunk {task.chunk_index} 重试耗尽，已丢弃并按完成处理 | error={error[:80]}")
-            finalized += 1
-
-        if finalized > 0:
-            with _run_lock:
-                _current_job.update(state)
-            _write_state(state_path, state)
-        return finalized
-
-    def finalize_any_remaining_unresolved_chunks() -> int:
-        finalized = 0
-        for _, tasks in all_tasks_per_book:
-            for task in tasks:
-                key = (task.book_name, task.chunk_index)
-                if key in completed_chunk_keys:
-                    continue
-                result = results.get(key)
-                payload = (result or {}).get("payload") or {"triples": []}
-                error = str((result or {}).get("error") or "unresolved_after_retries").strip()
-                attempt = int((result or {}).get("_retried", 0) or 0)
-                if result is not None:
-                    result["error"] = None
-                    result["rows"] = []
-                    result["_written"] = True
-                else:
-                    results[key] = {
-                        "task": task,
-                        "payload": payload,
-                        "error": None,
-                        "rows": [],
-                        "_retried": attempt,
-                        "_written": True,
-                    }
-                completed_chunk_keys.add(key)
-                _append_checkpoint(
-                    checkpoint_path,
-                    task=task,
-                    error=f"dropped_after_retries: {error}",
-                    payload=payload,
-                    attempt=attempt,
-                    resumed=resume_mode,
-                    triples_count=0,
-                    success_override=True,
-                )
-                _log("warn", f"  chunk {task.chunk_index} 收尾兜底丢弃并按完成处理 | error={error[:80]}")
-                finalized += 1
-
-        if finalized > 0:
-            with _run_lock:
-                _current_job.update(state)
-            _write_state(state_path, state)
-        return finalized
-
-    try:
-        # ── 第一阶段：分块调度（跨书交错，统一送入全局并行池） ─────────────────────
-        all_tasks_per_book: list[tuple[Path, list]] = []
-        for book_path in selected_books:
-            tasks = pipeline.schedule_book_chunks(
-                book_path=book_path,
-                chapter_excludes=chapter_excludes or None,
-                max_chunks_per_book=max_chunks_per_book,
-                skip_initial_chunks_per_book=skip_initial_chunks,
-                chunk_strategy=chunk_strategy,
-            )
-            all_tasks_per_book.append((book_path, tasks))
-            total_chunks_all += len(tasks)
-
-        if resume_mode:
-            scheduled_chunk_keys = {
-                (task.book_name, task.chunk_index)
-                for _, tasks in all_tasks_per_book
-                for task in tasks
-            }
-            completed_chunk_keys = {
-                key for key in completed_chunk_keys
-                if key in scheduled_chunk_keys
-            }
-            total_chunks_done = len(completed_chunk_keys)
-            state["resume_skipped_chunks"] = total_chunks_done
-
-        pending_tasks_per_book: list[tuple[Path, list[Any]]] = []
-        for book_index, (book_path, scheduled_tasks) in enumerate(all_tasks_per_book, start=1):
-            pending_tasks = [task for task in scheduled_tasks if (task.book_name, task.chunk_index) not in completed_chunk_keys]
-            skipped_completed = len(scheduled_tasks) - len(pending_tasks)
-            if not pending_tasks:
-                completed_book_stems.add(book_path.stem)
-                state["books_completed"] = len(completed_book_stems)
-                _clear_books_force_unprocessed([book_path.stem])
-                if resume_mode and skipped_completed == len(scheduled_tasks):
-                    _log("info", f"{book_path.stem} 本次续跑无需处理：{skipped_completed} 个 chunk 已在当前 run 完成，已自动跳过")
-                else:
-                    _log("warn", f"{book_path.stem} 无可处理 chunk（全部被过滤）")
-                continue
-            pending_tasks_per_book.append((book_path, pending_tasks))
-            _log(
-                "info",
-                f"纳入全局队列 [{book_index}/{len(selected_books)}] {book_path.stem}，"
-                f"{len(pending_tasks)} chunks | parallel={pipeline.config.parallel_workers} "
-                f"retry_parallel={retry_parallel_workers} dry_run={dry_run}",
-            )
-
-        task_queues = [deque(tasks) for _, tasks in pending_tasks_per_book]
-        interleaved_tasks: list[Any] = []
-        while True:
-            appended = False
-            for queue in task_queues:
-                if queue:
-                    interleaved_tasks.append(queue.popleft())
-                    appended = True
-            if not appended:
-                break
-
-        state["chunks_total"] = total_chunks_all
-        state["chunks_completed"] = total_chunks_done
-        state["total_triples"] = total_triples
-        state["phase"] = "extracting"
-        _update_runtime_metrics(
-            state,
-            start_ts=start_ts,
-            session_chunks_done=session_chunks_done,
-            total_chunks_done=total_chunks_done,
-            total_chunks_all=total_chunks_all,
-        )
-        refresh_provider_monitor()
-        with _run_lock:
-            _current_job.update(state)
-        _write_state(state_path, state)
-        _log("info", f"调度完成，共 {total_chunks_all} 个 chunk，全局队列待处理 {len(interleaved_tasks)} 个")
-        if _job_cancelled.is_set():
-            note_cancelling()
-
-        if not _job_cancelled.is_set() and (dry_run or pipeline.config.parallel_workers <= 1 or len(interleaved_tasks) <= 1):
-            for task_index, task in enumerate(interleaved_tasks, start=1):
-                if _job_cancelled.is_set():
-                    note_cancelling()
-                    break
-                state["current_book"] = task.book_name
-                state["current_chapter"] = task.chapter_name
-                state["current_chunk_index"] = task.chunk_index
-                with _run_lock:
-                    _current_job.update(state)
-                _log("info", f"  -> 处理 {task.book_name} chunk {task.chunk_index}/{len(interleaved_tasks)}")
-                try:
-                    payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
-                    error = None
-                    _log("ok", f"  chunk {task.chunk_index}/{len(interleaved_tasks)} ✓ {task.book_name}")
-                except Exception as exc:
-                    payload = {"triples": []}
-                    error = str(exc)
-                    chunk_errors += 1
-                    state["chunk_errors"] = chunk_errors
-                    _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
-                rows, effective_error = _evaluate_chunk_attempt(
-                    pipeline,
-                    task=task,
-                    payload=payload,
-                    error=error,
-                )
-                key = result_key(task)
-                results[key] = {
-                    "task": task,
-                    "payload": payload,
-                    "error": effective_error,
-                    "rows": rows,
-                    "_retried": 0,
-                    "_written": False,
-                }
-                if effective_error is not None and error is None:
-                    _log("warn", f"  chunk {task.chunk_index} low_yield | triples={len(rows)} | queued_for_retry")
-                if effective_error is None:
-                    for row in rows:
-                        pipeline.append_jsonl(triples_jsonl, asdict(row))
-                    results[key]["_written"] = True
-                    total_triples += len(rows)
-                    state["total_triples"] = total_triples
-                    completed_chunk_keys.add((task.book_name, task.chunk_index))
-                pipeline.append_jsonl(
-                    raw_jsonl,
-                    _build_raw_chunk_record(
-                        task=task,
-                        payload=payload,
-                        error=effective_error,
-                        rows_count=len(rows),
-                    ),
-                )
-                _append_checkpoint(
-                    checkpoint_path,
-                    task=task,
-                    error=effective_error,
-                    payload=payload,
-                    attempt=0,
-                    resumed=resume_mode,
-                    triples_count=len(rows),
-                )
-                total_chunks_done += 1
-                session_chunks_done += 1
-                _update_runtime_metrics(
-                    state,
-                    start_ts=start_ts,
-                    session_chunks_done=session_chunks_done,
-                    total_chunks_done=total_chunks_done,
-                    total_chunks_all=total_chunks_all,
-                )
-                refresh_provider_monitor()
-                with _run_lock:
-                    _current_job.update(state)
-                _write_state(state_path, state)
-        elif not _job_cancelled.is_set():
-            with ThreadPoolExecutor(max_workers=pipeline.config.parallel_workers) as executor:
-                future_map: dict[Any, Any] = {}
-                pending_queue: deque[Any] = deque(interleaved_tasks)
-                future_index = 0
-
-                def submit_available_tasks() -> None:
-                    while (
-                        pending_queue
-                        and len(future_map) < pipeline.config.parallel_workers
-                        and not _job_cancelled.is_set()
-                    ):
-                        task = pending_queue.popleft()
-                        future_map[executor.submit(pipeline.extract_chunk_payload, task, False)] = task
-
-                submit_available_tasks()
-                _log(
-                    "info",
-                    f"  [全局并行] 已启动 {len(future_map)} 个 worker，"
-                    f"队列总量={len(interleaved_tasks)} parallel_workers={pipeline.config.parallel_workers}",
-                )
-                while future_map:
-                    if _job_cancelled.is_set():
-                        note_cancelling()
-                        executor.shutdown(wait=False, cancel_futures=True)
-                        break
-                    done, _ = wait(tuple(future_map), return_when=FIRST_COMPLETED)
-                    for future in done:
-                        future_index += 1
-                        task = future_map.pop(future)
-                        state["current_book"] = task.book_name
-                        state["current_chapter"] = task.chapter_name
-                        state["current_chunk_index"] = task.chunk_index
-                        try:
-                            payload = future.result()
-                            error = None
-                        except Exception as exc:
-                            payload = {"triples": []}
-                            error = str(exc)
-                            chunk_errors += 1
-                            state["chunk_errors"] = chunk_errors
-                            _log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
-                        rows, effective_error = _evaluate_chunk_attempt(
-                            pipeline,
-                            task=task,
-                            payload=payload,
-                            error=error,
-                        )
-                        key = result_key(task)
-                        results[key] = {
-                            "task": task,
-                            "payload": payload,
-                            "error": effective_error,
-                            "rows": rows,
-                            "_retried": 0,
-                            "_written": False,
-                        }
-                        if error is None and effective_error is not None:
-                            _log("warn", f"  chunk {task.chunk_index} low_yield | triples={len(rows)} | queued_for_retry")
-                        if effective_error is None:
-                            for row in rows:
-                                pipeline.append_jsonl(triples_jsonl, asdict(row))
-                            results[key]["_written"] = True
-                            total_triples += len(rows)
-                            state["total_triples"] = total_triples
-                            completed_chunk_keys.add((task.book_name, task.chunk_index))
-                        if error is not None:
-                            _log("warn", f"  chunk {task.chunk_index} 无三元组 | error={error} | is_dict={isinstance(payload,dict)}")
-                        pipeline.append_jsonl(
-                            raw_jsonl,
-                            _build_raw_chunk_record(
-                                task=task,
-                                payload=payload,
-                                error=effective_error,
-                                rows_count=len(rows),
-                            ),
-                        )
-                        _append_checkpoint(
-                            checkpoint_path,
-                            task=task,
-                            error=effective_error,
-                            payload=payload,
-                            attempt=0,
-                            resumed=resume_mode,
-                            triples_count=len(rows),
-                        )
-                        total_chunks_done += 1
-                        session_chunks_done += 1
-                        _update_runtime_metrics(
-                            state,
-                            start_ts=start_ts,
-                            session_chunks_done=session_chunks_done,
-                            total_chunks_done=total_chunks_done,
-                            total_chunks_all=total_chunks_all,
-                        )
-                        _log(
-                            "info",
-                            f"  [parallel] progress {future_index}/{len(interleaved_tasks)} | "
-                            f"book={task.book_name} | chunk={task.chunk_index} | triples={len(rows)} | "
-                            f"total_triples={total_triples} | error={effective_error or '-'}",
-                        )
-                        refresh_provider_monitor()
-                        with _run_lock:
-                            _current_job.update(state)
-                        _write_state(state_path, state)
-                    submit_available_tasks()
-            if _job_cancelled.is_set():
-                note_cancelling()
-
-        retry_count = 0
-        while retry_count < max_chunk_retries:
-            if _job_cancelled.is_set():
-                note_cancelling()
-                break
-            failed_tasks = [r for r in results.values() if r["error"] is not None and r.get("_retried", 0) < max_chunk_retries]
-            if not failed_tasks:
-                break
-            retry_count += 1
-            _log("warn", f"  开始第 {retry_count} 轮重试，{len(failed_tasks)} 个 chunk 待重试")
-            state["chunk_retries"] = retry_count
-            run_retry_batch(failed_tasks, retry_count)
-            if _job_cancelled.is_set():
-                break
-
-        finalize_exhausted_low_yield_chunks(results)
-        finalize_exhausted_failed_chunks(results)
-        if not _job_cancelled.is_set():
-            finalize_any_remaining_unresolved_chunks()
-
-        incomplete_books = []
-        for book_path, scheduled_tasks in all_tasks_per_book:
-            book_all_completed = bool(scheduled_tasks) and all(
-                (task.book_name, task.chunk_index) in completed_chunk_keys
-                for task in scheduled_tasks
-            )
-            if book_all_completed:
-                if book_path.stem not in completed_book_stems:
-                    _log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
-                _clear_books_force_unprocessed([book_path.stem])
-                completed_book_stems.add(book_path.stem)
-                state["books_completed"] = len(completed_book_stems)
-            else:
-                pending_for_book = sum(
-                    1
-                    for task in scheduled_tasks
-                    if (task.book_name, task.chunk_index) not in completed_chunk_keys
-                )
-                if pending_for_book > 0:
-                    incomplete_books.append(book_path.stem)
-                    _log("warn", f"  {book_path.stem} 仍有 {pending_for_book} 个 chunk 未完成，当前 run 保留为未完成状态")
-
-        for _, tasks in all_tasks_per_book:
-            for task in tasks:
-                result = results.get(result_key(task), {"task": task, "payload": {"triples": []}, "error": "missing", "rows": []})
-                rows = result.get("rows") or []
-                if result.get("error") is not None:
-                    continue
-                all_rows.extend(rows)
-
-        # ── 写出 CSV + graph_import ─────────────────────────────────────
-        pipeline.write_csv(run_dir / "triples.normalized.csv", all_rows)
-        pipeline.write_graph_import(run_dir / "graph_import.json", all_rows)
-
-        was_cancelled = _job_cancelled.is_set() or state.get("status") == "cancelling"
-        pending_chunk_count = sum(
-            1
-            for book_path, tasks in all_tasks_per_book
-            for task in tasks
-            if (task.book_name, task.chunk_index) not in completed_chunk_keys
-        )
-        state["phase"] = "done"
-        if was_cancelled:
-            state["status"] = "cancelled"
-        elif pending_chunk_count > 0:
-            state["status"] = "partial"
-        else:
-            state["status"] = "completed"
-        state["finished_at"] = datetime.now().isoformat(timespec="seconds")
-        state["elapsed_secs"] = int(time.time() - start_ts)
-        state["eta"] = "已取消" if was_cancelled else ("未完成" if pending_chunk_count > 0 else "完成")
-        state["total_triples"] = total_triples
-        state["books_completed"] = len(completed_book_stems)
-        state["pending_chunks"] = pending_chunk_count
-        state["books_incomplete"] = len(incomplete_books)
-        state["incomplete_books"] = incomplete_books
-        refresh_provider_monitor(force_log=True)
-        with _run_lock:
-            _current_job.update(state)
-        _write_state(state_path, state)
-        if was_cancelled:
-            _log("warn", f"任务已取消，已保留当前进度：{total_triples} 条三元组，错误 {chunk_errors} 个")
-        elif pending_chunk_count > 0:
-            _log("warn", f"提取结束，但仍有 {pending_chunk_count} 个 chunk 未完成，run 标记为 partial")
-        else:
-            _log("info", f"提取完成，共 {total_triples} 条三元组，错误 {chunk_errors} 个")
-
-        # ── 可选：自动清洗 ──────────────────────────────────────────────
-        if auto_clean and state.get("status") == "completed":
-            if not triples_jsonl.exists() or triples_jsonl.stat().st_size == 0:
-                _log("warn", f"跳过清洗: {triples_jsonl} 为空或不存在（{total_triples} 条三元组）")
-            else:
-                state["phase"] = "cleaning"
-                with _run_lock:
-                    _current_job.update(state)
-                _log("info", "开始自动清洗...")
-                report = pipeline.clean_run_dir(run_dir)
-                _log("info", f"清洗完成: 保留 {report['kept_total']} 条，丢弃 {report['dropped_total']} 条")
-
-        # ── 可选：自动发布 ──────────────────────────────────────────────
-        if auto_publish and state.get("status") == "completed":
-            state["phase"] = "publishing"
-            with _run_lock:
-                _current_job.update(state)
-            _log("info", "开始自动发布到图谱队列...")
-            enqueued, publish_status = _enqueue_publish_task(run_dir.name, kind="json", replace=False)
-            state["publish_status"] = publish_status
-            with _run_lock:
-                _current_job.update(state)
-            _write_state(state_path, state)
-            if enqueued:
-                _log("info", f"已加入自动发布队列: {run_dir.name}")
-            else:
-                json_status = publish_status.get("json", {}) if isinstance(publish_status, dict) else {}
-                _log("info", f"自动发布未重复入队，当前状态: {json_status.get('status', 'unknown')}")
-
-        state["phase"] = "finished"
-        refresh_provider_monitor(force_log=True)
-        with _run_lock:
-            _current_job.update(state)
-        _write_state(state_path, state)
-        if cleanup_job_log_file:
-            _cleanup_job_log_file()
-
-    except Exception as exc:
-        state["status"] = "error"
-        state["phase"] = "error"
-        state["error"] = _describe_exception(exc)
-        state["finished_at"] = datetime.now().isoformat(timespec="seconds")
-        refresh_provider_monitor(force_log=True)
-        with _run_lock:
-            _current_job.update(state)
-        _write_state(state_path, state)
-        _log("error", f"任务异常: {state['error']}")
-        _log("error", traceback.format_exc().rstrip())
-        if cleanup_job_log_file:
-            _cleanup_job_log_file()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# API 模型
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _run_auto_extraction_batches(
     *,
@@ -2097,104 +667,31 @@ def _run_auto_extraction_batches(
     max_chunk_retries: int,
     batch_size: int = DEFAULT_AUTO_BOOK_BATCH_SIZE,
 ) -> None:
-    selected_books = list(initial_selected_books)
-    batch_index = 1
-    batch_size = _sanitize_auto_batch_size(batch_size)
-    try:
-        while selected_books:
-            batch_job_id = job_id if batch_index == 1 else f"{job_id}-b{batch_index}"
-            resume_run_dir = initial_resume_run_dir if batch_index == 1 else None
-            if batch_index > 1:
-                _log("info", f"自动续批启动 [{batch_index}]，共 {len(selected_books)} 本书")
-            _run_extraction_job(
-                job_id=batch_job_id,
-                selected_books=selected_books,
-                label=label,
-                dry_run=dry_run,
-                cfg_override=cfg_override,
-                chapter_excludes=chapter_excludes,
-                max_chunks_per_book=max_chunks_per_book,
-                skip_initial_chunks=skip_initial_chunks,
-                chunk_strategy=chunk_strategy,
-                auto_clean=auto_clean,
-                auto_publish=auto_publish,
-                max_chunk_retries=max_chunk_retries,
-                resume_run_dir=resume_run_dir,
-                cleanup_job_log_file=False,
-            )
-            if _job_cancelled.is_set():
-                return
-            with _run_lock:
-                last_status = _current_job.get("status")
-            if last_status != "completed":
-                return
-
-            pipeline = _build_pipeline(cfg_override)
-            next_books, _ = _select_auto_start_books(pipeline, batch_size=batch_size)
-            if not next_books:
-                _log("info", "自动批处理完成，已无剩余未处理书籍")
-                return
-
-            batch_index += 1
-            with _run_lock:
-                _current_job.update(
-                    {
-                        "status": "running",
-                        "phase": "preparing_next_batch",
-                        "current_book": "",
-                        "current_chapter": "",
-                        "auto_chain_mode": True,
-                        "auto_batch_index": batch_index,
-                        "auto_batch_size": batch_size,
-                        "next_batch_books": [path.stem for path in next_books],
-                    }
-                )
-            _log("info", f"当前批次完成，准备自动开启下一批，共 {len(next_books)} 本书")
-            selected_books = next_books
-    finally:
-        _cleanup_job_log_file()
-
-
-class APIConfig(BaseModel):
-    model: str = Field(default="", description="LLM 模型名")
-    api_key: str = Field(default="", description="API Key")
-    base_url: str = Field(default="", description="API Base URL")
-    providers: list[dict[str, Any]] = Field(default_factory=list, description="多 API 源配置列表")
-    request_timeout: float = Field(default=314.0)
-    max_retries: int = Field(default=2)
-    request_delay: float = Field(default=1.1)
-    retry_backoff_base: float = Field(default=2.0)
-    parallel_workers: int = Field(default=11)
-    max_chunk_chars: int = Field(default=800)
-    chunk_overlap: int = Field(default=200)
-    chunk_strategy: str = Field(default="body_first")
-    max_chunk_retries: int = Field(default=2, description="Chunk 失败后最大重试次数")
-
-
-class StartJobRequest(BaseModel):
-    selected_books: list[str] = Field(default=[], description="书名关键词或序号列表")
-    label: str = Field(default="", description="任务标签")
-    dry_run: bool = Field(default=False)
-    chapter_excludes: list[str] = Field(default=[])
-    max_chunks_per_book: int | None = Field(default=None)
-    skip_initial_chunks: int = Field(default=0)
-    chunk_strategy: str = Field(default="body_first")
-    auto_clean: bool = Field(default=True)
-    auto_publish: bool = Field(default=False)
-    api_config: APIConfig = Field(default_factory=APIConfig)
-
-
-class ResumeRunRequest(BaseModel):
-    auto_clean: bool = Field(default=False)
-    auto_publish: bool = Field(default=False)
-    continue_next_batches: bool = Field(default=True)
-    api_config: APIConfig = Field(default_factory=APIConfig)
-
-
-class GraphBookDeleteRequest(BaseModel):
-    books: list[str] = Field(default=[], description="要删除的 source_book 列表")
-    sync_nebula: bool = Field(default=True)
-    mark_unprocessed: bool = Field(default=True)
+    auto_batch.run_auto_extraction_batches(
+        job_id=job_id,
+        initial_selected_books=initial_selected_books,
+        initial_resume_run_dir=initial_resume_run_dir,
+        label=label,
+        dry_run=dry_run,
+        cfg_override=cfg_override,
+        chapter_excludes=chapter_excludes,
+        max_chunks_per_book=max_chunks_per_book,
+        skip_initial_chunks=skip_initial_chunks,
+        chunk_strategy=chunk_strategy,
+        auto_clean=auto_clean,
+        auto_publish=auto_publish,
+        max_chunk_retries=max_chunk_retries,
+        batch_size=batch_size,
+        default_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+        build_pipeline=lambda cfg: _build_pipeline(cfg),
+        run_extraction_job=_run_extraction_job,
+        select_auto_start_books_fn=_select_auto_start_books,
+        job_cancelled=_job_cancelled,
+        run_lock=_run_lock,
+        current_job=_current_job,
+        log=lambda level, msg: _log(level, msg),
+        cleanup_job_log_file=_cleanup_job_log_file,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2206,21 +703,10 @@ def list_books():
     """列出所有书目"""
     try:
         pipeline = _build_pipeline()
-        books = pipeline.discover_books()
-        processed_stems = _get_processed_book_stems()
-        recommended = {str(p) for p in pipeline.recommend_books(limit=12)}
-        result = []
-        for i, b in enumerate(books, start=1):
-            size_kb = round(b.stat().st_size / 1024, 1)
-            result.append({
-                "index": i,
-                "name": b.stem,
-                "path": str(b),
-                "size_kb": size_kb,
-                "recommended": str(b) in recommended,
-                "processed": b.stem in processed_stems,
-            })
-        return {"books": result, "total": len(result)}
+        return books_api.list_books_payload(
+            pipeline,
+            processed_stems=_get_processed_book_stems(),
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2230,16 +716,9 @@ def list_chapters(book_name: str, limit: int = 50):
     """查看某本书的章节"""
     try:
         pipeline = _build_pipeline()
-        books = pipeline.discover_books()
-        matched = [b for b in books if book_name in b.stem]
-        if not matched:
-            raise HTTPException(status_code=404, detail="book_not_found")
-        sections = pipeline.split_book(matched[0])[:limit]
-        return {
-            "book": matched[0].stem,
-            "total_sections": len(sections),
-            "sections": [{"title": s["title"], "chars": len(s["content"])} for s in sections],
-        }
+        return books_api.chapters_payload(pipeline, book_name=book_name, limit=limit)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="book_not_found")
     except HTTPException:
         raise
     except Exception as exc:
@@ -2249,45 +728,44 @@ def list_chapters(book_name: str, limit: int = 50):
 @app.post("/api/job/start")
 def start_job(req: StartJobRequest):
     """启动一次提取任务"""
-    global _job_thread, _current_job, _job_log
+    global _job_thread, _job_log_file, _job_log_file_path
 
     with _run_lock:
         if _current_job.get("status") == "running":
             raise HTTPException(status_code=409, detail="已有任务运行中，请等待完成或先取消")
 
-    # 解析书目
     pipeline = _build_pipeline(req.api_config.model_dump())
-    auto_chain_mode = not req.selected_books
-    auto_batch_size = DEFAULT_AUTO_BOOK_BATCH_SIZE
-    selected = _resolve_start_selected_books(pipeline, req.selected_books)
-    auto_skipped_processed_books: list[str] = []
-    if auto_chain_mode:
-        selected, auto_skipped_processed_books = _select_auto_start_books(
-            pipeline,
-            batch_size=auto_batch_size,
-        )
+    selected, auto_skipped_processed_books, auto_chain_mode, auto_batch_size = job_requests.prepare_start_selection(
+        pipeline=pipeline,
+        raw_selected_books=req.selected_books,
+        default_auto_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+        resolve_selected_books=_resolve_start_selected_books,
+        select_auto_start_books=lambda current_pipeline: _select_auto_start_books(
+            current_pipeline,
+            batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+        ),
+    )
 
     if not selected:
         detail = "没有剩余未处理书籍；如需重跑历史书籍，请手动选择具体书目"
         raise HTTPException(status_code=400, detail=detail)
 
-    if not req.dry_run:
-        if not any(provider.api_key for provider in pipeline.config.providers if provider.enabled):
-            raise HTTPException(status_code=400, detail="未配置 API Key，请在 API 配置中填写或在 .env 中设置 TRIPLE_LLM_API_KEY")
+    if not req.dry_run and not job_requests.enabled_provider_has_api_key(pipeline):
+        raise HTTPException(status_code=400, detail="未配置 API Key，请在 API 配置中填写或在 .env 中设置 TRIPLE_LLM_API_KEY")
 
     job_id = str(uuid4())[:8]
-    with _run_lock:
-        _current_job = {}
-        _job_log.clear()
-        _job_cancelled.clear()
-        log_file_path = DEFAULT_OUTPUT_DIR / f"current_job_{job_id}.log"
-        _write_text_atomic(log_file_path, "", encoding="utf-8")
-        global _job_log_file, _job_log_file_path
-        _job_log_file = log_file_path
-        _job_log_file_path = log_file_path
+    _job_log_file, _job_log_file_path = job_state.initialize_job_context(
+        lock=_run_lock,
+        current_job=_current_job,
+        job_log=_job_log,
+        cancel_event=_job_cancelled,
+        output_dir=DEFAULT_OUTPUT_DIR,
+        job_id=job_id,
+        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    )
 
     target = _run_auto_extraction_batches if auto_chain_mode else _run_extraction_job
-    thread_kwargs = dict(
+    thread_kwargs = job_requests.start_thread_kwargs(
         job_id=job_id,
         label=req.label or "extraction",
         dry_run=req.dry_run,
@@ -2299,12 +777,10 @@ def start_job(req: StartJobRequest):
         auto_clean=req.auto_clean,
         auto_publish=req.auto_publish,
         max_chunk_retries=req.api_config.max_chunk_retries,
+        auto_chain_mode=auto_chain_mode,
+        selected_books=selected,
+        auto_batch_size=auto_batch_size,
     )
-    if auto_chain_mode:
-        thread_kwargs["initial_selected_books"] = selected
-        thread_kwargs["batch_size"] = auto_batch_size
-    else:
-        thread_kwargs["selected_books"] = selected
 
     _job_thread = threading.Thread(
         target=target,
@@ -2312,19 +788,18 @@ def start_job(req: StartJobRequest):
         daemon=True,
     )
     _job_thread.start()
-    return {
-        "job_id": job_id,
-        "selected_books": [b.stem for b in selected],
-        "auto_skipped_processed_books": auto_skipped_processed_books,
-        "auto_chain_mode": auto_chain_mode,
-        "auto_batch_size": auto_batch_size if auto_chain_mode else 0,
-        "message": "任务已启动",
-    }
+    return job_requests.start_response(
+        job_id=job_id,
+        selected_books=selected,
+        auto_skipped_processed_books=auto_skipped_processed_books,
+        auto_chain_mode=auto_chain_mode,
+        auto_batch_size=auto_batch_size,
+    )
 
 
 @app.post("/api/runs/{run_name}/resume")
 def resume_run(run_name: str, req: ResumeRunRequest):
-    global _job_thread, _current_job, _job_log
+    global _job_thread, _job_log_file, _job_log_file_path
 
     with _run_lock:
         if _current_job.get("status") == "running":
@@ -2335,65 +810,50 @@ def resume_run(run_name: str, req: ResumeRunRequest):
         raise HTTPException(status_code=404, detail="run_not_found")
 
     manifest = _load_json_file(run_dir / "manifest.json", {})
-    selected = [Path(item) for item in manifest.get("books", []) if str(item).strip()]
-    selected = [path for path in selected if path.exists()]
+    selected = job_requests.selected_books_from_manifest(manifest)
     if not selected:
         raise HTTPException(status_code=400, detail="run_books_not_found")
 
-    cfg_override = dict(manifest.get("config", {}))
-    if manifest.get("model"):
-        cfg_override["model"] = manifest.get("model")
-    if manifest.get("base_url"):
-        cfg_override["base_url"] = manifest.get("base_url")
-    for key, value in req.api_config.model_dump(exclude_unset=True).items():
-        if key in RESUME_FIXED_FIELDS:
-            continue
-        if isinstance(value, str):
-            if value.strip():
-                cfg_override[key] = value
-        elif value is not None:
-            cfg_override[key] = value
+    cfg_override = job_requests.merge_resume_config(
+        manifest=manifest,
+        request_api_config=req.api_config.model_dump(exclude_unset=True),
+        fixed_fields=RESUME_FIXED_FIELDS,
+    )
 
     dry_run = bool(manifest.get("dry_run", False))
     if not dry_run:
         resumed_pipeline = _build_pipeline(cfg_override)
-        if not any(provider.api_key for provider in resumed_pipeline.config.providers if provider.enabled):
+        if not job_requests.enabled_provider_has_api_key(resumed_pipeline):
             raise HTTPException(status_code=400, detail="missing_llm_api_key")
 
     manifest_cfg = manifest.get("config", {})
     job_id = str(uuid4())[:8]
-    with _run_lock:
-        _current_job = {}
-        _job_log.clear()
-        _job_cancelled.clear()
-        log_file_path = DEFAULT_OUTPUT_DIR / f"current_job_{job_id}.log"
-        _write_text_atomic(log_file_path, "", encoding="utf-8")
-        global _job_log_file, _job_log_file_path
-        _job_log_file = log_file_path
-        _job_log_file_path = log_file_path
+    _job_log_file, _job_log_file_path = job_state.initialize_job_context(
+        lock=_run_lock,
+        current_job=_current_job,
+        job_log=_job_log,
+        cancel_event=_job_cancelled,
+        output_dir=DEFAULT_OUTPUT_DIR,
+        job_id=job_id,
+        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    )
 
     auto_chain_mode = bool(req.continue_next_batches)
     target = _run_auto_extraction_batches if auto_chain_mode else _run_extraction_job
-    thread_kwargs = dict(
+    thread_kwargs = job_requests.resume_thread_kwargs(
         job_id=job_id,
-        label=run_name,
+        run_name=run_name,
         dry_run=dry_run,
         cfg_override=cfg_override,
-        chapter_excludes=list(manifest_cfg.get("chapter_excludes", [])),
-        max_chunks_per_book=manifest_cfg.get("max_chunks_per_book"),
-        skip_initial_chunks=int(manifest_cfg.get("skip_initial_chunks_per_book", 0) or 0),
-        chunk_strategy=str(manifest_cfg.get("chunk_strategy", "body_first")),
+        manifest_cfg=manifest_cfg,
         auto_clean=req.auto_clean,
         auto_publish=req.auto_publish,
         max_chunk_retries=int(cfg_override.get("max_chunk_retries", req.api_config.max_chunk_retries)),
+        auto_chain_mode=auto_chain_mode,
+        selected_books=selected,
+        run_dir=run_dir,
+        default_auto_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
     )
-    if auto_chain_mode:
-        thread_kwargs["initial_selected_books"] = selected
-        thread_kwargs["initial_resume_run_dir"] = run_dir
-        thread_kwargs["batch_size"] = DEFAULT_AUTO_BOOK_BATCH_SIZE
-    else:
-        thread_kwargs["selected_books"] = selected
-        thread_kwargs["resume_run_dir"] = run_dir
 
     _job_thread = threading.Thread(
         target=target,
@@ -2401,14 +861,13 @@ def resume_run(run_name: str, req: ResumeRunRequest):
         daemon=True,
     )
     _job_thread.start()
-    return {
-        "job_id": job_id,
-        "run_dir": run_name,
-        "selected_books": [b.stem for b in selected],
-        "auto_chain_mode": auto_chain_mode,
-        "auto_batch_size": DEFAULT_AUTO_BOOK_BATCH_SIZE if auto_chain_mode else 0,
-        "message": "resume_started",
-    }
+    return job_requests.resume_response(
+        job_id=job_id,
+        run_name=run_name,
+        selected_books=selected,
+        auto_chain_mode=auto_chain_mode,
+        default_auto_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
+    )
 
 
 @app.post("/api/job/cancel")
@@ -2425,100 +884,40 @@ def cancel_job():
 @app.get("/api/job/status")
 def job_status():
     """获取当前任务状态快照"""
-    with _run_lock:
-        return dict(_current_job)
+    return job_state.job_status_snapshot(lock=_run_lock, current_job=_current_job)
 
 
 @app.get("/api/job/log")
 def job_log(since: int = 0):
     """获取日志（since=起始序号）"""
-    with _run_lock:
-        entries = _job_log[since:]
-    return {"entries": entries, "total": len(_job_log)}
+    return job_state.job_log_slice(lock=_run_lock, job_log=_job_log, since=since)
 
 
 @app.get("/api/job/stream")
 async def job_stream():
     """SSE 实时推送状态 + 日志"""
     async def generator():
-        sent_log_idx = 0
-        replayed_from_disk = False
-        while True:
-            with _run_lock:
-                state = dict(_current_job)
-                # Replay from disk log file on first fetch (handles page refresh reconnect)
-                if not replayed_from_disk and _job_log_file is not None and _job_log_file.exists():
-                    try:
-                        disk_lines = _job_log_file.read_text(encoding="utf-8").splitlines()
-                        existing_logs = [json.loads(line.lstrip("\ufeff")) for line in disk_lines if line.strip()]
-                        if existing_logs and len(existing_logs) > sent_log_idx:
-                            new_logs = existing_logs[sent_log_idx:]
-                            sent_log_idx = len(existing_logs)
-                    except Exception:
-                        pass
-                    replayed_from_disk = True
-                new_logs = _job_log[sent_log_idx:]
-                sent_log_idx += len(new_logs)
-            payload = json.dumps({
-                "state": state,
-                "logs": new_logs,
-            }, ensure_ascii=False)
-            yield f"data: {payload}\n\n"
-            if (
-                state.get("status") in ("completed", "error", "cancelled")
-                and state.get("phase") == "finished"
-                and not _is_job_thread_alive()
-            ):
-                break
-            await asyncio.sleep(1.0)
+        async for payload in job_state.iter_job_stream_events(
+            lock=_run_lock,
+            current_job=_current_job,
+            job_log=_job_log,
+            get_log_file=lambda: _job_log_file,
+            is_job_thread_alive=_is_job_thread_alive,
+        ):
+            yield payload
     return StreamingResponse(generator(), media_type="text/event-stream")
 
 
 @app.get("/api/runs")
 def list_runs(page: int = 1, page_size: int = 20):
     """列出历史运行记录"""
-    output_dir = DEFAULT_OUTPUT_DIR
-    if not output_dir.exists():
-        return {
-            "runs": [],
-            "total": 0,
-            "page": max(1, int(page or 1)),
-            "page_size": max(1, min(int(page_size or 20), 100)),
-            "total_pages": 0,
-        }
-    page = max(1, int(page or 1))
-    page_size = max(1, min(int(page_size or 20), 100))
-    runs = sorted((p for p in output_dir.iterdir() if p.is_dir()), reverse=True)
-    total = len(runs)
-    total_pages = (total + page_size - 1) // page_size if total else 0
-    start = (page - 1) * page_size
-    end = start + page_size
-    result = []
-    for run_dir in runs[start:end]:
-        state_path = run_dir / "state.json"
-        manifest_path = run_dir / "manifest.json"
-        state = _load_json_file(state_path, {})
-        manifest = _load_json_file(manifest_path, {})
-        publish_status = _load_publish_status(run_dir)
-        result.append({
-            "run_dir": run_dir.name,
-            "status": state.get("status", "unknown"),
-            "books_total": state.get("books_total", 0),
-            "books_completed": state.get("books_completed", 0),
-            "total_triples": state.get("total_triples", 0),
-            "chunk_errors": state.get("chunk_errors", 0),
-            "model": manifest.get("model", ""),
-            "created_at": manifest.get("created_at", ""),
-            "dry_run": manifest.get("dry_run", False),
-            "publish_status": publish_status,
-        })
-    return {
-        "runs": result,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "total_pages": total_pages,
-    }
+    return runs_api.list_runs_payload(
+        output_dir=DEFAULT_OUTPUT_DIR,
+        load_json_file=_load_json_file,
+        load_publish_status=_load_publish_status,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @app.get("/api/runs/{run_name}/resume-config")
@@ -2527,52 +926,12 @@ def run_resume_config(run_name: str):
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
-
-    manifest = _load_json_file(run_dir / "manifest.json", {})
-    state = _load_json_file(run_dir / "state.json", {})
-    manifest_cfg = manifest.get("config", {}) if isinstance(manifest.get("config", {}), dict) else {}
-
-    return {
-        "run_dir": run_name,
-        "status": state.get("status", "unknown"),
-        "dry_run": bool(manifest.get("dry_run", False)),
-        "progress": {
-            "chunks_completed": int(state.get("chunks_completed", 0) or 0),
-            "chunks_total": int(state.get("chunks_total", 0) or 0),
-            "books_completed": int(state.get("books_completed", 0) or 0),
-            "books_total": int(state.get("books_total", 0) or 0),
-            "total_triples": int(state.get("total_triples", 0) or 0),
-            "chunk_errors": int(state.get("chunk_errors", 0) or 0),
-        },
-        "api_config": {
-            "model": str(manifest.get("model", "") or ""),
-            "base_url": str(manifest.get("base_url", "") or ""),
-            "request_timeout": float(manifest_cfg.get("request_timeout", 314.0) or 314.0),
-            "max_retries": int(manifest_cfg.get("max_retries", 2) or 2),
-            "request_delay": float(manifest_cfg.get("request_delay", 1.1) or 1.1),
-            "retry_backoff_base": float(manifest_cfg.get("retry_backoff_base", 2.0) or 2.0),
-            "parallel_workers": int(manifest_cfg.get("parallel_workers", 11) or 11),
-            "max_chunk_retries": int(manifest_cfg.get("max_chunk_retries", 2) or 2),
-        },
-        "notes": {
-            "publish_json": "import_sqlite_runtime_graph",
-            "publish_nebula": "import_sqlite_runtime_graph_then_write_nebulagraph",
-            "resume_safe_fields": [
-                "model",
-                "base_url",
-                "api_key",
-                "request_timeout",
-                "max_retries",
-                "request_delay",
-                "retry_backoff_base",
-                "parallel_workers",
-                "max_chunk_retries",
-                "auto_clean",
-                "auto_publish",
-            ],
-            "resume_fixed_fields": sorted(RESUME_FIXED_FIELDS),
-        },
-    }
+    return runs_api.resume_config_payload(
+        run_name=run_name,
+        run_dir=run_dir,
+        load_json_file=_load_json_file,
+        resume_fixed_fields=RESUME_FIXED_FIELDS,
+    )
 
 
 @app.get("/api/runs/{run_name}/triples")
@@ -2581,22 +940,7 @@ def run_triples(run_name: str, limit: int = 50):
     run_dir = DEFAULT_OUTPUT_DIR / run_name
     if not run_dir.exists():
         raise HTTPException(status_code=404, detail="run_not_found")
-    # 优先用 cleaned，没有则用 normalized
-    jsonl = run_dir / "triples.cleaned.jsonl"
-    source_kind = "cleaned"
-    if not jsonl.exists():
-        jsonl = run_dir / "triples.normalized.jsonl"
-        source_kind = "normalized"
-    rows = []
-    if jsonl.exists():
-        with jsonl.open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    rows.append(json.loads(line.lstrip("\ufeff")))
-                if len(rows) >= limit:
-                    break
-    return {"run_dir": run_name, "rows": rows, "count": len(rows), "source_kind": source_kind, "source_path": str(jsonl)}
+    return runs_api.run_triples_payload(run_name=run_name, run_dir=run_dir, limit=limit)
 
 
 @app.post("/api/runs/{run_name}/clean")
@@ -2687,107 +1031,14 @@ def publish_unpublished_runs_nebula():
 
 @app.post("/api/runs/publish/stop-all")
 def stop_all_publish_tasks():
-    stopped_runs: list[str] = []
-    with _publish_lock:
-        queued_tasks = list(_publish_queue)
-        _publish_queue.clear()
-        _publish_worker_wakeup.clear()
-    for task in queued_tasks:
-        run_name = str(task.get("run_name", "") or "").strip()
-        kind = str(task.get("kind", "") or "json").strip()
-        if not run_name:
-            continue
-        run_dir = DEFAULT_OUTPUT_DIR / run_name
-        if not run_dir.exists():
-            continue
-        if kind == "nebula":
-            _update_publish_status(
-                run_dir,
-                "nebula",
-                {
-                    "status": "error",
-                    "published": False,
-                    "finished_at": _now_iso(),
-                    "error": "cancelled_from_queue",
-                },
-            )
-        else:
-            _update_publish_status(
-                run_dir,
-                "json",
-                {
-                    "status": "error",
-                    "published": False,
-                    "finished_at": _now_iso(),
-                    "error": "cancelled_from_queue",
-                },
-            )
-        stopped_runs.append(f"{run_name}:{kind}")
-
-    active_run = ""
-    with _publish_lock:
-        if isinstance(_active_publish_task, dict):
-            active_run = str(_active_publish_task.get("run_name", "") or "").strip()
-
-    if active_run:
-        active_dir = DEFAULT_OUTPUT_DIR / active_run
-        if active_dir.exists():
-            status = _load_publish_status(active_dir)
-            for section in ("json", "nebula"):
-                current = status.get(section, {})
-                if current.get("status") == "running":
-                    _update_publish_status(
-                        active_dir,
-                        section,
-                        {
-                            "status": "error",
-                            "published": False,
-                            "finished_at": _now_iso(),
-                            "error": "marked_stopped_manually; restart server if worker is still blocked",
-                        },
-                    )
-                    stopped_runs.append(f"{active_run}:{section}")
-
-    if DEFAULT_OUTPUT_DIR.exists():
-        for run_dir in DEFAULT_OUTPUT_DIR.iterdir():
-            if not run_dir.is_dir():
-                continue
-            status = _load_publish_status(run_dir)
-            for section in ("json", "nebula"):
-                current = status.get(section, {})
-                if current.get("status") not in {"queued", "running"}:
-                    continue
-                marker = f"{run_dir.name}:{section}"
-                if marker in stopped_runs:
-                    continue
-                _update_publish_status(
-                    run_dir,
-                    section,
-                    {
-                        "status": "error",
-                        "published": False,
-                        "finished_at": _now_iso(),
-                        "error": "stopped_manually_or_server_restarted",
-                    },
-                )
-                stopped_runs.append(marker)
-    return {
-        "stopped": stopped_runs,
-    }
+    return _publish_runtime.stop_all()
 
 
 @app.get("/api/graph/stats")
 def graph_stats():
     """当前 runtime 图谱的统计信息"""
     try:
-        stats = _runtime_graph_store().stats()
-        return {
-            "exists": bool(stats["exists"]),
-            "total_triples": int(stats["total_triples"]),
-            "evidence_count": int(stats["evidence_count"]),
-            "predicate_dist": [(item["predicate"], int(item["count"])) for item in stats["predicate_dist"]],
-            "book_dist": [(item["name"], int(item["count"])) for item in stats["book_dist"]],
-        }
+        return graph_admin.graph_stats_payload(_runtime_graph_store)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2795,22 +1046,13 @@ def graph_stats():
 @app.get("/api/graph/books")
 def graph_books(limit: int = 200, q: str = ""):
     try:
-        store = _runtime_graph_store()
-        rows = store.list_books(limit=max(1, limit), keyword=q.strip())
-        processed_stems = _get_processed_book_stems()
-        return {
-            "exists": bool(store.stats()["exists"]),
-            "books": [
-                {
-                    "name": row["name"],
-                    "triple_count": int(row["triple_count"]),
-                    "processed": row["name"] in processed_stems,
-                }
-                for row in rows
-            ],
-            "total": store.total_books(q.strip()),
-            "force_unprocessed": _load_book_status_overrides().get("force_unprocessed", []),
-        }
+        return graph_admin.graph_books_payload(
+            runtime_graph_store=_runtime_graph_store,
+            processed_books_provider=_get_processed_book_stems,
+            book_overrides_provider=_load_book_status_overrides,
+            limit=limit,
+            keyword=q,
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2818,13 +1060,11 @@ def graph_books(limit: int = 200, q: str = ""):
 @app.get("/api/graph/books/{book_name}/triples")
 def graph_book_triples(book_name: str, limit: int = 200):
     try:
-        store = _runtime_graph_store()
-        matched = store.book_triples(book_name, limit=max(1, limit))
-        return {
-            "book": book_name,
-            "total": store.book_total(book_name),
-            "rows": matched[: max(1, limit)],
-        }
+        return graph_admin.graph_book_triples_payload(
+            runtime_graph_store=_runtime_graph_store,
+            book_name=book_name,
+            limit=limit,
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -2861,13 +1101,13 @@ def get_env_config():
         fallback_api_key=api_key,
         fallback_base_url=base_url,
     )
-    return {
-        "model": model,
-        "base_url": base_url,
-        "api_key_set": bool(api_key),
-        "api_key_hint": (api_key[:4] + "..." + api_key[-4:]) if len(api_key) > 8 else ("已设置" if api_key else "未设置"),
-        "providers": [_provider_to_dict(provider) for provider in providers],
-    }
+    return diagnostics_api.env_config_payload(
+        model=model,
+        base_url=base_url,
+        api_key=api_key,
+        providers=providers,
+        provider_to_dict=_provider_to_dict,
+    )
 
 
 @app.post("/api/job/test-call")
@@ -2875,53 +1115,14 @@ def test_api_call(req: StartJobRequest):
     """诊断接口：拿第一本书的第一个 chunk 测试 API，返回原始 LLM 响应和解析结果"""
     try:
         pipeline = _build_pipeline(req.api_config.model_dump())
-        books = pipeline.discover_books()
-        if not books:
-            raise HTTPException(status_code=400, detail="没有可用的书籍")
-        tasks = pipeline.schedule_book_chunks(
-            book_path=books[0],
-            chapter_excludes=req.chapter_excludes or None,
-            max_chunks_per_book=1,
-            skip_initial_chunks_per_book=0,
-            chunk_strategy=req.chunk_strategy or "body_first",
+        return diagnostics_api.test_api_call_payload(
+            pipeline,
+            chapter_excludes=req.chapter_excludes,
+            chunk_strategy=req.chunk_strategy,
+            provider_to_dict=_provider_to_dict,
         )
-        if not tasks:
-            raise HTTPException(status_code=400, detail="该书没有可处理的 chunk")
-        task = tasks[0]
-
-        prompt = pipeline.build_prompt(
-            book_name=task.book_name,
-            chapter_name=task.chapter_name,
-            text_chunk=task.text_chunk,
-        )
-        llm_payload = pipeline.call_llm(prompt)
-        meta = llm_payload.get("__meta__", {}) if isinstance(llm_payload, dict) else {}
-        raw_content = str(meta.get("raw_text", ""))
-        parsed = llm_payload
-
-        triples_normalized = pipeline.normalize_triples(
-            payload=parsed if isinstance(parsed, dict) else {"triples": parsed if isinstance(parsed, list) else []},
-            book_name=task.book_name,
-            chapter_name=task.chapter_name,
-        )
-
-        return {
-            "book": task.book_name,
-            "chapter": task.chapter_name,
-            "chunk_chars": len(task.text_chunk),
-            "model": pipeline.config.model,
-            "base_url": pipeline.config.base_url,
-            "api_key_prefix": (pipeline.config.api_key[:4] + "...") if len(pipeline.config.api_key) > 4 else pipeline.config.api_key,
-            "providers": [_provider_to_dict(provider) for provider in pipeline.config.providers],
-            "llm_provider_name": meta.get("provider_name"),
-            "llm_provider_model": meta.get("provider_model"),
-            "llm_provider_base_url": meta.get("provider_base_url"),
-            "raw_response_length": len(str(raw_content)),
-            "raw_response_preview": str(raw_content)[:300],
-            "parsed_triples_count": len(triples_normalized),
-            "parsed_sample": [{"subject": r.subject, "predicate": r.predicate, "object": r.object} for r in triples_normalized[:3]],
-            "status_code": 200,
-        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}")
 
@@ -2952,7 +1153,7 @@ if __name__ == "__main__":
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
 
-    print(f"🚀 TCM Pipeline Console 启动中...")
+    print("🚀 TCM Pipeline Console 启动中...")
     print(f"   访问地址: http://{args.host}:{args.port}")
     print(f"   书库路径: {DEFAULT_BOOKS_DIR}")
     print(f"   输出目录: {DEFAULT_OUTPUT_DIR}")

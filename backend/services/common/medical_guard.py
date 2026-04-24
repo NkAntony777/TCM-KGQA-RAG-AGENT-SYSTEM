@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import re
 
 
 class RiskLevel(str, Enum):
@@ -100,6 +101,17 @@ _ACADEMIC_DOSAGE_CONTEXT_PATTERNS: tuple[str, ...] = (
     "文献",
     "研究",
 )
+
+_EXAM_QUERY_CONTEXT_PATTERNS: tuple[str, ...] = (
+    "选择题",
+    "选项",
+    "题目",
+    "下列",
+    "单选题",
+    "多选题",
+)
+
+_CHOICE_MARKER_RE = re.compile(r"(?m)^\s*[A-Z][\.\:：]")
 
 # 高风险：附加免责声明 + 强烈建议就医
 _HIGH_RISK_PATTERNS: tuple[str, ...] = (
@@ -208,7 +220,7 @@ def assess_query(query: str) -> GuardResult:
     matched: list[str] = []
 
     if _should_refuse_dosage_query(text, lowered_text):
-        matched.extend(pattern for pattern in _DOSAGE_TRIGGER_PATTERNS if pattern in text or pattern in lowered_text)
+        matched.extend(pattern for pattern in _DOSAGE_TRIGGER_PATTERNS if _contains_guard_pattern(text, lowered_text, pattern))
         return GuardResult(
             risk_level=RiskLevel.HIGH_RISK,
             matched_patterns=matched,
@@ -268,8 +280,25 @@ def append_disclaimer(answer: str, disclaimer: str) -> str:
 
 
 def _should_refuse_dosage_query(text: str, lowered_text: str) -> bool:
-    if not any(pattern in text or pattern in lowered_text for pattern in _DOSAGE_TRIGGER_PATTERNS):
+    if not _contains_any_guard_pattern(text, lowered_text, _DOSAGE_TRIGGER_PATTERNS):
         return False
-    if any(pattern in text or pattern in lowered_text for pattern in _ACADEMIC_DOSAGE_CONTEXT_PATTERNS):
+    if _contains_any_guard_pattern(text, lowered_text, _ACADEMIC_DOSAGE_CONTEXT_PATTERNS):
         return False
-    return any(pattern in text or pattern in lowered_text for pattern in _ACTIONABLE_DOSAGE_PATTERNS)
+    if any(pattern in text for pattern in _EXAM_QUERY_CONTEXT_PATTERNS):
+        return False
+    if len(_CHOICE_MARKER_RE.findall(text)) >= 2:
+        return False
+    return _contains_any_guard_pattern(text, lowered_text, _ACTIONABLE_DOSAGE_PATTERNS)
+
+
+def _contains_any_guard_pattern(text: str, lowered_text: str, patterns: tuple[str, ...]) -> bool:
+    return any(_contains_guard_pattern(text, lowered_text, pattern) for pattern in patterns)
+
+
+def _contains_guard_pattern(text: str, lowered_text: str, pattern: str) -> bool:
+    probe = pattern.strip()
+    if not probe:
+        return False
+    if probe.isascii():
+        return probe.lower() in lowered_text
+    return probe in text

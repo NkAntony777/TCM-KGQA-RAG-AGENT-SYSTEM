@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -39,19 +40,20 @@ class NebulaGraphSettings:
     host: str = "127.0.0.1"
     port: int = 9669
     user: str = "root"
-    password: str = "nebula"
+    password: str = ""
     space: str = "tcm_kg"
     vid_max_length: int = 64
     timeout_ms: int = 8000
 
 
 def load_nebula_settings() -> NebulaGraphSettings:
+    space = _validate_nebula_identifier(os.getenv("NEBULA_SPACE", "tcm_kg").strip() or "tcm_kg")
     return NebulaGraphSettings(
         host=os.getenv("NEBULA_HOST", "127.0.0.1").strip() or "127.0.0.1",
         port=int(os.getenv("NEBULA_PORT", "9669").strip() or "9669"),
         user=os.getenv("NEBULA_USER", "root").strip() or "root",
-        password=os.getenv("NEBULA_PASSWORD", "nebula").strip() or "nebula",
-        space=os.getenv("NEBULA_SPACE", "tcm_kg").strip() or "tcm_kg",
+        password=os.getenv("NEBULA_PASSWORD", "").strip(),
+        space=space,
         vid_max_length=int(os.getenv("NEBULA_VID_MAX_LENGTH", "64").strip() or "64"),
         timeout_ms=int(os.getenv("NEBULA_TIMEOUT_MS", "8000").strip() or "8000"),
     )
@@ -83,11 +85,18 @@ def _escape_ngql(value: str) -> str:
     return (
         (value or "")
         .replace("\\", "\\\\")
+        .replace("`", "\\`")
         .replace('"', '\\"')
         .replace("\r", "\\r")
         .replace("\n", "\\n")
         .replace("\t", "\\t")
     )
+
+
+def _validate_nebula_identifier(value: str) -> str:
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value or ""):
+        raise ValueError(f"invalid_nebula_identifier:{value!r}")
+    return value
 
 
 def _load_evidence_map(path: Path | None) -> dict[str, dict[str, Any]]:

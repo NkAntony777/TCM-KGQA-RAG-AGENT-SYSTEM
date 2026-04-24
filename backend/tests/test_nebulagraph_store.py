@@ -1,19 +1,34 @@
 ﻿from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from services.graph_service.nebulagraph_store import (
     NebulaGraphStore,
+    NebulaGraphSettings,
+    _escape_ngql,
     edge_rank,
     entity_vid,
     load_graph_rows,
+    load_nebula_settings,
 )
 
 
 class TestNebulaGraphStore(unittest.TestCase):
+    def test_default_password_is_not_hardcoded(self) -> None:
+        self.assertEqual(NebulaGraphSettings().password, "")
+
+    def test_load_settings_does_not_default_to_nebula_password(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(load_nebula_settings().password, "")
+
+    def test_escape_ngql_escapes_backtick_and_quotes(self) -> None:
+        self.assertEqual(_escape_ngql('a`b"c'), 'a\\`b\\"c')
+
     def test_entity_vid_is_stable(self) -> None:
         self.assertEqual(entity_vid("六味地黄丸"), entity_vid("六味地黄丸"))
         self.assertNotEqual(entity_vid("六味地黄丸"), entity_vid("四君子汤"))

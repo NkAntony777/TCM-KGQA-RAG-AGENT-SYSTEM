@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from scripts.tcm_triple_console import (
+from services.triple_pipeline_service import (
     DEFAULT_OUTPUT_DIR,
     PipelineConfig,
     TCMTriplePipeline,

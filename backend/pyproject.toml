@@ -29,7 +29,52 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
   "pytest>=8.4.0,<9.0.0",
+  "ruff>=0.14.0,<1.0.0",
+  "vulture>=2.14,<3.0",
 ]
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+target-version = "py311"
+line-length = 140
+exclude = [
+  ".venv",
+  ".uv-cache",
+  ".uv-cache-local",
+  "_tmp_test",
+  "_tmp_uv_cache",
+  "storage",
+  "workspace",
+  "services/graph_service/data",
+  "services/graph_service/logs",
+  "services/retrieval_service/data",
+  "eval/Results",
+  "eval/TCM-PA",
+  "eval/TCM-SDT",
+  "eval/TCMBench",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/pipeline_server.py" = ["E402"]
+
+[tool.vulture]
+min_confidence = 80
+paths = ["services", "scripts", "tools", "graph", "router"]
+exclude = [
+  ".venv/",
+  ".uv-cache/",
+  ".uv-cache-local/",
+  "_tmp_test/",
+  "_tmp_uv_cache/",
+  "storage/",
+  "workspace/",
+  "services/graph_service/data/",
+  "services/graph_service/logs/",
+  "services/retrieval_service/data/",
+  "eval/Results/",
+  "eval/TCM-PA/",
+  "eval/TCM-SDT/",
+  "eval/TCMBench/",
+]

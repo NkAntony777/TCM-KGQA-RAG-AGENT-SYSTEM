@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+import threading
 import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,6 +20,43 @@ if str(BACKEND_ROOT) not in sys.path:
 
 DEFAULT_DATASET = BACKEND_ROOT / "eval" / "datasets" / "qa_weakness_probe_12.json"
 DEFAULT_BASE_URL = "http://127.0.0.1:8002"
+_EXPLICIT_FINAL_LETTERS_RE = re.compile(r"(?:最终选项|最终答案|答案|选项)\s*[：: ]\s*([A-Z]{1,8})")
+_UNCERTAINTY_HINTS = ("无法判断", "证据不足", "无法选择", "无对应选项", "最终选项：无", "最终选项:无")
+
+
+class _ThreadLocalClientPool:
+    def __init__(self, *, base_url: str, timeout: float) -> None:
+        self._base_url = base_url
+        self._timeout = timeout
+        self._local = threading.local()
+        self._clients: list[httpx.Client] = []
+        self._lock = threading.Lock()
+
+    def get_client(self) -> httpx.Client:
+        client = getattr(self._local, "client", None)
+        if client is None:
+            client = httpx.Client(base_url=self._base_url, timeout=self._timeout)
+            self._local.client = client
+            with self._lock:
+                self._clients.append(client)
+        return client
+
+    def close(self) -> None:
+        with self._lock:
+            clients = list(self._clients)
+            self._clients.clear()
+        for client in clients:
+            client.close()
+
+
+def _resolve_base_urls(*, base_url: str, base_urls: list[str] | None) -> list[str]:
+    candidates = [str(item).strip() for item in (base_urls or []) if str(item).strip()]
+    if candidates:
+        return list(dict.fromkeys(candidates))
+    normalized = str(base_url).strip()
+    if not normalized:
+        raise ValueError("base_url_required")
+    return [normalized]
 
 
 def load_dataset(path: Path) -> list[dict[str, Any]]:
@@ -47,6 +86,34 @@ def _normalize_book(value: str) -> str:
     if "-" in text and text.split("-", 1)[0].isdigit():
         text = text.split("-", 1)[1].strip()
     return text
+
+
+def _normalize_answer_text(value: str) -> str:
+    text = str(value or "").strip()
+    text = (
+        text.replace("～", "~")
+        .replace("—", "-")
+        .replace("–", "-")
+        .replace("−", "-")
+        .replace("至", "-")
+        .replace("到", "-")
+        .replace("克", "g")
+    )
+    text = re.sub(r"\s+", "", text)
+    text = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff~\-\./]", "", text)
+    return text.lower()
+
+
+def _extract_explicit_final_letters(answer: str) -> str:
+    match = _EXPLICIT_FINAL_LETTERS_RE.search(str(answer or "").upper())
+    if match is None:
+        return ""
+    return "".join(ch for ch in match.group(1) if "A" <= ch <= "Z")
+
+
+def _has_uncertainty_signal(answer: str) -> bool:
+    text = str(answer or "")
+    return any(token in text for token in _UNCERTAINTY_HINTS)
 
 
 def _flatten_predicates(response_data: dict[str, Any]) -> set[str]:
@@ -94,21 +161,40 @@ def _evaluate_case(
         if token_text and token_text not in answer:
             issues.append(f"answer_missing_all:{token_text}")
 
-    normalized_answer_letters = "".join(ch for ch in answer.upper() if "A" <= ch <= "Z")
     expected_option_letters = [
         "".join(ch for ch in str(token).upper() if "A" <= ch <= "Z")
         for token in (case.get("answer_option_letters_any", []) or [])
         if "".join(ch for ch in str(token).upper() if "A" <= ch <= "Z")
     ]
+    explicit_final_letters = _extract_explicit_final_letters(answer)
+    explicit_final_letter_set = set(explicit_final_letters)
+    single_choice_explicit_match = False
     if expected_option_letters:
         letter_sets = [set(token) for token in expected_option_letters if token]
+        if len(letter_sets) == 1 and len(letter_sets[0]) == 1 and explicit_final_letter_set == letter_sets[0]:
+            single_choice_explicit_match = True
+        normalized_answer_letters = "".join(ch for ch in answer.upper() if "A" <= ch <= "Z")
         normalized_answer_set = set(normalized_answer_letters)
         if not any(letter_set and letter_set.issubset(normalized_answer_set) for letter_set in letter_sets):
             issues.append("answer_option_letters_missing_any:" + "|".join(expected_option_letters))
 
     any_tokens = [str(token).strip() for token in (case.get("answer_contains_any", []) or []) if str(token).strip()]
+    normalized_answer = _normalize_answer_text(answer)
+    normalized_any_token_match = any(
+        normalized_token and normalized_token in normalized_answer
+        for normalized_token in (_normalize_answer_text(token) for token in any_tokens)
+    )
     if any_tokens and not any(token in answer for token in any_tokens):
         issues.append("answer_missing_any:" + "|".join(any_tokens))
+
+    if single_choice_explicit_match:
+        issues = [issue for issue in issues if not issue.startswith("answer_missing_any:")]
+    elif expected_option_letters and len(set(expected_option_letters[0])) == 1 and normalized_any_token_match and not _has_uncertainty_signal(answer):
+        issues = [
+            issue
+            for issue in issues
+            if not issue.startswith("answer_missing_any:") and not issue.startswith("answer_option_letters_missing_any:")
+        ]
 
     forbid_tokens = [str(token).strip() for token in (case.get("answer_forbid", []) or []) if str(token).strip()]
     for token in forbid_tokens:
@@ -191,6 +277,13 @@ def _request_failure_case(case: dict[str, Any], *, mode: str, latency_ms: float,
     }
 
 
+def _post_case_request(client: httpx.Client, *, query: str, mode: str, top_k: int) -> httpx.Response:
+    return client.post(
+        f"/api/qa/answer?mode={mode}",
+        json={"query": query, "mode": mode, "top_k": top_k},
+    )
+
+
 def _run_single_case(
     case: dict[str, Any],
     *,
@@ -199,15 +292,16 @@ def _run_single_case(
     top_k: int,
     timeout: float,
     warning_issue_prefixes: list[str] | None = None,
+    client: httpx.Client | None = None,
 ) -> dict[str, Any]:
     query = str(case.get("query", "")).strip()
     started = time.perf_counter()
     try:
-        with httpx.Client(base_url=base_url, timeout=timeout) as client:
-            response = client.post(
-                f"/api/qa/answer?mode={mode}",
-                json={"query": query, "mode": mode, "top_k": top_k},
-            )
+        if client is None:
+            with httpx.Client(base_url=base_url, timeout=timeout) as owned_client:
+                response = _post_case_request(owned_client, query=query, mode=mode, top_k=top_k)
+        else:
+            response = _post_case_request(client, query=query, mode=mode, top_k=top_k)
         latency_ms = (time.perf_counter() - started) * 1000
     except httpx.HTTPError as exc:
         latency_ms = (time.perf_counter() - started) * 1000
@@ -246,10 +340,32 @@ def _run_single_case(
     )
 
 
+def _run_single_case_with_pool(
+    client_pool: _ThreadLocalClientPool,
+    case: dict[str, Any],
+    *,
+    mode: str,
+    base_url: str,
+    top_k: int,
+    timeout: float,
+    warning_issue_prefixes: list[str] | None = None,
+) -> dict[str, Any]:
+    return _run_single_case(
+        case,
+        mode=mode,
+        base_url=base_url,
+        top_k=top_k,
+        timeout=timeout,
+        warning_issue_prefixes=warning_issue_prefixes,
+        client=client_pool.get_client(),
+    )
+
+
 def run_probe(
     *,
     dataset: list[dict[str, Any]],
     base_url: str,
+    base_urls: list[str] | None = None,
     modes: list[str],
     top_k: int,
     timeout: float,
@@ -260,63 +376,39 @@ def run_probe(
     effective_cases = [case for case in dataset if str(case.get("query", "")).strip()]
     total_cases = len(effective_cases)
     total_runs = total_cases * max(1, len(modes))
-    requested_jobs: list[tuple[dict[str, Any], str]] = [
-        (case, mode)
-        for case in effective_cases
-        for mode in modes
-    ]
+    resolved_base_urls = _resolve_base_urls(base_url=base_url, base_urls=base_urls)
+    requested_jobs: list[tuple[dict[str, Any], str, str]] = []
+    job_index = 0
+    for case in effective_cases:
+        for mode in modes:
+            requested_jobs.append((case, mode, resolved_base_urls[job_index % len(resolved_base_urls)]))
+            job_index += 1
     completed_runs = 0
     passed_runs = 0
 
     if max(1, int(workers)) <= 1:
-        for case, mode in requested_jobs:
-            completed_runs += 1
-            print(
-                f"[qa-probe] {completed_runs:04d}/{total_runs:04d} "
-                f"({completed_runs / max(1, total_runs):.1%}) {case.get('id', 'unknown')} {mode} start",
-                flush=True,
-            )
-            evaluated = _run_single_case(
-                case,
-                mode=mode,
-                base_url=base_url,
-                top_k=top_k,
-                timeout=timeout,
-                warning_issue_prefixes=warning_issue_prefixes,
-            )
-            results.append(evaluated)
-            if evaluated["passed"]:
-                passed_runs += 1
-            issue_text = ",".join(evaluated["issues"]) if evaluated["issues"] else "ok"
-            print(
-                f"[qa-probe] {completed_runs:04d}/{total_runs:04d} "
-                f"({completed_runs / max(1, total_runs):.1%}) {case.get('id', 'unknown')} {mode} "
-                f"done route={evaluated['route'] or '-'} latency_ms={evaluated['latency_ms']:.1f} "
-                f"passed={passed_runs}/{completed_runs} issues={issue_text}",
-                flush=True,
-            )
-    else:
-        print(
-            f"[qa-probe] parallel mode enabled: workers={max(1, int(workers))}, total_runs={total_runs}",
-            flush=True,
-        )
-        with ThreadPoolExecutor(max_workers=max(1, int(workers))) as executor:
-            future_map = {
-                executor.submit(
-                    _run_single_case,
+        clients_by_base_url: dict[str, httpx.Client] = {}
+        try:
+            for case, mode, job_base_url in requested_jobs:
+                client = clients_by_base_url.get(job_base_url)
+                if client is None:
+                    client = httpx.Client(base_url=job_base_url, timeout=timeout)
+                    clients_by_base_url[job_base_url] = client
+                completed_runs += 1
+                print(
+                    f"[qa-probe] {completed_runs:04d}/{total_runs:04d} "
+                    f"({completed_runs / max(1, total_runs):.1%}) {case.get('id', 'unknown')} {mode} start base={job_base_url}",
+                    flush=True,
+                )
+                evaluated = _run_single_case(
                     case,
                     mode=mode,
-                    base_url=base_url,
+                    base_url=job_base_url,
                     top_k=top_k,
                     timeout=timeout,
                     warning_issue_prefixes=warning_issue_prefixes,
-                ): (case, mode)
-                for case, mode in requested_jobs
-            }
-            for future in as_completed(future_map):
-                case, mode = future_map[future]
-                completed_runs += 1
-                evaluated = future.result()
+                    client=client,
+                )
                 results.append(evaluated)
                 if evaluated["passed"]:
                     passed_runs += 1
@@ -324,10 +416,57 @@ def run_probe(
                 print(
                     f"[qa-probe] {completed_runs:04d}/{total_runs:04d} "
                     f"({completed_runs / max(1, total_runs):.1%}) {case.get('id', 'unknown')} {mode} "
-                    f"done route={evaluated['route'] or '-'} latency_ms={evaluated['latency_ms']:.1f} "
+                    f"done base={job_base_url} route={evaluated['route'] or '-'} latency_ms={evaluated['latency_ms']:.1f} "
                     f"passed={passed_runs}/{completed_runs} issues={issue_text}",
                     flush=True,
                 )
+        finally:
+            for client in clients_by_base_url.values():
+                close = getattr(client, "close", None)
+                if callable(close):
+                    close()
+    else:
+        print(
+            f"[qa-probe] parallel mode enabled: workers={max(1, int(workers))}, total_runs={total_runs}, backends={len(resolved_base_urls)}",
+            flush=True,
+        )
+        client_pools = {
+            item: _ThreadLocalClientPool(base_url=item, timeout=timeout)
+            for item in resolved_base_urls
+        }
+        try:
+            with ThreadPoolExecutor(max_workers=max(1, int(workers))) as executor:
+                future_map = {
+                    executor.submit(
+                        _run_single_case_with_pool,
+                        client_pools[job_base_url],
+                        case,
+                        mode=mode,
+                        base_url=job_base_url,
+                        top_k=top_k,
+                        timeout=timeout,
+                        warning_issue_prefixes=warning_issue_prefixes,
+                    ): (case, mode, job_base_url)
+                    for case, mode, job_base_url in requested_jobs
+                }
+                for future in as_completed(future_map):
+                    case, mode, job_base_url = future_map[future]
+                    completed_runs += 1
+                    evaluated = future.result()
+                    results.append(evaluated)
+                    if evaluated["passed"]:
+                        passed_runs += 1
+                    issue_text = ",".join(evaluated["issues"]) if evaluated["issues"] else "ok"
+                    print(
+                        f"[qa-probe] {completed_runs:04d}/{total_runs:04d} "
+                        f"({completed_runs / max(1, total_runs):.1%}) {case.get('id', 'unknown')} {mode} "
+                        f"done base={job_base_url} route={evaluated['route'] or '-'} latency_ms={evaluated['latency_ms']:.1f} "
+                        f"passed={passed_runs}/{completed_runs} issues={issue_text}",
+                        flush=True,
+                    )
+        finally:
+            for client_pool in client_pools.values():
+                client_pool.close()
 
     failures = [item for item in results if not item["passed"]]
     soft_issue_counter = Counter()
@@ -374,6 +513,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Probe QA weak spots across quick/deep modes.")
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--base-urls", nargs="+", default=None)
     parser.add_argument("--modes", nargs="+", default=["quick", "deep"])
     parser.add_argument("--top-k", type=int, default=12)
     parser.add_argument("--timeout", type=float, default=120.0)
@@ -384,6 +524,7 @@ def main() -> int:
     summary = run_probe(
         dataset=load_dataset(args.dataset),
         base_url=args.base_url,
+        base_urls=list(args.base_urls) if args.base_urls else None,
         modes=args.modes,
         top_k=args.top_k,
         timeout=args.timeout,

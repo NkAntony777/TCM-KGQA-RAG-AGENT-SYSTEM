@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from services.qa_service.models import ALLOWED_PLANNER_GAPS, AnswerMode
 from services.qa_service.skill_registry import RuntimeSkill
+
+
+_CHOICE_OPTION_LINE_RE = re.compile(r"(?m)^\s*([A-Z])[\.\:：]\s*(.+?)\s*$")
+_EXPLICIT_CHOICE_LETTERS_RE = re.compile(r"(?:最终选项|最终答案|答案|选项)\s*[：: ]\s*([A-Z]{1,8})")
+_NON_ALNUM_CJK_RE = re.compile(r"[^0-9A-Za-z\u4e00-\u9fff]+")
 
 
 def _planner_factual_summary(items: list[dict[str, Any]], *, limit: int = 4) -> list[str]:
@@ -52,6 +58,64 @@ def _planner_trace_summary(steps: list[dict[str, Any]], *, limit: int = 2) -> li
             )
         )
     return summary
+
+
+def _normalize_choice_text(text: str) -> str:
+    return _NON_ALNUM_CJK_RE.sub("", str(text or "")).lower()
+
+
+def _extract_multiple_choice_options(query: str) -> list[tuple[str, str]]:
+    options: list[tuple[str, str]] = []
+    seen_letters: set[str] = set()
+    for match in _CHOICE_OPTION_LINE_RE.finditer(str(query or "")):
+        letter = match.group(1).upper()
+        option_text = match.group(2).strip()
+        if not option_text or letter in seen_letters:
+            continue
+        seen_letters.add(letter)
+        options.append((letter, option_text))
+    return options
+
+
+def _infer_multiple_choice_letters(query: str, answer: str) -> str:
+    options = _extract_multiple_choice_options(query)
+    if len(options) < 2:
+        return ""
+    valid_letters = {letter for letter, _ in options}
+    explicit_match = _EXPLICIT_CHOICE_LETTERS_RE.search(str(answer or "").upper())
+    if explicit_match:
+        explicit_letters = "".join(ch for ch in explicit_match.group(1) if ch in valid_letters)
+        if explicit_letters:
+            return "".join(dict.fromkeys(explicit_letters))
+
+    normalized_answer = _normalize_choice_text(answer)
+    if not normalized_answer:
+        return ""
+    matched_letters = [
+        letter
+        for letter, option_text in options
+        if _normalize_choice_text(option_text) and _normalize_choice_text(option_text) in normalized_answer
+    ]
+    if not matched_letters:
+        return ""
+
+    multi_select_query = any(token in str(query or "") for token in ("哪几项", "或哪几项", "多选"))
+    deduped_letters = list(dict.fromkeys(matched_letters))
+    if not multi_select_query and len(deduped_letters) != 1:
+        return ""
+    return "".join(deduped_letters)
+
+
+def _ensure_multiple_choice_answer_format(query: str, answer: str) -> str:
+    normalized_answer = str(answer or "").strip()
+    inferred_letters = _infer_multiple_choice_letters(query, normalized_answer)
+    if not inferred_letters:
+        return normalized_answer
+    if _EXPLICIT_CHOICE_LETTERS_RE.search(normalized_answer.upper()):
+        return normalized_answer
+    if not normalized_answer:
+        return f"最终选项：{inferred_letters}"
+    return f"{normalized_answer}\n\n最终选项：{inferred_letters}"
 
 def _build_grounded_system_prompt(*, mode: AnswerMode) -> str:
     mode_text = "快速模式" if mode == "quick" else "深度模式"
@@ -172,6 +236,11 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
     if requested_dimensions:
         lines.append("用户要求保留的回答角度：" + "、".join(requested_dimensions))
         lines.append("输出要求：请按这些角度逐段作答，并显式写出对应标题。")
+    choice_options = _extract_multiple_choice_options(query)
+    if len(choice_options) >= 2:
+        lines.append("这是带选项的选择题。")
+        lines.append("输出要求：先给简短判断，最后单独一行写“最终选项：X”或“最终选项：AB”。")
+        lines.append("只允许使用题目中已有的选项字母；若多选，按字母升序连续书写，不要写括号或顿号。")
     lines.append("事实证据摘要：")
     structured_items = evidence_groups.get("structured", []) if isinstance(evidence_groups, dict) else []
     documentary_items = evidence_groups.get("documentary", []) if isinstance(evidence_groups, dict) else []

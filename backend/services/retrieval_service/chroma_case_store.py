@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import gc
+import json
 import math
-import pickle
 import re
 import sqlite3
 import threading
-import gc
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -22,6 +22,8 @@ except Exception:  # pragma: no cover
 
 CASE_STYLE_MARKERS = ("基本信息", "主诉", "现病史", "体格检查", "年龄", "性别", "舌", "脉")
 QA_ANSWER_MARKERS = ("诊断", "证型", "方剂", "中药", "治疗", "治法")
+MAX_HNSW_METADATA_BYTES = 64 * 1024 * 1024
+HNSW_METADATA_JSON_NAME = "index_metadata.json"
 
 
 @dataclass(frozen=True)
@@ -125,8 +127,7 @@ class _NativeHnswCollection:
         with self._lock:
             if self._index is not None and self._label_to_id is not None:
                 return
-            metadata_path = self.descriptor.vector_dir / "index_metadata.pickle"
-            payload = pickle.load(metadata_path.open("rb"))
+            payload = _load_hnsw_metadata(self.descriptor.vector_dir)
             label_to_id = {int(key): str(value) for key, value in dict(payload.get("label_to_id", {})).items()}
             index_count = max(
                 int(payload.get("total_elements_added", 0) or 0),
@@ -472,7 +473,7 @@ class ChromaCaseQAStore:
         sqlite_path = self.settings.db_path / "chroma.sqlite3"
         conn = _open_sqlite_readonly(sqlite_path)
         try:
-            match_expression = " OR ".join(f'"{term.replace(chr(34), "")}"' for term in terms if term.strip())
+            match_expression = _build_fts5_match_expression(terms)
             if not match_expression:
                 return {}
             rows = conn.execute(
@@ -566,11 +567,10 @@ def _load_embedding_metadata(sqlite_path: Path, metadata_segment_id: str, embedd
 
 
 def _read_vector_index_summary(vector_dir: Path) -> tuple[int, int]:
-    metadata_path = vector_dir / "index_metadata.pickle"
     estimated_elements = 0
-    if metadata_path.exists():
+    if (vector_dir / HNSW_METADATA_JSON_NAME).exists():
         try:
-            payload = pickle.load(metadata_path.open("rb"))
+            payload = _load_hnsw_metadata(vector_dir)
             estimated_elements = max(
                 int(payload.get("total_elements_added", 0) or 0),
                 len(dict(payload.get("label_to_id", {}))),
@@ -584,6 +584,52 @@ def _read_vector_index_summary(vector_dir: Path) -> tuple[int, int]:
         if file_path.exists():
             estimated_bytes += int(file_path.stat().st_size)
     return estimated_elements, estimated_bytes
+
+
+def _load_hnsw_metadata(vector_dir: Path) -> dict[str, Any]:
+    metadata_path = vector_dir / HNSW_METADATA_JSON_NAME
+    if metadata_path.exists():
+        return _load_hnsw_metadata_json(metadata_path)
+    raise FileNotFoundError(f"hnsw_metadata_json_missing:{metadata_path}")
+
+
+def _load_hnsw_metadata_json(metadata_path: Path) -> dict[str, Any]:
+    file_size = metadata_path.stat().st_size
+    if file_size > MAX_HNSW_METADATA_BYTES:
+        raise ValueError(f"hnsw_metadata_too_large:{file_size}")
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    return _validate_hnsw_metadata(payload)
+
+
+def _validate_hnsw_metadata(payload: Any) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise ValueError("invalid_hnsw_metadata_payload")
+    label_to_id = payload.get("label_to_id", {})
+    if not isinstance(label_to_id, dict):
+        raise ValueError("invalid_hnsw_metadata_label_map")
+    total_elements_added = int(payload.get("total_elements_added", 0) or 0)
+    return {
+        "label_to_id": {str(key): str(value) for key, value in label_to_id.items()},
+        "total_elements_added": max(total_elements_added, 0),
+    }
+
+
+def _build_fts5_match_expression(terms: list[str]) -> str:
+    quoted_terms: list[str] = []
+    for raw_term in terms:
+        term = _sanitize_fts5_term(raw_term)
+        if term:
+            quoted_terms.append(f'"{term}"')
+    return " OR ".join(quoted_terms)
+
+
+def _sanitize_fts5_term(term: str) -> str:
+    cleaned = re.sub(r"[\x00-\x1f\x7f]+", " ", str(term or ""))
+    cleaned = re.sub(r"[^\w\s\u4e00-\u9fff]+", " ", cleaned, flags=re.UNICODE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned:
+        return ""
+    return cleaned[:80]
 
 
 def _is_memory_load_error(message: str) -> bool:

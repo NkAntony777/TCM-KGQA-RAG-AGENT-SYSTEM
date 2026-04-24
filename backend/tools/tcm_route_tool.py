@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Type
+from typing import Any, Type
 
 from langchain_core.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
@@ -74,6 +74,163 @@ def _allowed_retrieval_prefixes(strategy) -> list[str]:
     return list(dict.fromkeys(prefixes))
 
 
+def _build_route_plan(query: str, top_k: int):
+    analysis = analyze_tcm_query(query)
+    decision = decide_route(query, analysis=analysis)
+    strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route, analysis=analysis)
+    execution_route = decision.route
+    route_override_reason = ""
+    if strategy.intent == "formula_origin" and strategy.entity_name and decision.route == "retrieval":
+        execution_route = "hybrid"
+        route_override_reason = "origin_entity_forced_hybrid"
+    elif strategy.preferred_route == "graph" and decision.route == "hybrid":
+        execution_route = "graph"
+        route_override_reason = "strategy_graph_override"
+
+    route_reason = _normalize_route_reason(
+        base_reason=decision.reason,
+        execution_route=execution_route,
+        strategy_override=route_override_reason,
+    )
+    return analysis, decision, strategy, execution_route, route_reason
+
+
+def _base_route_output(
+    *,
+    analysis,
+    decision,
+    strategy,
+    execution_route: str,
+    route_reason: str,
+    health: dict[str, Any],
+) -> dict[str, object]:
+    return {
+        "route": execution_route,
+        "route_reason": route_reason,
+        "classifier_route": decision.route,
+        "execution_mode": health.get("execution_mode"),
+        "query_analysis": analysis.to_dict(),
+        "retrieval_strategy": strategy.to_dict(),
+        "evidence_paths": strategy.evidence_paths,
+        "service_health": health,
+        "status": "ok",
+        "degradation": [],
+        "executed_routes": [],
+    }
+
+
+def _set_executed_routes(output: dict[str, object], routes: list[str]) -> None:
+    output["executed_routes"] = list(dict.fromkeys(routes))
+
+
+def _append_executed_route(output: dict[str, object], route: str) -> None:
+    current = output.get("executed_routes")
+    routes = list(current) if isinstance(current, list) else []
+    _set_executed_routes(output, [*map(str, routes), route])
+
+
+def _run_graph_search(*, query: str, strategy) -> dict[str, object]:
+    if strategy.graph_query_kind == "path" and strategy.path_start and strategy.path_end:
+        path_result = call_graph_path_query(
+            start=strategy.path_start,
+            end=strategy.path_end,
+            max_hops=3,
+            path_limit=max(1, min(strategy.graph_final_k, 5)),
+        )
+        if path_result.get("code") == 0:
+            return path_result
+
+    if strategy.graph_query_kind == "entity" and strategy.graph_query_text:
+        primary = call_graph_entity_lookup(
+            name=strategy.graph_query_text,
+            top_k=strategy.graph_final_k,
+            predicate_allowlist=strategy.predicate_allowlist,
+            predicate_blocklist=strategy.predicate_blocklist,
+        )
+        if primary.get("code") == 0:
+            return primary
+        secondary = call_graph_entity_lookup(
+            name=strategy.graph_query_text,
+            top_k=strategy.graph_final_k,
+        )
+        primary["fallback_attempt"] = {
+            "tool": "tcm_entity_lookup",
+            "mode": "unfiltered_retry",
+            "code": secondary.get("code"),
+            "message": secondary.get("message"),
+            "trace_id": secondary.get("trace_id"),
+        }
+        return secondary if secondary.get("code") == 0 else primary
+
+    primary = call_graph_syndrome_chain(symptom=strategy.symptom_name or query, top_k=min(strategy.graph_final_k, 8))
+    if primary.get("code") == 0:
+        return primary
+    secondary = call_graph_entity_lookup(name=strategy.graph_query_text or query, top_k=strategy.graph_final_k)
+    if secondary.get("code") == 0:
+        return secondary
+    primary["fallback_attempt"] = {
+        "tool": "tcm_entity_lookup",
+        "code": secondary.get("code"),
+        "message": secondary.get("message"),
+        "trace_id": secondary.get("trace_id"),
+    }
+    return primary
+
+
+def _run_retrieval_search(*, query: str, top_k: int, strategy) -> tuple[dict[str, object], str]:
+    expanded_query = _expand_retrieval_query(query=query, strategy=strategy)
+    allowed_prefixes = _allowed_retrieval_prefixes(strategy)
+    result = call_retrieval_hybrid(
+        query=expanded_query,
+        top_k=top_k,
+        candidate_k=max(strategy.vector_candidate_k, top_k * 3, 9),
+        enable_rerank=False,
+        search_mode="files_first",
+        allowed_file_path_prefixes=allowed_prefixes,
+    )
+    return result, expanded_query
+
+
+def _run_case_qa_search(*, query: str, top_k: int, strategy) -> dict[str, object]:
+    return call_retrieval_case_qa(
+        query=query,
+        top_k=min(top_k, max(3, strategy.graph_final_k)),
+        candidate_k=max(strategy.vector_candidate_k, top_k * 4, 20),
+    )
+
+
+def _maybe_run_case_qa(
+    *,
+    output: dict[str, object],
+    query: str,
+    top_k: int,
+    strategy,
+    source_route: str,
+) -> dict[str, object] | None:
+    if not _case_qa_enabled(strategy):
+        return None
+    _append_executed_route(output, "case_qa")
+    result = _run_case_qa_search(query=query, top_k=top_k, strategy=strategy)
+    output["case_qa_result"] = result
+    if not _is_success(result):
+        _append_degradation(output, source_route=source_route, target_route="case_qa", reason="case_qa_branch_failed")
+    return result
+
+
+def _record_retrieval_result(
+    *,
+    output: dict[str, object],
+    query: str,
+    top_k: int,
+    strategy,
+) -> dict[str, object]:
+    result, expanded_query = _run_retrieval_search(query=query, top_k=top_k, strategy=strategy)
+    if expanded_query != query:
+        output["retrieval_expanded_query"] = expanded_query
+    output["retrieval_result"] = result
+    return result
+
+
 class TCMRouteSearchTool(BaseTool):
     name: str = "tcm_route_search"
     description: str = (
@@ -88,129 +245,29 @@ class TCMRouteSearchTool(BaseTool):
         top_k: int = 12,
         run_manager: CallbackManagerForToolRun | None = None,
     ) -> str:
-        analysis = analyze_tcm_query(query)
-        decision = decide_route(query, analysis=analysis)
-        strategy = derive_retrieval_strategy(query, requested_top_k=top_k, route_hint=decision.route, analysis=analysis)
-        execution_route = decision.route
-        route_reason = decision.reason
-        route_override_reason = ""
-        if strategy.intent == "formula_origin" and strategy.entity_name and decision.route == "retrieval":
-            execution_route = "hybrid"
-            route_override_reason = "origin_entity_forced_hybrid"
-        elif strategy.preferred_route == "graph" and decision.route == "hybrid":
-            execution_route = "graph"
-            route_override_reason = "strategy_graph_override"
-        route_reason = _normalize_route_reason(
-            base_reason=route_reason,
-            execution_route=execution_route,
-            strategy_override=route_override_reason,
-        )
+        analysis, decision, strategy, execution_route, route_reason = _build_route_plan(query, top_k)
         health = service_health_snapshot()
-        output: dict[str, object] = {
-            "route": execution_route,
-            "route_reason": route_reason,
-            "classifier_route": decision.route,
-            "execution_mode": health.get("execution_mode"),
-            "query_analysis": analysis.to_dict(),
-            "retrieval_strategy": strategy.to_dict(),
-            "evidence_paths": strategy.evidence_paths,
-            "service_health": health,
-            "status": "ok",
-            "degradation": [],
-            "executed_routes": [],
-        }
+        output = _base_route_output(
+            analysis=analysis,
+            decision=decision,
+            strategy=strategy,
+            execution_route=execution_route,
+            route_reason=route_reason,
+            health=health,
+        )
 
         graph_result = None
         retrieval_result = None
         case_qa_result = None
 
-        def graph_search() -> dict[str, object]:
-            if strategy.graph_query_kind == "path" and strategy.path_start and strategy.path_end:
-                path_result = call_graph_path_query(
-                    start=strategy.path_start,
-                    end=strategy.path_end,
-                    max_hops=3,
-                    path_limit=max(1, min(strategy.graph_final_k, 5)),
-                )
-                if path_result.get("code") == 0:
-                    return path_result
-
-            if strategy.graph_query_kind == "entity" and strategy.graph_query_text:
-                primary = call_graph_entity_lookup(
-                    name=strategy.graph_query_text,
-                    top_k=strategy.graph_final_k,
-                    predicate_allowlist=strategy.predicate_allowlist,
-                    predicate_blocklist=strategy.predicate_blocklist,
-                )
-                if primary.get("code") == 0:
-                    return primary
-                secondary = call_graph_entity_lookup(
-                    name=strategy.graph_query_text,
-                    top_k=strategy.graph_final_k,
-                )
-                primary["fallback_attempt"] = {
-                    "tool": "tcm_entity_lookup",
-                    "mode": "unfiltered_retry",
-                    "code": secondary.get("code"),
-                    "message": secondary.get("message"),
-                    "trace_id": secondary.get("trace_id"),
-                }
-                return secondary if secondary.get("code") == 0 else primary
-
-            primary = call_graph_syndrome_chain(symptom=strategy.symptom_name or query, top_k=min(strategy.graph_final_k, 8))
-            if primary.get("code") == 0:
-                return primary
-            secondary = call_graph_entity_lookup(name=strategy.graph_query_text or query, top_k=strategy.graph_final_k)
-            if secondary.get("code") == 0:
-                return secondary
-            primary["fallback_attempt"] = {
-                "tool": "tcm_entity_lookup",
-                "code": secondary.get("code"),
-                "message": secondary.get("message"),
-                "trace_id": secondary.get("trace_id"),
-            }
-            return primary
-
-        def retrieval_search() -> dict[str, object]:
-            expanded_query = _expand_retrieval_query(query=query, strategy=strategy)
-            if expanded_query != query:
-                output["retrieval_expanded_query"] = expanded_query
-            allowed_prefixes = _allowed_retrieval_prefixes(strategy)
-            return call_retrieval_hybrid(
-                query=expanded_query,
-                top_k=top_k,
-                candidate_k=max(strategy.vector_candidate_k, top_k * 3, 9),
-                enable_rerank=False,
-                search_mode="files_first",
-                allowed_file_path_prefixes=allowed_prefixes,
-            )
-
-        def case_qa_search() -> dict[str, object]:
-            return call_retrieval_case_qa(
-                query=query,
-                top_k=min(top_k, max(3, strategy.graph_final_k)),
-                candidate_k=max(strategy.vector_candidate_k, top_k * 4, 20),
-            )
-
-        def maybe_run_case_qa(source_route: str) -> dict[str, object] | None:
-            if not _case_qa_enabled(strategy):
-                return None
-            output["executed_routes"] = list(dict.fromkeys([*output["executed_routes"], "case_qa"]))
-            result = case_qa_search()
-            output["case_qa_result"] = result
-            if not _is_success(result):
-                _append_degradation(output, source_route=source_route, target_route="case_qa", reason="case_qa_branch_failed")
-            return result
-
         if execution_route == "graph":
-            output["executed_routes"] = ["graph"]
-            graph_result = graph_search()
+            _set_executed_routes(output, ["graph"])
+            graph_result = _run_graph_search(query=query, strategy=strategy)
             output["graph_result"] = graph_result
 
             if not _is_success(graph_result) or not _has_graph_evidence(graph_result):
-                output["executed_routes"] = ["graph", "retrieval"]
-                retrieval_result = retrieval_search()
-                output["retrieval_result"] = retrieval_result
+                _set_executed_routes(output, ["graph", "retrieval"])
+                retrieval_result = _record_retrieval_result(output=output, query=query, top_k=top_k, strategy=strategy)
                 _append_degradation(
                     output,
                     source_route="graph",
@@ -227,15 +284,14 @@ class TCMRouteSearchTool(BaseTool):
             else:
                 output["final_route"] = "graph"
 
-            case_qa_result = maybe_run_case_qa("graph")
+            case_qa_result = _maybe_run_case_qa(output=output, query=query, top_k=top_k, strategy=strategy, source_route="graph")
         elif execution_route == "retrieval":
-            output["executed_routes"] = ["retrieval"]
-            retrieval_result = retrieval_search()
-            output["retrieval_result"] = retrieval_result
+            _set_executed_routes(output, ["retrieval"])
+            retrieval_result = _record_retrieval_result(output=output, query=query, top_k=top_k, strategy=strategy)
 
             if not _is_success(retrieval_result):
-                output["executed_routes"] = ["retrieval", "graph"]
-                graph_result = graph_search()
+                _set_executed_routes(output, ["retrieval", "graph"])
+                graph_result = _run_graph_search(query=query, strategy=strategy)
                 output["graph_result"] = graph_result
                 _append_degradation(output, source_route="retrieval", target_route="graph", reason="retrieval_primary_failed")
 
@@ -248,15 +304,20 @@ class TCMRouteSearchTool(BaseTool):
             else:
                 output["final_route"] = "retrieval"
 
-            case_qa_result = maybe_run_case_qa("retrieval")
+            case_qa_result = _maybe_run_case_qa(
+                output=output,
+                query=query,
+                top_k=top_k,
+                strategy=strategy,
+                source_route="retrieval",
+            )
         else:
-            output["executed_routes"] = ["graph", "retrieval"]
-            graph_result = graph_search()
-            retrieval_result = retrieval_search()
+            _set_executed_routes(output, ["graph", "retrieval"])
+            graph_result = _run_graph_search(query=query, strategy=strategy)
+            retrieval_result = _record_retrieval_result(output=output, query=query, top_k=top_k, strategy=strategy)
             output["graph_result"] = graph_result
-            output["retrieval_result"] = retrieval_result
 
-            case_qa_result = maybe_run_case_qa("hybrid")
+            case_qa_result = _maybe_run_case_qa(output=output, query=query, top_k=top_k, strategy=strategy, source_route="hybrid")
 
             raw_graph_ok = _is_success(graph_result)
             graph_ok = raw_graph_ok and _has_graph_evidence(graph_result)

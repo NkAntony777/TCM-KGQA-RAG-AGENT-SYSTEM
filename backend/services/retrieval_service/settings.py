@@ -41,8 +41,6 @@ class RetrievalServiceSettings:
     leaf_retrieve_level: int
     dense_dim: int
     embedding_batch_size: int
-    embedding_batch_workers: int
-    embedding_show_progress: bool
     chroma_case_db_path: Path
     chroma_case_mirror_path: Path
     chroma_case_collection_prefix: str
@@ -59,6 +57,8 @@ class RetrievalServiceSettings:
     classic_corpus_path: Path
     runtime_graph_db_path: Path
     section_summary_cache_path: Path
+    embedding_batch_workers: int = 1
+    embedding_show_progress: bool = False
 
 
 def load_settings() -> RetrievalServiceSettings:

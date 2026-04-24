@@ -35,6 +35,7 @@ class SectionReadRequest(BaseModel):
 app = FastAPI(title="TCM Retrieval Service", version="0.1.0")
 
 
+@app.get("/health")
 @app.get("/api/v1/retrieval/health")
 def health(x_trace_id: str | None = Header(default=None, alias="X-Trace-Id")):
     return success(get_retrieval_engine().health(), trace_id=x_trace_id)

@@ -188,6 +188,18 @@ TAVILY_API_KEY=your_key
 uv run uvicorn app:app --host 0.0.0.0 --port 8002 --reload
 ```
 
+评测专用后端建议改用仓库根目录下的 `启动评测后端8002.bat`。
+它会关闭 `reload`，支持多 worker，并自动设置 `SKIP_MEMORY_INDEX_STARTUP_REBUILD=1`。
+默认 worker 数为 `2`，也可先设置环境变量再启动：
+
+```bat
+set EVAL_WORKERS=4
+启动评测后端8002.bat
+```
+
+如果 Windows 下 `uvicorn --workers N` 不稳定，推荐直接使用 `启动评测后端集群.bat`。
+它会启动多个独立单实例后端（`8002` 到 `8005`），评测时可通过多个 `base_urls` 做轮询分发。
+
 如果你在本地同时跑图谱 / 检索 sidecar，可额外启动对应服务；如果 sidecar 不可用，当前主链默认应该优先回退到本地真实引擎，而不是展示用 mock 数据。
 
 ### 3. 启动前端

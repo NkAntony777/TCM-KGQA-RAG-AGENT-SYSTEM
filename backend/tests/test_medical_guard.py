@@ -126,6 +126,25 @@ class TestSafePatterns(unittest.TestCase):
         self.assertFalse(result.should_refuse)
         self.assertEqual(result.risk_level, RiskLevel.SAFE)
 
+    def test_academic_dosage_context_is_case_insensitive_for_ascii_terms(self) -> None:
+        result = assess_query("请从AQP机制分析五苓散剂量阈值效应")
+        self.assertFalse(result.should_refuse)
+        self.assertEqual(result.risk_level, RiskLevel.SAFE)
+
+    def test_multiple_choice_exam_query_with_dosage_terms_is_not_refused(self) -> None:
+        result = assess_query(
+            "请回答下面的中医处方审核选择题。\n"
+            "题目：下列不属于调配制度的是\n"
+            "选项：\n"
+            "A. 调配人员接到计价收款后的处方，应再次审方\n"
+            "B. 应注意处方中有无配伍禁忌\n"
+            "C. 特殊管理的药品剂量是否正确\n"
+            "D. 向患者说明用法用量，煎煮方法，有无禁忌\n"
+            "E. 按处方药味顺序调配，间隔摆放"
+        )
+        self.assertFalse(result.should_refuse)
+        self.assertNotEqual(result.risk_level, RiskLevel.HIGH_RISK)
+
 
 class TestAppendDisclaimer(unittest.TestCase):
     """append_disclaimer 工具函数行为验证。"""

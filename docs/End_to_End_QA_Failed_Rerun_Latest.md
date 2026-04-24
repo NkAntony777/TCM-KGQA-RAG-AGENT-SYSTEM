@@ -1,0 +1,481 @@
+# End-to-End QA Failed Case Rerun
+
+## Overview
+
+| Field | Value |
+| --- | --- |
+| source_report | D:\毕业设计数据处理\langchain-miniopenclaw\backend\eval\paper\end_to_end_qa_eval_latest.json |
+| timeout_s | 540.0 |
+| workers | 4 |
+| total_rerun | 435 |
+| recovered | 200 |
+| still_failed | 235 |
+| recovered_rate | 0.4598 |
+
+## By Dataset
+
+| Dataset | Total | Recovered | Still Failed |
+| --- | ---: | ---: | ---: |
+| tcmeval_pa_full.json | 284 | 114 | 170 |
+| tcmeval_sdt_train_full.json | 151 | 86 | 65 |
+
+## Top Remaining Issues
+
+- answer_option_letters_missing_any:C: 24
+- answer_option_letters_missing_any:D: 14
+- answer_option_letters_missing_any:E: 14
+- answer_option_letters_missing_any:B: 7
+- answer_option_letters_missing_any:A: 7
+- request_error:ReadTimeout: 6
+- answer_option_letters_missing_any:ABDE: 4
+- answer_missing_any:3 -9g: 4
+- answer_missing_any:明确提示并建议医师修改处方: 4
+- answer_option_letters_missing_any:ABCDE: 3
+- answer_missing_any:黄芩、槐米: 3
+- answer_missing_any:三棱: 3
+- answer_missing_any:1.5~4.5g: 3
+- answer_missing_any:足太阳湿热: 2
+- answer_missing_any:络脉瘀阻|痰热上扰: 2
+- answer_missing_any:气血失养: 2
+- answer_missing_any:卫阳不固: 2
+- answer_missing_any:风热犯肺: 2
+- answer_missing_any:郁滞胸脘|湿热互结: 2
+- answer_missing_any:阳明腑经湿热内攘: 2
+
+## Results
+
+- tcmeval_pa_full.json::tcmpa_100[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=51992.9
+- tcmeval_pa_full.json::tcmpa_100[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=51029.2
+- tcmeval_pa_full.json::tcmpa_101[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=49034.8
+- tcmeval_pa_full.json::tcmpa_102[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=48286.3
+- tcmeval_pa_full.json::tcmpa_104[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=53351.0
+- tcmeval_pa_full.json::tcmpa_105[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=45889.4
+- tcmeval_pa_full.json::tcmpa_106[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=104006.5
+- tcmeval_pa_full.json::tcmpa_106[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=51854.8
+- tcmeval_pa_full.json::tcmpa_107[deep] still_failed route=hybrid original=answer_option_letters_missing_any:A rerun=answer_option_letters_missing_any:A latency_ms=63046.4
+- tcmeval_pa_full.json::tcmpa_108[quick] still_failed route=hybrid original=answer_missing_any:无麻醉药品处方权的医师在夜班急救需给病人使用罂粟壳时，可限开 1 日量 rerun=answer_option_letters_missing_any:D,answer_missing_any:无麻醉药品处方权的医师在夜班急救需给病人使用罂粟壳时，可限开 1 日量 latency_ms=75027.7
+- tcmeval_pa_full.json::tcmpa_109[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:麻醉药品专用处方应由药剂科留存 2 年备查 rerun=answer_option_letters_missing_any:E,answer_missing_any:麻醉药品专用处方应由药剂科留存 2 年备查 latency_ms=70740.9
+- tcmeval_pa_full.json::tcmpa_11[deep] recovered route=graph original=answer_option_letters_missing_any:E rerun=ok latency_ms=14919.2
+- tcmeval_pa_full.json::tcmpa_11[quick] recovered route=graph original=answer_option_letters_missing_any:E rerun=ok latency_ms=14798.1
+- tcmeval_pa_full.json::tcmpa_110[deep] still_failed route=hybrid original=answer_missing_any:凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行 rerun=answer_option_letters_missing_any:E,answer_missing_any:凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行 latency_ms=184608.7
+- tcmeval_pa_full.json::tcmpa_110[quick] still_failed route=hybrid original=answer_missing_any:凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行 rerun=answer_option_letters_missing_any:E,answer_missing_any:凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行 latency_ms=118990.7
+- tcmeval_pa_full.json::tcmpa_111[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查 rerun=answer_missing_any:制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查 latency_ms=26953.4
+- tcmeval_pa_full.json::tcmpa_111[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查 rerun=answer_missing_any:制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查 latency_ms=23589.1
+- tcmeval_pa_full.json::tcmpa_112[deep] still_failed route=hybrid original=answer_missing_any:执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义 rerun=answer_missing_any:执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义 latency_ms=207554.6
+- tcmeval_pa_full.json::tcmpa_112[quick] still_failed route=hybrid original=answer_missing_any:执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义 rerun=answer_missing_any:执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义 latency_ms=114259.4
+- tcmeval_pa_full.json::tcmpa_113[deep] still_failed route=hybrid original=answer_missing_any:病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药 rerun=answer_missing_any:病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药 latency_ms=100059.2
+- tcmeval_pa_full.json::tcmpa_113[quick] still_failed route=hybrid original=answer_missing_any:病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药 rerun=answer_missing_any:病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药 latency_ms=62016.1
+- tcmeval_pa_full.json::tcmpa_117[deep] still_failed route=hybrid original=answer_missing_any:实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效 rerun=answer_missing_any:实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效 latency_ms=115762.6
+- tcmeval_pa_full.json::tcmpa_117[quick] still_failed route=hybrid original=answer_missing_any:实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效 rerun=answer_missing_any:实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效 latency_ms=60166.8
+- tcmeval_pa_full.json::tcmpa_119[deep] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:先煎 rerun=ok latency_ms=41114.9
+- tcmeval_pa_full.json::tcmpa_119[quick] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:先煎 rerun=ok latency_ms=41883.9
+- tcmeval_pa_full.json::tcmpa_120[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=43291.8
+- tcmeval_pa_full.json::tcmpa_120[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=40797.4
+- tcmeval_pa_full.json::tcmpa_121[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=48673.9
+- tcmeval_pa_full.json::tcmpa_121[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=46384.7
+- tcmeval_pa_full.json::tcmpa_122[deep] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=56181.8
+- tcmeval_pa_full.json::tcmpa_122[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=46736.6
+- tcmeval_pa_full.json::tcmpa_123[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=52187.5
+- tcmeval_pa_full.json::tcmpa_124[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=58936.9
+- tcmeval_pa_full.json::tcmpa_126[deep] still_failed route=graph original=answer_missing_any:“七情” 配伍没有单用，都是配伍使用 rerun=answer_missing_any:“七情” 配伍没有单用，都是配伍使用 latency_ms=18829.7
+- tcmeval_pa_full.json::tcmpa_126[quick] still_failed route=graph original=answer_missing_any:“七情” 配伍没有单用，都是配伍使用 rerun=answer_missing_any:“七情” 配伍没有单用，都是配伍使用 latency_ms=20205.0
+- tcmeval_pa_full.json::tcmpa_127[deep] still_failed route=graph original=answer_missing_any:中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情” rerun=answer_missing_any:中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情” latency_ms=25227.7
+- tcmeval_pa_full.json::tcmpa_127[quick] still_failed route=graph original=answer_missing_any:中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情” rerun=answer_missing_any:中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情” latency_ms=64841.3
+- tcmeval_pa_full.json::tcmpa_129[deep] still_failed route=graph original=answer_missing_any:一种药物能消除或减轻另一种药物的毒性或副作用 rerun=answer_missing_any:一种药物能消除或减轻另一种药物的毒性或副作用 latency_ms=17483.5
+- tcmeval_pa_full.json::tcmpa_129[quick] still_failed route=graph original=answer_option_letters_missing_any:A,answer_missing_any:一种药物能消除或减轻另一种药物的毒性或副作用 rerun=answer_missing_any:一种药物能消除或减轻另一种药物的毒性或副作用 latency_ms=14522.8
+- tcmeval_pa_full.json::tcmpa_13[deep] still_failed route=hybrid original=answer_missing_any:合理用药即取得最大的医疗和社会效益，可以不计投入成本 rerun=answer_missing_any:合理用药即取得最大的医疗和社会效益，可以不计投入成本 latency_ms=53172.0
+- tcmeval_pa_full.json::tcmpa_130[deep] still_failed route=graph original=answer_missing_any:两种药物合用能产生毒性反应或者副作用，属配伍禁忌 rerun=answer_missing_any:两种药物合用能产生毒性反应或者副作用，属配伍禁忌 latency_ms=30796.4
+- tcmeval_pa_full.json::tcmpa_131[deep] still_failed route=graph original=answer_missing_any:两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌 rerun=answer_missing_any:两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌 latency_ms=15772.3
+- tcmeval_pa_full.json::tcmpa_132[deep] still_failed route=graph original=answer_missing_any:两种药物的合用能互相抑制、降低或丧失药效 rerun=answer_missing_any:两种药物的合用能互相抑制、降低或丧失药效 latency_ms=25040.9
+- tcmeval_pa_full.json::tcmpa_132[quick] recovered route=graph original=answer_option_letters_missing_any:B,answer_missing_any:两种药物的合用能互相抑制、降低或丧失药效 rerun=ok latency_ms=17842.4
+- tcmeval_pa_full.json::tcmpa_135[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米等 rerun=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米等 latency_ms=174649.7
+- tcmeval_pa_full.json::tcmpa_136[deep] still_failed route=hybrid original=request_error:ReadTimeout rerun=answer_option_letters_missing_any:B,answer_missing_any:天花粉 latency_ms=75821.9
+- tcmeval_pa_full.json::tcmpa_136[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:天花粉 rerun=answer_option_letters_missing_any:B,answer_missing_any:天花粉 latency_ms=58965.9
+- tcmeval_pa_full.json::tcmpa_137[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D rerun=answer_option_letters_missing_any:D,answer_missing_any:三棱 latency_ms=158102.5
+- tcmeval_pa_full.json::tcmpa_137[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:三棱 rerun=answer_option_letters_missing_any:D,answer_missing_any:三棱 latency_ms=94261.7
+- tcmeval_pa_full.json::tcmpa_14[deep] recovered route=hybrid original=answer_missing_any:药源性疾病是药物在正常用法用量情况下产生的不良反应 rerun=ok latency_ms=94737.8
+- tcmeval_pa_full.json::tcmpa_14[quick] still_failed route=hybrid original=answer_missing_any:药源性疾病是药物在正常用法用量情况下产生的不良反应 rerun=answer_missing_any:药源性疾病是药物在正常用法用量情况下产生的不良反应 latency_ms=84774.4
+- tcmeval_pa_full.json::tcmpa_140[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=43602.6
+- tcmeval_pa_full.json::tcmpa_141[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C rerun=answer_option_letters_missing_any:C,answer_missing_any:妊娠慎用药 latency_ms=144517.6
+- tcmeval_pa_full.json::tcmpa_141[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:妊娠慎用药 rerun=answer_option_letters_missing_any:C,answer_missing_any:妊娠慎用药 latency_ms=121719.6
+- tcmeval_pa_full.json::tcmpa_142[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=59191.9
+- tcmeval_pa_full.json::tcmpa_142[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=48357.0
+- tcmeval_pa_full.json::tcmpa_143[deep] still_failed route=graph original=answer_option_letters_missing_any:B rerun=answer_option_letters_missing_any:B latency_ms=21986.1
+- tcmeval_pa_full.json::tcmpa_147[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=51995.5
+- tcmeval_pa_full.json::tcmpa_147[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=53090.1
+- tcmeval_pa_full.json::tcmpa_148[deep] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:清晨空腹或睡前服 rerun=ok latency_ms=84624.5
+- tcmeval_pa_full.json::tcmpa_149[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:睡前 1～2h 服用 rerun=answer_missing_any:睡前 1～2h 服用 latency_ms=47574.1
+- tcmeval_pa_full.json::tcmpa_150[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:晚上服用 rerun=answer_option_letters_missing_any:C,answer_missing_any:晚上服用 latency_ms=56456.1
+- tcmeval_pa_full.json::tcmpa_150[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:晚上服用 rerun=answer_option_letters_missing_any:C,answer_missing_any:晚上服用 latency_ms=52687.9
+- tcmeval_pa_full.json::tcmpa_154[deep] still_failed route=hybrid original=answer_missing_any:麻醉中药罂粟壳每张处方不超过 3d 常用量|麻醉中药罂粟壳不得单包|麻醉中药罂粟壳每张处方不超过 18g|麻醉中药罂粟壳处方由经营或使用单位留存 2 年 rerun=answer_option_letters_missing_any:ABDE,answer_missing_any:麻醉中药罂粟壳每张处方不超过 3d 常用量|麻醉中药罂粟壳不得单包|麻醉中药罂粟壳每张处方不超过 18g|麻醉中药罂粟壳处方由经营或使用单位留存 2 年 latency_ms=55450.4
+- tcmeval_pa_full.json::tcmpa_154[quick] still_failed route=hybrid original=answer_missing_any:麻醉中药罂粟壳每张处方不超过 3d 常用量|麻醉中药罂粟壳不得单包|麻醉中药罂粟壳每张处方不超过 18g|麻醉中药罂粟壳处方由经营或使用单位留存 2 年 rerun=answer_option_letters_missing_any:ABDE,answer_missing_any:麻醉中药罂粟壳每张处方不超过 3d 常用量|麻醉中药罂粟壳不得单包|麻醉中药罂粟壳每张处方不超过 18g|麻醉中药罂粟壳处方由经营或使用单位留存 2 年 latency_ms=54301.2
+- tcmeval_pa_full.json::tcmpa_155[deep] recovered route=graph original=answer_option_letters_missing_any:ABCD rerun=ok latency_ms=16310.3
+- tcmeval_pa_full.json::tcmpa_156[deep] still_failed route=hybrid original=answer_option_letters_missing_any:ABCD rerun=answer_option_letters_missing_any:ABCD latency_ms=63433.5
+- tcmeval_pa_full.json::tcmpa_159[deep] still_failed route=hybrid original=answer_missing_any:1979 年 1 月 rerun=answer_missing_any:1979 年 1 月 latency_ms=50897.7
+- tcmeval_pa_full.json::tcmpa_16[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=55097.7
+- tcmeval_pa_full.json::tcmpa_160[deep] still_failed route=hybrid original=answer_missing_any:3~9g rerun=answer_missing_any:3~9g latency_ms=50403.5
+- tcmeval_pa_full.json::tcmpa_160[quick] still_failed route=hybrid original=answer_missing_any:3~9g rerun=answer_option_letters_missing_any:D,answer_missing_any:3~9g latency_ms=50535.4
+- tcmeval_pa_full.json::tcmpa_161[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1.5~4.5g rerun=answer_option_letters_missing_any:C,answer_missing_any:1.5~4.5g latency_ms=99112.8
+- tcmeval_pa_full.json::tcmpa_161[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1.5~4.5g rerun=answer_option_letters_missing_any:C,answer_missing_any:1.5~4.5g latency_ms=43184.6
+- tcmeval_pa_full.json::tcmpa_162[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:9~45g rerun=answer_option_letters_missing_any:B,answer_missing_any:9~45g latency_ms=64638.7
+- tcmeval_pa_full.json::tcmpa_164[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:0.3~1g rerun=answer_missing_any:0.3~1g latency_ms=54665.0
+- tcmeval_pa_full.json::tcmpa_164[quick] recovered route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:0.3~1g rerun=ok latency_ms=54673.7
+- tcmeval_pa_full.json::tcmpa_165[deep] still_failed route=graph original=answer_option_letters_missing_any:A,answer_missing_any:用量可大些 rerun=answer_missing_any:用量可大些 latency_ms=17256.4
+- tcmeval_pa_full.json::tcmpa_165[quick] still_failed route=graph original=answer_option_letters_missing_any:A,answer_missing_any:用量可大些 rerun=answer_missing_any:用量可大些 latency_ms=17260.3
+- tcmeval_pa_full.json::tcmpa_166[deep] still_failed route=graph original=answer_option_letters_missing_any:C,answer_missing_any:不宜重剂量 rerun=answer_missing_any:不宜重剂量 latency_ms=50504.9
+- tcmeval_pa_full.json::tcmpa_167[deep] still_failed route=graph original=answer_option_letters_missing_any:E,answer_missing_any:可低于新病者的剂量 rerun=answer_option_letters_missing_any:E,answer_missing_any:可低于新病者的剂量 latency_ms=15899.1
+- tcmeval_pa_full.json::tcmpa_168[deep] still_failed route=graph original=answer_option_letters_missing_any:B,answer_missing_any:用量可酌减 rerun=answer_missing_any:用量可酌减 latency_ms=14368.8
+- tcmeval_pa_full.json::tcmpa_168[quick] still_failed route=graph original=answer_option_letters_missing_any:B,answer_missing_any:用量可酌减 rerun=answer_missing_any:用量可酌减 latency_ms=23955.0
+- tcmeval_pa_full.json::tcmpa_170[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:用量不宜过大 rerun=answer_missing_any:用量不宜过大 latency_ms=95328.0
+- tcmeval_pa_full.json::tcmpa_170[quick] recovered route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:用量不宜过大 rerun=ok latency_ms=103360.2
+- tcmeval_pa_full.json::tcmpa_172[deep] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:用量宜小 rerun=ok latency_ms=181228.7
+- tcmeval_pa_full.json::tcmpa_173[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:用量可较重 rerun=answer_option_letters_missing_any:D,answer_missing_any:用量可较重 latency_ms=84465.9
+- tcmeval_pa_full.json::tcmpa_173[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:用量可较重 rerun=answer_option_letters_missing_any:D,answer_missing_any:用量可较重 latency_ms=92290.1
+- tcmeval_pa_full.json::tcmpa_174[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:用量则更大些 rerun=answer_option_letters_missing_any:E,answer_missing_any:用量则更大些 latency_ms=110525.5
+- tcmeval_pa_full.json::tcmpa_174[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:用量则更大些 rerun=answer_option_letters_missing_any:E,answer_missing_any:用量则更大些 latency_ms=115323.0
+- tcmeval_pa_full.json::tcmpa_176[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:以当代药物和疾病的系统知识和理论为基础，安全、有效、经济、适当地使用药物 rerun=answer_missing_any:以当代药物和疾病的系统知识和理论为基础，安全、有效、经济、适当地使用药物 latency_ms=49475.5
+- tcmeval_pa_full.json::tcmpa_177[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=91917.2
+- tcmeval_pa_full.json::tcmpa_179[deep] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:自我用药 rerun=ok latency_ms=36853.4
+- tcmeval_pa_full.json::tcmpa_179[quick] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:自我用药 rerun=ok latency_ms=34075.7
+- tcmeval_pa_full.json::tcmpa_180[deep] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=121179.9
+- tcmeval_pa_full.json::tcmpa_180[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=52372.2
+- tcmeval_pa_full.json::tcmpa_181[deep] still_failed route=hybrid original=answer_option_letters_missing_any:A rerun=answer_option_letters_missing_any:A,answer_missing_any:运用中医药学综合知识及管理学知识指导临床用药 latency_ms=126680.9
+- tcmeval_pa_full.json::tcmpa_189[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=31258.2
+- tcmeval_pa_full.json::tcmpa_191[deep] still_failed route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:黄芪 rerun=answer_option_letters_missing_any:A latency_ms=48235.4
+- tcmeval_pa_full.json::tcmpa_191[quick] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:黄芪 rerun=ok latency_ms=37589.5
+- tcmeval_pa_full.json::tcmpa_192[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:饮用大量浓茶 rerun=answer_option_letters_missing_any:D,answer_missing_any:饮用大量浓茶 latency_ms=77321.0
+- tcmeval_pa_full.json::tcmpa_193[quick] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:洗胃 rerun=ok latency_ms=53314.9
+- tcmeval_pa_full.json::tcmpa_194[deep] still_failed route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:洗胃 rerun=answer_option_letters_missing_any:A,answer_missing_any:洗胃 latency_ms=52138.6
+- tcmeval_pa_full.json::tcmpa_196[deep] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=55286.1
+- tcmeval_pa_full.json::tcmpa_196[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=50178.9
+- tcmeval_pa_full.json::tcmpa_198[deep] recovered route=graph original=answer_option_letters_missing_any:A,answer_missing_any:黄药子 rerun=ok latency_ms=13936.5
+- tcmeval_pa_full.json::tcmpa_198[quick] recovered route=graph original=answer_option_letters_missing_any:A,answer_missing_any:黄药子 rerun=ok latency_ms=16729.1
+- tcmeval_pa_full.json::tcmpa_2[quick] recovered route=hybrid original=answer_option_letters_missing_any:D rerun=ok latency_ms=101406.5
+- tcmeval_pa_full.json::tcmpa_20[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=44564.9
+- tcmeval_pa_full.json::tcmpa_200[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B rerun=answer_missing_any:变态反应 latency_ms=72896.5
+- tcmeval_pa_full.json::tcmpa_202[deep] still_failed route=hybrid original=answer_option_letters_missing_any:BC rerun=answer_option_letters_missing_any:BC latency_ms=34276.5
+- tcmeval_pa_full.json::tcmpa_202[quick] still_failed route=hybrid original=answer_option_letters_missing_any:BC rerun=answer_option_letters_missing_any:BC latency_ms=33174.1
+- tcmeval_pa_full.json::tcmpa_203[deep] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:人参 rerun=ok latency_ms=82790.8
+- tcmeval_pa_full.json::tcmpa_203[quick] recovered route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:人参 rerun=ok latency_ms=116945.3
+- tcmeval_pa_full.json::tcmpa_204[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=53988.2
+- tcmeval_pa_full.json::tcmpa_205[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=54916.1
+- tcmeval_pa_full.json::tcmpa_207[deep] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=58997.2
+- tcmeval_pa_full.json::tcmpa_209[quick] recovered route=hybrid original=answer_option_letters_missing_any:ABCD rerun=ok latency_ms=56514.9
+- tcmeval_pa_full.json::tcmpa_21[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B rerun=answer_missing_any:2 或 3 次 latency_ms=91668.0
+- tcmeval_pa_full.json::tcmpa_21[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B rerun=answer_missing_any:2 或 3 次 latency_ms=40242.1
+- tcmeval_pa_full.json::tcmpa_210[deep] recovered route=graph original=answer_option_letters_missing_any:ABCD,answer_missing_any:配伍禁忌包括 “十八反”“十九畏”|妊娠禁忌药分为禁用和慎用两类|服药时一般应忌食生冷、油腻、辛辣等不易消化及有刺激性的食物|儿童用药剂量可根据年龄、体重等适当调整 rerun=ok latency_ms=18582.5
+- tcmeval_pa_full.json::tcmpa_210[quick] still_failed route=graph original=answer_option_letters_missing_any:ABCD,answer_missing_any:配伍禁忌包括 “十八反”“十九畏”|妊娠禁忌药分为禁用和慎用两类|服药时一般应忌食生冷、油腻、辛辣等不易消化及有刺激性的食物|儿童用药剂量可根据年龄、体重等适当调整 rerun=answer_missing_any:配伍禁忌包括 “十八反”“十九畏”|妊娠禁忌药分为禁用和慎用两类|服药时一般应忌食生冷、油腻、辛辣等不易消化及有刺激性的食物|儿童用药剂量可根据年龄、体重等适当调整 latency_ms=17273.9
+- tcmeval_pa_full.json::tcmpa_211[deep] still_failed route=hybrid original=answer_option_letters_missing_any:ABCDE rerun=answer_option_letters_missing_any:ABCDE latency_ms=56586.1
+- tcmeval_pa_full.json::tcmpa_214[deep] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:在系统中明确提示，建议医师修改处方 rerun=answer_missing_any:在系统中明确提示，建议医师修改处方 latency_ms=106349.3
+- tcmeval_pa_full.json::tcmpa_214[quick] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:在系统中明确提示，建议医师修改处方 rerun=answer_missing_any:在系统中明确提示，建议医师修改处方 latency_ms=66284.6
+- tcmeval_pa_full.json::tcmpa_215[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:医师是否在处方内注明延长用量的合理理由 rerun=answer_missing_any:医师是否在处方内注明延长用量的合理理由 latency_ms=59126.3
+- tcmeval_pa_full.json::tcmpa_215[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:医师是否在处方内注明延长用量的合理理由 rerun=answer_missing_any:医师是否在处方内注明延长用量的合理理由 latency_ms=52286.7
+- tcmeval_pa_full.json::tcmpa_216[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:《长期处方管理规范》 rerun=answer_missing_any:《长期处方管理规范》 latency_ms=23406.8
+- tcmeval_pa_full.json::tcmpa_216[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:《长期处方管理规范》 rerun=answer_missing_any:《长期处方管理规范》 latency_ms=40044.6
+- tcmeval_pa_full.json::tcmpa_217[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=48169.8
+- tcmeval_pa_full.json::tcmpa_218[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=53700.1
+- tcmeval_pa_full.json::tcmpa_219[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:6 g rerun=answer_option_letters_missing_any:D,answer_missing_any:6 g latency_ms=113721.5
+- tcmeval_pa_full.json::tcmpa_219[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:6 g rerun=answer_option_letters_missing_any:D,answer_missing_any:6 g latency_ms=58967.8
+- tcmeval_pa_full.json::tcmpa_220[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B rerun=answer_missing_any:3 日用量 latency_ms=54447.3
+- tcmeval_pa_full.json::tcmpa_222[deep] recovered route=graph original=answer_option_letters_missing_any:C rerun=ok latency_ms=58582.1
+- tcmeval_pa_full.json::tcmpa_222[quick] recovered route=graph original=answer_option_letters_missing_any:C rerun=ok latency_ms=58747.6
+- tcmeval_pa_full.json::tcmpa_223[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=49424.2
+- tcmeval_pa_full.json::tcmpa_224[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C rerun=answer_missing_any:18 味 latency_ms=34260.7
+- tcmeval_pa_full.json::tcmpa_226[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:医师双签字确认 rerun=answer_missing_any:医师双签字确认 latency_ms=32854.8
+- tcmeval_pa_full.json::tcmpa_226[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=30220.1
+- tcmeval_pa_full.json::tcmpa_227[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=143242.2
+- tcmeval_pa_full.json::tcmpa_227[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=81075.8
+- tcmeval_pa_full.json::tcmpa_229[quick] recovered route=graph original=answer_option_letters_missing_any:B rerun=ok latency_ms=18531.3
+- tcmeval_pa_full.json::tcmpa_230[deep] still_failed route=graph original=answer_missing_any:用药同时与疾病、并发症及证型均不符合 rerun=answer_missing_any:用药同时与疾病、并发症及证型均不符合 latency_ms=28772.0
+- tcmeval_pa_full.json::tcmpa_230[quick] still_failed route=graph original=answer_missing_any:用药同时与疾病、并发症及证型均不符合 rerun=answer_missing_any:用药同时与疾病、并发症及证型均不符合 latency_ms=20440.8
+- tcmeval_pa_full.json::tcmpa_232[deep] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=55244.7
+- tcmeval_pa_full.json::tcmpa_232[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=45890.3
+- tcmeval_pa_full.json::tcmpa_233[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:1/3-1/2 rerun=answer_option_letters_missing_any:D,answer_missing_any:1/3-1/2 latency_ms=56550.4
+- tcmeval_pa_full.json::tcmpa_233[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:1/3-1/2 rerun=answer_missing_any:1/3-1/2 latency_ms=50433.7
+- tcmeval_pa_full.json::tcmpa_234[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1/2-3/4 rerun=answer_option_letters_missing_any:C,answer_missing_any:1/2-3/4 latency_ms=48488.2
+- tcmeval_pa_full.json::tcmpa_234[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1/2-3/4 rerun=answer_option_letters_missing_any:C,answer_missing_any:1/2-3/4 latency_ms=47637.5
+- tcmeval_pa_full.json::tcmpa_235[deep] still_failed route=hybrid original=answer_missing_any:3 倍 rerun=answer_option_letters_missing_any:C,answer_missing_any:3 倍 latency_ms=63672.4
+- tcmeval_pa_full.json::tcmpa_235[quick] still_failed route=hybrid original=answer_missing_any:3 倍 rerun=answer_missing_any:3 倍 latency_ms=57935.7
+- tcmeval_pa_full.json::tcmpa_236[quick] still_failed route=graph original=answer_option_letters_missing_any:C,answer_missing_any:240 g rerun=answer_missing_any:240 g latency_ms=42299.6
+- tcmeval_pa_full.json::tcmpa_237[deep] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:300 g rerun=answer_option_letters_missing_any:D,answer_missing_any:300 g latency_ms=137438.0
+- tcmeval_pa_full.json::tcmpa_237[quick] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:300 g rerun=answer_option_letters_missing_any:D,answer_missing_any:300 g latency_ms=76873.6
+- tcmeval_pa_full.json::tcmpa_239[deep] recovered route=graph original=answer_option_letters_missing_any:C,answer_missing_any:医疗机构可根据实际情况自行制定处方剂量限定标准 rerun=ok latency_ms=13562.0
+- tcmeval_pa_full.json::tcmpa_239[quick] still_failed route=graph original=answer_option_letters_missing_any:C,answer_missing_any:医疗机构可根据实际情况自行制定处方剂量限定标准 rerun=answer_missing_any:医疗机构可根据实际情况自行制定处方剂量限定标准 latency_ms=13740.8
+- tcmeval_pa_full.json::tcmpa_24[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=30412.0
+- tcmeval_pa_full.json::tcmpa_240[deep] still_failed route=hybrid original=answer_missing_any:应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方 rerun=answer_missing_any:应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方 latency_ms=89237.0
+- tcmeval_pa_full.json::tcmpa_240[quick] still_failed route=hybrid original=answer_missing_any:应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方 rerun=answer_missing_any:应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方 latency_ms=103950.9
+- tcmeval_pa_full.json::tcmpa_241[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:明确提示并建议医师修改处方 rerun=answer_missing_any:明确提示并建议医师修改处方 latency_ms=154800.4
+- tcmeval_pa_full.json::tcmpa_241[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:明确提示并建议医师修改处方 rerun=answer_missing_any:明确提示并建议医师修改处方 latency_ms=57016.6
+- tcmeval_pa_full.json::tcmpa_243[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:明确提示并建议医师修改处方 rerun=answer_missing_any:明确提示并建议医师修改处方 latency_ms=113575.4
+- tcmeval_pa_full.json::tcmpa_243[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:明确提示并建议医师修改处方 rerun=answer_missing_any:明确提示并建议医师修改处方 latency_ms=80499.1
+- tcmeval_pa_full.json::tcmpa_244[deep] recovered route=graph original=answer_option_letters_missing_any:B,answer_missing_any:明确提示并建议医师修改处方 rerun=ok latency_ms=136456.5
+- tcmeval_pa_full.json::tcmpa_244[quick] recovered route=graph original=answer_option_letters_missing_any:B,answer_missing_any:明确提示并建议医师修改处方 rerun=ok latency_ms=112607.9
+- tcmeval_pa_full.json::tcmpa_247[deep] still_failed route=hybrid original=answer_missing_any:同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改 rerun=answer_missing_any:同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改 latency_ms=130378.7
+- tcmeval_pa_full.json::tcmpa_247[quick] still_failed route=hybrid original=answer_missing_any:同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改 rerun=answer_missing_any:同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改 latency_ms=85082.6
+- tcmeval_pa_full.json::tcmpa_249[deep] still_failed route=graph original=answer_missing_any:手工签名、电子签名或加盖专用签章均须事先备案，且备案信息必须与处方上的签名或签章一致 rerun=answer_missing_any:手工签名、电子签名或加盖专用签章均须事先备案，且备案信息必须与处方上的签名或签章一致 latency_ms=163453.0
+- tcmeval_pa_full.json::tcmpa_25[deep] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=48798.3
+- tcmeval_pa_full.json::tcmpa_25[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=48070.2
+- tcmeval_pa_full.json::tcmpa_250[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=51168.0
+- tcmeval_pa_full.json::tcmpa_253[quick] recovered route=graph original=answer_option_letters_missing_any:B rerun=ok latency_ms=58030.9
+- tcmeval_pa_full.json::tcmpa_254[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=44365.0
+- tcmeval_pa_full.json::tcmpa_258[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:超药典上限必须拒绝调配 rerun=answer_missing_any:超药典上限必须拒绝调配 latency_ms=50521.2
+- tcmeval_pa_full.json::tcmpa_258[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:超药典上限必须拒绝调配 rerun=answer_missing_any:超药典上限必须拒绝调配 latency_ms=51505.5
+- tcmeval_pa_full.json::tcmpa_259[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:2/3 rerun=answer_option_letters_missing_any:C,answer_missing_any:2/3 latency_ms=52288.6
+- tcmeval_pa_full.json::tcmpa_259[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:2/3 rerun=answer_option_letters_missing_any:C,answer_missing_any:2/3 latency_ms=54399.4
+- tcmeval_pa_full.json::tcmpa_26[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=49629.8
+- tcmeval_pa_full.json::tcmpa_261[deep] still_failed route=hybrid original=answer_missing_any:1/2~3/4 rerun=answer_option_letters_missing_any:C,answer_missing_any:1/2~3/4 latency_ms=51838.0
+- tcmeval_pa_full.json::tcmpa_261[quick] still_failed route=hybrid original=answer_missing_any:1/2~3/4 rerun=answer_option_letters_missing_any:C,answer_missing_any:1/2~3/4 latency_ms=51864.3
+- tcmeval_pa_full.json::tcmpa_262[deep] still_failed route=graph original=answer_option_letters_missing_any:C,answer_missing_any:300g rerun=answer_missing_any:300g latency_ms=107628.7
+- tcmeval_pa_full.json::tcmpa_262[quick] still_failed route=graph original=answer_option_letters_missing_any:C,answer_missing_any:300g rerun=answer_missing_any:300g latency_ms=66166.1
+- tcmeval_pa_full.json::tcmpa_263[quick] still_failed route=graph original=answer_option_letters_missing_any:B rerun=answer_missing_any:用量宜轻 latency_ms=13792.0
+- tcmeval_pa_full.json::tcmpa_264[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=50883.0
+- tcmeval_pa_full.json::tcmpa_266[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=52143.8
+- tcmeval_pa_full.json::tcmpa_269[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:先煎 30 分钟 rerun=answer_missing_any:先煎 30 分钟 latency_ms=48496.2
+- tcmeval_pa_full.json::tcmpa_269[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:先煎 30 分钟 rerun=answer_missing_any:先煎 30 分钟 latency_ms=57551.2
+- tcmeval_pa_full.json::tcmpa_27[deep] recovered route=hybrid original=answer_option_letters_missing_any:D rerun=ok latency_ms=49559.0
+- tcmeval_pa_full.json::tcmpa_272[deep] recovered route=hybrid original=answer_option_letters_missing_any:ABC rerun=ok latency_ms=56167.8
+- tcmeval_pa_full.json::tcmpa_274[deep] still_failed route=hybrid original=answer_missing_any:电子处方允许直接覆盖原内容|药师可代医师修改剂量|涂改后字迹清晰即可 rerun=answer_missing_any:电子处方允许直接覆盖原内容|药师可代医师修改剂量|涂改后字迹清晰即可 latency_ms=56723.9
+- tcmeval_pa_full.json::tcmpa_275[deep] recovered route=graph original=answer_option_letters_missing_any:ABE rerun=ok latency_ms=56685.3
+- tcmeval_pa_full.json::tcmpa_275[quick] still_failed route=graph original=answer_option_letters_missing_any:ABE rerun=answer_option_letters_missing_any:ABE latency_ms=113801.8
+- tcmeval_pa_full.json::tcmpa_279[quick] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:"后下" 适用于所有芳香类药材 rerun=answer_missing_any:"后下" 适用于所有芳香类药材 latency_ms=32092.8
+- tcmeval_pa_full.json::tcmpa_28[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=49557.2
+- tcmeval_pa_full.json::tcmpa_289[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:苦杏仁成人一日用量可达 30g rerun=answer_option_letters_missing_any:C,answer_missing_any:苦杏仁成人一日用量可达 30g latency_ms=53543.0
+- tcmeval_pa_full.json::tcmpa_289[quick] recovered route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:苦杏仁成人一日用量可达 30g rerun=ok latency_ms=62388.8
+- tcmeval_pa_full.json::tcmpa_29[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=52328.0
+- tcmeval_pa_full.json::tcmpa_29[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=49370.6
+- tcmeval_pa_full.json::tcmpa_291[deep] recovered route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:糖尿病患者可随意使用蜂蜜制丸剂 rerun=ok latency_ms=56819.6
+- tcmeval_pa_full.json::tcmpa_291[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:糖尿病患者可随意使用蜂蜜制丸剂 rerun=answer_missing_any:糖尿病患者可随意使用蜂蜜制丸剂 latency_ms=58699.2
+- tcmeval_pa_full.json::tcmpa_293[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 rerun=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 latency_ms=200609.4
+- tcmeval_pa_full.json::tcmpa_293[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 rerun=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 latency_ms=65233.2
+- tcmeval_pa_full.json::tcmpa_295[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E rerun=answer_option_letters_missing_any:E latency_ms=86359.5
+- tcmeval_pa_full.json::tcmpa_295[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:维生素 rerun=answer_option_letters_missing_any:E latency_ms=82673.9
+- tcmeval_pa_full.json::tcmpa_296[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:必须要求医师修改；不同意修改即使双签字也不予通过 rerun=answer_missing_any:必须要求医师修改；不同意修改即使双签字也不予通过 latency_ms=81607.5
+- tcmeval_pa_full.json::tcmpa_296[quick] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:必须要求医师修改；不同意修改即使双签字也不予通过 rerun=answer_missing_any:必须要求医师修改；不同意修改即使双签字也不予通过 latency_ms=58486.4
+- tcmeval_pa_full.json::tcmpa_297[deep] still_failed route=hybrid original=answer_missing_any:有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行 rerun=answer_option_letters_missing_any:C,answer_missing_any:有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行 latency_ms=122687.0
+- tcmeval_pa_full.json::tcmpa_297[quick] still_failed route=hybrid original=answer_missing_any:有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行 rerun=answer_missing_any:有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行 latency_ms=61527.7
+- tcmeval_pa_full.json::tcmpa_298[deep] still_failed route=hybrid original=answer_missing_any:3～15g（先煎60分钟） rerun=answer_missing_any:3～15g（先煎60分钟） latency_ms=45313.2
+- tcmeval_pa_full.json::tcmpa_298[quick] still_failed route=hybrid original=answer_missing_any:3～15g（先煎60分钟） rerun=answer_missing_any:3～15g（先煎60分钟） latency_ms=46820.8
+- tcmeval_pa_full.json::tcmpa_299[deep] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:0.01～0.06g rerun=ok latency_ms=48725.9
+- tcmeval_pa_full.json::tcmpa_299[quick] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:0.01～0.06g rerun=ok latency_ms=70634.8
+- tcmeval_pa_full.json::tcmpa_30[deep] recovered route=graph original=answer_option_letters_missing_any:ABCD rerun=ok latency_ms=19982.9
+- tcmeval_pa_full.json::tcmpa_301[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:炮制品 3～9g，生品仅外用 rerun=answer_missing_any:炮制品 3～9g，生品仅外用 latency_ms=69866.9
+- tcmeval_pa_full.json::tcmpa_302[deep] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:0.015～0.03g rerun=answer_option_letters_missing_any:B,answer_missing_any:0.015～0.03g latency_ms=44512.1
+- tcmeval_pa_full.json::tcmpa_302[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:0.015～0.03g rerun=answer_option_letters_missing_any:B,answer_missing_any:0.015～0.03g latency_ms=48439.2
+- tcmeval_pa_full.json::tcmpa_305[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:28 种 rerun=answer_missing_any:28 种 latency_ms=20436.9
+- tcmeval_pa_full.json::tcmpa_308[deep] still_failed route=hybrid original=answer_option_letters_missing_any:D rerun=answer_missing_any:入丸散或卷烟熏吸 latency_ms=32591.4
+- tcmeval_pa_full.json::tcmpa_308[quick] recovered route=hybrid original=answer_option_letters_missing_any:D rerun=ok latency_ms=29995.5
+- tcmeval_pa_full.json::tcmpa_313[quick] recovered route=hybrid original=answer_option_letters_missing_any:A rerun=ok latency_ms=56191.8
+- tcmeval_pa_full.json::tcmpa_315[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:0.6～1.5g rerun=answer_option_letters_missing_any:C,answer_missing_any:0.6～1.5g latency_ms=89895.7
+- tcmeval_pa_full.json::tcmpa_315[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:0.6～1.5g rerun=answer_option_letters_missing_any:C,answer_missing_any:0.6～1.5g latency_ms=47683.7
+- tcmeval_pa_full.json::tcmpa_317[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B rerun=answer_missing_any:0.1～0.3g latency_ms=48224.0
+- tcmeval_pa_full.json::tcmpa_320[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:5～10g rerun=answer_option_letters_missing_any:C,answer_missing_any:5～10g latency_ms=82168.4
+- tcmeval_pa_full.json::tcmpa_320[quick] recovered route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:5～10g rerun=ok latency_ms=56354.3
+- tcmeval_pa_full.json::tcmpa_321[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:2～5g rerun=answer_option_letters_missing_any:C,answer_missing_any:2～5g latency_ms=55215.0
+- tcmeval_pa_full.json::tcmpa_321[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:2～5g rerun=answer_missing_any:2～5g latency_ms=76807.7
+- tcmeval_pa_full.json::tcmpa_324[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1.5～3g rerun=answer_option_letters_missing_any:C,answer_missing_any:1.5～3g latency_ms=55797.7
+- tcmeval_pa_full.json::tcmpa_324[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:1.5～3g rerun=answer_option_letters_missing_any:C,answer_missing_any:1.5～3g latency_ms=49064.0
+- tcmeval_pa_full.json::tcmpa_325[quick] still_failed route=hybrid original=answer_missing_any:3～10g rerun=answer_missing_any:3～10g latency_ms=54492.0
+- tcmeval_pa_full.json::tcmpa_326[deep] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:3～6g rerun=answer_option_letters_missing_any:C,answer_missing_any:3～6g latency_ms=49355.6
+- tcmeval_pa_full.json::tcmpa_326[quick] still_failed route=hybrid original=answer_option_letters_missing_any:C,answer_missing_any:3～6g rerun=answer_option_letters_missing_any:C,answer_missing_any:3～6g latency_ms=49747.1
+- tcmeval_pa_full.json::tcmpa_33[quick] still_failed route=graph original=answer_option_letters_missing_any:B rerun=answer_option_letters_missing_any:B latency_ms=14660.8
+- tcmeval_pa_full.json::tcmpa_35[quick] recovered route=graph original=answer_option_letters_missing_any:E rerun=ok latency_ms=15987.4
+- tcmeval_pa_full.json::tcmpa_37[quick] still_failed route=hybrid original=answer_missing_any:合理用药即取得最大的医疗和社会效益，可以不计投入成本 rerun=answer_missing_any:合理用药即取得最大的医疗和社会效益，可以不计投入成本 latency_ms=76760.0
+- tcmeval_pa_full.json::tcmpa_39[quick] still_failed route=hybrid original=answer_missing_any:每张处方不超过 2 日常用量 rerun=answer_option_letters_missing_any:C,answer_missing_any:每张处方不超过 2 日常用量 latency_ms=52730.2
+- tcmeval_pa_full.json::tcmpa_4[deep] still_failed route=graph original=answer_option_letters_missing_any:D rerun=answer_option_letters_missing_any:D latency_ms=16021.5
+- tcmeval_pa_full.json::tcmpa_4[quick] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:使药 rerun=answer_option_letters_missing_any:D,answer_missing_any:使药 latency_ms=16288.2
+- tcmeval_pa_full.json::tcmpa_44[deep] still_failed route=graph original=answer_option_letters_missing_any:D,answer_missing_any:向患者说明用法用量，煎煮方法，有无禁忌 rerun=answer_missing_any:向患者说明用法用量，煎煮方法，有无禁忌 latency_ms=25077.8
+- tcmeval_pa_full.json::tcmpa_44[quick] recovered route=graph original=answer_option_letters_missing_any:D,answer_missing_any:向患者说明用法用量，煎煮方法，有无禁忌 rerun=ok latency_ms=36838.8
+- tcmeval_pa_full.json::tcmpa_46[quick] still_failed route=hybrid original=answer_missing_any:服用温补药时，应少饮茶，少吃酸味食物 rerun=answer_missing_any:服用温补药时，应少饮茶，少吃酸味食物 latency_ms=58609.7
+- tcmeval_pa_full.json::tcmpa_47[deep] still_failed route=hybrid original=answer_missing_any:3 -9g rerun=answer_missing_any:3 -9g latency_ms=49280.9
+- tcmeval_pa_full.json::tcmpa_47[quick] still_failed route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:3 -9g rerun=answer_missing_any:3 -9g latency_ms=46179.7
+- tcmeval_pa_full.json::tcmpa_48[quick] still_failed route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:1.5~4.5g rerun=answer_missing_any:1.5~4.5g latency_ms=43884.7
+- tcmeval_pa_full.json::tcmpa_5[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=57454.3
+- tcmeval_pa_full.json::tcmpa_5[quick] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=46817.5
+- tcmeval_pa_full.json::tcmpa_50[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:0.03~0.6g rerun=answer_missing_any:0.03~0.6g latency_ms=58698.5
+- tcmeval_pa_full.json::tcmpa_51[deep] still_failed route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:3 -9g rerun=answer_option_letters_missing_any:A,answer_missing_any:3 -9g latency_ms=84437.3
+- tcmeval_pa_full.json::tcmpa_51[quick] still_failed route=hybrid original=answer_option_letters_missing_any:A,answer_missing_any:3 -9g rerun=answer_option_letters_missing_any:A,answer_missing_any:3 -9g latency_ms=56889.3
+- tcmeval_pa_full.json::tcmpa_52[deep] recovered route=hybrid original=answer_option_letters_missing_any:ABC rerun=ok latency_ms=56669.1
+- tcmeval_pa_full.json::tcmpa_52[quick] recovered route=hybrid original=answer_option_letters_missing_any:ABC rerun=ok latency_ms=99184.3
+- tcmeval_pa_full.json::tcmpa_53[quick] recovered route=hybrid original=answer_option_letters_missing_any:DE rerun=ok latency_ms=50303.6
+- tcmeval_pa_full.json::tcmpa_55[deep] recovered route=hybrid original=answer_option_letters_missing_any:ABCDE rerun=ok latency_ms=152027.1
+- tcmeval_pa_full.json::tcmpa_56[quick] still_failed route=graph original=answer_option_letters_missing_any:ABCDE rerun=answer_option_letters_missing_any:ABCDE latency_ms=22940.6
+- tcmeval_pa_full.json::tcmpa_59[deep] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=56573.0
+- tcmeval_pa_full.json::tcmpa_59[quick] recovered route=hybrid original=answer_option_letters_missing_any:E rerun=ok latency_ms=51784.6
+- tcmeval_pa_full.json::tcmpa_60[quick] recovered route=graph original=answer_option_letters_missing_any:A rerun=ok latency_ms=13610.4
+- tcmeval_pa_full.json::tcmpa_62[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 rerun=answer_option_letters_missing_any:E,answer_missing_any:黄芩、槐米 latency_ms=289820.5
+- tcmeval_pa_full.json::tcmpa_67[deep] still_failed route=graph original=answer_option_letters_missing_any:ABCDE,answer_missing_any:毒性作用|后遗作用|过敏反应|继发反应|特异性遗传因素 rerun=answer_option_letters_missing_any:ABCDE latency_ms=17909.8
+- tcmeval_pa_full.json::tcmpa_67[quick] recovered route=graph original=answer_option_letters_missing_any:ABCDE,answer_missing_any:毒性作用|后遗作用|过敏反应|继发反应|特异性遗传因素 rerun=ok latency_ms=15519.2
+- tcmeval_pa_full.json::tcmpa_68[deep] still_failed route=graph original=answer_option_letters_missing_any:BCE rerun=answer_option_letters_missing_any:BCE latency_ms=17484.0
+- tcmeval_pa_full.json::tcmpa_68[quick] still_failed route=graph original=answer_option_letters_missing_any:BCE rerun=answer_option_letters_missing_any:BCE latency_ms=13716.8
+- tcmeval_pa_full.json::tcmpa_69[deep] still_failed route=hybrid original=answer_option_letters_missing_any:ABDE rerun=answer_option_letters_missing_any:ABDE latency_ms=93190.9
+- tcmeval_pa_full.json::tcmpa_69[quick] still_failed route=hybrid original=answer_option_letters_missing_any:ABDE rerun=answer_option_letters_missing_any:ABDE latency_ms=59284.4
+- tcmeval_pa_full.json::tcmpa_7[deep] recovered route=graph original=answer_missing_any:一种药物的毒性或副作用，能被另一种药物减轻或消除 rerun=ok latency_ms=16244.2
+- tcmeval_pa_full.json::tcmpa_7[quick] still_failed route=graph original=answer_missing_any:一种药物的毒性或副作用，能被另一种药物减轻或消除 rerun=answer_missing_any:一种药物的毒性或副作用，能被另一种药物减轻或消除 latency_ms=19626.9
+- tcmeval_pa_full.json::tcmpa_70[deep] recovered route=hybrid original=answer_option_letters_missing_any:D rerun=ok latency_ms=98882.8
+- tcmeval_pa_full.json::tcmpa_70[quick] recovered route=hybrid original=answer_option_letters_missing_any:D rerun=ok latency_ms=58329.9
+- tcmeval_pa_full.json::tcmpa_71[deep] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=52952.3
+- tcmeval_pa_full.json::tcmpa_71[quick] recovered route=hybrid original=answer_option_letters_missing_any:B rerun=ok latency_ms=51122.9
+- tcmeval_pa_full.json::tcmpa_74[quick] recovered route=graph original=answer_option_letters_missing_any:C rerun=ok latency_ms=14538.0
+- tcmeval_pa_full.json::tcmpa_75[quick] still_failed route=graph original=answer_option_letters_missing_any:E rerun=answer_option_letters_missing_any:E latency_ms=20019.5
+- tcmeval_pa_full.json::tcmpa_77[quick] still_failed route=hybrid original=answer_option_letters_missing_any:D,answer_missing_any:甘遂和芫花 rerun=answer_missing_any:甘遂和芫花 latency_ms=61523.8
+- tcmeval_pa_full.json::tcmpa_81[deep] still_failed route=hybrid original=answer_option_letters_missing_any:E,answer_missing_any:三棱 rerun=answer_option_letters_missing_any:E,answer_missing_any:三棱 latency_ms=206912.7
+- tcmeval_pa_full.json::tcmpa_87[deep] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:砒霜 rerun=ok latency_ms=119009.8
+- tcmeval_pa_full.json::tcmpa_87[quick] recovered route=hybrid original=answer_option_letters_missing_any:B,answer_missing_any:砒霜 rerun=ok latency_ms=69259.0
+- tcmeval_pa_full.json::tcmpa_88[quick] still_failed route=hybrid original=answer_option_letters_missing_any:A rerun=answer_option_letters_missing_any:A,answer_missing_any:川乌 latency_ms=65367.8
+- tcmeval_pa_full.json::tcmpa_9[deep] recovered route=hybrid original=answer_option_letters_missing_any:C rerun=ok latency_ms=135594.5
+- tcmeval_pa_full.json::tcmpa_94[deep] recovered route=hybrid original=answer_missing_any:病人的生活习惯和个体差异不同，但不影响药物的有效性和安全性 rerun=ok latency_ms=109316.2
+- tcmeval_pa_full.json::tcmpa_96[quick] recovered route=graph original=answer_option_letters_missing_any:C rerun=ok latency_ms=12060.2
+- tcmeval_pa_full.json::tcmpa_97[deep] still_failed route=graph original=answer_missing_any:减少药物不良反应的发生，提高病人的生命质量，降低发病率、控制医疗保健费用的过度增长，使全社会获得最大的收益 rerun=answer_missing_any:减少药物不良反应的发生，提高病人的生命质量，降低发病率、控制医疗保健费用的过度增长，使全社会获得最大的收益 latency_ms=144905.5
+- tcmeval_pa_full.json::tcmpa_99[deep] still_failed route=hybrid original=answer_missing_any:中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应 rerun=answer_missing_any:中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应 latency_ms=119639.2
+- tcmeval_pa_full.json::tcmpa_99[quick] still_failed route=hybrid original=answer_missing_any:中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应 rerun=answer_missing_any:中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应 latency_ms=72233.7
+- tcmeval_sdt_train_full.json::病例101_pathogenesis[deep] still_failed route=hybrid original=request_error:ReadTimeout rerun=answer_missing_any:感受署邪 latency_ms=265489.9
+- tcmeval_sdt_train_full.json::病例101_pathogenesis[quick] still_failed route=hybrid original=answer_missing_any:感受署邪 rerun=answer_missing_any:感受署邪 latency_ms=161134.6
+- tcmeval_sdt_train_full.json::病例101_syndrome[deep] recovered route=graph original=answer_missing_any:暑温 rerun=ok latency_ms=47563.9
+- tcmeval_sdt_train_full.json::病例101_syndrome[quick] recovered route=graph original=answer_missing_any:暑温 rerun=ok latency_ms=44838.6
+- tcmeval_sdt_train_full.json::病例103_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=276268.7
+- tcmeval_sdt_train_full.json::病例103_syndrome[deep] still_failed route=graph original=answer_missing_any:气滞血瘀 rerun=answer_missing_any:气滞血瘀 latency_ms=55481.0
+- tcmeval_sdt_train_full.json::病例106_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=146418.0
+- tcmeval_sdt_train_full.json::病例111_pathogenesis[deep] recovered route=retrieval original=request_error:ReadTimeout rerun=ok latency_ms=275151.6
+- tcmeval_sdt_train_full.json::病例112_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=368531.3
+- tcmeval_sdt_train_full.json::病例114_syndrome[quick] still_failed route=graph original=answer_missing_any:痰浊内阻|肝风上逆 rerun=answer_missing_any:痰浊内阻|肝风上逆 latency_ms=19072.3
+- tcmeval_sdt_train_full.json::病例117_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:胃火实 rerun=ok latency_ms=236003.3
+- tcmeval_sdt_train_full.json::病例117_syndrome[quick] recovered route=graph original=answer_missing_any:胃热 rerun=ok latency_ms=17419.8
+- tcmeval_sdt_train_full.json::病例126_pathogenesis[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540011.7
+- tcmeval_sdt_train_full.json::病例126_syndrome[deep] still_failed route=graph original=answer_missing_any:卫阳不固 rerun=answer_missing_any:卫阳不固 latency_ms=34515.0
+- tcmeval_sdt_train_full.json::病例126_syndrome[quick] still_failed route=graph original=answer_missing_any:卫阳不固 rerun=answer_missing_any:卫阳不固 latency_ms=20034.7
+- tcmeval_sdt_train_full.json::病例132_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=239469.9
+- tcmeval_sdt_train_full.json::病例134_syndrome[deep] recovered route=graph original=answer_missing_any:血瘀气滞 rerun=ok latency_ms=14048.7
+- tcmeval_sdt_train_full.json::病例134_syndrome[quick] still_failed route=graph original=answer_missing_any:血瘀气滞 rerun=answer_missing_any:血瘀气滞 latency_ms=19692.6
+- tcmeval_sdt_train_full.json::病例138_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=388730.7
+- tcmeval_sdt_train_full.json::病例143_syndrome[quick] still_failed route=graph original=answer_missing_any:痰蒙心窍 rerun=answer_missing_any:痰蒙心窍 latency_ms=123419.2
+- tcmeval_sdt_train_full.json::病例146_syndrome[deep] recovered route=graph original=answer_missing_any:阳明积热|厥阳升扰 rerun=ok latency_ms=42447.7
+- tcmeval_sdt_train_full.json::病例146_syndrome[quick] recovered route=graph original=answer_missing_any:阳明积热|厥阳升扰 rerun=ok latency_ms=27995.9
+- tcmeval_sdt_train_full.json::病例150_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=137017.3
+- tcmeval_sdt_train_full.json::病例153_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=192922.6
+- tcmeval_sdt_train_full.json::病例154_syndrome[deep] still_failed route=graph original=answer_missing_any:肝肾同病|脾胃不和 rerun=answer_missing_any:肝肾同病|脾胃不和 latency_ms=34288.8
+- tcmeval_sdt_train_full.json::病例154_syndrome[quick] still_failed route=graph original=answer_missing_any:肝肾同病|脾胃不和 rerun=answer_missing_any:肝肾同病|脾胃不和 latency_ms=20346.7
+- tcmeval_sdt_train_full.json::病例155_syndrome[deep] recovered route=graph original=answer_missing_any:痰热内蕴|阴耗火动 rerun=ok latency_ms=76768.5
+- tcmeval_sdt_train_full.json::病例158_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=365721.5
+- tcmeval_sdt_train_full.json::病例158_syndrome[deep] still_failed route=graph original=answer_missing_any:络脉瘀阻|痰热上扰 rerun=answer_missing_any:络脉瘀阻|痰热上扰 latency_ms=17786.2
+- tcmeval_sdt_train_full.json::病例158_syndrome[quick] still_failed route=graph original=answer_missing_any:络脉瘀阻|痰热上扰 rerun=answer_missing_any:络脉瘀阻|痰热上扰 latency_ms=20879.3
+- tcmeval_sdt_train_full.json::病例161_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=223930.8
+- tcmeval_sdt_train_full.json::病例162_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=308351.7
+- tcmeval_sdt_train_full.json::病例171_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:肝郁下陷|阳亢热盛|移热膀胱 rerun=ok latency_ms=135684.7
+- tcmeval_sdt_train_full.json::病例178_pathogenesis[deep] still_failed route=hybrid original=answer_missing_any:气乱于上之候|下虚上实 rerun=answer_missing_any:气乱于上之候|下虚上实 latency_ms=75514.7
+- tcmeval_sdt_train_full.json::病例17_pathogenesis[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540003.0
+- tcmeval_sdt_train_full.json::病例182_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:肾虚阴火上炎 rerun=ok latency_ms=261804.3
+- tcmeval_sdt_train_full.json::病例18_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=274056.3
+- tcmeval_sdt_train_full.json::病例18_pathogenesis[quick] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=138508.7
+- tcmeval_sdt_train_full.json::病例192_pathogenesis[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540011.3
+- tcmeval_sdt_train_full.json::病例196_syndrome[deep] still_failed route=graph original=answer_missing_any:血不濡筋|营卫失调 rerun=answer_missing_any:血不濡筋|营卫失调 latency_ms=20884.8
+- tcmeval_sdt_train_full.json::病例196_syndrome[quick] still_failed route=graph original=answer_missing_any:血不濡筋|营卫失调 rerun=answer_missing_any:血不濡筋|营卫失调 latency_ms=26346.1
+- tcmeval_sdt_train_full.json::病例197_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:心火偏盛 rerun=ok latency_ms=35330.6
+- tcmeval_sdt_train_full.json::病例197_syndrome[deep] still_failed route=graph original=answer_missing_any:心火下移小肠 rerun=answer_missing_any:心火下移小肠 latency_ms=28442.6
+- tcmeval_sdt_train_full.json::病例197_syndrome[quick] still_failed route=graph original=answer_missing_any:心火下移小肠 rerun=answer_missing_any:心火下移小肠 latency_ms=26109.1
+- tcmeval_sdt_train_full.json::病例199_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:化燥伤阴|湿热内蕴 rerun=ok latency_ms=57570.6
+- tcmeval_sdt_train_full.json::病例19_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=249699.4
+- tcmeval_sdt_train_full.json::病例201_pathogenesis[deep] still_failed route=hybrid original=answer_missing_any:痰浊瘀血阻滞上焦|郁火伤津之象 rerun=answer_missing_any:痰浊瘀血阻滞上焦|郁火伤津之象 latency_ms=50625.0
+- tcmeval_sdt_train_full.json::病例201_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:痰浊瘀血阻滞上焦|郁火伤津之象 rerun=ok latency_ms=54440.4
+- tcmeval_sdt_train_full.json::病例203_syndrome[deep] still_failed route=graph original=answer_missing_any:心胆气虚 rerun=answer_missing_any:心胆气虚 latency_ms=22797.4
+- tcmeval_sdt_train_full.json::病例205_syndrome[deep] still_failed route=graph original=answer_missing_any:脾虚生湿 rerun=answer_missing_any:脾虚生湿 latency_ms=30064.0
+- tcmeval_sdt_train_full.json::病例205_syndrome[quick] still_failed route=graph original=answer_missing_any:脾虚生湿 rerun=answer_missing_any:脾虚生湿 latency_ms=16006.4
+- tcmeval_sdt_train_full.json::病例211_pathogenesis[quick] still_failed route=hybrid original=answer_missing_any:气血水郁积于腹内|肝脾肾三脏受病 rerun=answer_missing_any:气血水郁积于腹内|肝脾肾三脏受病 latency_ms=56151.6
+- tcmeval_sdt_train_full.json::病例225_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=514975.1
+- tcmeval_sdt_train_full.json::病例225_pathogenesis[quick] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=194015.1
+- tcmeval_sdt_train_full.json::病例228_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=295166.1
+- tcmeval_sdt_train_full.json::病例228_pathogenesis[quick] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=214264.0
+- tcmeval_sdt_train_full.json::病例228_syndrome[deep] recovered route=graph original=answer_missing_any:湿热中阻|气滞血瘀 rerun=ok latency_ms=25436.2
+- tcmeval_sdt_train_full.json::病例233_pathogenesis[deep] still_failed route=hybrid original=answer_missing_any:湿困经络 rerun=answer_missing_any:湿困经络 latency_ms=134031.1
+- tcmeval_sdt_train_full.json::病例233_pathogenesis[quick] still_failed route=hybrid original=answer_missing_any:湿困经络 rerun=answer_missing_any:湿困经络 latency_ms=55189.0
+- tcmeval_sdt_train_full.json::病例236_syndrome[quick] recovered route=graph original=request_error:ReadTimeout rerun=ok latency_ms=385279.0
+- tcmeval_sdt_train_full.json::病例238_syndrome[deep] still_failed route=graph original=answer_missing_any:血虚生风 rerun=answer_missing_any:血虚生风 latency_ms=33866.4
+- tcmeval_sdt_train_full.json::病例241_syndrome[quick] still_failed route=graph original=answer_missing_any:内扰神明|脾虚生湿 rerun=answer_missing_any:内扰神明|脾虚生湿 latency_ms=26472.6
+- tcmeval_sdt_train_full.json::病例245_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=294200.7
+- tcmeval_sdt_train_full.json::病例245_syndrome[quick] recovered route=graph original=answer_missing_any:湿热郁遏 rerun=ok latency_ms=85507.4
+- tcmeval_sdt_train_full.json::病例248_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=182876.1
+- tcmeval_sdt_train_full.json::病例249_syndrome[deep] still_failed route=graph original=answer_missing_any:伤害元气|伤肠胃之液 rerun=answer_missing_any:伤害元气|伤肠胃之液 latency_ms=24758.2
+- tcmeval_sdt_train_full.json::病例250_pathogenesis[deep] still_failed route=hybrid original=answer_missing_any:热邪从营分进入血分 rerun=answer_missing_any:热邪从营分进入血分 latency_ms=25599.2
+- tcmeval_sdt_train_full.json::病例251_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:心火又灼肺|肾精亏损 rerun=ok latency_ms=91604.7
+- tcmeval_sdt_train_full.json::病例253_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:水气搏结|脾胃原虚 rerun=ok latency_ms=134939.0
+- tcmeval_sdt_train_full.json::病例254_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:血枯津燥|失于治节 rerun=ok latency_ms=118344.3
+- tcmeval_sdt_train_full.json::病例25_pathogenesis[deep] still_failed route=hybrid original=request_error:ReadTimeout rerun=answer_missing_any:湿热内蕴|气郁血滞 latency_ms=419154.6
+- tcmeval_sdt_train_full.json::病例260_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:心营亏损 rerun=ok latency_ms=163304.6
+- tcmeval_sdt_train_full.json::病例272_syndrome[deep] still_failed route=graph original=answer_missing_any:痰湿阻滞|心阳不振 rerun=answer_missing_any:痰湿阻滞|心阳不振 latency_ms=29089.9
+- tcmeval_sdt_train_full.json::病例273_syndrome[deep] still_failed route=graph original=answer_missing_any:肺胃失养|热病伤阴 rerun=answer_missing_any:肺胃失养|热病伤阴 latency_ms=59512.5
+- tcmeval_sdt_train_full.json::病例279_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:肝脾不调 rerun=ok latency_ms=33841.8
+- tcmeval_sdt_train_full.json::病例279_syndrome[deep] still_failed route=graph original=answer_missing_any:肝脾不调 rerun=answer_missing_any:肝脾不调 latency_ms=20395.9
+- tcmeval_sdt_train_full.json::病例279_syndrome[quick] still_failed route=graph original=answer_missing_any:肝脾不调 rerun=answer_missing_any:肝脾不调 latency_ms=21497.2
+- tcmeval_sdt_train_full.json::病例280_syndrome[quick] recovered route=graph original=answer_missing_any:气阴双虚 rerun=ok latency_ms=24276.4
+- tcmeval_sdt_train_full.json::病例283_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=427741.7
+- tcmeval_sdt_train_full.json::病例283_pathogenesis[quick] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=186799.7
+- tcmeval_sdt_train_full.json::病例286_syndrome[deep] still_failed route=graph original=answer_missing_any:劳伤心脾 rerun=answer_missing_any:劳伤心脾 latency_ms=21740.5
+- tcmeval_sdt_train_full.json::病例293_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=120412.4
+- tcmeval_sdt_train_full.json::病例294_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=383163.7
+- tcmeval_sdt_train_full.json::病例294_syndrome[quick] recovered route=graph original=answer_missing_any:内夹积滞|外感风邪 rerun=ok latency_ms=46550.1
+- tcmeval_sdt_train_full.json::病例297_syndrome[deep] still_failed route=graph original=answer_missing_any:足太阳湿热 rerun=answer_missing_any:足太阳湿热 latency_ms=238321.0
+- tcmeval_sdt_train_full.json::病例297_syndrome[quick] still_failed route=graph original=answer_missing_any:足太阳湿热 rerun=answer_missing_any:足太阳湿热 latency_ms=235169.8
+- tcmeval_sdt_train_full.json::病例298_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=149755.5
+- tcmeval_sdt_train_full.json::病例298_syndrome[deep] still_failed route=graph original=answer_missing_any:阳明腑经湿热内攘 rerun=answer_missing_any:阳明腑经湿热内攘 latency_ms=88601.9
+- tcmeval_sdt_train_full.json::病例298_syndrome[quick] still_failed route=graph original=answer_missing_any:阳明腑经湿热内攘 rerun=answer_missing_any:阳明腑经湿热内攘 latency_ms=19552.0
+- tcmeval_sdt_train_full.json::病例299_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=83509.4
+- tcmeval_sdt_train_full.json::病例299_syndrome[deep] still_failed route=graph original=answer_missing_any:气血失养 rerun=answer_missing_any:气血失养 latency_ms=21579.7
+- tcmeval_sdt_train_full.json::病例299_syndrome[quick] still_failed route=graph original=answer_missing_any:气血失养 rerun=answer_missing_any:气血失养 latency_ms=15775.6
+- tcmeval_sdt_train_full.json::病例302_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=80056.2
+- tcmeval_sdt_train_full.json::病例304_syndrome[deep] recovered route=graph original=answer_missing_any:肝阴不足 rerun=ok latency_ms=113958.6
+- tcmeval_sdt_train_full.json::病例306_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=341248.5
+- tcmeval_sdt_train_full.json::病例306_syndrome[quick] recovered route=graph original=answer_missing_any:骨痹 rerun=ok latency_ms=88361.8
+- tcmeval_sdt_train_full.json::病例309_syndrome[deep] still_failed route=graph original=answer_missing_any:风热犯肺 rerun=answer_missing_any:风热犯肺 latency_ms=24595.5
+- tcmeval_sdt_train_full.json::病例309_syndrome[quick] still_failed route=graph original=answer_missing_any:风热犯肺 rerun=answer_missing_any:风热犯肺 latency_ms=104006.2
+- tcmeval_sdt_train_full.json::病例313_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:炼液为痰 rerun=ok latency_ms=64291.0
+- tcmeval_sdt_train_full.json::病例313_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:炼液为痰 rerun=ok latency_ms=68084.8
+- tcmeval_sdt_train_full.json::病例316_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=149610.1
+- tcmeval_sdt_train_full.json::病例318_syndrome[deep] recovered route=graph original=answer_missing_any:气血两亏 rerun=ok latency_ms=24434.2
+- tcmeval_sdt_train_full.json::病例318_syndrome[quick] still_failed route=graph original=answer_missing_any:气血两亏 rerun=answer_missing_any:气血两亏 latency_ms=28410.0
+- tcmeval_sdt_train_full.json::病例319_syndrome[deep] recovered route=graph original=answer_missing_any:气滞血瘀 rerun=ok latency_ms=48246.5
+- tcmeval_sdt_train_full.json::病例340_syndrome[deep] recovered route=graph original=answer_missing_any:阴虚肝旺|气血壅滞|痰火上升 rerun=ok latency_ms=33103.1
+- tcmeval_sdt_train_full.json::病例346_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=201278.6
+- tcmeval_sdt_train_full.json::病例346_pathogenesis[quick] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=108554.7
+- tcmeval_sdt_train_full.json::病例346_syndrome[deep] recovered route=graph original=answer_missing_any:肝胃失和 rerun=ok latency_ms=24516.2
+- tcmeval_sdt_train_full.json::病例347_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=188991.2
+- tcmeval_sdt_train_full.json::病例347_syndrome[deep] still_failed route=graph original=answer_missing_any:血虚兼受风湿之邪 rerun=answer_missing_any:血虚兼受风湿之邪 latency_ms=25157.2
+- tcmeval_sdt_train_full.json::病例347_syndrome[quick] still_failed route=graph original=answer_missing_any:血虚兼受风湿之邪 rerun=answer_missing_any:血虚兼受风湿之邪 latency_ms=24893.0
+- tcmeval_sdt_train_full.json::病例350_syndrome[quick] still_failed route=graph original=answer_missing_any:气阴两竭 rerun=answer_missing_any:气阴两竭 latency_ms=33825.0
+- tcmeval_sdt_train_full.json::病例35_syndrome[deep] still_failed route=graph original=answer_missing_any:肝郁胃虚 rerun=answer_missing_any:肝郁胃虚 latency_ms=22693.4
+- tcmeval_sdt_train_full.json::病例35_syndrome[quick] still_failed route=graph original=answer_missing_any:肝郁胃虚 rerun=answer_missing_any:肝郁胃虚 latency_ms=22114.1
+- tcmeval_sdt_train_full.json::病例37_syndrome[quick] recovered route=graph original=answer_missing_any:湿邪阻滞|气化失运|脾肾两虚 rerun=ok latency_ms=18937.4
+- tcmeval_sdt_train_full.json::病例41_pathogenesis[quick] still_failed route=hybrid original=answer_missing_any:脾湿郁热|脾肾亏虚|流注膀胱 rerun=answer_missing_any:脾湿郁热|脾肾亏虚|流注膀胱 latency_ms=58453.1
+- tcmeval_sdt_train_full.json::病例46_pathogenesis[deep] still_failed route=hybrid original=answer_missing_any:肝肺被伤 rerun=answer_missing_any:肝肺被伤 latency_ms=226411.9
+- tcmeval_sdt_train_full.json::病例46_syndrome[deep] recovered route=graph original=answer_missing_any:气滞血瘀 rerun=ok latency_ms=25664.7
+- tcmeval_sdt_train_full.json::病例46_syndrome[quick] recovered route=graph original=answer_missing_any:气滞血瘀 rerun=ok latency_ms=49913.2
+- tcmeval_sdt_train_full.json::病例47_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=259390.0
+- tcmeval_sdt_train_full.json::病例47_syndrome[deep] recovered route=graph original=answer_missing_any:胃气上逆|脾寒肝旺 rerun=ok latency_ms=27745.8
+- tcmeval_sdt_train_full.json::病例49_syndrome[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540013.2
+- tcmeval_sdt_train_full.json::病例49_syndrome[quick] recovered route=graph original=request_error:ReadTimeout rerun=ok latency_ms=337556.5
+- tcmeval_sdt_train_full.json::病例51_syndrome[quick] still_failed route=graph original=answer_missing_any:肺虚痰伏 rerun=answer_missing_any:肺虚痰伏 latency_ms=23227.2
+- tcmeval_sdt_train_full.json::病例59_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=124916.7
+- tcmeval_sdt_train_full.json::病例65_pathogenesis[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540033.9
+- tcmeval_sdt_train_full.json::病例66_syndrome[deep] still_failed route=graph original=answer_missing_any:郁滞胸脘|湿热互结 rerun=answer_missing_any:郁滞胸脘|湿热互结 latency_ms=27722.2
+- tcmeval_sdt_train_full.json::病例66_syndrome[quick] still_failed route=graph original=answer_missing_any:郁滞胸脘|湿热互结 rerun=answer_missing_any:郁滞胸脘|湿热互结 latency_ms=40720.7
+- tcmeval_sdt_train_full.json::病例69_syndrome[deep] recovered route=graph original=answer_missing_any:水邪上凌心肺 rerun=ok latency_ms=40693.8
+- tcmeval_sdt_train_full.json::病例6_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=233215.2
+- tcmeval_sdt_train_full.json::病例73_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=385287.6
+- tcmeval_sdt_train_full.json::病例74_pathogenesis[deep] still_failed route= original=request_error:ReadTimeout rerun=request_error:ReadTimeout latency_ms=540005.6
+- tcmeval_sdt_train_full.json::病例75_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=252288.2
+- tcmeval_sdt_train_full.json::病例77_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=122031.6
+- tcmeval_sdt_train_full.json::病例79_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=254338.0
+- tcmeval_sdt_train_full.json::病例79_syndrome[quick] still_failed route=graph original=answer_missing_any:心肝阳虚 rerun=answer_missing_any:心肝阳虚 latency_ms=44145.4
+- tcmeval_sdt_train_full.json::病例7_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=260993.9
+- tcmeval_sdt_train_full.json::病例7_syndrome[deep] recovered route=graph original=answer_missing_any:血瘀津亏|肝肾阴亏 rerun=ok latency_ms=22861.4
+- tcmeval_sdt_train_full.json::病例80_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=227293.5
+- tcmeval_sdt_train_full.json::病例84_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:耗伤肾水|相火离位 rerun=ok latency_ms=86181.9
+- tcmeval_sdt_train_full.json::病例84_syndrome[deep] still_failed route=graph original=answer_missing_any:虚火上炎|肾水不足 rerun=answer_missing_any:虚火上炎|肾水不足 latency_ms=31263.6
+- tcmeval_sdt_train_full.json::病例84_syndrome[quick] still_failed route=graph original=answer_missing_any:虚火上炎|肾水不足 rerun=answer_missing_any:虚火上炎|肾水不足 latency_ms=63715.7
+- tcmeval_sdt_train_full.json::病例88_pathogenesis[quick] recovered route=hybrid original=answer_missing_any:阳气外泄|下元虚寒 rerun=ok latency_ms=77419.9
+- tcmeval_sdt_train_full.json::病例88_syndrome[deep] still_failed route=graph original=answer_missing_any:真寒假热 rerun=answer_missing_any:真寒假热 latency_ms=17562.8
+- tcmeval_sdt_train_full.json::病例88_syndrome[quick] still_failed route=graph original=answer_missing_any:真寒假热 rerun=answer_missing_any:真寒假热 latency_ms=14385.7
+- tcmeval_sdt_train_full.json::病例90_pathogenesis[deep] recovered route=hybrid original=answer_missing_any:肾亏|壬癸不足 rerun=ok latency_ms=143239.3
+- tcmeval_sdt_train_full.json::病例90_pathogenesis[quick] still_failed route=hybrid original=answer_missing_any:肾亏|壬癸不足 rerun=answer_missing_any:肾亏|壬癸不足 latency_ms=111488.2
+- tcmeval_sdt_train_full.json::病例91_pathogenesis[deep] recovered route=hybrid original=request_error:ReadTimeout rerun=ok latency_ms=182634.2
+- tcmeval_sdt_train_full.json::病例93_syndrome[deep] recovered route=graph original=answer_missing_any:肾虚喘证 rerun=ok latency_ms=25405.9
+- tcmeval_sdt_train_full.json::病例97_syndrome[deep] recovered route=graph original=answer_missing_any:三阳合病 rerun=ok latency_ms=19566.0
+- tcmeval_sdt_train_full.json::病例97_syndrome[quick] recovered route=graph original=answer_missing_any:三阳合病 rerun=ok latency_ms=27603.2

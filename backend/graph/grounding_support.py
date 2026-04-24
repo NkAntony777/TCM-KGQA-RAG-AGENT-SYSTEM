@@ -318,13 +318,13 @@ def summarize_retrieval_result(result: dict[str, Any]) -> list[str]:
     return lines
 
 
-def build_mock_answer(query: str, tool_output: str, llm_error: str) -> str:
+def build_local_fallback_answer(query: str, tool_output: str, llm_error: str) -> str:
     payload = safe_json_loads(tool_output)
     if not isinstance(payload, dict):
         return "当前处于本地降级模式，但结构化工具返回不可解析，暂时无法生成回答。"
 
     lines = [
-        "当前处于本地演示降级模式，未调用外部大模型，以下回答直接基于路由与 mock 证据生成。",
+        "当前处于本地真实引擎降级模式，未调用外部大模型，以下回答直接基于路由与本地证据生成。",
         f"- 问题：{query}",
         f"- 路由：{payload.get('route', 'unknown')} -> {payload.get('final_route', payload.get('route', 'unknown'))}",
     ]
@@ -339,6 +339,11 @@ def build_mock_answer(query: str, tool_output: str, llm_error: str) -> str:
 
     lines.append(f"- 降级原因：{llm_error.splitlines()[0][:120]}")
     return "\n".join(lines)
+
+
+# Backward-compatible alias for older imports/tests. The implementation is no
+# longer mock-based; service unavailability degrades to local real evidence.
+build_mock_answer = build_local_fallback_answer
 
 
 def stringify_content(content: Any) -> str:

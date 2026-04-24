@@ -1,0 +1,3690 @@
+[
+  {
+    "id": "tcmpa_1",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药处方载有的内容不包括以下哪一项\n选项：\nA. 中药名称\nB. 中药数量\nC. 中药的煎法\nD. 中药的服用方法\nE. 中药的性状",
+    "answer_contains_any": [
+      "中药的性状"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_34",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于处方管理不正确的是\n选项：\nA. 处方应书写清晰，一般不得涂改\nB. 审方人员必须对错误处方如实登记上报\nC. 审方或调配人员应对超剂量用药予以修改\nD. 开具处方后的空白处应划一斜线，以示处方完毕\nE. 药物剂量一律用阿拉伯数字书写",
+    "answer_contains_any": [
+      "审方或调配人员应对超剂量用药予以修改"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_44",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不属于调配制度的是\n选项：\nA. 调配人员接到计价收款后的处方，应再次审方\nB. 应注意处方中有无配伍禁忌\nC. 特殊管理的药品剂量是否正确\nD. 向患者说明用法用量，煎煮方法，有无禁忌\nE. 按处方药味顺序调配，间隔摆放",
+    "answer_contains_any": [
+      "向患者说明用法用量，煎煮方法，有无禁忌"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_58",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下关于审方制度的描述，正确的有\n选项：\nA. 审查无误后方可计价\nB. 发现配伍禁忌，应自行修改\nC. 临时缺药时，应与处方医师联系，请处方医师更改后重新签字，方可计价\nD. 审方人员无权涂改医师处方\nE. 处方日期超过 5 日，须处方医师重新签字方可调配",
+    "answer_contains_any": [
+      "审查无误后方可计价",
+      "临时缺药时，应与处方医师联系，请处方医师更改后重新签字，方可计价",
+      "审方人员无权涂改医师处方"
+    ],
+    "answer_option_letters_any": [
+      "ACD"
+    ]
+  },
+  {
+    "id": "tcmpa_112",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于处方说法不正确的是\n选项：\nA. 广义的处方指载有药品名称、数量等内容和制备任何一种制剂的书面文件\nB. 狭义的处方指由注册的执业医师和执业助理医师在诊疗活动中为患者开具的、由药学专业技术人员审核、调配、核对，并作为发药凭证的医疗用药的医疗文书\nC. 中药处方是载有中药名称、数量、煎服用法等内容和制备任何中药制剂的书面文件，是医师辨证论治的书面记录和凭证，反映了医师的辨证理法和用药要求\nD. 中药处方是医师给中药调剂人员的书面通知，又是中药调剂工作的依据，也是计价、统计的凭证，具有法律意义，同时又具有技术上和经济上的意义\nE. 执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义",
+    "answer_contains_any": [
+      "执业医师和执业助理医师为患者开具的处方专供医疗机构工作人员使用，不具有法律意义"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_276",
+    "category": "tcmeval_pa_基础概念",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪项不属于处方审核的核心内容？\n选项：\nA. 诊断与用药相符性审查 \nB. 中药配伍禁忌审查 \nC. 特殊人群用药剂量审查 \nD. 药材市场价格审查 \nE. 处方书写规范性审查",
+    "answer_contains_any": [
+      "药材市场价格审查"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_2",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：引经药或调和药性的药物是\n选项：\nA. 君药\nB. 臣药\nC. 佐药\nD. 使药\nE. 其他",
+    "answer_contains_any": [
+      "使药"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_3",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不属于处方前记的内容是\n选项：\nA. 医疗机构名称\nB. 处方编号\nC. 患者姓名、性别、年龄\nD. 开具日期\nE. 药品金额",
+    "answer_contains_any": [
+      "药品金额"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_4",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：麻黄汤中炙甘草的作用是\n选项：\nA. 君药\nB. 臣药\nC. 佐药\nD. 使药\nE. 以上均非",
+    "answer_contains_any": [
+      "使药"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_5",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：蒲黄入煎剂宜\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 另煎\nE. 研末冲服",
+    "answer_contains_any": [
+      "包煎"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_6",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：气味芳香、含挥发性成分的饮片宜\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 另煎\nE. 冲服",
+    "answer_contains_any": [
+      "后下"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_18",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：哪一味中药属麻醉中药\n选项：\nA. 马钱子\nB. 川乌\nC. 罂粟壳\nD. 延胡索\nE. 雷公藤",
+    "answer_contains_any": [
+      "罂粟壳"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_19",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于罂粟壳的处方管理制度，错误的是\n选项：\nA. 所有执业医师均可行使麻醉中药处方权\nB. 使用罂粟壳的患者必须建病历\nC. 罂粟壳处方必须有具备资格的药学技术人员调制，实行双人签字制度\nD. 罂粟壳处方应保存 3 年备查\nE. 罂粟壳的医务人员必须是执业医师，经考核合格并获得麻醉药品处方权者",
+    "answer_contains_any": [
+      "所有执业医师均可行使麻醉中药处方权"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_24",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：生石膏入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "先煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_25",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：乌头入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "先煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_26",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：薄荷入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "后下"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_27",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：人参入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "另煎冲服"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_28",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：三七入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "研末冲服"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_29",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：鹿角胶入煎剂宜\n选项：\nA. 先煎 \nB. 后下 \nC. 烊化 \nD. 另煎冲服 \nE. 研末冲服",
+    "answer_contains_any": [
+      "烊化"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_33",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：协助主药以加强对主证治疗作用的药物是\n选项：\nA. 君药\nB. 臣药\nC. 佐药\nD. 使药\nE. 其他",
+    "answer_contains_any": [
+      "臣药"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_39",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于罂粟壳使用不正确的是\n选项：\nA. 不得零售\nB. 不得单包\nC. 每张处方不超过 2 日常用量\nD. 连续使用不得超过 7 天\nE. 一张处方总剂量不得超过18g",
+    "answer_contains_any": [
+      "每张处方不超过 2 日常用量"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_40",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下哪一味中药属麻醉中药\n选项：\nA. 马钱子\nB. 川乌\nC. 罂粟壳\nD. 延胡索\nE. 雷公藤",
+    "answer_contains_any": [
+      "罂粟壳"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_43",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方日期超过几日后，应请处方医师重新签字方可调配\n选项：\nA.1 日\nB.2 日\nC.3 日\nD.5 日\nE.7 日",
+    "answer_contains_any": [
+      "3 日"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_52",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些属于处方后记的内容\n选项：\nA. 医师签名\nB. 药品金额\nC. 审核、调配、核对、发药的药学专业技术人员签名\nD. 医疗、预防、保健机构名称\nE. 开具日期",
+    "answer_contains_any": [
+      "医师签名",
+      "药品金额",
+      "审核、调配、核对、发药的药学专业技术人员签名"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_53",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：羚羊角可\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 另煎\nE. 研末冲服",
+    "answer_contains_any": [
+      "另煎",
+      "研末冲服"
+    ],
+    "answer_option_letters_any": [
+      "DE"
+    ]
+  },
+  {
+    "id": "tcmpa_59",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：阿胶入煎剂宜\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 另煎\nE. 烊化",
+    "answer_contains_any": [
+      "烊化"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_60",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：矿石类、贝壳类等质地坚硬、有效成分不易煎出的药材，宜\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 另煎\nE. 冲服",
+    "answer_contains_any": [
+      "先煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_70",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：羚羊角的用法是\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 冲服\nE. 烊化",
+    "answer_contains_any": [
+      "冲服"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_71",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：大黄的用法是\n选项：\nA. 先煎\nB. 后下\nC. 包煎\nD. 冲服\nE. 烊化",
+    "answer_contains_any": [
+      "后下"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_108",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于麻醉中药的调剂与管理说法错误的是\n选项：\nA. 麻醉中药是指连续使用后易产生生理依赖性、能成瘾癖的一类中药\nB. 罂粟壳的供应必须根据医疗、教学和科研的需要，有计划地进行\nC. 经营和使用单位禁止非法使用、贮存、转让或借用罂粟壳\nD. 无麻醉药品处方权的医师在夜班急救需给病人使用罂粟壳时，可限开 1 日量\nE. 凡使用罂粟壳的病人必须建立病历",
+    "answer_contains_any": [
+      "无麻醉药品处方权的医师在夜班急救需给病人使用罂粟壳时，可限开 1 日量"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_109",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列说法不正确的是\n选项：\nA. 麻醉中药是指连续使用后易产生生理依赖性、能成瘾癖的一类中药\nB. 经营和使用单位应加强对罂粟壳的管理，禁止非法使用、贮存、转让或借用罂粟壳\nC. 使用罂粟壳的医务人员必须是执业医师，持有 “麻醉药品使用资格证书”，并将签名字样交药剂科备案后，方可行使麻醉药品处方权\nD. 凡使用罂粟壳的病人必须建立病历\nE. 麻醉药品专用处方应由药剂科留存 2 年备查",
+    "answer_contains_any": [
+      "麻醉药品专用处方应由药剂科留存 2 年备查"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_113",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列说法正确的是\n选项：\nA. 一张处方可以没有君药\nB. 针对兼证起主要治疗作用的药物，也可称谓君药\nC. 用以消除或减弱君、臣药的毒性，或制约其峻烈之性的药物，可称谓反佐药\nD. 病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药\nE. 引经药或调和药性的药物称之使药，一张处方可有可无",
+    "answer_contains_any": [
+      "病重邪盛，可能拒药时，配用与君、臣药性味相反而又能在治疗中起相成作用的药物，可称谓佐制药"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_114",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：医师书写处方前记包括\n选项：\nA. 医疗、预防、保健机构名称，费别，患者姓名、性别、年龄、门诊，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目\nB. 医疗、预防、保健机构名称，处方编号，费别，患者姓名、性别、年龄、门诊或住院病历号，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目\nC. 处方编号，费别，患者姓名、性别、年龄、门诊或住院病历号，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目\nD. 医疗、预防、保健机构名称，处方编号，患者姓名、性别、年龄、门诊或住院病历号，科别或病室等，并可添列专科要求的项目\nE. 医疗、预防、保健机构名称，处方编号，费别，性别、年龄、门诊或住院病历号，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目",
+    "answer_contains_any": [
+      "医疗、预防、保健机构名称，处方编号，费别，患者姓名、性别、年龄、门诊或住院病历号，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_115",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列除哪项外都是炮制类术语\n选项：\nA. 蒸\nB. 煨\nC. 煮\nD. 洗\nE. 炒",
+    "answer_contains_any": [
+      "洗"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_116",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列描述错误的是\n选项：\nA. 医疗、预防、保健机构名称，处方编号，费别，患者姓名、性别、年龄、门诊或住院病历号，科别或病室和床位号，临床诊断，开具日期等，并可添列专科要求的项目\nB. 西药、中成药、中药饮片可以开具在一张处方上\nC. 处方一律用规范的中文或英文名称书写\nD. 处方有修改，必须在修改处签名及注明修改日期\nE. 处方医师的签名式样和专用签章必须与在药学部门留样备查的式样一致，不得任意改动，否则应重新登记留样备案",
+    "answer_contains_any": [
+      "西药、中成药、中药饮片可以开具在一张处方上"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_117",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列描述错误的是\n选项：\nA. 实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效\nB. 试用期的医师开具处方须经所在医疗、预防、保健机构有处方权的执业医师审核并签名或加盖专用签章后处方有效\nC. 处方医师的签名式样和专用签章必须与在药学部门留样备查的式样一致，不得任意改动，否则应重新登记留样备案\nD. 处方有修改，必须在修改处签名及注明修改日期\nE. 医师开具处方时，除特殊情况外，必须注明临床诊断",
+    "answer_contains_any": [
+      "实习医师在上级医师指导下开处方，其处方不用上级医师签名也有生效"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_118",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不属于 \"脚注\" 的是\n选项：\nA. 久煎\nB. 包煎\nC. 另煎\nD. 冲服\nE. 先煎",
+    "answer_contains_any": [
+      "久煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_119",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：鹿角霜采用的方法为\n选项：\nA. 先煎\nB. 后下\nC. 烊化\nD. 包煎\nE. 另煎",
+    "answer_contains_any": [
+      "先煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_120",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：制川乌采用的方法为\n选项：\nA. 先煎\nB. 后下\nC. 烊化\nD. 包煎\nE. 另煎",
+    "answer_contains_any": [
+      "先煎"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_121",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：阿胶采用的方法为\n选项：\nA. 先煎\nB. 后下\nC. 烊化\nD. 包煎\nE. 另煎",
+    "answer_contains_any": [
+      "烊化"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_122",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：西红花采用的方法为\n选项：\nA. 先煎\nB. 后下\nC. 烊化\nD. 包煎\nE. 另煎",
+    "answer_contains_any": [
+      "另煎"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_123",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：鱼腥草采用的方法为\n选项：\nA. 先煎\nB. 后下\nC. 烊化\nD. 包煎\nE. 另煎",
+    "answer_contains_any": [
+      "后下"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_124",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：采用后下方法的药物为\n选项：\nA. 阿胶\nB. 三七\nC. 砂仁\nD. 珍珠母\nE. 葶苈子",
+    "answer_contains_any": [
+      "砂仁"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_125",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：采用冲服方法的药物为\n选项：\nA. 阿胶\nB. 三七\nC. 砂仁\nD. 珍珠母\nE. 葶苈子",
+    "answer_contains_any": [
+      "三七"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_152",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：麻醉中药罂粟壳连续使用不得超过\n选项：\nA. 5 年\nB. 3 年\nC. 7\nD\nD. 2\nD\nE. 6 年",
+    "answer_contains_any": [
+      "7"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_154",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于麻醉中药罂粟壳管理的有\n选项：\nA. 麻醉中药罂粟壳每张处方不超过 3d 常用量\nB. 麻醉中药罂粟壳不得单包\nC. 麻醉中药罂粟壳连续使用不得超过 5d\nD. 麻醉中药罂粟壳每张处方不超过 18g\nE. 麻醉中药罂粟壳处方由经营或使用单位留存 2 年",
+    "answer_contains_any": [
+      "麻醉中药罂粟壳每张处方不超过 3d 常用量",
+      "麻醉中药罂粟壳不得单包",
+      "麻醉中药罂粟壳每张处方不超过 18g",
+      "麻醉中药罂粟壳处方由经营或使用单位留存 2 年"
+    ],
+    "answer_option_letters_any": [
+      "ABDE"
+    ]
+  },
+  {
+    "id": "tcmpa_156",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：需要特殊管理的药品有\n选项：\nA. 麝香\nB. 炮马钱子\nC. 罂粟壳\nD. 蟾酥\nE. 龙骨",
+    "answer_contains_any": [
+      "麝香",
+      "炮马钱子",
+      "罂粟壳",
+      "蟾酥"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_159",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：为了我国的计量工作，国务院从  起，中医用药计量单位一律采用以 \"克\" 为单位的公制\n选项：\nA. 1977 年 2 月\nB. 1979 年 1 月\nC. 1980 年 3 月\nD. 1999 年 4 月\nE. 以上均不是",
+    "answer_contains_any": [
+      "1979 年 1 月"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_204",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下哪种中药饮片需要先煎\n选项：\nA. 薄荷 \nB. 钩藤 \nC. 石决明 \nD. 砂仁",
+    "answer_contains_any": [
+      "石决明"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_205",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪种中药饮片需要包煎\n选项：\nA. 蒲黄 \nB. 石膏 \nC. 知母 \nD. 黄柏",
+    "answer_contains_any": [
+      "蒲黄"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_207",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪味饮片需要包煎？\n选项：\nA. 人参 \nB. 旋覆花 \nC. 丹参 \nD. 知母",
+    "answer_contains_any": [
+      "旋覆花"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_209",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：需要后下的中药饮片有（ ）\n选项：\nA. 薄荷 \nB. 青蒿 \nC. 砂仁 \nD. 钩藤",
+    "answer_contains_any": [
+      "薄荷",
+      "青蒿",
+      "砂仁",
+      "钩藤"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_211",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列药物需后下的有（ ）\n选项：\nA. 薄荷 \nB. 砂仁 \nC. 钩藤 \nD. 豆蔻 \nE. 鱼腥草",
+    "answer_contains_any": [
+      "薄荷",
+      "砂仁",
+      "钩藤",
+      "豆蔻",
+      "鱼腥草"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_212",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在常规门诊处方审核中，审核药师首先应确认处方总用量是否超出以下哪一时间上限？\n选项：\nA. 1 日用量  \nB. 3 日用量  \nC. 5 日用量  \nD. 7 日用量  \nE. 10 日用量",
+    "answer_contains_any": [
+      "7 日用量"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_213",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：急诊处方的审核原则中，处方用量不得超过多少日用量？\n选项：\nA. 1 日用量  \nB. 3 日用量  \nC. 5 日用量  \nD. 7 日用量  \nE. 14 日用量",
+    "answer_contains_any": [
+      "3 日用量"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_214",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：若处方超过规定的日用量上限普通 7 日／急诊 3 日，审核药师最恰当的处理措施是：\n选项：\nA. 直接退方，不作任何提示 \nB. 无需干预，照常调配 \nC. 口头提醒患者自行减量 \nD. 在系统中明确提示，建议医师修改处方 \nE. 代替医师擅自改写处方用量",
+    "answer_contains_any": [
+      "在系统中明确提示，建议医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_215",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对慢性病、老年病或其他特殊情况确需延长用量的处方，审核药师应重点核查以下哪项内容？\n选项：\nA. 患者电话是否留存 \nB. 药房库存量是否充足 \nC. 医师是否在处方内注明延长用量的合理理由 \nD. 患者是否自费用药 \nE. 药品批号是否最新",
+    "answer_contains_any": [
+      "医师是否在处方内注明延长用量的合理理由"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_216",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对于符合开具长期处方条件的慢性病患者，审核药师在确认处方用量时，应当遵循哪一规范？\n选项：\nA. 《抗菌药物临床应用指导原则》 \nB. 《住院医嘱管理办法》 \nC. 《医疗器械监督管理条例》 \nD. 《长期处方管理规范》 \nE. 《药品不良反应监测办法》",
+    "answer_contains_any": [
+      "《长期处方管理规范》"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_217",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：麻醉药品或第一类精神药品处方应当使用什么颜色的处方笺？\n选项：\nA. 淡绿色处方 \nB. 白色处方 \nC. 淡黄色处方 \nD. 淡蓝色处方 \nE. 淡红色处方",
+    "answer_contains_any": [
+      "淡红色处方"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_218",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪一项信息属于麻醉药品处方必须注明的内容？\n选项：\nA. 患者电话号码 \nB. 患者医保卡号 \nC. 患者身份证明编号 \nD. 医师执业证编码 \nE. 药师执业证编码",
+    "answer_contains_any": [
+      "患者身份证明编号"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_219",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对麻醉药品处方进行审核时，如发现成人一次常用量超过多少克，药师应提示并建议医师修改处方？\n选项：\nA. 3 g \nB. 4 g \nC. 5 g \nD. 6 g \nE. 8 g",
+    "answer_contains_any": [
+      "6 g"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_220",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：每张麻醉药品处方的给药量若超过多少日用量，药师必须提示医师修改？\n选项：\nA. 1 日用量 \nB. 3 日用量 \nC. 5 日用量 \nD. 7 日用量 \nE. 14 日用量",
+    "answer_contains_any": [
+      "3 日用量"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_221",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：毒性中药内服处方如一次处方量超过下列哪一限度时，药师应提示医师修改，否则不得审核通过？\n选项：\nA. 1 日极量 \nB. 2 日极量 \nC. 3 日极量 \nD. 5 日极量 \nE. 7 日极量",
+    "answer_contains_any": [
+      "2 日极量"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_222",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：新生儿、婴幼儿中药饮片处方必须注明哪项基本信息？\n选项：\nA. 父母联系电话 \nB. 血型 \nC. 日龄或月龄 \nD. 出生医院 \nE. 既往病史",
+    "answer_contains_any": [
+      "日龄或月龄"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_223",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对新生儿、婴幼儿处方，如病情需要除年龄外还应补充填写下列哪项信息？\n选项：\nA. 身高 \nB. 体温 \nC. 体重 \nD. 血压 \nE. 家族史",
+    "answer_contains_any": [
+      "体重"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_249",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在审核中药饮片处方时，关于处方医师签名或专用签章下列哪项要求正确？\n选项：\nA. 仅需手工签名，无需备案 \nB. 电子处方可不显示签名 \nC. 手工签名、电子签名或加盖专用签章均须事先备案，且备案信息必须与处方上的签名或签章一致 \nD. 只要医院盖章即可 \nE. 由药师代签亦可",
+    "answer_contains_any": [
+      "手工签名、电子签名或加盖专用签章均须事先备案，且备案信息必须与处方上的签名或签章一致"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_250",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对电子处方进行审核时，下列哪一要素必须存在，否则不得通过？\n选项：\nA. 医院法人章 \nB. 患者电子签名 \nC. 处方医师的电子签名 \nD. 财务专用章 \nE. 药师的指纹",
+    "answer_contains_any": [
+      "处方医师的电子签名"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_251",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在处方“后记”栏中，如对处方内容进行修改，审核药师应重点核查哪项信息？\n选项：\nA. 是否加盖财务章 \nB. 药房库存是否充足 \nC. 修改处是否有医师签名并注明修改日期 \nD. 患者是否同意 \nE. 药师是否复核",
+    "answer_contains_any": [
+      "修改处是否有医师签名并注明修改日期"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_252",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于处方医师身份确认，下列说法正确的是：\n选项：\nA. 只能使用手工签名 \nB. 只能使用电子签名 \nC. 只能使用专用签章 \nD. 可采用手工签名、电子签名或加盖备案的专用签章 \nE. 无需任何署名",
+    "answer_contains_any": [
+      "可采用手工签名、电子签名或加盖备案的专用签章"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_253",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方审核时，如无特殊说明，中药饮片处方的有效期限应为：\n选项：\nA. 当日零点至次日零点 \nB. 开具当日有效 \nC. 连续 2 日有效 \nD. 连续 3 日有效 \nE. 连续 7 日有效",
+    "answer_contains_any": [
+      "开具当日有效"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_254",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在特殊情况下确需延长处方有效期时，开方医师应当：\n选项：\nA. 口头告知患者即可 \nB. 让药师代为注明 \nC. 在处方上注明具体有效期限 \nD. 由护士备注 \nE. 无需任何处理",
+    "answer_contains_any": [
+      "在处方上注明具体有效期限"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_255",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：延长后的处方有效期限最长不得超过多少天？\n选项：\nA. 1 天 \nB. 2 天 \nC. 3 天 \nD. 5 天 \nE. 7 天",
+    "answer_contains_any": [
+      "3 天"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_256",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：若处方注明的有效期超过 3 天，审核药师应采取的措施为：\n选项：\nA. 直接发药 \nB. 修改为 3 天后发药 \nC. 不予审核通过并提示医师修订 \nD. 让患者签字承担责任 \nE. 记录后照常发药",
+    "answer_contains_any": [
+      "不予审核通过并提示医师修订"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_257",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于处方有效期的说法，以下哪项正确？\n选项：\nA. 处方有效期可以由药房根据排队情况延长 \nB. 只要加盖医院公章即可延长有效期 \nC. 电子处方不受有效期限制 \nD. 延长有效期必须由开方医师注明且不得超过 3 天 \nE. 若患者需求紧急，可由药师决定延长",
+    "answer_contains_any": [
+      "延长有效期必须由开方医师注明且不得超过 3 天"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_266",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：车前子入煎剂的正确方法是？\n选项：\nA. 先煎 \nB. 后下 \nC. 包煎 \nD. 烊化 \nE. 冲服",
+    "answer_contains_any": [
+      "包煎"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_267",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：阿胶的正确调剂方法是？\n选项：\nA. 先煎 30 分钟 \nB. 后下 5 分钟 \nC. 包煎 \nD. 烊化兑服 \nE. 研粉冲服",
+    "answer_contains_any": [
+      "烊化兑服"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_268",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：薄荷入汤剂的煎煮要求是？\n选项：\nA. 久煎 30 分钟 \nB. 后下 5 分钟 \nC. 包煎 \nD. 另煎 \nE. 打碎先煎",
+    "answer_contains_any": [
+      "后下 5 分钟"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_269",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：生牡蛎的煎煮方法是？\n选项：\nA. 后下 \nB. 包煎 \nC. 先煎 30 分钟 \nD. 冲服 \nE. 烊化",
+    "answer_contains_any": [
+      "先煎 30 分钟"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_270",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列需包煎的药物有哪些？\n选项：\nA. 旋覆花 \nB. 辛夷 \nC. 海金沙 \nD. 三七粉 \nE. 人参",
+    "answer_contains_any": [
+      "旋覆花",
+      "辛夷",
+      "海金沙"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_271",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于附子煎煮的正确说法是？\n选项：\nA. 必须先煎 1 小时减毒 \nB. 可与生姜同煎增效 \nC. 煎煮时间越长毒性越小 \nD. 后下保留药效 \nE. 研粉冲服效果更佳",
+    "answer_contains_any": [
+      "必须先煎 1 小时减毒",
+      "可与生姜同煎增效"
+    ],
+    "answer_option_letters_any": [
+      "AB"
+    ]
+  },
+  {
+    "id": "tcmpa_272",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列需要另煎的药物是？\n选项：\nA. 西洋参 \nB. 冬虫夏草 \nC. 羚羊角粉 \nD. 钩藤 \nE. 茯苓",
+    "answer_contains_any": [
+      "西洋参",
+      "冬虫夏草",
+      "羚羊角粉"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_273",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些属于中药饮片处方前记的必填项？\n选项：\nA. 患者身份证号 \nB. 临床诊断 \nC. 科别或病室床位号 \nD. 处方医师工号 \nE. 药品生产批号",
+    "answer_contains_any": [
+      "临床诊断",
+      "科别或病室床位号"
+    ],
+    "answer_option_letters_any": [
+      "BC"
+    ]
+  },
+  {
+    "id": "tcmpa_274",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于处方修改的规范，错误的有？\n选项：\nA. 修改处需签名并注明日期 \nB. 电子处方允许直接覆盖原内容 \nC. 修改超过 3 处需重新开具 \nD. 药师可代医师修改剂量 \nE. 涂改后字迹清晰即可",
+    "answer_contains_any": [
+      "电子处方允许直接覆盖原内容",
+      "药师可代医师修改剂量",
+      "涂改后字迹清晰即可"
+    ],
+    "answer_option_letters_any": [
+      "BDE"
+    ]
+  },
+  {
+    "id": "tcmpa_275",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药饮片处方正文中，必须明确标注的是？\n选项：\nA. 饮片炮制规格（如 “炙甘草”）\nB. 单味药剂量 \nC. 总煎煮水量 \nD. 饮片产地 \nE. 特殊煎煮方法",
+    "answer_contains_any": [
+      "饮片炮制规格（如 “炙甘草”）",
+      "单味药剂量",
+      "特殊煎煮方法"
+    ],
+    "answer_option_letters_any": [
+      "ABE"
+    ]
+  },
+  {
+    "id": "tcmpa_279",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于处方脚注处理，错误的是：\n选项：\nA. \"包煎\" 适用于车前子等含黏液质药材 \nB. \"烊化\" 适用于阿胶等胶类药材 \nC. \"冲服\" 适用于三七粉等贵重细粉 \nD. \"后下\" 适用于所有芳香类药材 \nE. \"先煎\" 适用于附子等有毒药材",
+    "answer_contains_any": [
+      "\"后下\" 适用于所有芳香类药材"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_280",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于 \"君药\" 在处方中的书写要求，错误的是：\n选项：\nA. 应列于处方首位 \nB. 用量通常为方中最大 \nC. 必须使用生品饮片 \nD. 药味数量一般较少 \nE. 体现对主证的治疗作用",
+    "answer_contains_any": [
+      "必须使用生品饮片"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_281",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列处方结构最符合 \"君臣佐使\" 原则的是：\n选项：\nA. 麻黄 15g（君），桂枝 9g（臣），杏仁 9g（佐），甘草 6g（使）\nB. 黄芪 30g，白术 15g，防风 10g，茯苓 12g\nC. 当归 12g，川芎 9g，白芍 9g，熟地 12g\nD. 黄连 6g，黄芩 9g，黄柏 6g，栀子 9g\nE. 人参 10g，麦冬 15g，五味子 6g，丹参 12g",
+    "answer_contains_any": [
+      "麻黄 15g（君），桂枝 9g（臣），杏仁 9g（佐），甘草 6g（使）"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_282",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方中 \"使药\" 的作用不包括：\n选项：\nA. 引经报使 \nB. 调和诸药 \nC. 辅助君药增效 \nD. 减轻君臣药毒性 \nE. 针对兼证治疗",
+    "answer_contains_any": [
+      "针对兼证治疗"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_283",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：发现处方中 \"臣药\" 缺失时，药师应：\n选项：\nA. 直接补充臣药后调配 \nB. 拒绝调配并注明原因 \nC. 与医师沟通确认意图 \nD. 将佐药升级为臣药 \nE. 按原方调配不予干预",
+    "answer_contains_any": [
+      "与医师沟通确认意图"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_284",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不符合 \"佐药\" 书写要求的是：\n选项：\nA. 与君药性味相反而成制约 \nB. 用量不得超过君药 \nC. 必须使用炮制品种 \nD. 可治疗次要兼证 \nE. 能消除君臣药副作用",
+    "answer_contains_any": [
+      "必须使用炮制品种"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_285",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：体现现代处方 \"君臣佐使\" 书写特点的是：\n选项：\nA. 使用化学药物替代使药 \nB. 在每味药后标注角色括号 \nC. 君药必须超过 5 味 \nD. 佐使药用量需等量 \nE. 仅适用于经典名方",
+    "answer_contains_any": [
+      "在每味药后标注角色括号"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_306",
+    "category": "tcmeval_pa_处方规范性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方含制附子和薄荷，正确的煎煮顺序是：\n选项：\nA. 附子与薄荷同煎  \nB. 附子先煎 60 分钟，薄荷后下  \nC. 薄荷先煎，附子后下  \nD. 均需包煎  \nE. 均需另煎",
+    "answer_contains_any": [
+      "附子先煎 60 分钟，薄荷后下"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_228",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：“适宜性”审核要求比对处方用药与哪两项中医诊断信息是否相符？\n选项：\nA. 患者年龄与性别 \nB. 病名与证型 \nC. 药品规格与批号 \nD. 检验指标与影像结果 \nE. 给药途径与频次",
+    "answer_contains_any": [
+      "病名与证型"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_49",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：质地较重的药物常用量为\n选项：\nA. 3 -9g\nB.1.5~4.5g\nC.9~45g\nD. 0.03~0.6g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "9~45g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_13",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于合理用药的描述，错误的是\n选项：\nA. 合理用药是运用医学综合知识和管理学知识指导用药\nB. 合理用药就是要安全、有效、简便、经济的使用药物\nC. 合理用药要达到最小的投入、取得最大的医疗和社会效益的目的\nD. 合理用药即取得最大的医疗和社会效益，可以不计投入成本\nE. 合理用药需要在充分了解疾病和药物的基础上才能进行",
+    "answer_contains_any": [
+      "合理用药即取得最大的医疗和社会效益，可以不计投入成本"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_263",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：芳香化湿类药物如砂仁的用量特点是？\n选项：\nA. 用量宜大 \nB. 用量宜轻 \nC. 需先煎增量 \nD. 与药材质地无关",
+    "answer_contains_any": [
+      "用量宜轻"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_98",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物不良反应因果关系分为五级，下列哪一项是错误的\n选项：\nA. 极不可能\nB. 不可能\nC. 可能\nD. 很可能\nE. 肯定",
+    "answer_contains_any": [
+      "极不可能"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_90",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下关于合理用药的概念说法错误的是\n选项：\nA. 合理用药是指运用医药学综合知识及管理学知识指导用药\nB. 是在充分了解疾病和药物的基础上\nC. 安全、有效、简便、经济地使用药物\nD. 达到以最小的投入，取得最大的医疗和社会效益的目的\nE. 以上均不对",
+    "answer_contains_any": [
+      "以上均不对"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_85",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属妊娠期安全用药的是\n选项：\nA. 蟾酥\nB. 藿香\nC. 急性子\nD. 番泻叶\nE. 三七",
+    "answer_contains_any": [
+      "藿香"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_61",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于妊娠禁用药的是\n选项：\nA. 制川乌\nB. 白附子\nC. 马钱子\nD. 丁公藤\nE. 肉桂",
+    "answer_contains_any": [
+      "马钱子"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_262",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药饮片处方总量超过多少克需提示医师修改非膏方？\n选项：\nA. 100g\nB. 240g\nC. 300g\nD. 500g",
+    "answer_contains_any": [
+      "300g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_47",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：一般药物干品常用量为\n选项：\nA. 3 -9g\nB.1.5~4.5g\nC.9~45g\nD. 0.03~0.6g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "3 -9g"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_238",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：临床个别专业或医师确需突破处方剂量上限时，应向院内哪个组织提出申请？\n选项：\nA. 医务科 \nB. 药品不良反应监测中心 \nC. 药事管理与药物治疗学委员会 \nD. 院感管理委员会 \nE. 财务处",
+    "answer_contains_any": [
+      "药事管理与药物治疗学委员会"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_325",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：土鳖虫内服煎汤的剂量范围是：\n选项：\nA. 0.5～1g  \nB. 1～3g  \nC. 3～10g  \nD. 5～12g  \nE. 10～15g",
+    "answer_contains_any": [
+      "3～10g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_187",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不合理用药的主要表现之一是\n选项：\nA. 引发药物不良反应及药源性疾病\nB. 认真审方堵漏\nC. 违反用药禁忌\nD. 合理配伍用药\nE. 准确辨析患者病症",
+    "answer_contains_any": [
+      "违反用药禁忌"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_41",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下哪一味中药不按毒性中药材管理\n选项：\nA. 川乌\nB. 雪上一支蒿\nC. 斑蝥\nD. 何首乌\nE. 马钱子",
+    "answer_contains_any": [
+      "何首乌"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_199",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不属于蟾酥及含蟾酥的中成药的中毒症状的是\n选项：\nA. 心律不齐\nB. 胸闷、心悸\nC. 恶心、呕吐\nD. 血压上升\nE. 大汗虚脱",
+    "answer_contains_any": [
+      "血压上升"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_153",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：毒性药品处方每张剂量不得超过\n选项：\nA. 5 年\nB. 3 年\nC. 7\nD\nD. 2\nD\nE. 6 年",
+    "answer_contains_any": [
+      "2"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_15",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药不良反应及药源性疾病的分类不包含\n选项：\nA. 与药物剂量有关的中药不良反应及药源性疾病\nB. 与药物剂量无关的中药不良反应及药源性疾病\nC. 与中药配伍有关的中药不良反应及药源性疾病\nD. 与中药配伍无关的中药不良反应及药源性疾病\nE. 药物依赖性",
+    "answer_contains_any": [
+      "与中药配伍无关的中药不良反应及药源性疾病"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_14",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于药源性疾病的描述，错误的是\n选项：\nA. 药源性疾病是药物不良反应致使机体某些器官或组织产生功能性或器质性损害而出现的一系列临床症状与体征\nB. 药源性疾病是药物在正常用法用量情况下产生的不良反应\nC. 药源性疾病包括药物在正常用法用量情况下产生的不良反应\nD. 药源性疾病包括药物因超量、超时等因素引起的不良反应\nE. 药源性疾病包括药物因误服、错用以及不正常使用等因素引起的不良反应",
+    "answer_contains_any": [
+      "药源性疾病是药物在正常用法用量情况下产生的不良反应"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_42",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下有关确定中药用量原则的说法，错误的是\n选项：\nA. 有毒中药用量宜小\nB. 质地较轻或容易煎出的药物用量不宜过大\nC. 质地较重或不易煎出的药物用量加重\nD. 芳香走散的药物，用量宜小\nE. 味厚滋腻的药物，用量不宜过大",
+    "answer_contains_any": [
+      "味厚滋腻的药物，用量不宜过大"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_83",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与狼毒同用的是\n选项：\nA. 密陀僧\nB. 大黄\nC. 芒硝\nD. 人参\nE. 芫花",
+    "answer_contains_any": [
+      "密陀僧"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_87",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与水银同用的是\n选项：\nA. 朴硝\nB. 砒霜\nC. 狼毒\nD. 巴豆\nE. 丁香",
+    "answer_contains_any": [
+      "砒霜"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_177",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药的首要条件是\n选项：\nA. 安全性\nB. 有效性\nC. 经济性\nD. 适用性\nE. 质量合格",
+    "answer_contains_any": [
+      "安全性"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_202",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：六神丸的大量服用易造成\n选项：\nA. 士的宁中毒\nB. 砷中毒\nC. 蟾酥中毒\nD. 汞中毒\nE. 乌头碱中毒",
+    "answer_contains_any": [
+      "砷中毒",
+      "蟾酥中毒"
+    ],
+    "answer_option_letters_any": [
+      "BC"
+    ]
+  },
+  {
+    "id": "tcmpa_326",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：丁公藤内服配制酒剂的剂量是：\n选项：\nA. 0.1～0.5g  \nB. 0.5～1g  \nC. 3～6g  \nD. 6～10g  \nE. 10～15g",
+    "answer_contains_any": [
+      "3～6g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_191",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对急性期及明显肝功能损害者不应用\n选项：\nA. 黄芪\nB. 熟地\nC. 白术\nD. 山楂\nE. 补中益气丸",
+    "answer_contains_any": [
+      "黄芪"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_78",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：藜芦不宜与人参、西洋参、党参、苦参、丹参、玄参、北沙参、南沙参、赤芍、白芍及同用\n选项：\nA. 三棱\nB. 细辛\nC. 肉桂\nD. 芒硝\nE. 丁香",
+    "answer_contains_any": [
+      "细辛"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_248",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：重复使用同一中药饮片可能导致的主要风险不包括下列哪项？\n选项：\nA. 剂量叠加 \nB. 增加毒副作用 \nC. 药理作用相互抵消 \nD. 药物经济负担加重 \nE. 用药依从性下降",
+    "answer_contains_any": [
+      "药理作用相互抵消"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_231",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：若中药饮片用药与疾病、并发症及证型均不符合，应将该用药归入下列哪一类别？\n选项：\nA. 合理用药 \nB. 适应症不适宜 \nC. 无适应症用药 \nD. 药味超限 \nE. 不良反应用药",
+    "answer_contains_any": [
+      "无适应症用药"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_244",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：审核哺乳期患者处方时，若发现所选中药饮片可能通过乳汁影响婴幼儿，下列措施最符合规范：\n选项：\nA. 直接减半剂量发药 \nB. 明确提示并建议医师修改处方 \nC. 建议患者自行暂停哺乳 \nD. 取得患者口头同意后发药 \nE. 复印处方留存后发药",
+    "answer_contains_any": [
+      "明确提示并建议医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_316",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：雄黄内服的常用剂量是：\n选项：\nA. 0.01～0.03g  \nB. 0.03～0.05g  \nC. 0.05～0.1g  \nD. 0.1～0.3g  \nE. 0.3～0.5g",
+    "answer_contains_any": [
+      "0.05～0.1g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_151",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：解表药宜\n选项：\nA. 饭前服用\nB. 清晨空腹或睡前服\nC. 晚上服用\nD. 睡前 1～2h 服用\nE. 及时服用",
+    "answer_contains_any": [
+      "及时服用"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_84",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属妊娠期安全用药的是\n选项：\nA. 姜黄\nB. 红花\nC. 制川乌\nD. 大黄\nE. 甘草",
+    "answer_contains_any": [
+      "甘草"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_162",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：质地较重的药物的常用量为\n选项：\nA. 0.03~0.6g\nB. 9~45g\nC. 1.5~4.5g\nD. 3~9g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "9~45g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_198",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：大剂量服用，其有毒成分直接作用于肝脏，损害肝细胞而发生黄疸的有毒中药是\n选项：\nA. 黄药子\nB. 雄黄\nC. 朱砂\nD. 蟾酥\nE. 马钱子",
+    "answer_contains_any": [
+      "黄药子"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_99",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列说法正确的是\n选项：\nA. 中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应\nB. 中药不良反应是指不合格药品在正常用法、用量时出现与用药目的有关的或意外的有害反应\nC. 中药不良反应是指合格药品在正常用法、用量时出现与用药目的有关的或意外的有害反应\nD. 中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应，不包括中成药和中药饮片引起的不良反应\nE. 中药不良反应是指病人非正常使用药品，引起的不良反应",
+    "answer_contains_any": [
+      "中药不良反应是指合格药品在正常用法、用量时出现与用药目的无关的或意外的有害反应"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_8",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相杀的定义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 药物配合主药，互相增强作用\nD. 两种药物合用能相互抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用，能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "一种药物能消除或减轻另一种药物的毒性或副作用"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_286",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪项不属于中药处方适宜性的核心要素？\n选项：\nA. 辨证与用药相符 \nB. 剂量与疗程合理 \nC. 药材产地明确标注 \nD. 配伍禁忌符合规范 \nE. 特殊人群用药调整",
+    "answer_contains_any": [
+      "药材产地明确标注"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_66",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：妊娠禁用、忌用、慎用的药有\n选项：\nA. 毒性中药\nB. 药性猛烈的中药\nC. 通经祛瘀药\nD. 开窍药\nE. 补益药",
+    "answer_contains_any": [
+      "毒性中药",
+      "药性猛烈的中药",
+      "通经祛瘀药"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_243",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：当肾功能不全患者处方中含可能进一步损害肾功能的中药饮片时，审核药师应：\n选项：\nA. 将剂量下调 30% 后发药 \nB. 不作干预 \nC. 明确提示并建议医师修改处方 \nD. 让患者多饮水即可 \nE. 仅备案，不必反馈医师",
+    "answer_contains_any": [
+      "明确提示并建议医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_313",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“有毒”类中药的是：\n选项：\nA. 朱砂  \nB. 马钱子粉  \nC. 制草乌  \nD. 苦杏仁  \nE. 地肤子",
+    "answer_contains_any": [
+      "朱砂"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_131",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相恶的意义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 辅药配合主药，互相增强作用\nD. 两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_293",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些中药与铝、镁、钙合用产生金属络合物发生性质改变\n选项：\nA. 甘草、鹿茸\nB. 儿茶、地榆\nC. 石榴皮、大黄\nD. 代赭石、自然铜\nE. 黄芩、槐米",
+    "answer_contains_any": [
+      "黄芩、槐米"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_65",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不是马钱子及其制剂中毒表现的是\n选项：\nA. 头晕头痛\nB. 烦躁不安\nC. 瞳孔放大\nD. 呼吸加快\nE. 咽下困难",
+    "answer_contains_any": [
+      "瞳孔放大"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_309",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“大毒”类中药的是：\n选项：\nA. 蜈蚣  \nB. 附子  \nC. 生巴豆  \nD. 水蛭  \nE. 苦杏仁",
+    "answer_contains_any": [
+      "生巴豆"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_130",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相反的意义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 辅药配合主药，互相增强作用\nD. 两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "两种药物合用能产生毒性反应或者副作用，属配伍禁忌"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_319",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：艾叶内服煎汤的剂量范围是：\n选项：\nA. 0.5～1g  \nB. 1～3g  \nC. 3～9g  \nD. 5～10g  \nE. 10～15g",
+    "answer_contains_any": [
+      "3～9g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_310",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“有毒”类中药的是：\n选项：\nA. 斑蝥  \nB. 吴茱萸  \nC. 蛇床子  \nD. 土鳖虫  \nE. 艾叶",
+    "answer_contains_any": [
+      "斑蝥"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_141",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：通经祛瘀、行气破滞以及药性辛热的中药为\n选项：\nA. 妊娠禁用药\nB. 妊娠忌用药\nC. 妊娠慎用药\nD. 妊娠限用药\nE. 妊娠期用药",
+    "answer_contains_any": [
+      "妊娠慎用药"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_45",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：汤剂的类型不包括\n选项：\nA. 煮剂\nB. 煎剂\nC. 煮散\nD. 沸水泡药\nE. 蒸剂",
+    "answer_contains_any": [
+      "蒸剂"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_135",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些中药与铝、镁、钙药物合用产生金属络合物发生性质改变\n选项：\nA. 甘草、鹿茸\nB. 儿茶、地榆等\nC. 石榴皮、大黄等\nD. 代赭石、自然铜\nE. 黄芩、槐米等",
+    "answer_contains_any": [
+      "黄芩、槐米等"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_132",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药配伍禁忌的概念是指\n选项：\nA. 两种药物合用能产生毒性反应或者副作用\nB. 两种药物的合用能互相抑制、降低或丧失药效\nC. 是指一种药物的毒性或副作用，能被另一种药物减轻或消除\nD. 是指一种药物能消除或减轻另一种药物的毒性或副作用\nE. 是指配合主药，互相增强作用。其性味功用一般有某种共性",
+    "answer_contains_any": [
+      "两种药物的合用能互相抑制、降低或丧失药效"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_305",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：《医疗用毒性药品管理办法》规定的毒性中药品种数量是：\n选项：\nA. 10 种  \nB. 27 种  \nC. 28 种  \nD. 42 种  \nE. 83 种",
+    "answer_contains_any": [
+      "28 种"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_95",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些因素不影响病人的用药情况\n选项：\nA. 营养水平\nB. 脏器功能\nC. 年龄\nD. 天气情况\nE. 性别",
+    "answer_contains_any": [
+      "天气情况"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_20",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：马钱子的用量是\n选项：\nA. 0.1-0.2g\nB. 0.2-0.4g\nC. 0.3-0.6g\nD. 0.6-0.8g\nE. 0.8-1.2g",
+    "answer_contains_any": [
+      "0.3-0.6g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_165",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：剂型、配伍与用量的关系中，成人和体质健康的病人\n选项：\nA. 用量可大些\nB. 用量可酌减\nC. 不宜重剂量\nD. 剂量可适当增加\nE. 可低于新病者的剂量",
+    "answer_contains_any": [
+      "用量可大些"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_185",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：保证合理用药的措施之一是\n选项：\nA. 准确辨析患者的病证\nB. 延误疾病的治疗\nC. 安全、有效、简便、经济\nD. 最大限度地发挥药物的效能，降低不良反应\nE. 合理用药的主力军",
+    "answer_contains_any": [
+      "准确辨析患者的病证"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_54",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列合用属于 “十九畏” 的是\n选项：\nA. 巴豆与牵牛子\nB. 甘草与芫花\nC. 芒硝与三棱\nD. 肉桂与赤石脂\nE. 丁香与郁金",
+    "answer_contains_any": [
+      "巴豆与牵牛子",
+      "芒硝与三棱",
+      "肉桂与赤石脂",
+      "丁香与郁金"
+    ],
+    "answer_option_letters_any": [
+      "ACDE"
+    ]
+  },
+  {
+    "id": "tcmpa_140",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：毒性或毒性较强的药性猛烈的中药为\n选项：\nA. 妊娠禁用药\nB. 妊娠忌用药\nC. 妊娠慎用药\nD. 妊娠限用药\nE. 妊娠期用药",
+    "answer_contains_any": [
+      "妊娠禁用药"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_37",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于合理用药的描述，错误的是\n选项：\nA. 合理用药是运用医学综合知识和管理学知识指导用药\nB. 合理用药就是要安全、有效、简便、经济地使用药物\nC. 合理用药要达到最小的投入、取得最大的医疗和社会效益的目的\nD. 合理用药即取得最大的医疗和社会效益，可以不计投入成本\nE. 合理用药需要在充分了解疾病和药物的基础上才能进行",
+    "answer_contains_any": [
+      "合理用药即取得最大的医疗和社会效益，可以不计投入成本"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_189",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：老人不宜长期使用的药物为\n选项：\nA. 山药\nB. 阿胶\nC. 黄芪\nD. 大枣\nE. 六神丸",
+    "answer_contains_any": [
+      "六神丸"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_103",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：气管炎、哮喘病人多采用\n选项：\nA. 注射\nB. 静滴\nC. 外治\nD. 气雾剂吸入\nE. 其他",
+    "answer_contains_any": [
+      "气雾剂吸入"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_225",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下哪类处方可不受“18 味以内”原则限制？\n选项：\nA. 儿科日常处方 \nB. 外用敷药 \nC. 膏方 \nD. 高血压常规处方 \nE. 住院临时医嘱",
+    "answer_contains_any": [
+      "膏方"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_210",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于中药饮片用药禁忌的说法正确的有（ ）\n选项：\nA. 配伍禁忌包括 “十八反”“十九畏” \nB. 妊娠禁忌药分为禁用和慎用两类 \nC. 服药时一般应忌食生冷、油腻、辛辣等不易消化及有刺激性的食物 \nD. 儿童用药剂量可根据年龄、体重等适当调整",
+    "answer_contains_any": [
+      "配伍禁忌包括 “十八反”“十九畏”",
+      "妊娠禁忌药分为禁用和慎用两类",
+      "服药时一般应忌食生冷、油腻、辛辣等不易消化及有刺激性的食物",
+      "儿童用药剂量可根据年龄、体重等适当调整"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_136",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与附子合用的药物是\n选项：\nA. 赤石脂\nB. 天花粉\nC. 细辛\nD. 三棱\nE. 郁金",
+    "answer_contains_any": [
+      "天花粉"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_195",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：过量服用可引起口腔咽喉干痛、烧灼感、口中有金属味等中毒反应的中药是\n选项：\nA. 乌头类中药\nB. 含马钱子的中成药\nC. 含雄黄的中成药\nD. 含蟾酥的中成药\nE. 含朱砂的中成药",
+    "answer_contains_any": [
+      "含雄黄的中成药"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_77",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：甘草不宜与同用\n选项：\nA. 党参、苦参、丹参\nB. 郁金\nC. 细辛、赤芍\nD. 甘遂和芫花\nE. 牵牛子",
+    "answer_contains_any": [
+      "甘遂和芫花"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_32",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下是毒性中药材的是\n选项：\nA.斑蝥\nB.马钱子\nC.蟾酥\nD.藤黄\nE.洋金花",
+    "answer_contains_any": [
+      "斑蝥",
+      "马钱子",
+      "蟾酥",
+      "藤黄",
+      "洋金花"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_247",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下关于“不同基源重复用药”说法正确的是：\n选项：\nA. 仅限同名异物的情况 \nB. 只要炮制方法不同就一定重复 \nC. 同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改 \nD. 基源不同视为两味药，可同时使用 \nE. 只有国家明令禁止时才算重复",
+    "answer_contains_any": [
+      "同处方使用基源不同但功效相同的饮片应视为重复用药并提示修改"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_86",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与硫黄同用的是\n选项：\nA. 朴硝\nB. 砒霜\nC. 狼毒\nD. 巴豆\nE. 丁香",
+    "answer_contains_any": [
+      "朴硝"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_102",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：皮肤及阴道疾病多采用\n选项：\nA. 注射\nB. 静滴\nC. 外治\nD. 气雾剂吸入\nE. 其他",
+    "answer_contains_any": [
+      "外治"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_242",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：老年患者伴多种慢性疾病时，选择中药饮片的首要审核要点是：\n选项：\nA. 避免任何温补药物 \nB. 只要总量 ≤240 g 即可 \nC. 注重价格低廉 \nD. 审查所选饮片对老年慢病患者是否合理，不当用药应提示医师修改 \nE. 必须全部改用颗粒剂",
+    "answer_contains_any": [
+      "审查所选饮片对老年慢病患者是否合理，不当用药应提示医师修改"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_308",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：洋金花常用剂型是：\n选项：\nA. 煎汤内服  \nB. 外用敷贴  \nC. 酒浸饮用  \nD. 入丸散或卷烟熏吸  \nE. 炼化冲服",
+    "answer_contains_any": [
+      "入丸散或卷烟熏吸"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_46",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列有关服药时饮食禁忌的叙述，错误的是\n选项：\nA. 热性疾病应少食辛辣\nB. 服用解表药时，应少食生冷\nC. 服用温补药时，应少饮茶，少吃酸味食物\nD. 热性疾病应少饮酒\nE. 服用温补药时，应少食萝卜",
+    "answer_contains_any": [
+      "服用温补药时，应少饮茶，少吃酸味食物"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_320",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：苦杏仁内服煎汤的常用剂量是：\n选项：\nA. 1～3g  \nB. 3～6g  \nC. 5～10g  \nD. 6～12g  \nE. 1～15g",
+    "answer_contains_any": [
+      "5～10g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_291",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于特殊人群用药，错误的是？\n选项：\nA. 老年人应减少苦寒药的用量 \nB. 儿童用药剂量通常按体重折算 \nC. 肝肾功能不全者慎用含重金属药物 \nD. 哺乳期妇女禁用活血破血药 \nE. 糖尿病患者可随意使用蜂蜜制丸剂",
+    "answer_contains_any": [
+      "糖尿病患者可随意使用蜂蜜制丸剂"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_164",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：贵重药物的常用量为\n选项：\nA. 0.03~0.6g\nB. 9~45g\nC. 1.5~4.5g\nD. 3~9g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "0.3~1g"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_137",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与芒硝合用的药物是\n选项：\nA. 赤石脂\nB. 天花粉\nC. 细辛\nD. 三棱\nE. 郁金",
+    "answer_contains_any": [
+      "三棱"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_67",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药品不良反应包括\n选项：\nA. 毒性作用\nB. 后遗作用\nC. 过敏反应\nD. 继发反应\nE. 特异性遗传因素",
+    "answer_contains_any": [
+      "毒性作用",
+      "后遗作用",
+      "过敏反应",
+      "继发反应",
+      "特异性遗传因素"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_138",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与丁香合用的药物是\n选项：\nA. 赤石脂\nB. 天花粉\nC. 细辛\nD. 三棱\nE. 郁金",
+    "answer_contains_any": [
+      "郁金"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_134",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：妊娠禁忌是指妇女在怀孕期间应禁止使用的药物，不包括\n选项：\nA. 一般具有毒性的中药\nB. 具有解表功效的药物\nC. 破血逐瘀功能的中药\nD. 芳香走窜功能的中药\nE. 有峻下逐水功效的中药",
+    "answer_contains_any": [
+      "具有解表功效的药物"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_81",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与芒硝同用的是\n选项：\nA. 甘草\nB. 三七\nC. 人参\nD. 桂枝\nE. 三棱",
+    "answer_contains_any": [
+      "三棱"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_96",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不属于配伍 “七情” 的是\n选项：\nA. 单行\nB. 相须、相使\nC. 相助、相佐\nD. 相畏、相杀\nE. 相恶、相反",
+    "answer_contains_any": [
+      "相助、相佐"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_35",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：人参参与莱菔子，属于哪种配伍关系\n选项：\nA. 相须\nB. 相使\nC. 相畏\nD. 相杀\nE. 相恶",
+    "answer_contains_any": [
+      "相恶"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_69",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列药物可以内服的是\n选项：\nA. 砒石\nB. 雄黄\nC. 红粉\nD. 轻粉\nE. 生马钱子",
+    "answer_contains_any": [
+      "砒石",
+      "雄黄",
+      "轻粉",
+      "生马钱子"
+    ],
+    "answer_option_letters_any": [
+      "ABDE"
+    ]
+  },
+  {
+    "id": "tcmpa_184",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药的主要目的是\n选项：\nA. 准确辨析患者的病证\nB. 延误疾病的治疗\nC. 安全、有效、简便、经济\nD. 最大限度地发挥药物的效能，降低不良反应\nE. 合理用药的主力军",
+    "answer_contains_any": [
+      "最大限度地发挥药物的效能，降低不良反应"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_323",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：川楝子内服煎汤的剂量范围是：\n选项：\nA. 1～3g  \nB. 3～6g  \nC. 5～10g  \nD. 6～12g  \nE. 10～15g",
+    "answer_contains_any": [
+      "5～10g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_318",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：水蛭内服入丸散的日用量是：\n选项：\nA. 0.1～0.5g  \nB. 1～3g  \nC. 3～6g  \nD. 5～10g  \nE. 10～15g",
+    "answer_contains_any": [
+      "1～3g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_166",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：剂型、配伍与用量的关系中，病情轻者\n选项：\nA. 用量可大些\nB. 用量可酌减\nC. 不宜重剂量\nD. 剂量可适当增加\nE. 可低于新病者的剂量",
+    "answer_contains_any": [
+      "不宜重剂量"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_227",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在无地方规定的情况下，医疗机构内部可由哪个组织制定本院中药饮片处方药味数的限定标准？\n选项：\nA. 医务科 \nB. 护理部 \nC. 药事管理与药物治疗学委员会 \nD. 后勤保障部 \nE. 财务科",
+    "answer_contains_any": [
+      "药事管理与药物治疗学委员会"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_97",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于确定最佳治疗方案权衡病人应用药物所获得的收益与承受的伤害以及费用效益关系，下列说法正确的是\n选项：\nA. 减少药物的使用，提高病人的生命质量，降低发病率，控制医疗保健费用的过度增长，使社会获得最大的收益\nB. 减少药物不良反应的发生，提高病人的生命质量，降低发病率、控制医疗保健费用的过度增长，使全社会获得最大的收益\nC. 减少药物不良反应的发生，提高病人的生命质量，降低发病率，使病人得到最好的治疗\nD. 减少药物不良反应的发生，提高病人的生命质量，降低发病率，控制医疗保健费用的过度增长，使医院获得最大的收益\nE. 使用最好的药物，提高病人的生命质量，降低发病率，使社会获得收益",
+    "answer_contains_any": [
+      "减少药物不良反应的发生，提高病人的生命质量，降低发病率、控制医疗保健费用的过度增长，使全社会获得最大的收益"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_190",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：婴幼儿用药不宜\n选项：\nA. 辅以健脾和胃之品\nB. 滥用滋补品\nC. 辅以凉肝定惊之品\nD. 及时用药\nE. 使用轻清之品",
+    "answer_contains_any": [
+      "滥用滋补品"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_296",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于“毒性中药饮片”超出剂量上限的处理，下列哪项正确？\n选项：\nA. 双签字即可豁免限制 \nB. 只需患者说明即可放行 \nC. 药师口头记录后可放行 \nD. 可与有毒饮片相同处理 \nE. 必须要求医师修改；不同意修改即使双签字也不予通过",
+    "answer_contains_any": [
+      "必须要求医师修改；不同意修改即使双签字也不予通过"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_127",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于 “七情” 配伍的概念错误的是\n选项：\nA. 中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情”\nB. 相畏即一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 相杀即一种药物能消除或减轻另一种药物的毒性或副作用\nD. 相反即两种药物合用能产生毒性反应或者副作用，属配伍禁忌\nE. 相恶即两种药物的合用能互相抑制、降低或丧失药效，属配伍禁忌",
+    "answer_contains_any": [
+      "中药方剂按 “君、臣、佐、使” 组方原则，就称为 “七情”"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_23",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下有关服药时间的描述，错误的是\n选项：\nA. 滋补药宜饭后服\nB. 解表药应趁热服\nC. 驱虫、攻下药应空腹服\nD. 安神药应睡前服\nE. 慢性病应清晨服",
+    "answer_contains_any": [
+      "慢性病应清晨服"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_232",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：一般情况下，新生儿单味中药饮片的给药量应为成人量的多少？\n选项：\nA. 1/8 \nB. 1/6 \nC. 1/4 \nD. 1/3 \nE. 1/2",
+    "answer_contains_any": [
+      "1/6"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_312",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“大毒”类中药的是：\n选项：\nA. 制川乌  \nB. 雄黄  \nC. 闹羊花  \nD. 全蝎  \nE. 北豆根",
+    "answer_contains_any": [
+      "闹羊花"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_110",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于毒性中药的调剂与管理说法错误的是\n选项：\nA. 毒性中药系指毒性剧烈、治疗量与中毒量相近、使用不当会致人中毒或死亡的一类中药\nB. 毒性中药的收购、经营，由各级医药管理部门指定的药品经营单位负责\nC. 收购、经营、加工、使用毒性中药的单位必须建立健全保管、验收等制度\nD. 毒性中药的包装容器上必须印有毒药标志\nE. 凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行",
+    "answer_contains_any": [
+      "凡加工炮制毒性中药，必须按照当地卫生行政部门制定的炮制规范的规定进行"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_146",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下不是乌头碱中毒的原因的是\n选项：\nA. 用药过量\nB. 煎煮不当，乌头类药物宜久煎。乌头碱水解后成乌头原碱，毒性为乌头碱的 1/4000~1/2000，而强心作用增强。煎煮时间太短，易引起中毒\nC. 应单独煎煮\nD. 个体差异。乌头中毒出现症状、时间快慢不一，中毒量的个体差异亦较大，且可引起蓄积性中毒\nE. 配伍或制剂不当",
+    "answer_contains_any": [
+      "应单独煎煮"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_258",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：毒性中药饮片如制川乌的剂量审核原则是？\n选项：\nA. 超药典上限可双签字通过 \nB. 超药典上限必须拒绝调配 \nC. 超两日极量需双签字 \nD. 按医师经验灵活调整",
+    "answer_contains_any": [
+      "超药典上限必须拒绝调配"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_31",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药不良反应的常见因素包括\n选项：\nA.剂量过大或疗程过长\nB.不合理用药\nC.个体差异\nD.管理不完善\nE.品种混乱及炮制质量欠佳",
+    "answer_contains_any": [
+      "剂量过大或疗程过长",
+      "不合理用药",
+      "个体差异",
+      "管理不完善",
+      "品种混乱及炮制质量欠佳"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_82",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与肉桂官桂同用的是\n选项：\nA. 甘草\nB. 赤石脂\nC. 麻黄\nD. 藿香\nE. 生姜",
+    "answer_contains_any": [
+      "赤石脂"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_298",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：生附子内服煎汤的剂量是：\n选项：\nA. 1～3g  \nB. 3～15g（先煎60分钟）  \nC. 0.03～0.06g  \nD. 5～10g  \nE. 10～20g",
+    "answer_contains_any": [
+      "3～15g（先煎60分钟）"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_183",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药的基本原则是\n选项：\nA. 准确辨析患者的病证\nB. 延误疾病的治疗\nC. 安全、有效、简便、经济\nD. 最大限度地发挥药物的效能，降低不良反应\nE. 合理用药的主力军",
+    "answer_contains_any": [
+      "安全、有效、简便、经济"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_175",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：确定中药用量的原则有\n选项：\nA. 药物的性质\nB. 药物的剂型\nC. 药物的配伍\nD. 病情的严重程度\nE. 用药人群特点",
+    "answer_contains_any": [
+      "药物的性质",
+      "药物的剂型",
+      "药物的配伍",
+      "病情的严重程度",
+      "用药人群特点"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_145",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于 “十九畏” 的是\n选项：\nA. 芒硝不宜与三棱合用\nB. 巴豆不宜与牵牛子合用\nC. 丁香不宜与郁金合用\nD. 藜芦不宜与党参合用\nE. 附子不宜与贝母合用",
+    "answer_contains_any": [
+      "芒硝不宜与三棱合用",
+      "巴豆不宜与牵牛子合用",
+      "丁香不宜与郁金合用"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_246",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：若在处方审核中发现重复用药且医师未说明理由，药师最恰当的处理措施是：\n选项：\nA. 直接退方，不予调配 \nB. 无需干预，照常发药 \nC. 明确提示并建议医师修改处方 \nD. 擅自删去重复药味 \nE. 让患者自行决定是否服用",
+    "answer_contains_any": [
+      "明确提示并建议医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_62",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些中药与铝、镁、钙合用产生金属络合物发生性质改变\n选项：\nA. 甘草、鹿茸\nB. 儿茶、地榆\nC. 石榴皮、大黄\nD. 代赭石、自然铜\nE. 黄芩、槐米",
+    "answer_contains_any": [
+      "黄芩、槐米"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_301",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：生半夏的正确用法是：\n选项：\nA. 生品直接入煎  \nB. 炮制品 3～9g，生品仅外用  \nC. 打粉冲服  \nD. 久煎 2 小时减毒  \nE. 与生姜同煎增效",
+    "answer_contains_any": [
+      "炮制品 3～9g，生品仅外用"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_321",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：吴茱萸内服煎汤的剂量范围是：\n选项：\nA. 0.5～1g  \nB. 1～3g  \nC. 2～5g  \nD. 5～10g  \nE. 10～15g",
+    "answer_contains_any": [
+      "2～5g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_299",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：斑蝥炮制后入丸散的日用量是：\n选项：\nA. 0.01～0.03g  \nB. 0.01～0.06g  \nC. 0.1～0.3g  \nD. 0.5～1g  \nE. 1～2g",
+    "answer_contains_any": [
+      "0.01～0.06g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_139",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与肉桂合用的药物是\n选项：\nA. 赤石脂\nB. 天花粉\nC. 细辛\nD. 三棱\nE. 郁金",
+    "answer_contains_any": [
+      "赤石脂"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_226",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：若确因病情需要超规格使用药味数，通过审核前必须满足哪项要求？\n选项：\nA. 患者书面同意 \nB. 医师双签字确认 \nC. 药师加注备注 \nD. 护士会诊 \nE. 药房主任批准",
+    "answer_contains_any": [
+      "医师双签字确认"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_245",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪种情况属于“中药饮片重复用药”审核范畴？\n选项：\nA. 同一处方既开生黄芪又开炒黄芪 \nB. 同一处方黄芪与党参并用 \nC. 同一处方连用黄芪与黄芪注射液 \nD. 同一处方黄芪与黄精并用 \nE. 同一处方分早晚各服一次黄芪",
+    "answer_contains_any": [
+      "同一处方既开生黄芪又开炒黄芪"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_56",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：引起中药不良反应治疗原则有\n选项：\nA. 提高对中医药的正确认识\nB. 运用中医药理论、辨证施治\nC. 加强中医药市场管理\nD. 合理配伍用药\nE. 慎重使用中药注射剂",
+    "answer_contains_any": [
+      "提高对中医药的正确认识",
+      "运用中医药理论、辨证施治",
+      "加强中医药市场管理",
+      "合理配伍用药",
+      "慎重使用中药注射剂"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_173",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物的性质与用量的关系中，厚味滋腻的药物\n选项：\nA. 用量宜加重\nB. 用量宜小\nC. 用量不宜过大\nD. 用量可较重\nE. 用量则更大些",
+    "answer_contains_any": [
+      "用量可较重"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_300",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：砒霜内服的极量是：\n选项：\nA. 0.001g  \nB. 0.009g  \nC. 0.03g  \nD. 0.1g  \nE. 0.5g",
+    "answer_contains_any": [
+      "0.009g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_181",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理使用中成药是指\n选项：\nA. 运用中医药学综合知识及管理学知识指导临床用药\nB. 将中药和中成药的不良反应降到最低限度\nC. 运用中医药学知识指导临床用药\nD. 最大限度地发挥中药治疗效能\nE. 运用经济学和管理学知识指导临床用药",
+    "answer_contains_any": [
+      "运用中医药学综合知识及管理学知识指导临床用药"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_295",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与地榆同用的西药是\n选项：\nA. 氢氧化铝\nB. 三硅酸镁\nC. 碳酸钙\nD. 四环素\nE. 维生素 \nB1",
+    "answer_contains_any": [
+      "维生素"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_168",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：剂型、配伍与用量的关系中，儿童及老年体弱者\n选项：\nA. 用量可大些\nB. 用量可酌减\nC. 不宜重剂量\nD. 剂量可适当增加\nE. 可低于新病者的剂量",
+    "answer_contains_any": [
+      "用量可酌减"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_79",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与巴豆同用的是\n选项：\nA. 牵牛子\nB. 白芍\nC. 人参\nD. 肉桂\nE. 沙参",
+    "answer_contains_any": [
+      "牵牛子"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_147",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：健脾药、补益药、止泻药等宜\n选项：\nA. 饭前服用\nB. 清晨空腹或睡前服\nC. 晚上服用\nD. 睡前 1～2h 服用\nE. 及时服用",
+    "answer_contains_any": [
+      "饭前服用"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_91",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下关于合理用药的意义说法错误的是\n选项：\nA. 合理用药是在充分考虑病人用药后获得的效益与承担的风险后所做的最佳选择\nB. 使药效得到充分发挥，不良反应降至最低水平，药品费用更为合理\nC. 合理用药涉及广大群众的切身利益，是用药安全、有效、简便、经济的保障\nD. 可以充分有效地利用卫生资源，取得最大的医疗和社会效益的目的\nE. 以上均不对",
+    "answer_contains_any": [
+      "以上均不对"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_63",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于妊娠慎用药的是\n选项：\nA. 川牛膝\nB. 牛膝\nC. 千金子\nD. 益母草\nE. 斑蝥",
+    "answer_contains_any": [
+      "牛膝"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_180",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药的基本原则是\n选项：\nA. 安全\nB. 有效\nC. 简便\nD. 经济\nE. 安全、有效、简便、经济",
+    "answer_contains_any": [
+      "安全、有效、简便、经济"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_178",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：安全性的实质内容是指\n选项：\nA. 药物的毒副作用小\nB. 无不良反应\nC. 风险效应尽可能小\nD. 无致畸形\nE. 无致癌性",
+    "answer_contains_any": [
+      "风险效应尽可能小"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_38",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下不属于临床不合理用药表现的是\n选项：\nA. 用药指征不明确\nB. 违反禁忌证\nC. 给药计量过大或过小\nD. 在安全、有效的前提下尽量选择价廉的药物\nE. 盲目选择贵重药",
+    "answer_contains_any": [
+      "在安全、有效的前提下尽量选择价廉的药物"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_278",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方审核时发现下列哪种情况应当拒绝调配？\n选项：\nA. 生石膏先煎 \nB. 妊娠妇女处方中含红花 \nC. 细辛用量为 5g\nD. 处方未注明煎煮方法 \nE. 麻黄与杏仁同用",
+    "answer_contains_any": [
+      "妊娠妇女处方中含红花"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_17",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下不属于临床不合理用药表现的是\n选项：\nA. 用药指征不明确\nB. 违反禁忌证\nC. 用药剂量过大或过小\nD. 有效而经济地使用药物\nE. 盲目选择贵重药",
+    "answer_contains_any": [
+      "有效而经济地使用药物"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_51",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：贵重药物常用量为\n选项：\nA. 3 -9g\nB.1.5~4.5g\nC.9~45g\nD. 0.03~0.6g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "3 -9g"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_68",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下药材，只能外用，不能内服的是\n选项：\nA. 砒霜\nB. 水银\nC. 红粉\nD. 轻粉\nE. 白降丹",
+    "answer_contains_any": [
+      "水银",
+      "红粉",
+      "白降丹"
+    ],
+    "answer_option_letters_any": [
+      "BCE"
+    ]
+  },
+  {
+    "id": "tcmpa_229",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：当中药饮片的使用与病名相符但与证型不符时，应判定为：\n选项：\nA. 合理用药 \nB. 适应症不适宜 \nC. 无适应症用药 \nD. 剂量超限 \nE. 药味过多",
+    "answer_contains_any": [
+      "适应症不适宜"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_72",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不属于药物配伍关系的是\n选项：\nA. 相须\nB. 相使\nC. 单行\nD. 相杀\nE. 相反",
+    "answer_contains_any": [
+      "单行"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_292",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不能与含有雄黄的中药合用的西药是\n选项：\nA. 食盐\nB. 溴化钾\nC. 磺胺类药物\nD. 硫酸亚铁\nE. 强心苷类",
+    "answer_contains_any": [
+      "硫酸亚铁"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_239",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于中药饮片处方剂量限制，下列说法正确的是：\n选项：\nA. 仅国家层面可制定限制，医院不得调整 \nB. 只要患者同意即可突破剂量 \nC. 医疗机构可根据实际情况自行制定处方剂量限定标准 \nD. 240 g 的限制仅适用于住院患者 \nE. 剂量限制只针对膏方",
+    "answer_contains_any": [
+      "医疗机构可根据实际情况自行制定处方剂量限定标准"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_161",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：质地较轻的药物的常用量为\n选项：\nA. 0.03~0.6g\nB. 9~45g\nC. 1.5~4.5g\nD. 3~9g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "1.5~4.5g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_203",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪种中药饮片不宜与藜芦同用\n选项：\nA. 人参 \nB. 甘草 \nC. 大枣 \nD. 黄芪",
+    "answer_contains_any": [
+      "人参"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_22",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下有关服药温度的描述，错误的是\n选项：\nA. 一般都宜温服\nB. 对胃肠道有刺激的宜热服\nC. 呕吐患者宜冷服\nD. 中毒患者宜冷服\nE. 解表药宜热服",
+    "answer_contains_any": [
+      "对胃肠道有刺激的宜热服"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_150",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：治疗哮喘的药物宜\n选项：\nA. 饭前服用\nB. 清晨空腹或睡前服\nC. 晚上服用\nD. 睡前 1～2h 服用\nE. 及时服用",
+    "answer_contains_any": [
+      "晚上服用"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_149",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：镇静安眠药多\n选项：\nA. 饭前服用\nB. 清晨空腹或睡前服\nC. 晚上服用\nD. 睡前 1～2h 服用\nE. 及时服用",
+    "answer_contains_any": [
+      "睡前 1～2h 服用"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_290",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪项不属于中药处方经济性适宜的原则？\n选项：\nA. 优先选用医保目录内药物 \nB. 避免盲目使用贵重药材 \nC. 相同功效药物选择价格较低者 \nD. 尽量使用道地药材以保证疗效 \nE. 减少不必要的复方组合",
+    "answer_contains_any": [
+      "尽量使用道地药材以保证疗效"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_171",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物的性质与用量的关系中，质地较重或不易煎的药物如矿物或贝壳类\n选项：\nA. 用量宜加重\nB. 用量宜小\nC. 用量不宜过大\nD. 用量可较重\nE. 用量则更大些",
+    "answer_contains_any": [
+      "用量宜加重"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_186",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不合理用药的后果之一是\n选项：\nA. 引发药物不良反应及药源性疾病\nB. 认真审方堵漏\nC. 违反用药禁忌\nD. 合理配伍用药\nE. 准确辨析患者病症",
+    "answer_contains_any": [
+      "引发药物不良反应及药源性疾病"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_100",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：一般病情最佳给药途径是\n选项：\nA. 口服\nB. 静滴\nC. 外治\nD. 气雾剂吸入\nE. 其他",
+    "answer_contains_any": [
+      "口服"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_193",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：消化道黏膜被腐蚀的中毒患者禁用\n选项：\nA. 洗胃\nB. 吸氧\nC. 喝牛奶\nD. 饮用大量浓茶\nE. 服用鸡蛋清",
+    "answer_contains_any": [
+      "洗胃"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_9",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与芒硝同用的是\n选项：\nA. 牵牛子\nB. 郁金\nC. 三棱\nD. 赤石脂\nE. 狼毒",
+    "answer_contains_any": [
+      "三棱"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_294",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：人参不宜与以下哪种西药合用\n选项：\nA. 痢特灵\nB. 四环素\nC. 维生素 \nB1\nD. 碘化钾\nE. 氢氧化铝",
+    "answer_contains_any": [
+      "碘化钾"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_307",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：水蛭的内服剂量范围是：\n选项：\nA. 0.1～0.5g  \nB. 1～3g  \nC. 3～6g  \nD. 5～10g  \nE. 10～15g",
+    "answer_contains_any": [
+      "1～3g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_259",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：一名 3 岁幼儿使用非毒性中药，合理剂量应为成人量的？\n选项：\nA. 1/6\nB. 1/3\nC. 2/3\nD. 全量",
+    "answer_contains_any": [
+      "2/3"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_188",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：严重心功能不全患者中毒时不可用\n选项：\nA. 洗胃\nB. 饮用大量浓茶\nC. 喝牛奶\nD. 服用活性炭\nE. 服用鸡蛋清",
+    "answer_contains_any": [
+      "洗胃"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_104",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：健脾药宜\n选项：\nA. 饭前服\nB. 空腹服\nC. 睡前服\nD. 及时服用\nE. 晚上服用",
+    "answer_contains_any": [
+      "饭前服"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_233",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：乳婴儿1 月龄-1 岁单味中药饮片剂量应控制在成人量的哪一范围？\n选项：\nA. 1/8 \nB. 1/6 \nC. 2/3 \nD. 1/3-1/2 \nE. 与成人量相同",
+    "answer_contains_any": [
+      "1/3-1/2"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_142",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：毒性中药为\n选项：\nA. 妊娠禁用药\nB. 妊娠忌用药\nC. 妊娠慎用药\nD. 妊娠限用药\nE. 妊娠期用药",
+    "answer_contains_any": [
+      "妊娠禁用药"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_241",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对于儿童处方中含毒副作用较大或对小儿有特殊毒副作用的中药饮片，审核药师的正确做法是：\n选项：\nA. 直接调配发药 \nB. 仅提示监测，无需修改 \nC. 明确提示并建议医师修改处方 \nD. 按成人剂量照常发药 \nE. 家长签字后即可放行",
+    "answer_contains_any": [
+      "明确提示并建议医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_107",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：补益药宜\n选项：\nA. 饭前服\nB. 空腹服\nC. 睡前服\nD. 及时服用\nE. 晚上服用",
+    "answer_contains_any": [
+      "饭前服"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_163",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：有毒的药物的常用量为\n选项：\nA. 0.03~0.6g\nB. 9~45g\nC. 1.5~4.5g\nD. 3~9g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "0.03~0.6g"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_302",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：蜈蚣的常用剂量是：\n选项：\nA. 0.001～0.005g  \nB. 0.015～0.03g  \nC. 0.05～0.1g  \nD. 0.1～0.3g  \nE. 0.3～0.6g",
+    "answer_contains_any": [
+      "0.015～0.03g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_170",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物的性质与用量的关系中，质地较轻或容易煎出的药物\n选项：\nA. 用量宜加重\nB. 用量宜小\nC. 用量不宜过大\nD. 用量可较重\nE. 用量则更大些",
+    "answer_contains_any": [
+      "用量不宜过大"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_7",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相畏的定义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 药物配合主药，互相增强作用\nD. 两种药物合用能相互抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用，能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "一种药物的毒性或副作用，能被另一种药物减轻或消除"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_101",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：危重病人、急症病人最佳给药途径是\n选项：\nA. 口服\nB. 静滴\nC. 外治\nD. 气雾剂吸入\nE. 其他",
+    "answer_contains_any": [
+      "静滴"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_179",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪些情况不是不合理用药的表现\n选项：\nA. 用药指征不明确\nB. 自我用药\nC. 给药剂量失准\nD. 给药途径不适\nE. 服药时间不当",
+    "answer_contains_any": [
+      "自我用药"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_74",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：减轻或消除药物疗效的配伍关系是\n选项：\nA. 相须\nB. 相使\nC. 相畏\nD. 单行\nE. 相反",
+    "answer_contains_any": [
+      "相畏"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_314",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：生甘遂内服入丸散的日用量是：\n选项：\nA. 0.1～0.3g  \nB. 0.5～1.5g  \nC. 1.5～3g  \nD. 3～6g  \nE. 5～10g",
+    "answer_contains_any": [
+      "0.5～1.5g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_50",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：有毒药物常用量为\n选项：\nA. 3 -9g\nB.1.5~4.5g\nC.9~45g\nD. 0.03~0.6g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "0.03~0.6g"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_111",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列说法不正确的是\n选项：\nA. 毒性中药的管理品种，由卫生部会同国家食品药品监督管理局、国家中医药管理局规定\nB. 其他任何单位或个人不得从事毒性中药的收购、经营和配方业务\nC. 毒性中药的包装容器上必须印有毒药标志\nD. 凡加工炮制毒性中药，必须按照《中国药典》或者省、自治区、直辖市卫生行政部门制定的炮制规范的规定进行\nE. 制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查",
+    "answer_contains_any": [
+      "制备含毒性中药的制剂，必须建立完整的制剂记录，保存 3 年备查"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_200",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：与药物剂量无关的不良反应是\n选项：\nA. 毒副作用\nB. 变态反应\nC. 引起轻微的反应或疾病，症状可不治而愈\nD. 可致残、致畸、致癌\nE. 不良反应症状明显，常累及重要器官或系统",
+    "answer_contains_any": [
+      "变态反应"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_80",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与丁香同用的是\n选项：\nA. 牵牛子\nB. 川贝\nC. 郁金\nD. 大黄\nE. 甘草",
+    "answer_contains_any": [
+      "郁金"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_304",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“大毒”类中药的是：\n选项：\nA. 苦杏仁  \nB. 水蛭  \nC. 马钱子  \nD. 吴茱萸  \nE. 蛇床子",
+    "answer_contains_any": [
+      "马钱子"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_148",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：驱虫药可于\n选项：\nA. 饭前服用\nB. 清晨空腹或睡前服\nC. 晚上服用\nD. 睡前 1～2h 服用\nE. 及时服用",
+    "answer_contains_any": [
+      "清晨空腹或睡前服"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_303",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：制川乌的煎煮要求是：\n选项：\nA. 后下 5 分钟  \nB. 包煎避免刺激  \nC. 先煎 30～60 分钟  \nD. 冲服减毒  \nE. 另炖 2 小时",
+    "answer_contains_any": [
+      "先煎 30～60 分钟"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_208",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下属于 “十八反” 内容的有（ ）\n选项：\nA. 甘草反甘遂 \nB. 乌头反贝母 \nC. 藜芦反细辛 \nD. 人参反五灵脂",
+    "answer_contains_any": [
+      "甘草反甘遂",
+      "乌头反贝母",
+      "藜芦反细辛"
+    ],
+    "answer_option_letters_any": [
+      "ABC"
+    ]
+  },
+  {
+    "id": "tcmpa_129",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相杀的意义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 辅药配合主药，互相增强作用\nD. 两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "一种药物能消除或减轻另一种药物的毒性或副作用"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_176",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药是指\n选项：\nA. 药品无不良反应\nB. 药品不良反应尽可能小\nC. 用药安全、价廉、方便\nD. 对症下药、无副作用、价格便宜、使用方便\nE. 以当代药物和疾病的系统知识和理论为基础，安全、有效、经济、适当地使用药物",
+    "answer_contains_any": [
+      "以当代药物和疾病的系统知识和理论为基础，安全、有效、经济、适当地使用药物"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_10",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于妊娠忌用药的是\n选项：\nA. 制川乌\nB. 白附子\nC. 马钱子\nD. 丁公藤\nE. 肉桂",
+    "answer_contains_any": [
+      "马钱子"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_21",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：汤剂的煎煮次数以多少次为最佳\n选项：\nA. 1 次\nB. 2 或 3 次\nC. 4 次\nD. 5 次\nE. 越多越好",
+    "answer_contains_any": [
+      "2 或 3 次"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_277",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于 \"十八反\" 配伍禁忌，以下说法错误的是：\n选项：\nA. 乌头类反半夏、瓜蒌、贝母 \nB. 甘草反甘遂、大戟、芫花 \nC. 藜芦反人参、丹参、玄参 \nD. 附子与干姜同用属于配伍禁忌 \nE. 海藻与甘草同用可能产生毒性",
+    "answer_contains_any": [
+      "附子与干姜同用属于配伍禁忌"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_75",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于药物配伍禁忌关系的是\n选项：\nA. 相须\nB. 相使\nC. 单行\nD. 相杀\nE. 相反",
+    "answer_contains_any": [
+      "相反"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_167",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：剂型、配伍与用量的关系中，久病者\n选项：\nA. 用量可大些\nB. 用量可酌减\nC. 不宜重剂量\nD. 剂量可适当增加\nE. 可低于新病者的剂量",
+    "answer_contains_any": [
+      "可低于新病者的剂量"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_160",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：一般药物干品的常用量为\n选项：\nA. 0.03~0.6g\nB. 9~45g\nC. 1.5~4.5g\nD. 3~9g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "3~9g"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_157",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：中药剂量的概念正确的是\n选项：\nA. 中药的用量，又称为中药的剂量，是临床处方中使用每味药的分量\nB. 中药的每味药的分量\nC. 是最小的中药的称量单位\nD. 是中药的每味药的包装量\nE. 以上均不是",
+    "answer_contains_any": [
+      "中药的用量，又称为中药的剂量，是临床处方中使用每味药的分量"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_192",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：急性中毒出现呼吸衰竭者禁用\n选项：\nA. 洗胃\nB. 吸氧\nC. 喝牛奶\nD. 饮用大量浓茶\nE. 服用鸡蛋清",
+    "answer_contains_any": [
+      "饮用大量浓茶"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_55",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药的目的有\n选项：\nA. 发挥药物的最大效能\nB. 防止和减轻不良反应\nC. 使患者用最好的支出取得最好的治疗结果\nD. 有效利用卫生资源\nE. 减少浪费",
+    "answer_contains_any": [
+      "发挥药物的最大效能",
+      "防止和减轻不良反应",
+      "使患者用最好的支出取得最好的治疗结果",
+      "有效利用卫生资源",
+      "减少浪费"
+    ],
+    "answer_option_letters_any": [
+      "ABCDE"
+    ]
+  },
+  {
+    "id": "tcmpa_11",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：人参与莱菔子，属于哪种配伍关系\n选项：\nA. 相须\nB. 相使\nC. 相畏\nD. 相杀\nE. 相恶",
+    "answer_contains_any": [
+      "相恶"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_230",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下哪种情况属于“无适应症用药”？\n选项：\nA. 用药与病名相符、证型不符 \nB. 用药与病名不符但与并发症相符 \nC. 用药同时与疾病、并发症及证型均不符合 \nD. 用药与证型相符但与病名不符 \nE. 用药仅与体质特点相符",
+    "answer_contains_any": [
+      "用药同时与疾病、并发症及证型均不符合"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_106",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：止泻药宜\n选项：\nA. 饭前服\nB. 空腹服\nC. 睡前服\nD. 及时服用\nE. 晚上服用",
+    "answer_contains_any": [
+      "饭前服"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_16",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：洋地黄类中药的毒性反应不包括\n选项：\nA. 恶心呕吐\nB. 腹痛腹泻\nC. 少尿\nD. 心动过速\nE. 四肢麻木",
+    "answer_contains_any": [
+      "四肢麻木"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_169",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：剂型、配伍与用量的关系中，病情重者\n选项：\nA. 用量可大些\nB. 用量可酌减\nC. 不宜重剂量\nD. 剂量可适当增加\nE. 可低于新病者的剂量",
+    "answer_contains_any": [
+      "剂量可适当增加"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_328",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于“有毒”中药饮片需要处方审核干预的触发条件，下列哪一项最完整且准确？\n选项：\nA. 仅单味剂量超过药典上限\nB. 仅一次处方量超过两日极量\nC. 单味剂量超过药典上限或一次处方量超过三日极量\nD. 单味剂量超过上限或一次处方量超过两日极量\nE. 单味剂量超过说明书日常用量即可",
+    "answer_contains_any": [
+      "单味剂量超过上限或一次处方量超过两日极量"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_94",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理用药必须针对病人具体情况制订给药剂量，以下说法错误的是\n选项：\nA. 病人的生活习惯和个体差异不同，但不影响药物的有效性和安全性\nB. 儿童、老人因对药物代谢能力不全或衰退，易发生药物蓄积，引起毒性反应\nC. 病人的健康水平、脏器功能等，影响对药物的代谢能力和耐受能力\nD. 要从药物经济学方面考虑病人经济承受能力问题\nE. 要根据病人的病情及其年龄等情况，合理选用药物及制订剂量",
+    "answer_contains_any": [
+      "病人的生活习惯和个体差异不同，但不影响药物的有效性和安全性"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_12",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于合理用药指导的内容，不正确的是\n选项：\nA. 针对患者具体情况合理选择药物\nB. 根据患者的经济状况合理选择药物\nC. 针对病情合理选择给药途径\nD. 针对病情选择合理的给药时间及疗程\nE. 指导患者合理用药",
+    "answer_contains_any": [
+      "根据患者的经济状况合理选择药物"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_237",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：原则上，当中药饮片处方膏方除外剂量超过多少克时，审核药师必须提示并建议医师修改？\n选项：\nA. 180 g \nB. 240 g \nC. 260 g \nD. 300 g \nE. 320 g",
+    "answer_contains_any": [
+      "300 g"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_289",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于中药剂量适宜性，下列说法错误的是？\n选项：\nA. 细辛常用量为 1-3g，超量需医师双签字 \nB. 制川乌、制草乌常用量为 1.5-3g\nC. 苦杏仁成人一日用量可达 30g\nD. 朱砂内服每日不超过 0.5g\nE. 马钱子粉极量为 0.6g / 日",
+    "answer_contains_any": [
+      "苦杏仁成人一日用量可达 30g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_144",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列属于妊娠忌用药的有\n选项：\nA. 黄芩\nB. 甘草\nC. 山楂\nD. 巴豆霜\nE. 附子",
+    "answer_contains_any": [
+      "巴豆霜",
+      "附子"
+    ],
+    "answer_option_letters_any": [
+      "DE"
+    ]
+  },
+  {
+    "id": "tcmpa_133",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不属于 “十八反” 的是\n选项：\nA. 海藻、大戟、芫花不能与甘草合用\nB. 半夏、瓜蒌、贝母、白蔹不可与川乌合用\nC. 藜芦不能与人参、细辛合用\nD. 人参、细辛可以同白芍合用\nE. 草乌不可与贝母合用",
+    "answer_contains_any": [
+      "人参、细辛可以同白芍合用"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_93",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：合理应用中药或中成药必须根据正确的\n选项：\nA. 八纲\nB. 辨证\nC. 论证\nD. 阴阳\nE. 脏腑",
+    "answer_contains_any": [
+      "辨证"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_105",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：镇静安眠药宜\n选项：\nA. 饭前服\nB. 空腹服\nC. 睡前服\nD. 及时服用\nE. 晚上服用",
+    "answer_contains_any": [
+      "睡前服"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_36",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相反的意义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 药物配合主药，互相增强作用\nD. 两种药物合用能相互抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用，能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "两种药物合用，能产生毒性反应或者副作用，属配伍禁忌"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_57",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：乌头类中药的毒性反应包括\n选项：\nA. 四肢麻木\nB. 烦躁呕吐\nC. 心律失常\nD. 房室传导阻滞\nE. 腹痛腹泻",
+    "answer_contains_any": [
+      "四肢麻木",
+      "烦躁呕吐",
+      "心律失常",
+      "房室传导阻滞"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_206",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪种中药饮片孕妇慎用\n选项：\nA. 艾叶 \nB. 川芎 \nC. 杜仲 \nD. 桑寄生",
+    "answer_contains_any": [
+      "川芎"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_89",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与人参同用的是\n选项：\nA. 川乌\nB. 半夏\nC. 甘草\nD. 藜芦\nE. 桂枝",
+    "answer_contains_any": [
+      "藜芦"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_197",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：过量服用，主要作用于神经系统，尤其是迷走神经的有毒中药是指\n选项：\nA. 含雄黄的中成药\nB. 乌头类药物\nC. 含蟾酥的中成药\nD. 含半夏的中成药\nE. 含马钱子的中成药",
+    "answer_contains_any": [
+      "乌头类药物"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_288",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列哪种情况属于中药处方的不合理用药？\n选项：\nA. 风寒感冒使用麻黄汤 \nB. 阴虚火旺者长期服用附子理中丸 \nC. 湿热泄泻使用葛根芩连汤 \nD. 气虚自汗使用玉屏风散 \nE. 肝阳上亢使用天麻钩藤饮",
+    "answer_contains_any": [
+      "阴虚火旺者长期服用附子理中丸"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_48",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：质地较轻的药物常用量为\n选项：\nA. 3 -9g\nB.1.5~4.5g\nC.9~45g\nD. 0.03~0.6g\nE. 0.3~1g",
+    "answer_contains_any": [
+      "1.5~4.5g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_174",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物的性质与用量的关系中，新鲜药物因含有水分\n选项：\nA. 用量宜加重\nB. 用量宜小\nC. 用量不宜过大\nD. 用量可较重\nE. 用量则更大些",
+    "answer_contains_any": [
+      "用量则更大些"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_261",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：60 岁以上老年人使用非毒性中药，剂量通常为成人量的？\n选项：\nA. 1/6\nB. 1/3~1/2\nC. 1/2~3/4\nD. 全量",
+    "answer_contains_any": [
+      "1/2~3/4"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_172",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：药物的性质与用量的关系中，芳香走散的药物\n选项：\nA. 用量宜加重\nB. 用量宜小\nC. 用量不宜过大\nD. 用量可较重\nE. 用量则更大些",
+    "answer_contains_any": [
+      "用量宜小"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_234",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：60 岁以上老年人单味中药饮片的常规剂量通常为成人量的多少？\n选项：\nA. 1/4-1/3 \nB. 1/3-1/2 \nC. 1/2-3/4 \nD. 3/4-1 \nE. 与成人量相同",
+    "answer_contains_any": [
+      "1/2-3/4"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_327",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：北豆根内服煎汤的剂量是：\n选项：\nA. 1～3g  \nB. 3～9g  \nC. 5～10g  \nD. 6～12g  \nE. 10～15g",
+    "answer_contains_any": [
+      "3～9g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_126",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下不属于 “七情” 配伍的临床意义的是\n选项：\nA. “七情” 配伍有利于减轻或消除毒副作用\nB. “七情” 配伍能使单用无害的药物相互作用而产生毒性反应或副作用\nC. 相须、相使的配伍关系因协同作用而扩大治疗范围，或增强疗效\nD. 相畏、相杀的配伍关系有利于减轻或消除毒性或副作用\nE. “七情” 配伍没有单用，都是配伍使用",
+    "answer_contains_any": [
+      "“七情” 配伍没有单用，都是配伍使用"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_235",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：对非毒性或有毒中药饮片，若单味剂量超出法定上限的几倍时，审核药师必须提示并建议医生修订处方？\n选项：\nA. 2 倍 \nB. 2.5 倍 \nC. 3 倍 \nD. 4 倍 \nE. 5 倍",
+    "answer_contains_any": [
+      "3 倍"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_297",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列关于“有毒”与“毒性”中药饮片超限处理差异的描述，哪项正确？\n选项：\nA. 二者均允许双签字后放行 \nB. 二者均绝对禁止放行 \nC. 有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行 \nD. 有毒饮片比毒性饮片更严 \nE. 毒性饮片可患者签字代替医师修改",
+    "answer_contains_any": [
+      "有毒饮片必要时可双签字放行；毒性饮片超限不同意修改即使双签字也不能放行"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_194",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：严重心功能不全患者禁用\n选项：\nA. 洗胃\nB. 吸氧\nC. 喝牛奶\nD. 饮用大量浓茶\nE. 服用鸡蛋清",
+    "answer_contains_any": [
+      "洗胃"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_264",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：矿物类中药如石膏的常规用量范围是？\n选项：\nA. 0.1~1g\nB. 3~9g\nC. 15~60g\nD. 100~200g",
+    "answer_contains_any": [
+      "15~60g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_317",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：巴豆霜内服入丸散的剂量是：\n选项：\nA. 0.01～0.03g  \nB. 0.1～0.3g  \nC. 0.3～0.6g  \nD. 0.5～1g  \nE. 1～2g",
+    "answer_contains_any": [
+      "0.1～0.3g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_128",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：相畏的意义是\n选项：\nA. 一种药物能消除或减轻另一种药物的毒性或副作用\nB. 一种药物的毒性或副作用，能被另一种药物减轻或消除\nC. 辅药配合主药，互相增强作用\nD. 两种药物合用能互相抑制、降低或丧失药效，属配伍禁忌\nE. 两种药物合用能产生毒性反应或者副作用，属配伍禁忌",
+    "answer_contains_any": [
+      "一种药物的毒性或副作用，能被另一种药物减轻或消除"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_182",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不合理用药的表现是\n选项：\nA. 准确辨析患者的病证\nB. 延误疾病的治疗\nC. 安全、有效、简便、经济\nD. 最大限度地发挥药物的效能，降低不良反应\nE. 合理用药的主力军",
+    "answer_contains_any": [
+      "延误疾病的治疗"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_64",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：以下不属于临床不合理用药表现的是\n选项：\nA. 用药指征不明确\nB. 违反禁忌证\nC. 给药剂量过大或过小\nD. 在安全、有效的前提下尽量选择价廉的药物\nE. 盲目选择贵重药",
+    "answer_contains_any": [
+      "在安全、有效的前提下尽量选择价廉的药物"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_324",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：红大戟内服入丸散的剂量是：\n选项：\nA. 0.1～0.3g  \nB. 0.5～1g  \nC. 1.5～3g  \nD. 3～6g  \nE. 5～10g",
+    "answer_contains_any": [
+      "1.5～3g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_76",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：川乌、草乌、附子不宜与贝母、半夏、白及、白蔹及下哪种药同用\n选项：\nA. 郁金\nB. 人参\nC. 肉桂\nD. 郁金\nE. 瓜蒌",
+    "answer_contains_any": [
+      "瓜蒌"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_265",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：医师申请长期超量使用毒性中药，必须经过哪个部门批准？\n选项：\nA. 医院办公室 \nB. 药房主任 \nC. 药事管理与药物治疗学委员会 \nD. 医务科",
+    "answer_contains_any": [
+      "药事管理与药物治疗学委员会"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_73",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：能增强药物疗效的配伍关系是\n选项：\nA. 相须\nB. 相畏\nC. 单行\nD. 相杀\nE. 相反",
+    "answer_contains_any": [
+      "相须"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_287",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：关于妊娠禁忌用药，下列说法错误的是？\n选项：\nA. 红花、桃仁属于慎用药 \nB. 麝香、水蛭属于禁用药物 \nC. 制半夏在医师指导下可谨慎使用 \nD. 所有活血化瘀药均不可用于孕妇 \nE. 妊娠期应避免使用毒性较强的中药",
+    "answer_contains_any": [
+      "所有活血化瘀药均不可用于孕妇"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_315",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：闹羊花内服煎汤的剂量范围是：\n选项：\nA. 0.05～0.1g  \nB. 0.3～0.6g  \nC. 0.6～1.5g  \nD. 1.5～3g  \nE. 3～9g",
+    "answer_contains_any": [
+      "0.6～1.5g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_201",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：与药物剂量有关的不良反应是\n选项：\nA. 毒副作用\nB. 变态反应\nC. 引起轻微的反应或疾病，症状可不治而愈\nD. 可致残、致畸、致癌\nE. 不良反应症状明显，常累及重要器官或系统",
+    "answer_contains_any": [
+      "毒副作用"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_92",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下面哪一项属于合理用药\n选项：\nA. 用药指证不明确、违反禁忌证\nB. 给药剂量过大或过小、疗程过长或过短\nC. 给药途径不适宜、给药方法不当\nD. 合并用药过多\nE. 不盲目选用贵重药",
+    "answer_contains_any": [
+      "不盲目选用贵重药"
+    ],
+    "answer_option_letters_any": [
+      "E"
+    ]
+  },
+  {
+    "id": "tcmpa_88",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：不宜与贝母同用的是\n选项：\nA. 川乌\nB. 半夏\nC. 甘草\nD. 藜芦\nE. 桂枝",
+    "answer_contains_any": [
+      "川乌"
+    ],
+    "answer_option_letters_any": [
+      "A"
+    ]
+  },
+  {
+    "id": "tcmpa_260",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：处方中黄芪用量为 30g常规上限 9g，药师应如何处理？\n选项：\nA. 直接发药 \nB. 建议修改，双签字后调配 \nC. 拒绝调配 \nD. 减量至 9g",
+    "answer_contains_any": [
+      "建议修改，双签字后调配"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_322",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：蛇床子内服煎汤的剂量是：\n选项：\nA. 1～3g  \nB. 3～10g  \nC. 5～12g  \nD. 6～15g  \nE. 10～20g",
+    "answer_contains_any": [
+      "3～10g"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_155",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列是毒性中药材的是\n选项：\nA. 斑蝥\nB. 炮马钱子\nC. 蟾酥\nD. 藤黄\nE. 龙骨",
+    "answer_contains_any": [
+      "斑蝥",
+      "炮马钱子",
+      "蟾酥",
+      "藤黄"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_158",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列与确定中药用量原则无关的是\n选项：\nA. 中药的性质与用量的关系\nB. 中药的剂型与用量的关系\nC. 中药的配伍与用量的关系\nD. 中药的产地与用量的关系\nE. 中药的用药人群不同，用量不同",
+    "answer_contains_any": [
+      "中药的产地与用量的关系"
+    ],
+    "answer_option_letters_any": [
+      "D"
+    ]
+  },
+  {
+    "id": "tcmpa_240",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：审核中药饮片处方时，关于“基源与炮制品”选择的要求，下列表述哪项正确？\n选项：\nA. 只要剂量合规，无需关注基源与炮制方式 \nB. 仅当处方药味超过 18 味时才审核基源 \nC. 应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方 \nD. 基源与炮制只由采购部门负责，药师可忽略 \nE. 只需在膏方处方中审核基源与炮制品",
+    "answer_contains_any": [
+      "应审核基源及炮制品的合理性，若明显不适宜应提示医师修改处方"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_196",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：服用过量可致各种出血症状的有毒药物是\n选项：\nA. 马钱子\nB. 雄黄\nC. 蟾酥\nD. 黄药子\nE. 朱砂",
+    "answer_contains_any": [
+      "雄黄"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  },
+  {
+    "id": "tcmpa_224",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在缺乏地方明确规定的情况下，原则上每张中药饮片处方的药味数应控制在多少味以内？\n选项：\nA. 12 味 \nB. 14 味 \nC. 18 味 \nD. 24 味 \nE. 30 味",
+    "answer_contains_any": [
+      "18 味"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_236",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：在无其他规定的情况下，中药饮片处方总剂量应控制在多少克以内？\n选项：\nA. 120 g \nB. 180 g \nC. 240 g \nD. 300 g \nE. 360 g",
+    "answer_contains_any": [
+      "240 g"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_30",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：配伍禁忌包括哪几方面内容\n选项：\nA.中药材配伍禁忌\nB.妊娠禁忌\nC.中西药物合用的配伍禁忌\nD.中成药配伍禁忌\nE.中药注射液配伍禁忌",
+    "answer_contains_any": [
+      "中药材配伍禁忌",
+      "妊娠禁忌",
+      "中西药物合用的配伍禁忌",
+      "中成药配伍禁忌"
+    ],
+    "answer_option_letters_any": [
+      "ABCD"
+    ]
+  },
+  {
+    "id": "tcmpa_311",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：属于“小毒”类中药的是：\n选项：\nA. 生半夏  \nB. 蜈蚣  \nC. 川楝子  \nD. 红粉  \nE. 生天仙子",
+    "answer_contains_any": [
+      "川楝子"
+    ],
+    "answer_option_letters_any": [
+      "C"
+    ]
+  },
+  {
+    "id": "tcmpa_143",
+    "category": "tcmeval_pa_处方适宜性",
+    "query": "请回答下面的中医处方审核或中药学选择题。可以先简要解释，再明确给出最终选项。\n题目：下列不属于中药不良反应的是\n选项：\nA. 过敏反应\nB. 光敏反应\nC. 后遗效应\nD. 继发效应\nE. 毒性作用",
+    "answer_contains_any": [
+      "光敏反应"
+    ],
+    "answer_option_letters_any": [
+      "B"
+    ]
+  }
+]

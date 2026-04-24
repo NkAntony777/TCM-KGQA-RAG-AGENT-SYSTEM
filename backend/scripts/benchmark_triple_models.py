@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.pipeline_server import _build_pipeline
-from scripts.tcm_triple_console import PipelineConfig, TCMTriplePipeline
+from services.triple_pipeline_service import PipelineConfig, TCMTriplePipeline
 
 
 BOOK_NAME = "072-医方考"

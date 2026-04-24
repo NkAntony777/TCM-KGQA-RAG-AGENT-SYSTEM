@@ -33,24 +33,19 @@ def run_hybrid_search(
 
     if normalized_search_mode == "files_first":
         try:
-            docs, retrieval_mode = files_first_store.search(
-                query=query,
-                query_context=query_context,
-                top_k=top_k,
-                candidate_k=max(candidate_k, top_k),
-                leaf_level=settings.leaf_retrieve_level,
-            )
-            if not docs and sparse_vector and milvus.has_collection():
-                docs = milvus.sparse_search(
-                    sparse_embedding=sparse_vector,
+            try:
+                docs, retrieval_mode = files_first_store.search(
+                    query=query,
+                    query_context=query_context,
                     top_k=top_k,
                     candidate_k=max(candidate_k, top_k),
                     leaf_level=settings.leaf_retrieve_level,
                 )
-                retrieval_mode = "sparse_milvus"
-            elif not docs and sparse_vector:
-                docs, retrieval_mode = local_store.search_sparse(
-                    sparse_embedding=sparse_vector,
+            except TypeError as exc:
+                if "query_context" not in str(exc):
+                    raise
+                docs, retrieval_mode = files_first_store.search(
+                    query=query,
                     top_k=top_k,
                     candidate_k=max(candidate_k, top_k),
                     leaf_level=settings.leaf_retrieve_level,
@@ -59,6 +54,26 @@ def run_hybrid_search(
             warnings.append(str(exc))
             docs = []
             retrieval_mode = "files_first_error"
+        milvus_collection_available = False
+        try:
+            milvus_collection_available = bool(milvus.has_collection())
+        except Exception as exc:
+            warnings.append(f"milvus_sparse_fallback_unavailable:{exc}")
+        if not docs and sparse_vector and milvus_collection_available:
+            docs = milvus.sparse_search(
+                sparse_embedding=sparse_vector,
+                top_k=top_k,
+                candidate_k=max(candidate_k, top_k),
+                leaf_level=settings.leaf_retrieve_level,
+            )
+            retrieval_mode = "sparse_milvus"
+        elif not docs and sparse_vector:
+            docs, retrieval_mode = local_store.search_sparse(
+                sparse_embedding=sparse_vector,
+                top_k=top_k,
+                candidate_k=max(candidate_k, top_k),
+                leaf_level=settings.leaf_retrieve_level,
+            )
 
         if docs and settings.vector_compatibility_enabled and embedding_client.is_ready():
             if _should_apply_files_first_vector_fusion(

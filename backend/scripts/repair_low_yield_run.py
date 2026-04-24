@@ -14,7 +14,7 @@ _BACKEND_DIR = _SCRIPTS_DIR.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from scripts.tcm_triple_console import (
+from services.triple_pipeline_service import (
     DEFAULT_OUTPUT_DIR,
     PipelineConfig,
     TCMTriplePipeline,

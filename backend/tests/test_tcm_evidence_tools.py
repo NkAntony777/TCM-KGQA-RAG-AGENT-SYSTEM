@@ -4,7 +4,8 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from tools.tcm_evidence_tools import EvidenceNavigator, _filter_items_by_book, _source_scope_specs
+from tools.tcm_evidence_support import _filter_items_by_book
+from tools.tcm_evidence_tools import EvidenceNavigator, _source_scope_specs
 
 
 class FakeAliasService:

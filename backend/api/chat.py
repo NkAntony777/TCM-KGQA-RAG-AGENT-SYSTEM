@@ -8,15 +8,15 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from api.chat_events import apply_event_to_segments, apply_result_to_segments, new_segment, result_to_events
-from graph.agent import agent_manager
+from services.app_context import generate_title, require_session_manager
 from services.qa_service.engine import get_qa_service
 
 router = APIRouter()
 
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1)
-    session_id: str
+    message: str = Field(..., min_length=1, max_length=4000)
+    session_id: str = Field(..., min_length=1, max_length=128)
     stream: bool = True
     mode: Literal["quick", "deep"] = Field(default="quick")
     top_k: int = Field(default=12, ge=1, le=20)
@@ -80,9 +80,10 @@ async def _event_sequence(payload: ChatRequest) -> AsyncIterator[dict[str, Any]]
 
 @router.post("/chat")
 async def chat(payload: ChatRequest):
-    session_manager = agent_manager.session_manager
-    if session_manager is None:
-        raise HTTPException(status_code=503, detail="Agent manager is not initialized")
+    try:
+        session_manager = require_session_manager()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="Application context is not initialized") from exc
 
     history_record = session_manager.load_session_record(payload.session_id)
     is_first_user_message = not any(
@@ -92,14 +93,11 @@ async def chat(payload: ChatRequest):
     async def event_generator():
         segments: list[dict[str, Any]] = []
         current_segment = new_segment()
-        final_result: dict[str, Any] | None = None
-
         try:
             async for event in _event_sequence(payload):
                 if event["type"] == "result":
                     result = event.get("result")
                     if isinstance(result, dict):
-                        final_result = result
                         apply_result_to_segments(result=result, segments=segments)
                     continue
                 current_segment = apply_event_to_segments(
@@ -121,7 +119,7 @@ async def chat(payload: ChatRequest):
             segments=segments,
         )
         if is_first_user_message:
-            title = await agent_manager.generate_title(payload.message)
+            title = await generate_title(payload.message)
             session_manager.set_title(payload.session_id, title)
             yield _sse("title", {"session_id": payload.session_id, "title": title})
 
@@ -132,14 +130,11 @@ async def chat(payload: ChatRequest):
     current_segment = new_segment()
     final_content = ""
     title: str | None = None
-    final_result: dict[str, Any] | None = None
-
     try:
         async for event in _event_sequence(payload):
             if event["type"] == "result":
                 result = event.get("result")
                 if isinstance(result, dict):
-                    final_result = result
                     apply_result_to_segments(result=result, segments=segments)
                 continue
             current_segment = apply_event_to_segments(
@@ -156,7 +151,7 @@ async def chat(payload: ChatRequest):
             segments=segments,
         )
         if is_first_user_message:
-            title = await agent_manager.generate_title(payload.message)
+            title = await generate_title(payload.message)
             session_manager.set_title(payload.session_id, title)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

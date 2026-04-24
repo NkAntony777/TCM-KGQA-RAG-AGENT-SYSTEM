@@ -18,6 +18,7 @@ from services.qa_service.prompts import (
     _build_grounded_system_prompt,
     _build_grounded_user_prompt,
     _compose_fallback_answer,
+    _ensure_multiple_choice_answer_format,
 )
 
 
@@ -322,6 +323,7 @@ async def _build_response(
         book_citations=book_citations,
         deep_trace=deep_trace or [],
     )
+    answer = _ensure_multiple_choice_answer_format(query, answer)
     selected_factual = factual[: settings.max_factual_evidence]
     selected_cases = cases[: settings.max_case_references]
     coverage = _coverage_summary(

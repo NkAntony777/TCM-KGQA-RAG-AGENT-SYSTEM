@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-from scripts.tcm_triple_console import (
+from services.triple_pipeline_service import (
     BACKEND_DIR,
     DEFAULT_BOOKS_DIR,
     DEFAULT_GRAPH_BASE,

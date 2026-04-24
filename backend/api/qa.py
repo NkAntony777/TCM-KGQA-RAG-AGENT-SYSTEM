@@ -6,7 +6,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from graph.agent import agent_manager
+from services.app_context import generate_title, require_session_manager
 from services.common.models import success
 from services.qa_service.engine import get_qa_service
 
@@ -14,10 +14,10 @@ router = APIRouter()
 
 
 class QAAnswerRequest(BaseModel):
-    query: str = Field(..., min_length=1, description="User TCM question")
+    query: str = Field(..., min_length=1, max_length=4000, description="User TCM question")
     mode: Literal["quick", "deep"] = Field(default="quick", description="QA execution mode")
     top_k: int = Field(default=12, ge=1, le=20, description="Evidence selection size")
-    session_id: str | None = Field(default=None, description="Optional session id for persistence")
+    session_id: str | None = Field(default=None, max_length=128, description="Optional session id for persistence")
 
 
 def _tool_calls_from_trace(tool_trace: list[dict[str, object]] | object) -> list[dict[str, object]]:
@@ -53,9 +53,10 @@ async def answer_question(
             top_k=payload.top_k,
         )
         if payload.session_id:
-            session_manager = agent_manager.session_manager
-            if session_manager is None:
-                raise HTTPException(status_code=503, detail="Agent manager is not initialized")
+            try:
+                session_manager = require_session_manager()
+            except RuntimeError as exc:
+                raise HTTPException(status_code=503, detail="Application context is not initialized") from exc
             session_manager.save_message(payload.session_id, "user", payload.query)
             session_manager.save_message(
                 payload.session_id,
@@ -77,7 +78,7 @@ async def answer_question(
             history = session_manager.load_session_record(payload.session_id).get("messages", [])
             is_first_user_message = len([item for item in history if item.get("role") == "user"]) == 1
             if is_first_user_message:
-                title = await agent_manager.generate_title(payload.query)
+                title = await generate_title(payload.query)
                 session_manager.set_title(payload.session_id, title)
                 data["session_title"] = title
     except ValueError as exc:

@@ -2,6 +2,9 @@
 .venv/
 backend/.env
 backend/.venv/
+backend/.uv-cache/
+backend/.uv-cache-local/
+backend/.test_tmp/
 __pycache__/
 **/__pycache__/
 *.pyc
@@ -46,7 +49,9 @@ backend/storage/triple_pipeline_test_books/
 backend/storage/chroma_case_query_mirror/
 backend/storage/section_summary_ablation/
 backend/.smoke_logs/
+backend/_tmp_logs/
 backend/workspace/
+backend/_tmp_uv_cache/
 backend/tmp_*.py
 backend/tmp_*.json
 backend/tmp_*.md
@@ -54,10 +59,12 @@ backend/tmp_*.pid
 backend/eval_*.json
 backend/eval/*.json
 backend/eval/*.md
+backend/eval/paper/*.tmp.*
 !backend/eval/datasets/
 !backend/eval/datasets/**
 !backend/eval/ablations/
 !backend/eval/ablations/**
+backend/eval/ablations/**/__pycache__/
 backend/services/graph_service/data/*.bak.db
 backend/services/graph_service/data/*.bak.json
 backend/services/graph_service/data/graph_runtime.governance*.json
@@ -78,6 +85,14 @@ backend/storage/*report*.json
 backend/storage/qa_*.json
 backend/storage/section_summary_cache.json
 backend/_tmp_test/
+backend/eval/Results/
+backend/eval/TCM-PA/
+backend/eval/TCM-SDT/
+backend/eval/TCMBench/
+backend/eval/paper/*_latest.json
+backend/eval/paper/*latest*.json
+backend/eval/paper/*_final_official.json
+docs/archive_20260420/
 backend/eval/datasets/paper/_tmp_traceable_*
 backend/storage/nav_group_cache/
 backend/storage/paper_milvus_import_sessions/
@@ -87,6 +102,8 @@ backend/eval/ablations/archive_20260419/
 frontend/.next/
 frontend/node_modules/
 frontend/.npm-cache/
+frontend/tsconfig.tsbuildinfo
+docs/*.tmp.*
 .vscode/
 .idea/
 .claude/

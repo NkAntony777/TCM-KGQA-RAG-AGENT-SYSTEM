@@ -169,6 +169,30 @@ class ServiceClientLocalFallbackTests(unittest.TestCase):
         self.assertTrue(snapshot["sidecar_probe_skipped"])
         self.assertEqual(snapshot["graph_backend"], "local-engine")
 
+    def test_sidecar_mode_defaults_to_local_real_engine_fallback(self) -> None:
+        fake_engine = type(
+            "FakeGraphEngine",
+            (),
+            {
+                "entity_lookup": lambda self, name, top_k=12, predicate_allowlist=None, predicate_blocklist=None: {
+                    "entity": {"canonical_name": name, "entity_type": "formula"},
+                    "relations": [{"predicate": "使用药材", "target": "熟地黄"}],
+                    "total": 1,
+                }
+            },
+        )()
+
+        with (
+            patch.dict("os.environ", {"TCM_SERVICE_MODE": "sidecar"}, clear=False),
+            patch("tools.tcm_service_client._post", side_effect=RuntimeError("graph_down")),
+            patch("tools.tcm_service_client.get_graph_engine", return_value=fake_engine),
+        ):
+            result = call_graph_entity_lookup("六味地黄丸", top_k=6)
+
+        self.assertEqual(result["backend"], "local-fallback")
+        self.assertEqual(result["code"], 0)
+        self.assertIn("graph-service unavailable", result["warning"])
+
 
 if __name__ == "__main__":
     unittest.main()

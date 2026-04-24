@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from eval.runners.run_qa_probe_suite import render_probe_suite_markdown, run_suite
-from eval.runners.run_qa_weakness_probe import run_probe
+from eval.runners.run_qa_weakness_probe import _evaluate_case, run_probe
 
 
 class QAProbeSuiteTests(unittest.TestCase):
@@ -149,6 +151,153 @@ class QAProbeSuiteTests(unittest.TestCase):
         self.assertEqual(summary["total"], 1)
         self.assertEqual(summary["failed"], 1)
         self.assertEqual(summary["failures"][0]["issues"], ["request_error:ReadTimeout"])
+
+    def test_run_probe_parallel_reuses_http_client_within_worker_threads(self) -> None:
+        dataset = [
+            {"id": f"origin_{index:03d}", "category": "origin_source", "query": f"问题 {index}"}
+            for index in range(1, 4)
+        ]
+        init_lock = threading.Lock()
+
+        class FakeResponse:
+            def json(self) -> dict[str, object]:
+                return {
+                    "data": {
+                        "answer": "标准答案",
+                        "route": {"final_route": "graph", "executed_routes": ["graph"]},
+                        "factual_evidence": [],
+                        "citations": [],
+                        "tool_trace": [],
+                    }
+                }
+
+        class FakeClient:
+            init_count = 0
+
+            def __init__(self, *args, **kwargs) -> None:
+                with init_lock:
+                    FakeClient.init_count += 1
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:
+                return None
+
+            def close(self) -> None:
+                return None
+
+            def post(self, *args, **kwargs):
+                time.sleep(0.02)
+                return FakeResponse()
+
+        total_runs = len(dataset) * 2
+        with patch("eval.runners.run_qa_weakness_probe.httpx.Client", FakeClient):
+            summary = run_probe(
+                dataset=dataset,
+                base_url="http://127.0.0.1:8002",
+                modes=["quick", "deep"],
+                top_k=12,
+                timeout=30.0,
+                workers=2,
+            )
+
+        self.assertEqual(summary["failed"], 0)
+        self.assertLess(FakeClient.init_count, total_runs)
+
+    def test_run_probe_round_robins_across_base_urls(self) -> None:
+        dataset = [
+            {"id": "origin_001", "category": "origin_source", "query": "问题 1"},
+            {"id": "origin_002", "category": "origin_source", "query": "问题 2"},
+        ]
+        post_bases: list[str] = []
+
+        class FakeResponse:
+            def json(self) -> dict[str, object]:
+                return {
+                    "data": {
+                        "answer": "标准答案",
+                        "route": {"final_route": "graph", "executed_routes": ["graph"]},
+                        "factual_evidence": [],
+                        "citations": [],
+                        "tool_trace": [],
+                    }
+                }
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                self.base_url = str(kwargs.get("base_url", ""))
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:
+                return None
+
+            def close(self) -> None:
+                return None
+
+            def post(self, *args, **kwargs):
+                post_bases.append(self.base_url)
+                return FakeResponse()
+
+        with patch("eval.runners.run_qa_weakness_probe.httpx.Client", FakeClient):
+            summary = run_probe(
+                dataset=dataset,
+                base_url="http://127.0.0.1:8002",
+                base_urls=["http://127.0.0.1:8002", "http://127.0.0.1:8003"],
+                modes=["quick", "deep"],
+                top_k=12,
+                timeout=30.0,
+                workers=1,
+            )
+
+        self.assertEqual(summary["failed"], 0)
+        self.assertEqual(
+            post_bases,
+            [
+                "http://127.0.0.1:8002",
+                "http://127.0.0.1:8003",
+                "http://127.0.0.1:8002",
+                "http://127.0.0.1:8003",
+            ],
+        )
+
+    def test_evaluate_case_accepts_single_choice_with_correct_final_letter(self) -> None:
+        case = {
+            "id": "mcq_001",
+            "query": "一般药物干品的常用量为",
+            "answer_option_letters_any": ["D"],
+            "answer_contains_any": ["3~9g"],
+        }
+        response = {
+            "answer": "一般药物干品的常用量范围是3~9克。\n\n最终选项：D",
+            "route": {"final_route": "hybrid", "executed_routes": ["graph", "retrieval"]},
+            "factual_evidence": [],
+            "citations": [],
+            "tool_trace": [],
+        }
+        result = _evaluate_case(case, mode="quick", response_data=response, latency_ms=123.4)
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["issues"], [])
+
+    def test_evaluate_case_keeps_uncertain_answer_failed_even_if_expected_token_appears(self) -> None:
+        case = {
+            "id": "mcq_002",
+            "query": "不宜与地榆同用的西药是",
+            "answer_option_letters_any": ["E"],
+            "answer_contains_any": ["维生素"],
+        }
+        response = {
+            "answer": "根据现有证据，无法确定与哪个西药存在明确配伍禁忌。\n\n最终选项：无",
+            "route": {"final_route": "hybrid", "executed_routes": ["graph", "retrieval"]},
+            "factual_evidence": [],
+            "citations": [],
+            "tool_trace": [],
+        }
+        result = _evaluate_case(case, mode="quick", response_data=response, latency_ms=123.4)
+        self.assertFalse(result["passed"])
+        self.assertIn("answer_option_letters_missing_any:E", result["issues"])
 
 
 if __name__ == "__main__":

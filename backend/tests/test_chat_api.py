@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 
 from api.chat import ChatRequest, chat
-from graph.agent import agent_manager
 from graph.session_manager import SessionManager
+from services.app_context import app_context
 
 
 class ChatApiTests(unittest.TestCase):
@@ -66,8 +66,8 @@ class ChatApiTests(unittest.TestCase):
 
         from api import chat as chat_module
 
-        original_session_manager = agent_manager.session_manager
-        original_generate_title = agent_manager.generate_title
+        original_session_manager = app_context.session_manager
+        original_generate_title = chat_module.generate_title
         original_get_qa_service = chat_module.get_qa_service
 
         class FakeQAService:
@@ -76,8 +76,8 @@ class ChatApiTests(unittest.TestCase):
 
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                agent_manager.session_manager = SessionManager(Path(tmp))
-                agent_manager.generate_title = fake_generate_title  # type: ignore[assignment]
+                app_context.session_manager = SessionManager(Path(tmp))
+                chat_module.generate_title = fake_generate_title  # type: ignore[assignment]
                 chat_module.get_qa_service = lambda: FakeQAService()  # type: ignore[assignment]
 
                 response = asyncio.run(
@@ -102,7 +102,7 @@ class ChatApiTests(unittest.TestCase):
                 self.assertEqual(body["segments"][0]["qa_mode"], "deep")
                 self.assertEqual(len(body["segments"][0]["tool_calls"]), 2)
 
-                saved = agent_manager.session_manager.get_history("chat-api-test")
+                saved = app_context.session_manager.get_history("chat-api-test")
                 self.assertEqual(saved["title"], "逍遥散功效")
                 self.assertEqual(len(saved["messages"]), 2)
                 self.assertEqual(saved["messages"][0]["role"], "user")
@@ -111,8 +111,8 @@ class ChatApiTests(unittest.TestCase):
                 self.assertEqual(saved["messages"][1]["notes"], ["deep_round_1:gaps=efficacy"])
                 self.assertEqual(saved["messages"][1]["qa_mode"], "deep")
         finally:
-            agent_manager.session_manager = original_session_manager
-            agent_manager.generate_title = original_generate_title  # type: ignore[assignment]
+            app_context.session_manager = original_session_manager
+            chat_module.generate_title = original_generate_title  # type: ignore[assignment]
             chat_module.get_qa_service = original_get_qa_service  # type: ignore[assignment]
 
 

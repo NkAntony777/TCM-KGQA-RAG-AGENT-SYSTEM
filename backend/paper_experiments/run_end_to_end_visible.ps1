@@ -14,5 +14,7 @@ $env:UV_CACHE_DIR = Join-Path $backendRoot ".uv-cache"
   --base-url "http://127.0.0.1:8002" `
   --modes quick deep `
   --top-k 12 `
-  --timeout 240
+  --timeout 240 `
+  --workers 0 `
+  --auto-workers 8
 Write-Host "[eval] finished"
