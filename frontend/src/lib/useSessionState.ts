@@ -102,9 +102,8 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
       }, {
         onEvent: (streamEvent) => {
           if (streamEvent.event === "new_response") {
-            const nextAssistantMessage = createMessage("assistant", "", qaMode);
-            currentAssistantId = nextAssistantMessage.id;
-            setMessages((prev) => [...prev, nextAssistantMessage]);
+            // Backend deep mode emits response-boundary markers for persistence/agent phases.
+            // The chat UI should keep one visible assistant answer per user question.
             return;
           }
           setMessages((prev) =>

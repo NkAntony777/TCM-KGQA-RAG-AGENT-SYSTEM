@@ -16634,19 +16634,21 @@
           "top1_chapter_hit": null,
           "top1_keyword_hit": true,
           "top1_evidence_hit": null,
-          "topk_book_hit": false,
+          "topk_book_hit": true,
           "topk_chapter_hit": null,
           "topk_keyword_hit": true,
           "topk_evidence_hit": null,
           "top1_provenance_hit": false,
-          "topk_provenance_hit": false,
-          "book_hit_rate_case": 0.0,
+          "topk_provenance_hit": true,
+          "book_hit_rate_case": 0.5,
           "chapter_hit_rate_case": null,
           "keyword_hit_rate_case": 0.3333,
           "evidence_hit_rate_case": null,
-          "source_mrr": 0.0,
-          "source_ndcg": 0.0,
-          "matched_books": [],
+          "source_mrr": 0.3333,
+          "source_ndcg": 0.5,
+          "matched_books": [
+            "太平惠民和剂局方"
+          ],
           "matched_chapters": [],
           "matched_keywords": [
             "四君子汤"
@@ -16661,7 +16663,7 @@
           "answer_keypoint_recall": 0.3333,
           "answer_keypoint_f1": 0.5,
           "top1_answer_provenance_hit": false,
-          "topk_answer_provenance_hit": false
+          "topk_answer_provenance_hit": true
         },
         "rows": [
           {
@@ -16689,15 +16691,15 @@
             "section_summary": null
           },
           {
-            "chunk_id": "classic::鸡峰普济方::0876::01",
-            "filename": "061-鸡峰普济方.txt",
-            "file_path": "classic://鸡峰普济方/0876-01",
-            "page_number": 876,
-            "book_name": "鸡峰普济方",
+            "chunk_id": "classic::太平惠民和剂局方::0255::01",
+            "filename": "059-太平惠民和剂局方.txt",
+            "file_path": "classic://太平惠民和剂局方/0255-01",
+            "page_number": 255,
+            "book_name": "太平惠民和剂局方",
             "chapter_title": "四君子汤",
-            "score": 0.031024531024531024,
+            "score": 0.03125763125763126,
             "rrf_rank": 3,
-            "match_snippet": "古籍：鸡峰普济方\n篇名：四君子汤\n属性：和胃进食人参 白术 茯苓 甘草（各一两）上为细末每服二钱水一盏入生姜三片枣一枚同煎至六分去滓温服不以时<目录>卷第八\\脾胃肝肾",
+            "match_snippet": "古籍：太平惠民和剂局方\n篇名：四君子汤\n内容：治荣卫气虚，脏腑怯弱，心腹胀满，全不思食，肠鸣泄泻，呕哕吐逆，大宜人参（去芦） 甘草（炙） 茯苓（去皮） 白术（各等分）上为细末。每服二钱，水一盏，煎至七分，通口服，不拘时，入盐少许，白汤点亦得。\n常服温和脾胃，进益饮食，辟寒邪瘴雾气。\n<目录>卷之三\\〔新添诸局经验秘方〕",
             "section_summary": null
           }
         ]
@@ -21431,11 +21433,11 @@
     "top1_book_hit_rate": 0.0972,
     "top1_chapter_hit_rate": 0.9583,
     "top1_keyword_hit_rate": 0.9722,
-    "topk_book_hit_rate": 0.1806,
+    "topk_book_hit_rate": 0.1944,
     "topk_chapter_hit_rate": 1.0,
     "topk_keyword_hit_rate": 0.9722,
-    "avg_source_mrr": 0.3819,
-    "avg_source_ndcg": 0.3932
+    "avg_source_mrr": 0.3866,
+    "avg_source_ndcg": 0.4002
   },
   "external_dense": {
     "label": "external_dense_candidates",

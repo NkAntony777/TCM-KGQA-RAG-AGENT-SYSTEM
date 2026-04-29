@@ -12,9 +12,10 @@
 4. `Classics_Vector_vs_FilesFirst_External_Validation_Latest.md`
 5. `Classics_Baseline_Matrix_Latest.md`
 6. `Classics_Baseline_Matrix_External_Validation_Latest.md`
-7. `Traceable_Classics_Benchmark_Test_Regraded_Fused_v2.md`
-8. `Traceable_Classics_Benchmark_Test_Eval_Fused_v2.md`
-9. `Files_First_Ablation_Latest.md`
+7. `Classics_Six_Baseline_Summary_Latest.md`
+8. `Traceable_Classics_Benchmark_Test_Regraded_Fused_v2.md`
+9. `Traceable_Classics_Benchmark_Test_Eval_Fused_v2.md`
+10. `Files_First_Ablation_Latest.md`
 
 ## 口径说明
 

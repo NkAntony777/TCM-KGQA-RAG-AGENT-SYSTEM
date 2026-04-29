@@ -20,12 +20,15 @@ backend/storage/memory_index/*
 !backend/storage/memory_index/.gitkeep
 backend/storage/knowledge/*
 !backend/storage/knowledge/.gitkeep
+backend/knowledge/
 backend/**/__pycache__/
 backend/router/__pycache__/
 backend/eval/**/__pycache__/
 backend/services/graph_service/data/graph_runtime.json
 backend/services/graph_service/data/graph_runtime.evidence.jsonl
 backend/services/graph_service/data/graph_runtime.db
+backend/services/graph_service/data/graph_runtime.db-shm
+backend/services/graph_service/data/graph_runtime.db-wal
 backend/services/graph_service/data/graph_runtime.rebuild_manifest*.json
 backend/services/graph_service/data/backups/
 backend/services/graph_service/data/nebula/
@@ -97,6 +100,7 @@ backend/eval/datasets/paper/_tmp_traceable_*
 backend/storage/nav_group_cache/
 backend/storage/paper_milvus_import_sessions/
 backend/storage/paper_sqlite_import_sessions/
+backend/storage/framework_baselines/
 backend/storage/retrieval_local_index.fts.db.state.json
 backend/eval/ablations/archive_20260419/
 frontend/.next/

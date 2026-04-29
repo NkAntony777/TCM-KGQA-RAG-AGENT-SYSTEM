@@ -3,7 +3,9 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { AnswerTraceTimeline } from "@/components/chat/AnswerTraceTimeline";
 import { EvidenceCard } from "@/components/chat/EvidenceCard";
+import { GraphEvidenceView } from "@/components/chat/GraphEvidenceView";
 import { GraphPathCard } from "@/components/chat/GraphPathCard";
 import { RetrievalCard } from "@/components/chat/RetrievalCard";
 import { RouteCard } from "@/components/chat/RouteCard";
@@ -49,8 +51,18 @@ export function ChatMessage({
           : "panel mr-auto text-[var(--color-ink)]"
       }`}
     >
+      {!isUser && (
+        <AnswerTraceTimeline
+          deepTrace={deepTrace}
+          evidenceBundle={evidenceBundle}
+          plannerSteps={plannerSteps}
+          qaMode={qaMode}
+          route={route}
+        />
+      )}
       {!isUser && <RetrievalCard results={retrievals} />}
       {!isUser && <RouteCard route={route} />}
+      {!isUser && <GraphEvidenceView items={evidence} />}
       {!isUser && <GraphPathCard items={evidence} />}
       {!isUser && <EvidenceCard items={evidence} />}
       {!isUser && (

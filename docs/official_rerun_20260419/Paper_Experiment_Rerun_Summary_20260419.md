@@ -81,7 +81,7 @@
 
 - `files_first_internal topk_book_hit_rate = 0.375`
 - `external_bm25_docs topk_book_hit_rate = 0.2222`
-- `vector_sqlite_internal topk_book_hit_rate = 0.1806`
+- `vector_sqlite_internal topk_book_hit_rate = 0.1944`
 - `external_dense_candidates topk_book_hit_rate = 0.0833`
 
 外部验证集：

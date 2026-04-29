@@ -1,336 +1,155 @@
-# langchain-OpenClaw
-![Architecture Diagram](d8c11e85b04d1fdc87c376cf8e36f0dc.jpg)
-![Architecture Diagram](0b253ee89f527f37e5e02d7f12471436.jpg)
-![Architecture Diagram](ecfd6a88a857621fcc269b4fa5948977.jpg)
-可在https://www.bilibili.com/video/BV1izcXz8EJx/?vd_source=af1143f8815e17a230561ad0ef6c689b    观看视频
+# TCM-KGQA-RAG-AGENT-SYSTEM
 
-一个本地运行、文件优先、可审计的 AI Agent 工作台。
+基于 **MiniMax mimo-V2-pro** 大模型驱动的中医古籍知识图谱问答 Agent 系统。
 
-当前问答链路的工程方向已经明确收口为：
+> 对 700 本中医古籍约 1GB TXT 文件做结构化三元组抽取与数据挖掘，消耗约 **12 亿 Token**，构建可推理、可检索的中医知识图谱，并实现完整的长链推理问答链路。
 
-- `graph + files-first + 结构化索引 + skill + planner`
-- `files_first` 已是 quick / deep 的默认主检索方向
-- 旧 dense / case 向量链路仍保留，但只作为兼容 fallback，不再是默认主路径
+---
 
+## 系统架构总览
 
-- 对话会落盘到本地 `JSON`
-- 长期记忆保存在 `Markdown`
-- 技能不是黑盒函数，而是可读可改的 `SKILL.md`
-- Prompt、工具调用、记忆注入、检索过程都能被看到
+![System Architecture](docs/figures/system_architecture.png)
 
-如果你想做一个“能解释自己为什么这样做”的 Agent，这个项目就是为这个方向准备的。
+系统由 **主后端（8002）+ 图谱服务（8101）+ 检索服务（8102）** 三个独立进程构成。用户提问经意图分类器做实体识别和路由决策后，自动调度图谱检索、文件检索或两者融合，SSE 流式返回答案、证据卡片和推理链路。
 
-## 为什么是它
+---
 
-很多 Agent 项目都很强，但也很“黑盒”：
+## 前端界面
 
-- 记忆存在向量库里，看不到
-- Prompt 拼接在代码深处，改起来不直观
-- 技能是硬编码函数，扩展成本高
-- 出错以后很难复盘“它到底做了什么”
+三栏 Agent 调试工作台——会话列表（左）、聊天面板与工具调用链（中）、文件编辑器（右）。
 
-langchain-OpenClaw 反过来做了几个选择：
+| 主界面与提问 | 图谱证据展示 |
+|---|---|
+| ![Frontend](docs/figures/ui_overview.png) | ![Graph Evidence](docs/figures/ui_graph_evidence.png) |
 
-| 传统做法 | langchain-OpenClaw |
-| --- | --- |
-| 向量库是唯一记忆来源 | 文件是事实源，索引只是可重建缓存 |
-| 技能写死在代码里 | 技能 = `skills/*/SKILL.md` |
-| Prompt 隐藏在代码里 | Prompt 由多个 Markdown 文件实时组装 |
-| 工具调用不透明 | 前端可看到 token、tool start/end、raw messages |
-| 项目越做越重 | 默认本地运行，无 MySQL / Redis 依赖 |
+| Deep 模式推理追踪 | 最终答案与证据溯源 |
+|---|---|
+| ![Deep Trace](docs/figures/ui_deep_trace.png) | ![Final Answer](docs/figures/ui_final_answer.png) |
 
-## 它现在能做什么
+---
 
-当前仓库已经具备一套完整的本地 Agent 基础能力：
+## 核心工作一：大规模古籍知识图谱构建
 
-- 流式聊天：基于 FastAPI SSE 返回 token、工具调用、分段回复
-- 会话持久化：每轮对话保存到 `backend/sessions/*.json`
-- 长期记忆：`backend/memory/MEMORY.md`
-- 图谱 + files-first + 结构化索引问答主链
-- 技能系统：Agent 先看技能快照，再按需读取 `SKILL.md`
-- 三栏工作台 UI：会话列表、聊天区、文件检查器
-- 文件在线编辑：可直接编辑 Memory / Skills / Workspace 文件
-- RAG 模式切换：可选择“直接拼接记忆”或“检索后注入”
+使用 **MiniMax mimo-V2-pro** 对 700 本中医古籍全文做结构化三元组抽取，形成可推理的知识网络。
 
-当前问答链路还额外具备以下 TCM 定制能力：
+![Knowledge Graph Extraction Pipeline](docs/figures/kg_extraction_pipeline.png)
 
-- 图谱实体查询、关系路径查询、证候链查询
-- `entity://` / `book://` / `chapter://` / `alias://` / `caseqa://` 证据路径读回
-- deep 模式按证据缺口执行 follow-up retrieval，而不是单次泛搜
-- sidecar 不可用时优先回退到本地真实 graph / retrieval engine，而不是 mock demo 数据
+**Mimo-V2-Pro 三元组抽取过程：**
+- 700 本古籍 TXT 文件（约 1GB）→ 分册分章切块 → 排除目录/序言等无信息章节
+- chunk 送入 mimo-V2-pro → JSON 结构化三元组提取 → 多 provider 格式统一 coerce
+- 去重 + 噪声过滤（非知识性文本）→ 运行时关系治理 → 发布为 `graph_runtime.json` + `graph_runtime.evidence.jsonl`
+- **约 12 亿 Token** 消耗，带 chunk 级 checkpoint 断点续跑与失败自动重试队列
 
-当前内置的技能包括：
+![Knowledge Graph Build Process](docs/figures/kg_build_process.png)
 
-- `天气查询`
-- `联网搜索`（Tavily）
-- `本地知识库检索`
-- `失败恢复经验沉淀`
+---
 
-## 当前检索状态（2026-04）
+## 核心工作二：Files-First 非向量主检索链路
 
-为避免把当前工程状态说得过满，这里明确区分：
+默认问答主链已收口为 "图谱 + files-first + 结构化索引"，摒弃传统纯 dense 向量检索的黑盒问题。
 
-### 已经实现
+![Files-First Pipeline](docs/figures/ffsr_pipeline.png)
 
-- `quick / deep` 默认主链已经切到 `files_first`
-- `case QA` 默认主链已经切到结构化非向量索引
-- graph 命中后已经可以继续走证据路径读回与局部 follow-up retrieval
-- sidecar 服务不可用时，主链可以回退到本地真实引擎
+- 经典古籍 files-first 索引：预处理阶段建立文件级 FTS 检索与结构化索引
+- 运行时按需走 `entity://` / `book://` / `chapter://` / `alias://` / `caseqa://` 证据路径
+- dense 向量检索仅作为兼容 fallback，不再参与默认主路径
 
-### 默认主路径
+---
 
-- `graph + files-first + 结构化索引 + skill + planner`
-- 证据层可靠性优先于继续堆 planner 技巧
-- deep 模式优先补“证据缺口”，而不是把整题重新做一次大检索
+## 核心工作三：长链推理（Deep Mode）
 
-### 仍然保留的兼容层
+系统支持 Quick 与 Deep 两种问答模式。Deep 模式是核心长链推理引擎——每轮由 LLM 规划器分析证据缺口后拆解下一步行动，覆盖率状态机持续评估。
 
-- dense retrieval 仍保留在旧 retrieval engine 内部
-- case 向量检索兼容路径还没有被物理删除
-- 因此当前准确说法是：**项目已经基本实现非向量主链，但还没有“完全去向量化”**
+![Evidence Path Deep Loop](docs/figures/evidence_path_deep_loop.png)
 
-### 推荐阅读
+![Graph System](docs/figures/graph_system.png)
 
-- [docs/PROJECT_PROGRESS.md](./docs/PROJECT_PROGRESS.md)
-- [docs/无向量检索替代方案_20260407.md](./docs/无向量检索替代方案_20260407.md)
+**推理流程：**
+1. 用户提问 → 意图分类与实体识别 → 路由决策（graph / retrieval / hybrid）
+2. Deep 模式最多 **4 轮迭代**，每轮最多 **2 个并行操作**
+3. LLM 规划器生成行动 → 启发式回退规划器兜底 → 答案生成 **四层回退链**
+4. 每步推理意图、新证据与覆盖率变化全部 SSE 流式输出并持久化
 
-## 界面结构
+---
 
-前端是一个面向 Agent 调试的三栏工作台：
+## 完整答案链
 
-- 左栏：会话列表、历史消息、Raw Messages
-- 中栏：聊天面板、工具调用链、检索卡片、流式输出
-- 右栏：Memory / Skills / Workspace 文件编辑器（Monaco）
+![System Answer Chain](docs/figures/system_answer_chain.png)
 
-这不是一个只给终端用的 Agent，而是一个“能看见自己内部状态”的 Agent IDE。
+---
 
-## 一次请求发生了什么
+## 实验验证
 
-```mermaid
-flowchart LR
-    U["用户发送消息"] --> F["POST /api/chat"]
-    F --> S["加载会话历史 sessions/*.json"]
-    S --> R{"RAG 模式?"}
-    R -- 是 --> M["检索 memory/MEMORY.md"]
-    R -- 否 --> P["直接拼接系统提示词"]
-    M --> P
-    P --> A["LangChain create_agent"]
-    A --> T["调用工具 / 读取技能 / 生成回复"]
-    T --> E["SSE 推送 token / tool_start / tool_end / done"]
-    E --> UI["前端实时更新界面"]
-    UI --> SAVE["保存用户消息、助手消息、工具记录"]
-```
+![Experiment Validation](docs/figures/experiment_validation_map.png)
+
+---
 
 ## 技术栈
 
-### 后端
+**后端：** Python 3.10+ / FastAPI / LangChain 1.x `create_agent` / LlamaIndex / OpenAI-compatible API  
+**前端：** Next.js 14 / React 18 / TypeScript / Tailwind CSS / Monaco Editor  
+**数据：** MiniMax mimo-V2-pro / NebulaGraph / Milvus / SQLite  
+**模型支持：** MiniMax / 智谱 / 百炼 / DeepSeek / OpenAI
 
-- Python 3.10+
-- FastAPI
-- LangChain 1.x `create_agent`
-- LlamaIndex Core
-- OpenAI-compatible model API
-
-### 前端
-
-- Next.js 14 App Router
-- React 18
-- TypeScript
-- Tailwind CSS
-- Monaco Editor
-
-### 默认模型配置
-
-- LLM Provider: `zhipu`
-- LLM Model: `glm-5`
-- Embedding Provider: `bailian`
-- Embedding Model: `text-embedding-v4`
-
-目前已支持的模型厂商：
-
-- 智谱 `zhipu`
-- 百炼 `bailian`
-- DeepSeek `deepseek`
-- OpenAI 兼容接口 `openai`
+---
 
 ## 快速开始
 
-### 1. 环境要求
+### 环境要求
+- Python 3.10+, Node.js 18+, npm
 
-- Python 3.10+
-- Node.js 18+
-- npm
-
-### 2. 启动后端
-
+### 启动后端
 ```bash
 cd backend
 uv sync
-copy .env.example .env
-```
-
-至少补齐这些环境变量：
-
-```env
-# 默认聊天模型
-ZHIPU_API_KEY=your_key
-
-# 默认 embedding
-BAILIAN_API_KEY=your_key
-
-# 联网搜索技能（可选，但推荐）
-TAVILY_API_KEY=your_key
-```
-
-然后启动：
-
-```bash
+cp .env.example .env   # 填入 API keys
 uv run uvicorn app:app --host 0.0.0.0 --port 8002 --reload
 ```
 
-评测专用后端建议改用仓库根目录下的 `启动评测后端8002.bat`。
-它会关闭 `reload`，支持多 worker，并自动设置 `SKIP_MEMORY_INDEX_STARTUP_REBUILD=1`。
-默认 worker 数为 `2`，也可先设置环境变量再启动：
-
-```bat
-set EVAL_WORKERS=4
-启动评测后端8002.bat
-```
-
-如果 Windows 下 `uvicorn --workers N` 不稳定，推荐直接使用 `启动评测后端集群.bat`。
-它会启动多个独立单实例后端（`8002` 到 `8005`），评测时可通过多个 `base_urls` 做轮询分发。
-
-如果你在本地同时跑图谱 / 检索 sidecar，可额外启动对应服务；如果 sidecar 不可用，当前主链默认应该优先回退到本地真实引擎，而不是展示用 mock 数据。
-
-### 3. 启动前端
-
+### 启动前端
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+打开 http://localhost:3000
 
-打开 [http://localhost:3000](http://localhost:3000)。
-
-## 5 分钟体验路线
-
-如果你第一次打开项目，建议按这个顺序体验：
-
-1. 发一条普通聊天消息，感受流式输出（1.黄金现在多少钱。2.帮我在知识库中查询（哪些商品库存不足/三一重工前三大股东/为什么我在我的帐户中找不到我的订单？"......）3.帮我查询北京天气）
-2. 打开右侧 Inspector，查看 `memory/MEMORY.md`
-3. 新建或编辑一个 skill，观察系统如何即时生效
-4. 打开 RAG 模式，再问一个和长期记忆相关的问题
-5. 查看 `backend/sessions/*.json`，确认对话和工具调用已真实落盘
+---
 
 ## 项目结构
 
 ```text
-mini-openclaw/
 ├── backend/
-│   ├── api/                 # 聊天、会话、文件、压缩、配置接口
-│   ├── graph/               # Agent 构建、Prompt 组装、Session、Memory 索引
-│   ├── tools/               # terminal / python_repl / fetch_url / read_file / knowledge search
-│   ├── workspace/           # SOUL / IDENTITY / USER / AGENTS 等系统提示词组件
-│   ├── skills/              # 每个技能一个目录，核心是 SKILL.md
-│   ├── memory/              # 长期记忆文件 MEMORY.md
-│   ├── knowledge/           # 本地知识库
-│   ├── sessions/            # 会话 JSON
-│   ├── storage/             # 记忆与知识库索引缓存
-│   ├── app.py               # FastAPI 入口
-│   └── SKILLS_SNAPSHOT.md   # 技能快照
+│   ├── api/                    # 聊天、会话、文件、配置接口
+│   ├── services/
+│   │   ├── qa_service/         # 问答编排、quick/deep 链路、证据包
+│   │   ├── graph_service/      # 图谱实体查询、证候链、多跳路径
+│   │   └── retrieval_service/  # files-first、结构化索引、向量兼容
+│   ├── router/                 # 意图分类、路由决策、检索策略
+│   ├── tools/                  # TCM 路由工具、证据导航工具
+│   ├── graph/                  # Agent 编排、会话管理、记忆索引
+│   ├── scripts/                # 三元组抽取控制台、图谱发布
+│   └── eval/                   # 评测数据集、评测脚本、基线矩阵
 └── frontend/
     └── src/
-        ├── app/             # 页面入口
-        ├── components/      # 三栏 UI、聊天面板、检索卡片、编辑器
-        └── lib/             # API 客户端与全局状态
+        ├── app/                # 页面入口
+        ├── components/         # 三栏 UI、聊天、证据卡片、图谱可视化
+        └── lib/                # API 客户端与状态管理
 ```
 
-## 核心概念
+---
 
-### 1. 文件即记忆
+## 核心设计理念
 
-本项目不是完全不用向量索引，而是把“文件”当作事实源：
+**文件即记忆：** 长期记忆是 `memory/MEMORY.md`，会话是 `sessions/*.json`——索引只是可重建缓存。而非黑盒向量库。修改文件后下一轮请求立刻生效。
 
-- 真正长期保存的是 `memory/MEMORY.md`
-- 真正会话记录是 `sessions/*.json`
-- LlamaIndex 负责构建可丢弃、可重建的索引缓存
+**可审计 Agent：** 前端可实时查看 tool start/end、Raw Messages、检索证据来源、路由决策原因——每一步推理都能被追溯和审计。
 
-也就是说：
+**优雅降级：** sidecar 不可用 → 回退本地引擎；图谱无命中 → 回退文本检索；LLM 生成失败 → 确定性文本拼接。每步降级都有标记和记录，不做静默切换。
 
-- 你能直接读懂 Agent 的记忆
-- 你能手动修改它的记忆
-- 就算索引删了，也能从源文件重建
+---
 
-### 2. 技能即插件
+## 相关资源
 
-技能不是 Python 函数注册，而是目录中的 `SKILL.md`：
-
-- `backend/skills/get_weather/SKILL.md`
-- `backend/skills/web-search/SKILL.md`
-- `backend/skills/retry-lesson-capture/SKILL.md`
-
-Agent 会先读取 `SKILLS_SNAPSHOT.md` 知道有哪些技能，再按需读取具体 skill 文件。
-
-这意味着：
-
-- 扩展能力更轻
-- 技能更容易审查
-- 适合面试展示和教学演示
-
-### 3. Prompt 可解释
-
-每次请求都会重新拼装系统提示词，来源包括：
-
-- `SKILLS_SNAPSHOT.md`
-- `workspace/SOUL.md`
-- `workspace/IDENTITY.md`
-- `workspace/USER.md`
-- `workspace/AGENTS.md`
-- `memory/MEMORY.md`（RAG 模式关闭时）
-
-所以你改完文件，下一轮请求立刻生效。
-
-## 适合谁
-
-这个项目尤其适合：
-
-- 想做本地 AI Agent 原型的人
-- 想做可解释 / 可审计 Agent 的人
-- 想拿 Agent 项目做面试作品的人
-- 想研究 Prompt、Memory、Tools、Skills 如何协同的人
-
-## 当前限制
-
-为了保持轻量和透明，这个项目有一些明确边界：
-
-- 目前默认面向本地开发环境，不含账号体系和多租户
-- 知识库更适合 UTF-8 文本类文件
-- 多模态文档解析还没有完整接入
-- 技能写入与经验沉淀依赖现有工具链和提示词约束，不是单独的工作流引擎
-
-## 路线图
-
-接下来比较值得继续补的方向：
-
-- 更强的 coding agent 工作流
-- 多模态文档解析
-- 更稳定的联网检索与引用
-- 自动经验沉淀与记忆治理
-- 技能模板和 Skill Scaffold 能力
-
-## 为什么适合做面试项目
-
-因为它同时覆盖了几个面试里很容易讲清楚的点：
-
-- 后端 API 设计
-- Agent 编排
-- Prompt 工程
-- RAG 检索
-- 本地持久化
-- 前后端联动
-- 可观测性和调试体验
-
-它不是“套壳调用模型”，而是一个可以展开讲架构取舍的完整作品。
-## 致谢
-
-项目中 `skill` 设计与思路参考了 [ConardLi/rag-skill](https://github.com/ConardLi/rag-skill)。
+- 项目演示视频：[Bilibili](https://www.bilibili.com/video/BV1izcXz8EJx/)
+- 详细开发进度：[docs/PROJECT_PROGRESS.md](docs/PROJECT_PROGRESS.md)

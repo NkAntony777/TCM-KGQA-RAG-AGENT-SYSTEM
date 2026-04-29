@@ -106,6 +106,49 @@ export type RouteEvent = {
   service_backends?: Record<string, string | null>;
 };
 
+export type GraphVizNode = {
+  id: string;
+  label: string;
+  type: string;
+  type_label?: string;
+  score?: number | null;
+  evidence_count?: number;
+  source_count?: number;
+  is_center?: boolean;
+  is_schema?: boolean;
+};
+
+export type GraphVizEdge = {
+  source: string;
+  target: string;
+  predicate: string;
+  evidence_count?: number;
+  source_books?: string[];
+  source_text?: string;
+  confidence?: number | null;
+  reverse?: boolean;
+  is_schema?: boolean;
+};
+
+export type GraphVizPayload = {
+  nodes: GraphVizNode[];
+  edges: GraphVizEdge[];
+  meta: {
+    kind?: string;
+    center?: string;
+    depth: number;
+    limit?: number;
+    truncated: boolean;
+    node_total_before_limit?: number;
+    edge_total_before_limit?: number;
+    graph_backend?: string;
+    graph_node_count?: number;
+    graph_edge_count?: number;
+    graph_evidence_count?: number;
+    note?: string;
+  };
+};
+
 export type SessionSummary = {
   id: string;
   title: string;
@@ -289,6 +332,19 @@ export async function setRagMode(enabled: boolean) {
     method: "PUT",
     body: JSON.stringify({ enabled })
   });
+}
+
+export async function getGraphSchemaSummary() {
+  return request<GraphVizPayload>("/graph/schema-summary");
+}
+
+export async function getGraphSubgraph(entity: string, depth = 2, limit = 120) {
+  const query = new URLSearchParams({
+    entity,
+    depth: String(depth),
+    limit: String(limit)
+  });
+  return request<GraphVizPayload>(`/graph/subgraph?${query.toString()}`);
 }
 
 export async function compressSession(sessionId: string) {

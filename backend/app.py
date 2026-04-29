@@ -10,6 +10,7 @@ from api.chat import router as chat_router
 from api.compress import router as compress_router
 from api.config_api import router as config_router
 from api.files import router as files_router
+from api.graph_viz import router as graph_viz_router
 from api.qa import router as qa_router
 from api.sessions import router as sessions_router
 from api.tokens import router as tokens_router
@@ -76,6 +77,7 @@ app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(qa_router, prefix="/api", tags=["qa"])
 app.include_router(sessions_router, prefix="/api", tags=["sessions"])
 app.include_router(files_router, prefix="/api", tags=["files"])
+app.include_router(graph_viz_router, prefix="/api", tags=["graph-viz"])
 app.include_router(tokens_router, prefix="/api", tags=["tokens"])
 app.include_router(compress_router, prefix="/api", tags=["compress"])
 app.include_router(config_router, prefix="/api", tags=["config"])

@@ -97,17 +97,41 @@ export function createMessage(
 }
 
 export function toUiMessages(history: Awaited<ReturnType<typeof getSessionHistory>>["messages"]) {
-  return history.map((message) => ({
-    ...createMessage(message.role, message.content ?? "", message.qa_mode),
-    toolCalls: message.tool_calls ?? [],
-    route: message.route,
-    evidence: message.evidence ?? [],
-    plannerSteps: message.planner_steps ?? [],
-    deepTrace: message.deep_trace ?? [],
-    evidenceBundle: message.evidence_bundle,
-    notes: message.notes ?? [],
-    citations: message.citations ?? []
-  }));
+  const mergedMessages: Message[] = [];
+
+  for (const message of history) {
+    const nextMessage: Message = {
+      ...createMessage(message.role, message.content ?? "", message.qa_mode),
+      toolCalls: message.tool_calls ?? [],
+      route: message.route,
+      evidence: message.evidence ?? [],
+      plannerSteps: message.planner_steps ?? [],
+      deepTrace: message.deep_trace ?? [],
+      evidenceBundle: message.evidence_bundle,
+      notes: message.notes ?? [],
+      citations: message.citations ?? []
+    };
+
+    const previous = mergedMessages[mergedMessages.length - 1];
+    if (previous?.role === "assistant" && nextMessage.role === "assistant") {
+      previous.content = [previous.content, nextMessage.content].filter(Boolean).join("\n\n");
+      previous.toolCalls = [...previous.toolCalls, ...nextMessage.toolCalls];
+      previous.retrievals = [...previous.retrievals, ...nextMessage.retrievals];
+      previous.route = nextMessage.route ?? previous.route;
+      previous.evidence = [...previous.evidence, ...nextMessage.evidence];
+      previous.plannerSteps = [...previous.plannerSteps, ...nextMessage.plannerSteps];
+      previous.deepTrace = [...previous.deepTrace, ...nextMessage.deepTrace];
+      previous.evidenceBundle = nextMessage.evidenceBundle ?? previous.evidenceBundle;
+      previous.notes = [...previous.notes, ...nextMessage.notes];
+      previous.citations = [...previous.citations, ...nextMessage.citations];
+      previous.qaMode = previous.qaMode === "deep" || nextMessage.qaMode === "deep" ? "deep" : previous.qaMode ?? nextMessage.qaMode;
+      continue;
+    }
+
+    mergedMessages.push(nextMessage);
+  }
+
+  return mergedMessages;
 }
 
 export function buildEditableFiles(skills: SkillMeta[]) {
