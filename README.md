@@ -1,6 +1,6 @@
 # TCM-KGQA-RAG-AGENT-SYSTEM
 
-基于 **MiniMax mimo-V2-pro** 大模型驱动的中医古籍知识图谱问答 Agent 系统。
+基于大模型驱动的中医古籍知识图谱问答 Agent 系统。
 
 > 对 700 本中医古籍约 1GB TXT 文件做结构化三元组抽取与数据挖掘，消耗约 **12 亿 Token**，构建可推理、可检索的中医知识图谱，并实现完整的长链推理问答链路。
 
@@ -30,13 +30,13 @@
 
 ## 核心工作一：大规模古籍知识图谱构建
 
-使用 **MiniMax mimo-V2-pro** 对 700 本中医古籍全文做结构化三元组抽取，形成可推理的知识网络。
+使用自研管道对 700 本中医古籍全文做结构化三元组抽取，形成可推理的知识网络。
 
 ![Knowledge Graph Extraction Pipeline](docs/figures/kg_extraction_pipeline.png)
 
-**Mimo-V2-Pro 三元组抽取过程：**
+**三元组抽取过程：**
 - 700 本古籍 TXT 文件（约 1GB）→ 分册分章切块 → 排除目录/序言等无信息章节
-- chunk 送入 mimo-V2-pro → JSON 结构化三元组提取 → 多 provider 格式统一 coerce
+- chunk 送入 LLM → JSON 结构化三元组提取 → 多 provider 格式统一 coerce
 - 去重 + 噪声过滤（非知识性文本）→ 运行时关系治理 → 发布为 `graph_runtime.json` + `graph_runtime.evidence.jsonl`
 - **约 12 亿 Token** 消耗，带 chunk 级 checkpoint 断点续跑与失败自动重试队列
 
@@ -88,7 +88,7 @@
 
 **后端：** Python 3.10+ / FastAPI / LangChain 1.x `create_agent` / LlamaIndex / OpenAI-compatible API  
 **前端：** Next.js 14 / React 18 / TypeScript / Tailwind CSS / Monaco Editor  
-**数据：** MiniMax mimo-V2-pro / NebulaGraph / Milvus / SQLite  
+**数据：** NebulaGraph / Milvus / SQLite  
 **模型支持：** MiniMax / 智谱 / 百炼 / DeepSeek / OpenAI
 
 ---
