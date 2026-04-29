@@ -40,8 +40,6 @@
 - 去重 + 噪声过滤（非知识性文本）→ 运行时关系治理 → 发布为 `graph_runtime.json` + `graph_runtime.evidence.jsonl`
 - **约 12 亿 Token** 消耗，带 chunk 级 checkpoint 断点续跑与失败自动重试队列
 
-![Knowledge Graph Build Process](docs/figures/kg_build_process.png)
-
 ---
 
 ## 核心工作二：Files-First 非向量主检索链路
@@ -71,10 +69,6 @@
 4. 每步推理意图、新证据与覆盖率变化全部 SSE 流式输出并持久化
 
 ---
-
-## 完整答案链
-
-![System Answer Chain](docs/figures/system_answer_chain.png)
 
 ---
 
@@ -151,5 +145,4 @@ npm run dev
 
 ## 相关资源
 
-- 项目演示视频：[Bilibili](https://www.bilibili.com/video/BV1izcXz8EJx/)
 - 详细开发进度：[docs/PROJECT_PROGRESS.md](docs/PROJECT_PROGRESS.md)
