@@ -114,3 +114,4 @@ docs/*.tmp.*
 *.log
 .DS_Store
 Thumbs.db
+_release/
