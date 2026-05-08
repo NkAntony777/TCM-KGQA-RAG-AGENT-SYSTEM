@@ -13,6 +13,7 @@ from services.common.evidence_payloads import (
     syndrome_items as _syndrome_items,
 )
 from services.qa_service.alias_service import get_runtime_alias_service
+from tools.evidence_path_resolver import parse_evidence_path
 from tools.tcm_service_client import (
     call_graph_entity_lookup,
     call_graph_path_query,
@@ -82,12 +83,13 @@ class EvidenceNavigator:
         source_hint: str = "",
         top_k: int | None = None,
     ) -> dict[str, Any]:
-        normalized = _normalize_path(path)
+        parsed_path = parse_evidence_path(path)
+        normalized = parsed_path.normalized
         resolved_top_k = max(1, int(top_k or self.default_top_k))
 
-        if normalized.startswith("entity://"):
-            body = normalized.removeprefix("entity://")
-            entity_name, _, predicate = body.partition("/")
+        if parsed_path.scheme == "entity":
+            entity_name = parsed_path.head
+            predicate = parsed_path.tail
             allowlist = None if predicate in ("", "*") else [predicate]
             raw = call_graph_entity_lookup(
                 name=entity_name,
@@ -105,9 +107,9 @@ class EvidenceNavigator:
                 items=items,
             )
 
-        if normalized.startswith("symptom://"):
-            body = normalized.removeprefix("symptom://")
-            symptom_name, _, suffix = body.partition("/")
+        if parsed_path.scheme == "symptom":
+            symptom_name = parsed_path.head
+            suffix = parsed_path.tail
             raw = call_graph_syndrome_chain(
                 symptom=symptom_name,
                 top_k=min(resolved_top_k, 8),
@@ -122,9 +124,8 @@ class EvidenceNavigator:
                 items=items,
             )
 
-        if normalized.startswith("path://"):
-            body = normalized.removeprefix("path://")
-            start, _, end = body.partition("->")
+        if parsed_path.scheme == "path":
+            start, _, end = parsed_path.body.partition("->")
             raw = call_graph_path_query(
                 start=start,
                 end=end,
@@ -138,8 +139,8 @@ class EvidenceNavigator:
                 items=_graph_path_items(raw),
             )
 
-        if normalized.startswith("alias://"):
-            entity_name = normalized.removeprefix("alias://").split("/", 1)[0].strip()
+        if parsed_path.scheme == "alias":
+            entity_name = parsed_path.head
             items = _alias_items(entity_name)
             return _response_payload(
                 tool="read_evidence_path",
@@ -147,10 +148,9 @@ class EvidenceNavigator:
                 items=items[:resolved_top_k],
             )
 
-        if normalized.startswith("book://"):
-            body = normalized.removeprefix("book://")
-            book_name, _, hint = body.partition("/")
-            hint_text = hint.replace("*", "").strip("/")
+        if parsed_path.scheme == "book":
+            book_name = parsed_path.head
+            hint_text = parsed_path.tail.replace("*", "").strip("/")
             raw, items = _source_lite_search(
                 book_name=book_name,
                 hint=hint_text,
@@ -165,7 +165,7 @@ class EvidenceNavigator:
                 items=items,
             )
 
-        if normalized.startswith("chapter://"):
+        if parsed_path.scheme == "chapter":
             raw = call_retrieval_read_section(
                 path=normalized,
                 top_k=max(resolved_top_k * 4, 16),
@@ -177,8 +177,8 @@ class EvidenceNavigator:
                 items=_section_items(raw),
             )
 
-        if normalized.startswith("qa://"):
-            target = normalized.removeprefix("qa://").split("/", 1)[0]
+        if parsed_path.scheme == "qa":
+            target = parsed_path.head
             alias_service = get_runtime_alias_service()
             search_query = alias_service.expand_query_with_aliases(target or query)
             raw = call_retrieval_hybrid(
@@ -195,8 +195,8 @@ class EvidenceNavigator:
                 items=_retrieval_items(raw),
             )
 
-        if normalized.startswith("caseqa://"):
-            target = normalized.removeprefix("caseqa://").split("/", 1)[0]
+        if parsed_path.scheme == "caseqa":
+            target = parsed_path.head
             search_query = target or query
             raw = call_retrieval_case_qa(
                 query=search_query,

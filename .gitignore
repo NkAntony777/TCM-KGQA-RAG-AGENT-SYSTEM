@@ -88,6 +88,8 @@ backend/storage/*report*.json
 backend/storage/qa_*.json
 backend/storage/section_summary_cache.json
 backend/_tmp_test/
+backend/_tmp_pytest/
+backend/pytest-cache-files-*/
 backend/eval/Results/
 backend/eval/TCM-PA/
 backend/eval/TCM-SDT/

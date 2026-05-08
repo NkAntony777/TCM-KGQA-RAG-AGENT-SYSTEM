@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import json
-import tempfile
 import unittest
-from pathlib import Path
 
 from eval.runners.run_release_gate import summarize_doctoral_baseline
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class TestReleaseGateDoctoralBaseline(unittest.TestCase):
     def test_summarize_doctoral_baseline_detects_complete_payload(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "doctoral.json"
+        tmpdir = make_test_dir("release_gate")
+        try:
+            path = tmpdir / "doctoral.json"
             path.write_text(
                 json.dumps(
                     {
@@ -26,6 +27,8 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
                 encoding="utf-8",
             )
             summary = summarize_doctoral_baseline(path)
+        finally:
+            cleanup_test_dir(tmpdir)
 
         self.assertTrue(summary["available"])
         self.assertTrue(summary["complete"])
@@ -36,8 +39,9 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
         self.assertEqual(summary["total_questions"], 2)
 
     def test_summarize_doctoral_baseline_detects_incomplete_payload(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "doctoral.json"
+        tmpdir = make_test_dir("release_gate")
+        try:
+            path = tmpdir / "doctoral.json"
             path.write_text(
                 json.dumps(
                     {
@@ -50,6 +54,8 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
                 encoding="utf-8",
             )
             summary = summarize_doctoral_baseline(path)
+        finally:
+            cleanup_test_dir(tmpdir)
 
         self.assertTrue(summary["available"])
         self.assertFalse(summary["complete"])
@@ -57,8 +63,9 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
         self.assertEqual(summary["deep_ok"], 0)
 
     def test_summarize_doctoral_baseline_rejects_short_or_fallback_deep_answer(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "doctoral.json"
+        tmpdir = make_test_dir("release_gate")
+        try:
+            path = tmpdir / "doctoral.json"
             path.write_text(
                 json.dumps(
                     {
@@ -74,6 +81,8 @@ class TestReleaseGateDoctoralBaseline(unittest.TestCase):
                 encoding="utf-8",
             )
             summary = summarize_doctoral_baseline(path)
+        finally:
+            cleanup_test_dir(tmpdir)
 
         self.assertFalse(summary["complete"])
         self.assertEqual(summary["deep_fallback_count"], 1)

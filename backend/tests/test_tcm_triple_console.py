@@ -2,9 +2,7 @@
 
 import json
 import os
-import tempfile
 import unittest
-from pathlib import Path
 from unittest import mock
 
 from scripts.tcm_triple_console import PipelineConfig
@@ -17,12 +15,13 @@ from scripts.tcm_triple_console import _normalize_provider_configs
 from scripts.tcm_triple_console import _write_text_atomic
 from scripts.tcm_triple_console import httpx
 from scripts.tcm_triple_console import resolve_chapter_excludes
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class TCMTripleConsoleTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp_dir.name)
+        self.root = make_test_dir("tcm_triple_console")
         self.books_dir = self.root / "books"
         self.output_dir = self.root / "output"
         self.books_dir.mkdir(parents=True, exist_ok=True)
@@ -39,7 +38,7 @@ class TCMTripleConsoleTests(unittest.TestCase):
         )
 
     def tearDown(self) -> None:
-        self.temp_dir.cleanup()
+        cleanup_test_dir(self.root)
 
     def test_split_book_respects_chapter_markers(self) -> None:
         book = self.books_dir / "001-测试方书.txt"

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-import tempfile
 import unittest
-from pathlib import Path
 
 from api.chat import ChatRequest, chat
 from graph.session_manager import SessionManager
 from services.app_context import app_context
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class ChatApiTests(unittest.TestCase):
@@ -75,8 +75,9 @@ class ChatApiTests(unittest.TestCase):
                 return await fake_answer(message, mode=mode, top_k=top_k)
 
         try:
-            with tempfile.TemporaryDirectory() as tmp:
-                app_context.session_manager = SessionManager(Path(tmp))
+            tmp = make_test_dir("chat_api")
+            try:
+                app_context.session_manager = SessionManager(tmp)
                 chat_module.generate_title = fake_generate_title  # type: ignore[assignment]
                 chat_module.get_qa_service = lambda: FakeQAService()  # type: ignore[assignment]
 
@@ -110,6 +111,8 @@ class ChatApiTests(unittest.TestCase):
                 self.assertEqual(saved["messages"][1]["planner_steps"][1]["stage"], "gap_check")
                 self.assertEqual(saved["messages"][1]["notes"], ["deep_round_1:gaps=efficacy"])
                 self.assertEqual(saved["messages"][1]["qa_mode"], "deep")
+            finally:
+                cleanup_test_dir(tmp)
         finally:
             app_context.session_manager = original_session_manager
             chat_module.generate_title = original_generate_title  # type: ignore[assignment]

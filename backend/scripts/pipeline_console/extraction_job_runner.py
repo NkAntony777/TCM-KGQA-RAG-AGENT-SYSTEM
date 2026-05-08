@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from services.triple_pipeline_models import TripleRecord
+from scripts.pipeline_console import state_transitions
 
 
 @dataclass
@@ -160,7 +161,7 @@ def run_extraction_job(
 
     def refresh_provider_monitor(*, force_log: bool = False) -> None:
         metrics = pipeline.get_provider_metrics()
-        state["provider_metrics"] = metrics
+        state_transitions.mark_provider_metrics(state=state, metrics=metrics)
         if force_log:
             return
 
@@ -183,7 +184,13 @@ def run_extraction_job(
             "total_triples": total_triples,
         }
 
-    sync_state()
+    job_state.mark_started_and_sync(
+        lock=_run_lock,
+        current_job=_current_job,
+        state_path=state_path,
+        state=state,
+        write_state=_write_state,
+    )
     refresh_provider_monitor(force_log=True)
 
     _log("info", f"任务启动 job_id={job_id}，共 {len(selected_books)} 本书")
@@ -216,8 +223,7 @@ def run_extraction_job(
 
     def note_cancelling() -> None:
         nonlocal cancel_logged
-        state["status"] = "cancelling"
-        state["phase"] = "cancelling"
+        state_transitions.mark_local_cancelling(state)
         sync_state()
         if not cancel_logged:
             _log("warn", "收到取消信号，等待当前进行中的请求结束并停止后续调度")
@@ -253,7 +259,7 @@ def run_extraction_job(
                 pipeline.append_jsonl(triples_jsonl, asdict(row))
             result["_written"] = True
             total_triples += len(rows)
-            state["total_triples"] = total_triples
+            state_transitions.mark_total_triples(state=state, total_triples=total_triples)
         if result["error"] is None:
             completed_chunk_keys.add(result_key(task))
         pipeline.append_jsonl(
@@ -367,7 +373,7 @@ def run_extraction_job(
                 all_tasks_per_book,
             )
             total_chunks_done = len(completed_chunk_keys)
-            state["resume_skipped_chunks"] = total_chunks_done
+            state_transitions.mark_resume_progress(state=state, skipped_chunks=total_chunks_done)
 
         pending_tasks_per_book: list[tuple[Path, list[Any]]] = []
         pending_candidates = extraction_planning.pending_tasks_by_book(
@@ -378,7 +384,10 @@ def run_extraction_job(
             skipped_completed = len(scheduled_tasks) - len(pending_tasks)
             if not pending_tasks:
                 completed_book_stems.add(book_path.stem)
-                state["books_completed"] = len(completed_book_stems)
+                state_transitions.mark_book_completed(
+                    state=state,
+                    completed_book_count=len(completed_book_stems),
+                )
                 _clear_books_force_unprocessed([book_path.stem])
                 if resume_mode and skipped_completed == len(scheduled_tasks):
                     _log("info", f"{book_path.stem} 本次续跑无需处理：{skipped_completed} 个 chunk 已在当前 run 完成，已自动跳过")
@@ -395,10 +404,12 @@ def run_extraction_job(
 
         interleaved_tasks = extraction_planning.interleave_tasks(pending_tasks_per_book)
 
-        state["chunks_total"] = total_chunks_all
-        state["chunks_completed"] = total_chunks_done
-        state["total_triples"] = total_triples
-        state["phase"] = "extracting"
+        state_transitions.mark_extracting(
+            state=state,
+            chunks_total=total_chunks_all,
+            chunks_completed=total_chunks_done,
+            total_triples=total_triples,
+        )
         _update_runtime_metrics(
             state,
             start_ts=start_ts,
@@ -452,7 +463,7 @@ def run_extraction_job(
                 break
             retry_count += 1
             _log("warn", f"  开始第 {retry_count} 轮重试，{len(failed_tasks)} 个 chunk 待重试")
-            state["chunk_retries"] = retry_count
+            state_transitions.mark_chunk_retries(state=state, retry_count=retry_count)
             run_retry_batch(failed_tasks, retry_count)
             if _job_cancelled.is_set():
                 break

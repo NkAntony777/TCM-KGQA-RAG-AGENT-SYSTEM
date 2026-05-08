@@ -32,10 +32,10 @@ def entity_lookup_exact_hit_payload(
     rows = grouped_rows.get(exact_name, [])
     if not rows:
         return None
-    entity_type = engine.fallback_engine.entity_type(exact_name)
-    relations = engine.fallback_engine._select_relation_clusters(
-        engine.fallback_engine._filter_relations(
-            engine.fallback_engine._annotate_relation_rows(rows, anchor_entity_type=entity_type),
+    entity_type = engine.fallback.entity_type(exact_name)
+    relations = engine.fallback.select_relation_clusters(
+        engine.fallback.filter_relations(
+            engine.fallback.annotate_relation_rows(rows, anchor_entity_type=entity_type),
             predicate_allowlist=predicate_allowlist or None,
             predicate_blocklist=predicate_blocklist,
         ),

@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import gc
 import re
-import shutil
 import sqlite3
-import tempfile
 import unittest
-from pathlib import Path
 
 from services.retrieval_service.files_first_support import LocalFilesFirstStore
 from services.retrieval_service.files_first_support import _prepare_match_terms
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class FakeTokenizer:
@@ -20,8 +19,9 @@ class FakeTokenizer:
 
 class FilesFirstSupportTests(unittest.TestCase):
     def test_rebuild_generates_section_metadata_and_section_hits(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalFilesFirstStore(Path(tmp) / "retrieval_local_index.fts.db", tokenizer=FakeTokenizer())
+        tmp_path = make_test_dir("files_first_support")
+        try:
+            store = LocalFilesFirstStore(tmp_path / "retrieval_local_index.fts.db", tokenizer=FakeTokenizer())
             rows = [
                 {
                     "chunk_id": "leaf-1",
@@ -67,11 +67,13 @@ class FilesFirstSupportTests(unittest.TestCase):
             self.assertIn("section", section)
             self.assertTrue(section["section"]["section_summary"])
             self.assertIn("功效", section["section"]["topic_tags"])
+        finally:
+            cleanup_test_dir(tmp_path)
 
     def test_health_auto_migrates_legacy_schema(self) -> None:
-        tmp = tempfile.mkdtemp()
+        tmp_path = make_test_dir("files_first_support")
         try:
-            db_path = Path(tmp) / "retrieval_local_index.fts.db"
+            db_path = tmp_path / "retrieval_local_index.fts.db"
             with sqlite3.connect(db_path) as conn:
                 conn.execute(
                     "CREATE TABLE docs (chunk_id TEXT PRIMARY KEY, text TEXT, filename TEXT, file_type TEXT, file_path TEXT, page_number INTEGER, chunk_idx INTEGER, parent_chunk_id TEXT, root_chunk_id TEXT, chunk_level INTEGER, book_name TEXT, chapter_title TEXT, section_key TEXT)"
@@ -89,7 +91,7 @@ class FilesFirstSupportTests(unittest.TestCase):
             del store
             gc.collect()
         finally:
-            shutil.rmtree(tmp, ignore_errors=True)
+            cleanup_test_dir(tmp_path)
 
     def test_prepare_match_terms_strips_prompt_scaffolding(self) -> None:
         terms = _prepare_match_terms("逍遥散一个比较适合直接引用的古籍出处片段是什么", FakeTokenizer())
@@ -100,8 +102,9 @@ class FilesFirstSupportTests(unittest.TestCase):
         self.assertFalse(any("逍遥散一个比较" in item for item in terms))
 
     def test_search_prefers_rows_covering_multiple_focus_entities(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalFilesFirstStore(Path(tmp) / "retrieval_local_index.fts.db", tokenizer=FakeTokenizer())
+        tmp_path = make_test_dir("files_first_support")
+        try:
+            store = LocalFilesFirstStore(tmp_path / "retrieval_local_index.fts.db", tokenizer=FakeTokenizer())
             rows = [
                 {
                     "chunk_id": "leaf-1",
@@ -139,6 +142,8 @@ class FilesFirstSupportTests(unittest.TestCase):
             self.assertTrue(results)
             self.assertEqual(results[0]["book_name"], "外科证治全书")
             self.assertIn("金银花", results[0]["text"])
+        finally:
+            cleanup_test_dir(tmp_path)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from services.graph_service.graph_relation_ranking import predicate_priority as 
 from services.graph_service.graph_relation_ranking import relation_score as _relation_score_support
 from services.graph_service.graph_relation_ranking import select_relation_clusters as _select_relation_clusters_support
 from services.graph_service.nebula_primary_engine import NebulaPrimaryGraphEngine as _NebulaPrimaryGraphEngineImpl
+from services.graph_service.path_search import ordered_path_neighbors as _ordered_path_neighbors  # noqa: F401
 from services.graph_service.path_search import search_ranked_paths as _search_ranked_paths
 from services.graph_service.query_text import query_fragments as _query_fragments_from_text
 from services.graph_service.query_text import query_mentions_source_book as _query_mentions_source_book_text

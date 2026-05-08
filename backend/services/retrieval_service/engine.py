@@ -11,7 +11,6 @@ from services.retrieval_service.backends import LocalHybridStore
 from services.retrieval_service.backends import MilvusHybridStore
 from services.retrieval_service.backends import OpenAICompatibleClient
 from services.retrieval_service.files_first_support import (
-    build_section_response as _build_section_response,
     LocalFilesFirstStore,
     ParentChunkStore,
 )
@@ -22,7 +21,7 @@ from services.retrieval_service import case_qa_runtime
 from services.retrieval_service.engine_health import build_retrieval_health
 from services.retrieval_service.query_understanding import LLMQueryUnderstanding
 from services.retrieval_service.qa_structured_store import StructuredQAIndex, StructuredQAIndexSettings
-from services.retrieval_service.search_runtime import search_hybrid as _search_hybrid
+from services.retrieval_service.query_service import RetrievalQueryService
 from services.retrieval_service.settings import load_settings
 from services.retrieval_service.settings import RetrievalServiceSettings
 from services.retrieval_service.sparse_lexicon import SparseLexiconStore
@@ -66,6 +65,7 @@ class RetrievalEngine:
             model=self.settings.rewrite_model,
         )
         self.milvus = MilvusHybridStore(self.settings)
+        self.query_service = RetrievalQueryService(self)
 
     @property
     def case_qa(self):
@@ -99,7 +99,7 @@ class RetrievalEngine:
         top_k: int,
         candidate_k: int,
     ) -> dict[str, Any]:
-        return case_qa_runtime.search_case_qa(self, query, top_k=top_k, candidate_k=candidate_k)
+        return self.query_service.search_case_qa(query, top_k=top_k, candidate_k=candidate_k)
 
     def search_hybrid(
         self,
@@ -111,8 +111,7 @@ class RetrievalEngine:
         allowed_file_path_prefixes: list[str] | None = None,
         search_mode: str = "files_first",
     ) -> dict[str, Any]:
-        return _search_hybrid(
-            self,
+        return self.query_service.search_hybrid(
             query,
             top_k=top_k,
             candidate_k=candidate_k,
@@ -129,8 +128,7 @@ class RetrievalEngine:
         result: dict[str, Any],
         top_k: int,
     ) -> str:
-        return query_rewrite_runtime._maybe_refine_files_first_query(
-            self,
+        return self.query_service.maybe_refine_files_first_query(
             query=query,
             search_mode=search_mode,
             result=result,
@@ -138,10 +136,10 @@ class RetrievalEngine:
         )
 
     def _refine_files_first_query(self, query: str) -> str:
-        return query_rewrite_runtime._refine_files_first_query(self, query)
+        return self.query_service.refine_files_first_query(query)
 
     def _fast_refine_files_first_query(self, query: str) -> str:
-        return query_rewrite_runtime._fast_refine_files_first_query(self, query)
+        return self.query_service.fast_refine_files_first_query(query)
 
     @staticmethod
     def _primary_refine_entities(query: str) -> list[str]:
@@ -152,7 +150,7 @@ class RetrievalEngine:
         return query_rewrite_runtime._prefer_refined_result(primary=primary, refined=refined)
 
     def rewrite_query(self, query: str, strategy: str = "complex") -> dict[str, Any]:
-        return query_rewrite_runtime.rewrite_query(self, query, strategy)
+        return self.query_service.rewrite_query(query, strategy)
 
     def index_documents(self, docs: list[dict[str, Any]], *, reset_collection: bool = False) -> dict[str, Any]:
         return retrieval_indexing.index_documents(self, docs, reset_collection=reset_collection)
@@ -293,8 +291,7 @@ class RetrievalEngine:
         return retrieval_quality._rerank(self, query, docs, top_k)
 
     def read_section(self, path: str, *, top_k: int = 12) -> dict[str, Any]:
-        payload = self.files_first_store.read_section(path=path, top_k=top_k)
-        return _build_section_response(path=path, payload=payload, parent_store=self.parent_store)
+        return self.query_service.read_section(path, top_k=top_k)
 
     @staticmethod
     def _filter_docs_by_file_path_prefixes(

@@ -4,6 +4,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from scripts.pipeline_console import state_transitions
+
 
 NowFn = Callable[[], str]
 SyncFn = Callable[[], None]
@@ -26,21 +28,16 @@ def apply_done_state(
     refresh_provider_monitor: RefreshFn,
     sync_state: SyncFn,
 ) -> None:
-    state["phase"] = "done"
-    if was_cancelled:
-        state["status"] = "cancelled"
-    elif pending_chunk_count > 0:
-        state["status"] = "partial"
-    else:
-        state["status"] = "completed"
-    state["finished_at"] = now_iso()
-    state["elapsed_secs"] = int(time.time() - start_ts)
-    state["eta"] = "已取消" if was_cancelled else ("未完成" if pending_chunk_count > 0 else "完成")
-    state["total_triples"] = total_triples
-    state["books_completed"] = completed_book_count
-    state["pending_chunks"] = pending_chunk_count
-    state["books_incomplete"] = len(incomplete_books)
-    state["incomplete_books"] = incomplete_books
+    state_transitions.mark_done(
+        state=state,
+        was_cancelled=was_cancelled,
+        pending_chunk_count=pending_chunk_count,
+        total_triples=total_triples,
+        completed_book_count=completed_book_count,
+        incomplete_books=incomplete_books,
+        elapsed_secs=int(time.time() - start_ts),
+        now_iso=now_iso,
+    )
     refresh_provider_monitor(force_log=True)
     sync_state()
 
@@ -77,7 +74,7 @@ def maybe_auto_clean(
     if not triples_jsonl.exists() or triples_jsonl.stat().st_size == 0:
         log("warn", f"跳过清洗: {triples_jsonl} 为空或不存在（{total_triples} 条三元组）")
         return
-    state["phase"] = "cleaning"
+    state_transitions.mark_cleaning(state)
     sync_state()
     log("info", "开始自动清洗...")
     report = pipeline.clean_run_dir(run_dir)
@@ -95,11 +92,11 @@ def maybe_auto_publish(
 ) -> None:
     if not auto_publish or state.get("status") != "completed":
         return
-    state["phase"] = "publishing"
+    state_transitions.mark_publishing(state)
     sync_state()
     log("info", "开始自动发布到图谱队列...")
     enqueued, publish_status = enqueue_publish(run_dir.name)
-    state["publish_status"] = publish_status
+    state_transitions.mark_publish_status(state=state, publish_status=publish_status)
     sync_state()
     if enqueued:
         log("info", f"已加入自动发布队列: {run_dir.name}")
@@ -114,7 +111,7 @@ def mark_finished(
     refresh_provider_monitor: RefreshFn,
     sync_state: SyncFn,
 ) -> None:
-    state["phase"] = "finished"
+    state_transitions.mark_finished(state)
     refresh_provider_monitor(force_log=True)
     sync_state()
 
@@ -128,9 +125,10 @@ def mark_error(
     refresh_provider_monitor: RefreshFn,
     sync_state: SyncFn,
 ) -> None:
-    state["status"] = "error"
-    state["phase"] = "error"
-    state["error"] = describe_exception(exc)
-    state["finished_at"] = now_iso()
+    state_transitions.mark_error(
+        state=state,
+        error=describe_exception(exc),
+        now_iso=now_iso,
+    )
     refresh_provider_monitor(force_log=True)
     sync_state()

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-import shutil
-import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from services.retrieval_service.qa_structured_store import StructuredQAIndex, StructuredQAIndexSettings
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class _FakeAliasService:
@@ -57,8 +57,8 @@ def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
 
 class StructuredQAIndexTests(unittest.TestCase):
     def test_search_qa_expands_aliases_before_matching(self) -> None:
-        root = Path(tempfile.mkdtemp())
-        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        root = make_test_dir("qa_structured_store")
+        self.addCleanup(lambda: cleanup_test_dir(root))
         qa_input = root / "qa.jsonl"
         case_input = root / "case.jsonl"
         index_path = root / "qa_structured.sqlite"
@@ -102,8 +102,8 @@ class StructuredQAIndexTests(unittest.TestCase):
         self.assertEqual(rows[0]["record_id"], "qa-1")
 
     def test_search_qa_uses_jieba_terms_for_long_chinese_questions(self) -> None:
-        root = Path(tempfile.mkdtemp())
-        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        root = make_test_dir("qa_structured_store")
+        self.addCleanup(lambda: cleanup_test_dir(root))
         qa_input = root / "qa.jsonl"
         case_input = root / "case.jsonl"
         index_path = root / "qa_structured.sqlite"
@@ -148,8 +148,8 @@ class StructuredQAIndexTests(unittest.TestCase):
         self.assertEqual(rows[0]["record_id"], "qa-2")
 
     def test_search_qa_boosts_formula_role_matches(self) -> None:
-        root = Path(tempfile.mkdtemp())
-        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        root = make_test_dir("qa_structured_store")
+        self.addCleanup(lambda: cleanup_test_dir(root))
         qa_input = root / "qa.jsonl"
         case_input = root / "case.jsonl"
         index_path = root / "qa_structured.sqlite"

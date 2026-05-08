@@ -61,7 +61,7 @@ def extract_nebula_path_skeleton(row: dict[str, Any]) -> dict[str, Any] | None:
 def build_payload_from_nebula_path_row(
     row: dict[str, Any],
     *,
-    fallback_engine,
+    fallback,
 ) -> dict[str, Any] | None:
     segments = row.get("p")
     if not isinstance(segments, list) or len(segments) < 3:
@@ -78,9 +78,9 @@ def build_payload_from_nebula_path_row(
     for left, right, segment in zip(nodes, nodes[1:], edge_segments):
         predicate = _normalize_relation_name(str(segment.get("predicate", "相关")).strip() or "相关")
         reverse = False
-        edge_data = fallback_engine.store.first_edge_between(left, right)
+        edge_data = fallback.first_edge_between(left, right)
         if not edge_data:
-            edge_data = fallback_engine.store.first_edge_between(right, left)
+            edge_data = fallback.first_edge_between(right, left)
             reverse = bool(edge_data)
         if edge_data:
             predicate = _normalize_relation_name(str(edge_data.get("predicate", predicate)).strip() or predicate)
@@ -92,7 +92,7 @@ def build_payload_from_nebula_path_row(
                     source_chapter=str(edge_data.get("source_chapter", "")).strip(),
                 ),
             }
-            source_item.update(fallback_engine._edge_evidence_payload(edge_data))
+            source_item.update(fallback.edge_evidence_payload(edge_data))
         else:
             source_book = str(segment.get("source_book", "")).strip()
             source_item = {

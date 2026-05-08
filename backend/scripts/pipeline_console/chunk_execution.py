@@ -4,6 +4,8 @@ from collections import deque
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, as_completed, wait
 from typing import Any, Callable
 
+from scripts.pipeline_console import state_transitions
+
 
 LogFn = Callable[[str, str], None]
 NoteCancellingFn = Callable[[], None]
@@ -34,8 +36,11 @@ def run_retry_batch(
                 break
             task = result["task"]
             result["_retried"] = result.get("_retried", 0) + 1
-            state["current_chapter"] = task.chapter_name
-            state["current_chunk_index"] = task.chunk_index
+            state_transitions.mark_current_task(
+                state=state,
+                chapter_name=task.chapter_name,
+                chunk_index=task.chunk_index,
+            )
             update_current_job()
             try:
                 payload = pipeline.extract_chunk_payload(task, dry_run=dry_run)
@@ -71,8 +76,11 @@ def run_retry_batch(
                 break
             result = future_map[future]
             task = result["task"]
-            state["current_chapter"] = task.chapter_name
-            state["current_chunk_index"] = task.chunk_index
+            state_transitions.mark_current_task(
+                state=state,
+                chapter_name=task.chapter_name,
+                chunk_index=task.chunk_index,
+            )
             try:
                 payload = future.result()
                 result["payload"] = payload
@@ -117,9 +125,12 @@ def run_serial_initial_chunks(
         if job_cancelled.is_set():
             note_cancelling()
             break
-        state["current_book"] = task.book_name
-        state["current_chapter"] = task.chapter_name
-        state["current_chunk_index"] = task.chunk_index
+        state_transitions.mark_current_task(
+            state=state,
+            book_name=task.book_name,
+            chapter_name=task.chapter_name,
+            chunk_index=task.chunk_index,
+        )
         update_current_job()
         log("info", f"  -> 处理 {task.book_name} chunk {task.chunk_index}/{len(interleaved_tasks)}")
         try:
@@ -130,7 +141,7 @@ def run_serial_initial_chunks(
             payload = {"triples": []}
             error = str(exc)
             chunk_errors += 1
-            state["chunk_errors"] = int(state.get("chunk_errors", 0) or 0) + 1
+            state_transitions.increment_chunk_errors(state)
             log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
         result = {
             "task": task,
@@ -196,9 +207,12 @@ def run_parallel_initial_chunks(
             for future in done:
                 future_index += 1
                 task = future_map.pop(future)
-                state["current_book"] = task.book_name
-                state["current_chapter"] = task.chapter_name
-                state["current_chunk_index"] = task.chunk_index
+                state_transitions.mark_current_task(
+                    state=state,
+                    book_name=task.book_name,
+                    chapter_name=task.chapter_name,
+                    chunk_index=task.chunk_index,
+                )
                 try:
                     payload = future.result()
                     error = None
@@ -206,7 +220,7 @@ def run_parallel_initial_chunks(
                     payload = {"triples": []}
                     error = str(exc)
                     chunk_errors += 1
-                    state["chunk_errors"] = int(state.get("chunk_errors", 0) or 0) + 1
+                    state_transitions.increment_chunk_errors(state)
                     log("error", f"  chunk {task.chunk_index} 失败: {str(exc)[:80]}")
                 result = {
                     "task": task,

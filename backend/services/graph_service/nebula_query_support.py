@@ -93,11 +93,11 @@ def direct_path_query_via_nebula(
 def syndrome_chain_via_nebula(engine, symptom: str, *, top_k: int) -> dict[str, Any]:
     symptom_candidates = engine._resolve_entities_via_primary(symptom, preferred_types={"symptom"})
     if not symptom_candidates:
-        symptom_candidates = engine.fallback_engine._resolve_entities(symptom, preferred_types={"symptom"})
+        symptom_candidates = engine.fallback.resolve_entities(symptom, preferred_types={"symptom"})
     if not symptom_candidates:
         symptom_candidates = engine._resolve_entities_via_primary(symptom)
     if not symptom_candidates:
-        symptom_candidates = engine.fallback_engine._resolve_entities(symptom)
+        symptom_candidates = engine.fallback.resolve_entities(symptom)
     if not symptom_candidates:
         return {"symptom": symptom.strip(), "syndromes": []}
     try:
@@ -127,7 +127,7 @@ def syndrome_chain_via_nebula(engine, symptom: str, *, top_k: int) -> dict[str, 
             item = {
                 "name": syndrome_name,
                 "score": 0.92 if symptom_node == symptom.strip() else 0.82,
-                "recommended_formulas": engine.fallback_engine._collect_recommended_formulas(syndrome_name),
+                "recommended_formulas": engine.fallback.collect_recommended_formulas(syndrome_name),
             }
             item.update(engine._evidence_payload_from_row(row))
             existing = deduped.get(syndrome_name)
@@ -141,9 +141,9 @@ def syndrome_chain_via_nebula(engine, symptom: str, *, top_k: int) -> dict[str, 
 
 
 def path_query_relation_rows(engine, entity_name: str) -> list[dict[str, Any]]:
-    return engine.fallback_engine._annotate_relation_rows(
+    return engine.fallback.annotate_relation_rows(
         engine._collect_nebula_relations(entity_name),
-        anchor_entity_type=engine.fallback_engine.entity_type(entity_name),
+        anchor_entity_type=engine.fallback.entity_type(entity_name),
     )
 
 
@@ -161,5 +161,5 @@ def fallback_ranked_path_search(
         max_hops=max_hops,
         path_limit=path_limit,
         relation_rows=engine._path_query_relation_rows,
-        build_path_payload=engine.fallback_engine._build_path_payload,
+        build_path_payload=engine.fallback.build_path_payload,
     )

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
@@ -21,11 +20,13 @@ from typing import Any
 from services.graph_service.engine import GraphQueryEngine
 from services.graph_service.engine import GraphServiceSettings
 from services.graph_service.engine import NebulaPrimaryGraphEngine
+from services.graph_service.engine import get_graph_engine
 from services.graph_service.engine import _ordered_path_neighbors, _search_ranked_paths
 from services.graph_service.relation_governance import expand_filter_predicates
 from services.graph_service.runtime_store import RuntimeGraphStore
 from services.graph_service.runtime_store import RuntimeGraphStoreSettings
-from services.graph_service.engine import get_graph_engine
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 # ---------------------------------------------------------------------------
@@ -165,8 +166,8 @@ class TestEntityLookup(unittest.TestCase):
             self.assertEqual(relation.get("predicate_family"), "主治族")
 
     def test_lookup_marks_ontology_boundary_mismatch_for_out_of_schema_relation(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_ontology_mismatch")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
             evidence_path = root / "graph_runtime.evidence.jsonl"
@@ -208,10 +209,12 @@ class TestEntityLookup(unittest.TestCase):
             self.assertEqual(result["relations"][0]["predicate"], "使用药材")
             self.assertFalse(result["relations"][0]["ontology_boundary_ok"])
             self.assertEqual(result["relations"][0]["ontology_boundary_tier"], "acceptable_polysemy")
+        finally:
+            cleanup_test_dir(root)
 
     def test_lookup_exposes_review_needed_tier_for_formula_to_formula_recommendation(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_review_tier")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
             evidence_path = root / "graph_runtime.evidence.jsonl"
@@ -251,6 +254,8 @@ class TestEntityLookup(unittest.TestCase):
 
             self.assertEqual(result["relations"][0]["predicate"], "推荐方剂")
             self.assertEqual(result["relations"][0]["ontology_boundary_tier"], "review_needed")
+        finally:
+            cleanup_test_dir(root)
 
 
 class TestPathQuery(unittest.TestCase):
@@ -879,8 +884,8 @@ class TestRuntimeGraphPrecedence(unittest.TestCase):
     """加载优先级：runtime 图存在时应覆盖 sample 图。"""
 
     def test_runtime_takes_precedence_over_sample(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_runtime_precedence")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
 
@@ -915,14 +920,16 @@ class TestRuntimeGraphPrecedence(unittest.TestCase):
             # runtime 与 sample 均可查询，说明导入与合并正常
             self.assertEqual(engine.entity_lookup("X", top_k=5)["entity"]["canonical_name"], "X")
             self.assertEqual(engine.entity_lookup("A", top_k=5)["entity"]["canonical_name"], "A")
+        finally:
+            cleanup_test_dir(root)
 
 
 class TestRuntimeEvidence(unittest.TestCase):
     """Evidence 加载与返回：验证 evidence JSONL 正确注入到关系中。"""
 
     def test_evidence_enriches_entity_lookup(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_evidence_lookup")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
             evidence_path = root / "graph_runtime.evidence.jsonl"
@@ -981,10 +988,12 @@ class TestRuntimeEvidence(unittest.TestCase):
             self.assertEqual(rel["fact_id"], "fact-test-001")
             self.assertEqual(rel["source_text"], "测试方以甘草为君。")
             self.assertAlmostEqual(rel["confidence"], 0.95, places=2)
+        finally:
+            cleanup_test_dir(root)
 
     def test_normalized_predicate_allowlist_matches_logical_mapping(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_predicate_allowlist")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
             evidence_path = root / "graph_runtime.evidence.jsonl"
@@ -1025,6 +1034,8 @@ class TestRuntimeEvidence(unittest.TestCase):
             self.assertEqual(result["entity"]["canonical_name"], "黄芪")
             self.assertEqual(_predicates(result["relations"]), {"药材基源"})
             self.assertEqual(result["relations"][0].get("normalized_predicate"), "拉丁学名")
+        finally:
+            cleanup_test_dir(root)
 
     def test_runtime_evidence_count_matches_jsonl(self) -> None:
         """真实 runtime 引擎的 evidence_count 应与 JSONL 行数一致。"""
@@ -1040,8 +1051,8 @@ class TestRuntimeEvidence(unittest.TestCase):
 
 class TestRuntimePathNeighbors(unittest.TestCase):
     def test_path_neighbors_prioritize_high_value_predicates_and_dedupe_targets(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("graph_path_neighbors")
+        try:
             sample_path = root / "sample_graph.json"
             runtime_path = root / "graph_runtime.json"
             evidence_path = root / "graph_runtime.evidence.jsonl"
@@ -1091,6 +1102,8 @@ class TestRuntimePathNeighbors(unittest.TestCase):
                 sample_evidence_path=None,
             )
             neighbors = store.path_neighbors("测试药", limit=3)
+        finally:
+            cleanup_test_dir(root)
 
         self.assertEqual(neighbors[0]["target"], "核心证候")
         self.assertEqual(neighbors[0]["predicate"], "治疗证候")

@@ -11,6 +11,7 @@ SKIP_DIRS = {
     ".uv-cache",
     ".venv",
     "__pycache__",
+    "_tmp_pytest",
     "_tmp_test",
     "eval",
     "logs",
@@ -24,12 +25,18 @@ def test_production_code_does_not_import_common_mock_data() -> None:
     pending = [BACKEND_ROOT]
     while pending:
         current = pending.pop()
-        for child in current.iterdir():
+        try:
+            children = list(current.iterdir())
+        except OSError:
+            continue
+        for child in children:
             try:
                 is_dir = child.is_dir()
             except OSError:
                 continue
             if is_dir:
+                if child.name.startswith("pytest-cache-files-"):
+                    continue
                 if child.name not in SKIP_DIRS and child.name != "tests":
                     pending.append(child)
                 continue

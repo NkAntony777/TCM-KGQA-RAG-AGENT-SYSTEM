@@ -1,10 +1,22 @@
 from __future__ import annotations
 
-import tempfile
+from contextlib import contextmanager
 import unittest
 from pathlib import Path
+from typing import Iterator
 
 from services.retrieval_service.engine import RetrievalEngine, RetrievalServiceSettings, SparseLexiconStore
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
+
+
+@contextmanager
+def temporary_test_dir() -> Iterator[str]:
+    path = make_test_dir("retrieval_engine")
+    try:
+        yield str(path)
+    finally:
+        cleanup_test_dir(path)
 
 
 class FakeEmbeddingClient:
@@ -149,7 +161,7 @@ class RetrievalEngineTests(unittest.TestCase):
         )
 
     def test_sparse_lexicon_persistence(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             store = SparseLexiconStore(Path(tmp) / "lexicon.json")
             store.fit(["逍遥散用于肝郁脾虚", "柴胡归肝经"])
             vector = store.encode_document("逍遥散用于肝郁")
@@ -162,7 +174,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(reloaded.encode_query("不存在的词"), {})
 
     def test_rewrite_query_fallback(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             result = engine.rewrite_query("逍遥散有什么功效", strategy="complex")
             self.assertIn("expanded_query", result)
@@ -170,7 +182,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertTrue(result["hypothetical_doc"])
 
     def test_search_hybrid_dense_fallback_normalizes_fields(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.embedding_client = FakeEmbeddingClient()
             engine.milvus = FakeMilvusStore()
@@ -199,7 +211,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["chunks"][0]["source_file"], "医方集解.txt")
 
     def test_search_case_qa_prefers_structured_index(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.structured_qa = type(
                 "FakeStructuredQAIndex",
@@ -232,7 +244,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertIn("胁肋胀痛", result["chunks"][0]["document"])
 
     def test_health_marks_vector_hot_path_disabled_by_default(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
             health = engine.health()
 
@@ -242,7 +254,7 @@ class RetrievalEngineTests(unittest.TestCase):
         self.assertIsNone(engine.case_qa)
 
     def test_search_hybrid_skips_dense_branch_when_vector_compatibility_disabled(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
             engine.embedding_client = FakeEmbeddingClient()
             result = engine.search_hybrid("逍遥散有什么功效", top_k=3, candidate_k=6, enable_rerank=False, search_mode="hybrid")
@@ -252,7 +264,7 @@ class RetrievalEngineTests(unittest.TestCase):
         self.assertIn("vector_compatibility_disabled", result["warnings"])
 
     def test_search_hybrid_filters_docs_that_miss_query_anchor_entity(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.embedding_client = FakeEmbeddingClient()
             engine.milvus = FakeMilvusStore()
@@ -287,7 +299,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["total"], 0)
 
     def test_search_hybrid_applies_single_query_refinement_for_low_hit_files_first(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp), vector_compatibility_enabled=False))
             engine.files_first_store = FakeFilesFirstStoreSequence(
                 [
@@ -335,7 +347,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["chunks"][0]["chunk_level"], 2)
 
     def test_search_hybrid_can_filter_by_file_path_prefix(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.embedding_client = FakeEmbeddingClient()
             engine.milvus = FakeMilvusStore()
@@ -383,7 +395,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertIn("source_prefix_filtered_all", filtered_out["warnings"])
 
     def test_search_hybrid_files_first_does_not_fall_back_to_dense_by_default(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.embedding_client = FakeEmbeddingClient()
             engine.local_store.save(
@@ -419,7 +431,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertIn("files_first_dense_fallback_disabled", result["warnings"])
 
     def test_search_hybrid_files_first_can_use_sparse_local_without_embedding(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             engine = RetrievalEngine(self._settings(Path(tmp)))
             engine.lexicon.fit(["六味地黄丸出自小儿药证直诀。"])
             engine.local_store.save(
@@ -454,7 +466,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(result["chunks"][0]["file_path"], "classic://小儿药证直诀/1")
 
     def test_index_configured_corpora_merges_sample_and_modern(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             tmpdir = Path(tmp)
             settings = self._settings(tmpdir)
             settings.sample_corpus_path.write_text(
@@ -508,7 +520,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual({row["file_path"] for row in local_rows}, {"classic://sample/1", "herb2://reference/HBREF0001"})
 
     def test_index_configured_corpora_can_include_classic(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             tmpdir = Path(tmp)
             settings = self._settings(tmpdir)
             settings.classic_corpus_path.write_text(
@@ -548,7 +560,7 @@ class RetrievalEngineTests(unittest.TestCase):
             self.assertEqual(local_rows[0]["file_path"], "classic://小儿药证直诀/0001-01")
 
     def test_files_first_index_can_search_classic_without_embedding(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with temporary_test_dir() as tmp:
             tmpdir = Path(tmp)
             settings = self._settings(tmpdir)
             settings.classic_corpus_path.write_text(

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from scripts.pipeline_console import extraction_planning
+from scripts.pipeline_console import state_transitions
 
 
 AppendCheckpointFn = Callable[..., None]
@@ -166,7 +167,10 @@ def summarize_book_completion(
                 log("info", f"  完成 {book_path.stem}，累计三元组: {total_triples}")
             clear_books_force_unprocessed([book_path.stem])
             completed_book_stems.add(book_path.stem)
-            state["books_completed"] = len(completed_book_stems)
+            state_transitions.mark_book_completed(
+                state=state,
+                completed_book_count=len(completed_book_stems),
+            )
         else:
             pending_for_book = sum(
                 1

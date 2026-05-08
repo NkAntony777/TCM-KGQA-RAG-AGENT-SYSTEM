@@ -2,16 +2,35 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import closing
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable, Protocol
 
 
-def get_docs_by_chunk_ids(store: Any, chunk_ids: list[str]) -> list[dict[str, Any]]:
-    store.ensure_schema()
+class SummaryCache(Protocol):
+    def get(self, key: str) -> dict[str, Any] | None:
+        ...
+
+
+class FilesFirstReaderContext(Protocol):
+    store_path: Path
+    summary_cache: SummaryCache
+    strip_classic_headers: Callable[[str], str]
+    merge_section_bodies: Callable[[list[str]], str]
+
+    def ensure_schema(self) -> dict[str, Any]:
+        ...
+
+    def resolve_section_metadata(self, *, section_key: str, book_name: str, chapter_title: str, section_text: str) -> dict[str, Any]:
+        ...
+
+
+def get_docs_by_chunk_ids(context: FilesFirstReaderContext, chunk_ids: list[str]) -> list[dict[str, Any]]:
+    context.ensure_schema()
     normalized_ids = [str(item or "").strip() for item in chunk_ids if str(item or "").strip()]
-    if not normalized_ids or not store.store_path.exists():
+    if not normalized_ids or not context.store_path.exists():
         return []
     placeholders = ",".join("?" for _ in normalized_ids)
-    with closing(sqlite3.connect(store.store_path)) as conn:
+    with closing(sqlite3.connect(context.store_path)) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             f"""
@@ -28,9 +47,9 @@ def get_docs_by_chunk_ids(store: Any, chunk_ids: list[str]) -> list[dict[str, An
     return [dict(row) for row in rows]
 
 
-def read_section(store: Any, *, path: str, top_k: int = 12) -> dict[str, Any]:
-    store.ensure_schema()
-    if not store.store_path.exists():
+def read_section(context: FilesFirstReaderContext, *, path: str, top_k: int = 12) -> dict[str, Any]:
+    context.ensure_schema()
+    if not context.store_path.exists():
         return {"path": path, "items": [], "count": 0, "status": "missing"}
     normalized = str(path or "").strip()
     if not normalized.startswith("chapter://"):
@@ -42,7 +61,7 @@ def read_section(store: Any, *, path: str, top_k: int = 12) -> dict[str, Any]:
     if not book_name or not chapter_title:
         return {"path": normalized, "items": [], "count": 0, "status": "invalid"}
 
-    with closing(sqlite3.connect(store.store_path)) as conn:
+    with closing(sqlite3.connect(context.store_path)) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             """
@@ -61,12 +80,12 @@ def read_section(store: Any, *, path: str, top_k: int = 12) -> dict[str, Any]:
 
     response: dict[str, Any] = {"path": normalized, "status": "ok", "count": len(items), "items": items}
     summary_key = str(items[0].get("section_key", "") or "").strip()
-    cached = store.summary_cache.get(summary_key) if summary_key else None
-    section_text = store.merge_section_bodies(
-        [store.strip_classic_headers(str(item.get("text", ""))) for item in items]
+    cached = context.summary_cache.get(summary_key) if summary_key else None
+    section_text = context.merge_section_bodies(
+        [context.strip_classic_headers(str(item.get("text", ""))) for item in items]
     )
     if cached is None:
-        cached = store._resolve_section_metadata(
+        cached = context.resolve_section_metadata(
             section_key=summary_key or f"{book_name}::{chapter_title}",
             book_name=book_name,
             chapter_title=chapter_title,

@@ -10,7 +10,7 @@
 
 ![System Architecture](docs/figures/system_architecture.png)
 
-系统由 **主后端（8002）+ 图谱服务（8101）+ 检索服务（8102）** 三个独立进程构成。用户提问经意图分类器做实体识别和路由决策后，自动调度图谱检索、文件检索或两者融合，SSE 流式返回答案、证据卡片和推理链路。
+系统支持 **主后端（8002）+ 图谱服务（8101）+ 检索服务（8102）** 的三进程部署；当前也支持主后端在本地模式下直接调用真实图谱与检索引擎，sidecar 不可用时不回退到 mock 数据。用户提问经意图分类器做实体识别和路由决策后，自动调度图谱检索、文件检索或两者融合，SSE 流式返回答案、证据卡片和推理链路。
 
 ---
 
@@ -42,15 +42,16 @@
 
 ---
 
-## 核心工作二：Files-First 非向量主检索链路
+## 核心工作二：Files-First 主检索链路
 
-默认问答主链已收口为 "图谱 + files-first + 结构化索引"，摒弃传统纯 dense 向量检索的黑盒问题。
+当前问答主链方向已收口为 "图谱 + files-first + 结构化索引"，目标是降低传统纯 dense 向量检索的黑盒依赖。需要注意：项目已经基本实现非向量检索方法，但旧 dense-compatible 路径尚未完全移除，仍作为兼容层、实验对照或显式 fallback 保留。
 
 ![Files-First Pipeline](docs/figures/ffsr_pipeline.png)
 
 - 经典古籍 files-first 索引：预处理阶段建立文件级 FTS 检索与结构化索引
 - 运行时按需走 `entity://` / `book://` / `chapter://` / `alias://` / `caseqa://` 证据路径
-- dense 向量检索仅作为兼容 fallback，不再参与默认主路径
+- structured case-QA 索引已作为病例 QA 的默认主路径
+- dense/vector 检索仍存在于 legacy retrieval engine、case-QA 兼容路径和论文对照实验中；不要将系统描述为“已完全去向量化”
 
 ---
 
@@ -80,9 +81,9 @@
 
 ## 技术栈
 
-**后端：** Python 3.10+ / FastAPI / LangChain 1.x `create_agent` / LlamaIndex / OpenAI-compatible API  
-**前端：** Next.js 14 / React 18 / TypeScript / Tailwind CSS / Monaco Editor  
-**数据：** NebulaGraph / Milvus / SQLite  
+**后端：** Python 3.11+ / FastAPI / LangChain 1.x `create_agent` / LlamaIndex / OpenAI-compatible API
+**前端：** Next.js 14 / React 18 / TypeScript / Tailwind CSS / Monaco Editor
+**数据：** NebulaGraph / Milvus / SQLite
 **模型支持：** MiniMax / 智谱 / 百炼 / DeepSeek / OpenAI
 
 ---
@@ -146,3 +147,4 @@ npm run dev
 ## 相关资源
 
 - 详细开发进度：[docs/PROJECT_PROGRESS.md](docs/PROJECT_PROGRESS.md)
+- 重构计划与测试矩阵：[docs/REFACTORING_PLAN_AND_TEST_MATRIX.md](docs/REFACTORING_PLAN_AND_TEST_MATRIX.md)

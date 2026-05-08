@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, AsyncIterator
 
+from scripts.pipeline_console import state_transitions
+
 
 NowFn = Callable[[], str]
 WriteStateFn = Callable[[Path, dict[str, Any]], None]
@@ -76,23 +78,12 @@ def mark_cancel_requested(
     write_state: WriteStateFn,
     now_iso: NowFn = default_now_iso,
 ) -> bool:
-    run_dir = None
-    state_snapshot: dict[str, Any] | None = None
     with lock:
-        if not current_job:
-            return False
-        current_job["status"] = "cancelling"
-        current_job["phase"] = "cancelling"
-        current_job["cancel_requested_at"] = now_iso()
-        run_dir = current_job.get("run_dir")
-        state_snapshot = dict(current_job)
-    if run_dir and state_snapshot:
-        state_path = Path(str(run_dir)) / "state.json"
-        try:
-            write_state(state_path, state_snapshot)
-        except Exception:
-            pass
-    return True
+        return state_transitions.mark_cancel_requested(
+            current_job=current_job,
+            write_state=write_state,
+            now_iso=now_iso,
+        )
 
 
 def job_status_snapshot(*, lock: Any, current_job: dict[str, Any]) -> dict[str, Any]:
@@ -111,6 +102,24 @@ def sync_current_job_state(
     with lock:
         current_job.update(state)
     write_state(state_path, state)
+
+
+def mark_started_and_sync(
+    *,
+    lock: Any,
+    current_job: dict[str, Any],
+    state_path: Path,
+    state: dict[str, Any],
+    write_state: WriteStateFn,
+) -> None:
+    state_transitions.mark_started(state)
+    sync_current_job_state(
+        lock=lock,
+        current_job=current_job,
+        state_path=state_path,
+        state=state,
+        write_state=write_state,
+    )
 
 
 def job_log_slice(

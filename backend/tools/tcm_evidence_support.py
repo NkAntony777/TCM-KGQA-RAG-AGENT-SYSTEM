@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import json
 import re
 import sys
 from typing import Any
-from urllib.parse import unquote
 
 from services.common.evidence_payloads import (
     clean_text as _clean_text,
@@ -13,6 +11,10 @@ from services.common.evidence_payloads import (
     safe_float as _safe_float,
 )
 from services.qa_service.alias_service import get_runtime_alias_service
+from tools.evidence_path_resolver import normalize_path as _resolver_normalize_path
+from tools.evidence_path_resolver import ordered_unique_paths as _resolver_ordered_unique_paths
+from tools.evidence_path_resolver import path_priority as _resolver_path_priority
+from tools.evidence_path_resolver import source_scope_specs as _resolver_source_scope_specs
 from tools.tcm_service_client import call_retrieval_hybrid
 
 
@@ -34,7 +36,7 @@ def _call_retrieval_hybrid(**kwargs: Any) -> dict[str, Any]:
 
 
 def _normalize_path(path: str) -> str:
-    return unquote((path or "").strip())
+    return _resolver_normalize_path(path)
 
 
 HINT_SPLIT_PATTERN = re.compile(r"[\s,，。；;：:、/()（）【】\[\]<>《》“”\"'·]+")
@@ -71,27 +73,11 @@ def _normalize_book_label(text: str) -> str:
 
 
 def _path_priority(path: str) -> tuple[int, str]:
-    normalized = _normalize_path(path)
-    if normalized.startswith("entity://"):
-        return (0, normalized)
-    if normalized.startswith("alias://"):
-        return (1, normalized)
-    if normalized.startswith("chapter://"):
-        return (2, normalized)
-    if normalized.startswith("book://"):
-        return (3, normalized)
-    if normalized.startswith("symptom://"):
-        return (4, normalized)
-    if normalized.startswith("qa://"):
-        return (5, normalized)
-    if normalized.startswith("caseqa://"):
-        return (6, normalized)
-    return (7, normalized)
+    return _resolver_path_priority(path)
 
 
 def _ordered_unique_paths(paths: list[str]) -> list[str]:
-    deduped = list(dict.fromkeys(path for path in (_normalize_path(item) for item in paths) if path))
-    return sorted(deduped, key=_path_priority)
+    return _resolver_ordered_unique_paths(paths)
 
 
 def _extract_hint_terms(*parts: str) -> list[str]:
@@ -183,25 +169,7 @@ def _rank_items_by_hint(items: list[dict[str, Any]], *, hint: str, query: str) -
 
 
 def _source_scope_specs(paths: list[str]) -> list[tuple[str, str]]:
-    specs: list[tuple[str, str]] = []
-    for path in paths:
-        normalized = _normalize_path(path)
-        if not normalized.startswith("book://"):
-            continue
-        body = normalized.removeprefix("book://")
-        book_name, _, hint = body.partition("/")
-        book_name = _normalize_book_label(book_name.strip())
-        hint_text = hint.replace("*", "").strip("/")
-        if book_name:
-            specs.append((book_name, hint_text))
-    deduped: list[tuple[str, str]] = []
-    seen = set()
-    for spec in specs:
-        if spec in seen:
-            continue
-        seen.add(spec)
-        deduped.append(spec)
-    return deduped
+    return _resolver_source_scope_specs(paths)
 
 
 def _dedupe_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:

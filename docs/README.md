@@ -6,9 +6,11 @@
 
 1. `PROJECT_PROGRESS.md`
    当前项目进展、实验脚本检查结论、数据集状态和论文实验准备情况。
-2. `official_rerun_20260419/README.md`
+2. `REFACTORING_PLAN_AND_TEST_MATRIX.md`
+   当前技术债、强耦合点、分阶段重构计划和测试矩阵。
+3. `official_rerun_20260419/README.md`
    最新正式论文实验结果入口。
-3. `official_rerun_20260419/Paper_Experiment_Rerun_Summary_20260419.md`
+4. `official_rerun_20260419/Paper_Experiment_Rerun_Summary_20260419.md`
    论文写作时最常用的总结果摘要。
 
 历史阶段性文档已归档到：
@@ -22,4 +24,3 @@
 2. 旧口径方法说明
 3. 中间消融与专家评审记录
 4. 旧版 benchmark 和临时 smoke 文档
-

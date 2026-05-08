@@ -140,22 +140,24 @@ class QAServiceLargeOutputTests(unittest.IsolatedAsyncioTestCase):
 
 class GroundedPromptCompactionTests(unittest.TestCase):
     def test_grounded_prompt_compacts_non_source_query(self) -> None:
+        factual_evidence = [
+            {
+                "source_type": "graph",
+                "source": "医方集解#12",
+                "source_book": "医方集解",
+                "source_chapter": "卷三",
+                "anchor_entity": "逍遥散",
+                "predicate": "功效",
+                "target": "疏肝健脾",
+                "snippet": "逍遥散用于肝郁血虚、脾失健运之证。" * 12,
+            }
+        ]
         prompt = _build_grounded_user_prompt(
             query="逍遥散的功效与主治是什么？",
             payload={"retrieval_strategy": {"intent": "formula_efficacy", "entity_name": "逍遥散"}},
             mode="quick",
-            factual_evidence=[
-                {
-                    "source_type": "graph",
-                    "source": "医方集解#12",
-                    "source_book": "医方集解",
-                    "source_chapter": "卷三",
-                    "anchor_entity": "逍遥散",
-                    "predicate": "功效",
-                    "target": "疏肝健脾",
-                    "snippet": "逍遥散用于肝郁血虚、脾失健运之证。" * 12,
-                }
-            ],
+            factual_evidence=factual_evidence,
+            evidence_groups={"structured": factual_evidence},
             case_references=[],
             citations=["医方集解/卷三"],
             notes=[],
@@ -170,19 +172,21 @@ class GroundedPromptCompactionTests(unittest.TestCase):
         self.assertNotIn(("逍遥散用于肝郁血虚、脾失健运之证。" * 3), prompt)
 
     def test_grounded_prompt_keeps_excerpt_for_source_query(self) -> None:
+        factual_evidence = [
+            {
+                "source_type": "chapter",
+                "source": "医方集解/卷三",
+                "source_book": "医方集解",
+                "source_chapter": "卷三",
+                "snippet": "逍遥散，治肝郁血虚，脾弱不运。" * 6,
+            }
+        ]
         prompt = _build_grounded_user_prompt(
             query="逍遥散出自哪本书？请给出处原文。",
             payload={"retrieval_strategy": {"intent": "formula_origin", "entity_name": "逍遥散"}},
             mode="deep",
-            factual_evidence=[
-                {
-                    "source_type": "chapter",
-                    "source": "医方集解/卷三",
-                    "source_book": "医方集解",
-                    "source_chapter": "卷三",
-                    "snippet": "逍遥散，治肝郁血虚，脾弱不运。" * 6,
-                }
-            ],
+            factual_evidence=factual_evidence,
+            evidence_groups={"documentary": factual_evidence},
             case_references=[],
             citations=["医方集解/卷三"],
             notes=[],

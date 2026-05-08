@@ -10,7 +10,6 @@ import os
 import sys
 import threading
 import time  # noqa: F401 - dynamic helper/test compatibility for runtime_metrics patching
-from collections import deque
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -47,6 +46,7 @@ from scripts.pipeline_console import job_requests
 from scripts.pipeline_console import job_state
 from scripts.pipeline_console import pipeline_factory
 from scripts.pipeline_console import run_artifacts
+from scripts.pipeline_console import runtime_state
 from scripts.pipeline_console import runtime_metrics
 from scripts.pipeline_console import runs_api
 from scripts.pipeline_console.models import GraphBookDeleteRequest, ResumeRunRequest, StartJobRequest
@@ -99,28 +99,42 @@ app.mount(
     name="pipeline_console_static",
 )
 
-# 当前运行状态（单例任务模型）
-_run_lock = threading.Lock()
-_current_job: dict[str, Any] = {}          # 当前运行元数据
-_job_log: list[dict[str, Any]] = []        # 实时日志队列（线程安全追加）
-_job_log_file: Path | None = None          # 实时日志磁盘文件，任务结束时清理
-_job_log_file_path: Path | None = None     # 日志文件路径（用于任务结束后删除）
-_job_thread: threading.Thread | None = None
-_job_cancelled = threading.Event()         # 用于取消信号
-_publish_lock = threading.RLock()
-_nebula_publish_threads: dict[str, threading.Thread] = {}
-_publish_queue: deque[dict[str, Any]] = deque()
-_publish_worker_wakeup = threading.Event()
-_active_publish_task: dict[str, Any] | None = None
-_book_status_lock = threading.RLock()
-_runtime_graph_mutation_lock = threading.RLock()
+# 当前运行状态（单例任务模型）。旧全局名保留为兼容入口，真实归属集中在 runtime 容器。
+_runtime_state = runtime_state.PipelineConsoleRuntimeState()
+_run_lock = _runtime_state.run_lock
+_current_job = _runtime_state.current_job
+_job_log = _runtime_state.job_log
+_job_log_file = _runtime_state.job_log_file
+_job_log_file_path = _runtime_state.job_log_file_path
+_job_thread = _runtime_state.job_thread
+_job_cancelled = _runtime_state.job_cancelled
+_publish_compat_state = runtime_state.PublishCompatibilityState()
+_publish_lock = _publish_compat_state.lock
+_nebula_publish_threads = _publish_compat_state.nebula_publish_threads
+_publish_queue = _publish_compat_state.queue
+_publish_worker_wakeup = _publish_compat_state.worker_wakeup
+_active_publish_task = _publish_compat_state.active_task
+_book_status_lock = _runtime_state.book_status_lock
+_runtime_graph_mutation_lock = _runtime_state.runtime_graph_mutation_lock
 
 DEFAULT_AUTO_BOOK_BATCH_SIZE = 7
 LOW_YIELD_RETRY_TRIPLE_THRESHOLD = 1
 PROVIDER_MONITOR_LOG_INTERVAL = 10
 
 
+def _sync_runtime_state_from_legacy_globals() -> runtime_state.PipelineConsoleRuntimeState:
+    return _runtime_state.bind_legacy_job_state(
+        current_job=_current_job,
+        job_log=_job_log,
+        job_log_file=_job_log_file,
+        job_log_file_path=_job_log_file_path,
+        job_thread=_job_thread,
+        job_cancelled=_job_cancelled,
+    )
+
+
 def _log(level: str, msg: str, **extra: Any) -> None:
+    _sync_runtime_state_from_legacy_globals()
     job_state.append_job_log(
         lock=_run_lock,
         job_log=_job_log,
@@ -133,13 +147,17 @@ def _log(level: str, msg: str, **extra: Any) -> None:
 
 def _cleanup_job_log_file() -> None:
     global _job_log_file, _job_log_file_path
-    _job_log_file, _job_log_file_path = job_state.cleanup_job_log_file(
-        lock=_run_lock,
-        log_file_path=_job_log_file_path,
+    _sync_runtime_state_from_legacy_globals()
+    _job_log_file, _job_log_file_path = _runtime_state.set_job_log_files(
+        *job_state.cleanup_job_log_file(
+            lock=_run_lock,
+            log_file_path=_job_log_file_path,
+        )
     )
 
 
 def _is_job_thread_alive() -> bool:
+    _sync_runtime_state_from_legacy_globals()
     thread = _job_thread
     return bool(thread and thread.is_alive())
 
@@ -583,6 +601,7 @@ RESUME_FIXED_FIELDS = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_extraction_job_context() -> extraction_job_runner.ExtractionJobContext:
+    _sync_runtime_state_from_legacy_globals()
     return extraction_job_runner.ExtractionJobContext(
         current_job=_current_job,
         run_lock=_run_lock,
@@ -667,6 +686,7 @@ def _run_auto_extraction_batches(
     max_chunk_retries: int,
     batch_size: int = DEFAULT_AUTO_BOOK_BATCH_SIZE,
 ) -> None:
+    _sync_runtime_state_from_legacy_globals()
     auto_batch.run_auto_extraction_batches(
         job_id=job_id,
         initial_selected_books=initial_selected_books,
@@ -729,6 +749,7 @@ def list_chapters(book_name: str, limit: int = 50):
 def start_job(req: StartJobRequest):
     """启动一次提取任务"""
     global _job_thread, _job_log_file, _job_log_file_path
+    _sync_runtime_state_from_legacy_globals()
 
     with _run_lock:
         if _current_job.get("status") == "running":
@@ -754,14 +775,16 @@ def start_job(req: StartJobRequest):
         raise HTTPException(status_code=400, detail="未配置 API Key，请在 API 配置中填写或在 .env 中设置 TRIPLE_LLM_API_KEY")
 
     job_id = str(uuid4())[:8]
-    _job_log_file, _job_log_file_path = job_state.initialize_job_context(
-        lock=_run_lock,
-        current_job=_current_job,
-        job_log=_job_log,
-        cancel_event=_job_cancelled,
-        output_dir=DEFAULT_OUTPUT_DIR,
-        job_id=job_id,
-        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    _job_log_file, _job_log_file_path = _runtime_state.set_job_log_files(
+        *job_state.initialize_job_context(
+            lock=_run_lock,
+            current_job=_current_job,
+            job_log=_job_log,
+            cancel_event=_job_cancelled,
+            output_dir=DEFAULT_OUTPUT_DIR,
+            job_id=job_id,
+            write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+        )
     )
 
     target = _run_auto_extraction_batches if auto_chain_mode else _run_extraction_job
@@ -782,10 +805,12 @@ def start_job(req: StartJobRequest):
         auto_batch_size=auto_batch_size,
     )
 
-    _job_thread = threading.Thread(
-        target=target,
-        kwargs=thread_kwargs,
-        daemon=True,
+    _job_thread = _runtime_state.set_job_thread(
+        threading.Thread(
+            target=target,
+            kwargs=thread_kwargs,
+            daemon=True,
+        )
     )
     _job_thread.start()
     return job_requests.start_response(
@@ -800,6 +825,7 @@ def start_job(req: StartJobRequest):
 @app.post("/api/runs/{run_name}/resume")
 def resume_run(run_name: str, req: ResumeRunRequest):
     global _job_thread, _job_log_file, _job_log_file_path
+    _sync_runtime_state_from_legacy_globals()
 
     with _run_lock:
         if _current_job.get("status") == "running":
@@ -828,14 +854,16 @@ def resume_run(run_name: str, req: ResumeRunRequest):
 
     manifest_cfg = manifest.get("config", {})
     job_id = str(uuid4())[:8]
-    _job_log_file, _job_log_file_path = job_state.initialize_job_context(
-        lock=_run_lock,
-        current_job=_current_job,
-        job_log=_job_log,
-        cancel_event=_job_cancelled,
-        output_dir=DEFAULT_OUTPUT_DIR,
-        job_id=job_id,
-        write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+    _job_log_file, _job_log_file_path = _runtime_state.set_job_log_files(
+        *job_state.initialize_job_context(
+            lock=_run_lock,
+            current_job=_current_job,
+            job_log=_job_log,
+            cancel_event=_job_cancelled,
+            output_dir=DEFAULT_OUTPUT_DIR,
+            job_id=job_id,
+            write_text=lambda path, text: _write_text_atomic(path, text, encoding="utf-8"),
+        )
     )
 
     auto_chain_mode = bool(req.continue_next_batches)
@@ -855,10 +883,12 @@ def resume_run(run_name: str, req: ResumeRunRequest):
         default_auto_batch_size=DEFAULT_AUTO_BOOK_BATCH_SIZE,
     )
 
-    _job_thread = threading.Thread(
-        target=target,
-        kwargs=thread_kwargs,
-        daemon=True,
+    _job_thread = _runtime_state.set_job_thread(
+        threading.Thread(
+            target=target,
+            kwargs=thread_kwargs,
+            daemon=True,
+        )
     )
     _job_thread.start()
     return job_requests.resume_response(

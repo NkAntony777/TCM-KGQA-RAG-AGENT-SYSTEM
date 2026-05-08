@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from services.graph_service.fallback_adapter import GraphFallbackBackend, LocalGraphFallbackAdapter
 from services.graph_service.nebulagraph_store import NebulaGraphStore
 from services.graph_service.nebula_entity_support import entity_lookup_directions as _entity_lookup_directions_support
 from services.graph_service.nebula_entity_support import entity_lookup_exact_hit_payload as _entity_lookup_exact_hit_payload_support
@@ -38,17 +39,23 @@ class NebulaPrimaryGraphEngine:
         self,
         primary_store: NebulaGraphStore | None = None,
         fallback_engine: GraphQueryEngine | None = None,
+        fallback: GraphFallbackBackend | None = None,
     ):
         self.primary_store = primary_store or NebulaGraphStore()
+        if fallback is not None:
+            self.fallback = fallback
+            self.fallback_engine = getattr(fallback, "engine", fallback)
+            return
         if fallback_engine is None:
             from services.graph_service.engine import GraphQueryEngine
 
             fallback_engine = GraphQueryEngine()
         self.fallback_engine = fallback_engine
+        self.fallback = LocalGraphFallbackAdapter(fallback_engine)
 
     def health(self) -> dict[str, Any]:
         primary = self.primary_store.health()
-        fallback = self.fallback_engine.health()
+        fallback = self.fallback.health()
         local_ready = fallback.get("status") == "ok"
         nebula_ready = primary.get("status") == "ok"
         active_backend = "nebula" if nebula_ready else ("sqlite_fallback" if local_ready else "unavailable")
@@ -87,7 +94,7 @@ class NebulaPrimaryGraphEngine:
                     return nebula_result
             except Exception:
                 pass
-        return self.fallback_engine.entity_lookup(
+        return self.fallback.entity_lookup(
             name,
             top_k=top_k,
             predicate_allowlist=predicate_allowlist,
@@ -187,7 +194,7 @@ class NebulaPrimaryGraphEngine:
             "entity": {
                 "name": query_text.strip(),
                 "canonical_name": canonical_name,
-                "entity_type": self.fallback_engine.entity_type(canonical_name),
+                "entity_type": self.fallback.entity_type(canonical_name),
             },
             "relations": [],
             "total": 0,
@@ -197,9 +204,9 @@ class NebulaPrimaryGraphEngine:
         start_candidates = self._resolve_entities_via_primary(start, exact_only=True)[:3]
         end_candidates = self._resolve_entities_via_primary(end, exact_only=True)[:3]
         if not start_candidates:
-            start_candidates = self.fallback_engine._resolve_entities(start, exact_only=True)[:3]
+            start_candidates = self.fallback.resolve_entities(start, exact_only=True)[:3]
         if not end_candidates:
-            end_candidates = self.fallback_engine._resolve_entities(end, exact_only=True)[:3]
+            end_candidates = self.fallback.resolve_entities(end, exact_only=True)[:3]
         if self._should_prefer_nebula_path(max_hops=max_hops, start_candidates=start_candidates, end_candidates=end_candidates):
             nebula_result = self._direct_path_query_via_nebula(
                 start_candidates=start_candidates,
@@ -209,13 +216,13 @@ class NebulaPrimaryGraphEngine:
             )
             if int(nebula_result.get("total", 0) or 0) > 0:
                 return nebula_result
-        local_result = self.fallback_engine.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
+        local_result = self.fallback.path_query(start, end, max_hops=max_hops, path_limit=path_limit)
         if int(local_result.get("total", 0) or 0) > 0:
             return local_result
         if not self._use_primary():
             return local_result
         try:
-            fast_paths = self.fallback_engine._fast_path_candidates(
+            fast_paths = self.fallback.fast_path_candidates(
                 start_candidates=start_candidates,
                 end_candidates=end_candidates,
                 max_hops=max_hops,
@@ -249,7 +256,7 @@ class NebulaPrimaryGraphEngine:
                     return nebula_result
             except Exception:
                 pass
-        return self.fallback_engine.syndrome_chain(symptom, top_k=top_k)
+        return self.fallback.syndrome_chain(symptom, top_k=top_k)
 
     def _syndrome_chain_via_nebula(self, symptom: str, *, top_k: int) -> dict[str, Any]:
         return _syndrome_chain_via_nebula_support(self, symptom, top_k=top_k)
@@ -291,7 +298,7 @@ class NebulaPrimaryGraphEngine:
         )
 
     def _build_payload_from_nebula_path_row(self, row: dict[str, Any]) -> dict[str, Any] | None:
-        return _build_payload_from_nebula_path_row_support(row, fallback_engine=self.fallback_engine)
+        return _build_payload_from_nebula_path_row_support(row, fallback=self.fallback)
 
     def _extract_nebula_path_skeleton(self, row: dict[str, Any]) -> dict[str, Any] | None:
         return _extract_nebula_path_skeleton_support(row)
@@ -423,14 +430,14 @@ class NebulaPrimaryGraphEngine:
         return _query_source_book_hints_support(
             query_text,
             query_fragments_func=self._query_fragments,
-            source_book_exists_func=self.fallback_engine.store.source_book_exists,
+            source_book_exists_func=self.fallback.source_book_exists,
         )
 
     def _query_fragments(self, query_text: str) -> list[str]:
-        return self.fallback_engine._query_fragments(query_text)
+        return self.fallback.query_fragments(query_text)
 
     def _query_mentions_source_book(self, query_text: str, source_book: str) -> bool:
-        return self.fallback_engine._query_mentions_source_book(query_text, source_book)
+        return self.fallback.query_mentions_source_book(query_text, source_book)
 
     def _path_query_relation_rows(self, entity_name: str) -> list[dict[str, Any]]:
         return _path_query_relation_rows_support(self, entity_name)

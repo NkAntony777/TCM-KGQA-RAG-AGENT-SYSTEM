@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import tempfile
 import unittest
 from pathlib import Path
 
 from scripts.import_classic_books import build_classic_books_corpus
 from scripts.import_herb2 import build_herb2_corpus
 from scripts.import_tcm_mkg import build_tcm_mkg_graph
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 def _write(path: Path, content: str) -> None:
@@ -15,8 +16,8 @@ def _write(path: Path, content: str) -> None:
 
 class TcmMkgImporterTests(unittest.TestCase):
     def test_build_tcm_mkg_graph_maps_core_relations(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+        root = make_test_dir("tcm_mkg_importer")
+        try:
             _write(root / "D2_Chinese_patent_medicine.tsv", "CPM_ID\tChinese_patent_medicine\nCPM1\t测试方")
             _write(root / "D3_CPM_TCMT.tsv", "CPM_ID\tChinese_group\tChinese_term\nCPM1\t治则\t扶正祛邪")
             _write(root / "D4_CPM_CHP.tsv", "CPM_ID\tCHP_ID\nCPM1\tCHP1")
@@ -36,6 +37,8 @@ class TcmMkgImporterTests(unittest.TestCase):
             _write(root / "D24_DOID_targets.tsv", "DOID\tEntrezID\nDOID:1\t1")
 
             facts, evidence, manifest = build_tcm_mkg_graph(root)
+        finally:
+            cleanup_test_dir(root)
 
         self.assertTrue(facts)
         self.assertEqual(len(facts), len(evidence))
@@ -53,8 +56,8 @@ class TcmMkgImporterTests(unittest.TestCase):
 
 class Herb2ImporterTests(unittest.TestCase):
     def test_build_herb2_corpus_emits_modern_docs(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+        root = make_test_dir("herb2_importer")
+        try:
             _write(
                 root / "HERB_formula_info_v2.txt",
                 "Formula_id\tFormula_cn_name\tFormula_pinyin_name\tFormula_en_name\tDosage_form\tAdministration\tType\tCategory\tHerbs_in_Chinese\tSyndromes_in_Chinese\tIndications_in_Chinese\tSource\nF1\t测试方\tCe Shi Fang\tTest Formula\t丸剂\tOral\t补益药\t中成药\t测试药\t测试证\t测试病\tETCM",
@@ -81,6 +84,8 @@ class Herb2ImporterTests(unittest.TestCase):
             )
 
             docs, manifest = build_herb2_corpus(root)
+        finally:
+            cleanup_test_dir(root)
 
         self.assertEqual(manifest["total_docs"], 6)
         file_paths = {doc["file_path"] for doc in docs}
@@ -93,8 +98,8 @@ class Herb2ImporterTests(unittest.TestCase):
 
 class ClassicBooksImporterTests(unittest.TestCase):
     def test_build_classic_books_corpus_emits_classic_docs(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+        root = make_test_dir("classic_books_importer")
+        try:
             content = (
                 "<篇名>小儿药证直诀\n"
                 "书名：小儿药证直诀\n"
@@ -108,6 +113,8 @@ class ClassicBooksImporterTests(unittest.TestCase):
             (root / "133-小儿药证直诀.txt").write_bytes(content.encode("gb18030"))
 
             docs, manifest = build_classic_books_corpus(root, chunk_size=80, overlap_chars=10)
+        finally:
+            cleanup_test_dir(root)
 
         self.assertEqual(manifest["books_processed"], 1)
         self.assertGreaterEqual(manifest["sections_processed"], 1)

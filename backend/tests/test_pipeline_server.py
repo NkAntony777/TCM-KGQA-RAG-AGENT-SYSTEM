@@ -1,7 +1,6 @@
 ﻿from __future__ import annotations
 
 import json
-import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -10,6 +9,8 @@ from services.graph_service.runtime_store import RuntimeGraphStore
 from scripts import pipeline_server
 from scripts.tcm_triple_console import PipelineConfig
 from scripts.tcm_triple_console import TCMTriplePipeline
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class CountingPipeline(TCMTriplePipeline):
@@ -234,8 +235,7 @@ class OrderRecordingPipeline(TCMTriplePipeline):
 
 class PipelineServerTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp_dir.name)
+        self.root = make_test_dir("pipeline_server")
         self.books_dir = self.root / "books"
         self.output_dir = self.root / "output"
         self.books_dir.mkdir(parents=True, exist_ok=True)
@@ -269,7 +269,37 @@ class PipelineServerTests(unittest.TestCase):
             pipeline_server._active_publish_task = None
             pipeline_server._publish_worker_wakeup.clear()
             pipeline_server._nebula_publish_threads.clear()
-        self.temp_dir.cleanup()
+        cleanup_test_dir(self.root)
+
+    def test_runtime_state_container_preserves_legacy_global_references(self) -> None:
+        runtime = pipeline_server._runtime_state
+        pipeline_server._sync_runtime_state_from_legacy_globals()
+
+        self.assertIs(pipeline_server._run_lock, runtime.run_lock)
+        self.assertIs(pipeline_server._current_job, runtime.current_job)
+        self.assertIs(pipeline_server._job_log, runtime.job_log)
+        self.assertIs(pipeline_server._job_cancelled, runtime.job_cancelled)
+        self.assertIs(pipeline_server._book_status_lock, runtime.book_status_lock)
+        self.assertIs(pipeline_server._runtime_graph_mutation_lock, runtime.runtime_graph_mutation_lock)
+
+        log_file = self.output_dir / "runtime-state.log"
+        pipeline_server._job_log_file, pipeline_server._job_log_file_path = runtime.set_job_log_files(log_file, log_file)
+        self.assertIs(pipeline_server._job_log_file, runtime.job_log_file)
+        self.assertIs(pipeline_server._job_log_file_path, runtime.job_log_file_path)
+
+        pipeline_server._job_log_file, pipeline_server._job_log_file_path = runtime.set_job_log_files(None, None)
+
+    def test_runtime_state_container_absorbs_legacy_current_job_rebinding(self) -> None:
+        original_job = pipeline_server._current_job
+        rebound_job = {"status": "running"}
+        try:
+            pipeline_server._current_job = rebound_job
+            runtime = pipeline_server._sync_runtime_state_from_legacy_globals()
+            self.assertIs(runtime.current_job, rebound_job)
+            self.assertEqual(pipeline_server.job_status(), rebound_job)
+        finally:
+            pipeline_server._current_job = original_job
+            pipeline_server._sync_runtime_state_from_legacy_globals()
 
     def test_resolve_start_selected_books_returns_all_books_when_empty(self) -> None:
         extra_book = self.books_dir / "002-test-book.txt"

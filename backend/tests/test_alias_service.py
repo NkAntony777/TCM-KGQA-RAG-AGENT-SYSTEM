@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import sqlite3
-import tempfile
 import unittest
 from contextlib import closing
 from pathlib import Path
 
 from services.qa_service.alias_service import RuntimeAliasService
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 def _init_alias_db(path: Path) -> None:
@@ -40,34 +41,43 @@ def _init_alias_db(path: Path) -> None:
 
 class AliasServiceTests(unittest.TestCase):
     def test_alias_service_expands_connected_alias_cluster(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "graph_runtime.db"
+        tmp = make_test_dir("alias_service")
+        try:
+            db_path = tmp / "graph_runtime.db"
             _init_alias_db(db_path)
             service = RuntimeAliasService(db_path)
 
             aliases = service.aliases_for_entity("金匮肾气丸", max_aliases=4)
+        finally:
+            cleanup_test_dir(tmp)
 
         self.assertIn("肾气丸", aliases)
         self.assertIn("八味丸", aliases)
 
     def test_alias_service_can_expand_query_with_aliases(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "graph_runtime.db"
+        tmp = make_test_dir("alias_service")
+        try:
+            db_path = tmp / "graph_runtime.db"
             _init_alias_db(db_path)
             service = RuntimeAliasService(db_path)
 
             expanded = service.expand_query_with_aliases("六味地黄丸 出处 原文")
+        finally:
+            cleanup_test_dir(tmp)
 
         self.assertIn("地黄丸", expanded)
         self.assertIn("六味丸", expanded)
 
     def test_alias_relations_include_source_book(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "graph_runtime.db"
+        tmp = make_test_dir("alias_service")
+        try:
+            db_path = tmp / "graph_runtime.db"
             _init_alias_db(db_path)
             service = RuntimeAliasService(db_path)
 
             items = service.alias_relations("六味地黄丸", max_items=4)
+        finally:
+            cleanup_test_dir(tmp)
 
         aliases = {item.alias: item for item in items}
         self.assertIn("地黄丸", aliases)

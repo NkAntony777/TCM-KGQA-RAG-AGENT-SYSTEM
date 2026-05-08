@@ -2,9 +2,7 @@
 
 import json
 import os
-import tempfile
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from services.graph_service.nebulagraph_store import (
@@ -16,6 +14,8 @@ from services.graph_service.nebulagraph_store import (
     load_graph_rows,
     load_nebula_settings,
 )
+from tests.test_temp_utils import cleanup_test_dir
+from tests.test_temp_utils import make_test_dir
 
 
 class TestNebulaGraphStore(unittest.TestCase):
@@ -34,8 +34,8 @@ class TestNebulaGraphStore(unittest.TestCase):
         self.assertNotEqual(entity_vid("六味地黄丸"), entity_vid("四君子汤"))
 
     def test_load_graph_rows_merges_evidence(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("nebula_rows_evidence")
+        try:
             graph_path = root / "graph.json"
             evidence_path = root / "graph.evidence.jsonl"
 
@@ -72,10 +72,12 @@ class TestNebulaGraphStore(unittest.TestCase):
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["source_text"], "测试方以甘草为君。")
             self.assertAlmostEqual(float(rows[0]["confidence"]), 0.95, places=2)
+        finally:
+            cleanup_test_dir(root)
 
     def test_load_graph_rows_supports_jsonl_graph(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("nebula_rows_jsonl")
+        try:
             graph_path = root / "graph.jsonl"
             evidence_path = root / "graph.evidence.jsonl"
 
@@ -126,10 +128,12 @@ class TestNebulaGraphStore(unittest.TestCase):
             self.assertEqual(len(rows), 2)
             self.assertEqual(rows[0]["source_text"], "测试方以甘草为君。")
             self.assertAlmostEqual(float(rows[0]["confidence"]), 0.95, places=2)
+        finally:
+            cleanup_test_dir(root)
 
     def test_export_ngql_contains_schema_and_insert_statements(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+        root = make_test_dir("nebula_export_ngql")
+        try:
             graph_path = root / "graph.json"
             output_path = root / "graph.ngql"
 
@@ -166,6 +170,8 @@ class TestNebulaGraphStore(unittest.TestCase):
             self.assertIn("INSERT EDGE `relation`", content)
             self.assertIn("测试方", content)
             self.assertIn("甘草", content)
+        finally:
+            cleanup_test_dir(root)
 
     def test_build_import_statements_use_distinct_edge_ranks_for_same_entity_pair(self) -> None:
         store = NebulaGraphStore()
