@@ -93,6 +93,7 @@ async def chat(payload: ChatRequest):
     async def event_generator():
         segments: list[dict[str, Any]] = []
         current_segment = new_segment()
+        done_data: dict[str, Any] | None = None
         try:
             async for event in _event_sequence(payload):
                 if event["type"] == "result":
@@ -107,6 +108,9 @@ async def chat(payload: ChatRequest):
                 )
 
                 data = {key: value for key, value in event.items() if key != "type"}
+                if event["type"] == "done":
+                    done_data = data
+                    continue
                 yield _sse(event["type"], data)
         except Exception as exc:
             yield _sse("error", {"error": str(exc)})
@@ -118,6 +122,8 @@ async def chat(payload: ChatRequest):
             user_message=payload.message,
             segments=segments,
         )
+        if done_data is not None:
+            yield _sse("done", done_data)
         if is_first_user_message:
             title = await generate_title(payload.message)
             session_manager.set_title(payload.session_id, title)

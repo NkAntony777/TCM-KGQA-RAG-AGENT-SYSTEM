@@ -215,7 +215,7 @@ def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2) -> list
     return lines
 
 
-def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int) -> str:
+def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int, selected_evidence: dict[str, Any] | None = None) -> str:
     strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
     analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
     include_verbatim_evidence = _query_requests_verbatim_evidence(query)
@@ -242,10 +242,37 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("输出要求：先给简短判断，最后单独一行写“最终选项：X”或“最终选项：AB”。")
         lines.append("只允许使用题目中已有的选项字母；若多选，按字母升序连续书写，不要写括号或顿号。")
     lines.append("事实证据摘要：")
+    selected_cards = selected_evidence.get("selected_cards", []) if isinstance(selected_evidence, dict) else []
+    if selected_cards:
+        required_facets = selected_evidence.get("required_facets", []) if isinstance(selected_evidence, dict) else []
+        missing_facets = selected_evidence.get("missing_facets", []) if isinstance(selected_evidence, dict) else []
+        if required_facets:
+            lines.append("必须覆盖的证据维度：" + "、".join(str(item) for item in required_facets if str(item).strip()))
+        lines.append("精选证据卡：")
+        for index, card in enumerate(selected_cards, start=1):
+            if not isinstance(card, dict):
+                continue
+            parts = [
+                f"{index}. [{card.get('facet_label', card.get('facet', '证据'))}]",
+                f"claim: {card.get('claim', '')}",
+                f"source: {card.get('source_label', '')}",
+            ]
+            excerpt = str(card.get("excerpt", "") or "").strip()
+            if excerpt:
+                parts.append(f"excerpt: {excerpt}")
+            source_path = str(card.get("source_path", "") or "").strip()
+            if source_path:
+                parts.append(f"path: {source_path}")
+            why_selected = str(card.get("why_selected", "") or "").strip()
+            if why_selected:
+                parts.append(f"why: {why_selected}")
+            lines.append(" | ".join(part for part in parts if part))
+        if missing_facets:
+            lines.append("证据缺口：" + "、".join(str(item) for item in missing_facets if str(item).strip()))
     structured_items = evidence_groups.get("structured", []) if isinstance(evidence_groups, dict) else []
     documentary_items = evidence_groups.get("documentary", []) if isinstance(evidence_groups, dict) else []
     other_items = evidence_groups.get("other", []) if isinstance(evidence_groups, dict) else []
-    if structured_items:
+    if structured_items and not selected_cards:
         lines.extend(
             _grounded_group_lines(
                 label="结构化图谱证据",
@@ -254,7 +281,7 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
                 include_snippet=False,
             )
         )
-    if documentary_items:
+    if documentary_items and not selected_cards:
         lines.extend(
             _grounded_group_lines(
                 label="文献原文证据",
@@ -263,7 +290,7 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
                 include_snippet=include_verbatim_evidence,
             )
         )
-    if other_items:
+    if other_items and not selected_cards:
         lines.extend(
             _grounded_group_lines(
                 label="补充证据",
@@ -287,6 +314,7 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("补充说明：" + "；".join(notes[:6]))
     if citations:
         lines.append("可引用来源：" + "；".join(citations[: (2 if mode == 'quick' else 3)]))
+    has_evidence = bool(factual_evidence or case_references or book_citations or citations)
     if include_verbatim_evidence:
         lines.append("回答时允许引用上面的出处摘录，但保持精简，不要大段抄录。")
     else:
@@ -295,6 +323,12 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("输出要求：先用结构化关系给结论，再补充必要的文献出处；若文献证据缺失，应明确说明当前结论主要来自图谱关系。")
     elif answer_policy == "graph_relation_with_origin":
         lines.append("输出要求：先概括图谱关系结论，再补充对应出处或条文支撑；若用户问出处/原文，必须优先交代书名、篇章或方后注。")
+    if mode == "deep" and has_evidence:
+        lines.append(
+            "深度模式输出要求：不要只给一句结论。请至少包含“结论”“证据要点”“出处/依据”三部分；"
+            "围绕每条关键证据解释它如何支撑结论，尽量覆盖上面的结构化图谱证据、文献原文证据和补充证据；"
+            "除非证据确实不足，回答正文不少于约400字。"
+        )
     lines.append("输出自然中文答案，不复述检索流程，末尾可用“依据：...”列 1 到 3 条来源。")
     return "\n".join(lines)
 

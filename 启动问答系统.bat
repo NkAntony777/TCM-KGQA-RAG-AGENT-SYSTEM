@@ -19,6 +19,15 @@ if not exist ".\frontend\package.json" (
   exit /b 1
 )
 
+echo Stopping existing QA processes on ports 3000, 8002, 8101, 8102...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop_qa_ports.ps1"
+if errorlevel 1 (
+  echo [ERROR] Failed to release QA ports
+  pause
+  exit /b 1
+)
+echo.
+
 echo Starting graph-service 8101...
 start "TCM Graph Service 8101" "%~dp0scripts\start_graph_8101.bat"
 

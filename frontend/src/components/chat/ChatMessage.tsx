@@ -25,7 +25,8 @@ export function ChatMessage({
   notes,
   citations,
   qaMode,
-  skills
+  skills,
+  isActive = false
 }: {
   role: "user" | "assistant";
   content: string;
@@ -40,6 +41,7 @@ export function ChatMessage({
   citations: string[];
   qaMode?: "quick" | "deep";
   skills: SkillMeta[];
+  isActive?: boolean;
 }) {
   const isUser = role === "user";
 
@@ -55,6 +57,7 @@ export function ChatMessage({
         <AnswerTraceTimeline
           deepTrace={deepTrace}
           evidenceBundle={evidenceBundle}
+          isActive={isActive}
           plannerSteps={plannerSteps}
           qaMode={qaMode}
           route={route}
@@ -82,7 +85,7 @@ export function ChatMessage({
           content
         ) : (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content || "正在思考..."}
+            {content || (isActive ? "正在整理证据约束回答..." : "正在思考...")}
           </ReactMarkdown>
         )}
       </div>

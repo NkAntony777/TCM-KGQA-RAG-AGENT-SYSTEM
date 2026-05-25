@@ -6,8 +6,9 @@ from unittest.mock import patch
 
 from services.qa_service.engine import QAService, _apply_origin_action_policy, _factual_evidence_from_payload, _identify_evidence_gaps, _plan_followup_actions
 from services.qa_service.evidence import _coverage_gaps_from_state, _deep_quality_gaps_from_state, _init_coverage_state, _update_coverage_state
+from services.qa_service.evidence_selector import select_evidence_for_answer
 from services.qa_service.planner_support import _pick_best_source_path
-from services.qa_service.prompts import _build_planner_user_prompt, _requested_answer_dimensions
+from services.qa_service.prompts import _build_grounded_user_prompt, _build_planner_user_prompt, _requested_answer_dimensions
 
 
 class FakeRouteTool:
@@ -131,6 +132,70 @@ def _deep_followup_payload() -> dict[str, object]:
 
 
 class QAServiceTests(unittest.IsolatedAsyncioTestCase):
+    def test_deep_grounded_prompt_requires_substantive_answer_when_evidence_exists(self) -> None:
+        payload = _composition_payload()
+        factual_evidence = _factual_evidence_from_payload(payload)
+
+        prompt = _build_grounded_user_prompt(
+            query="六味地黄丸的组成是什么",
+            payload=payload,
+            mode="deep",
+            factual_evidence=factual_evidence,
+            evidence_groups={"structured": factual_evidence, "documentary": [], "other": []},
+            case_references=[],
+            citations=["小儿药证直诀/卷下"],
+            notes=[],
+            book_citations=["小儿药证直诀/卷下"],
+            deep_trace=[],
+            evidence_limit=6,
+        )
+
+        self.assertIn("深度模式输出要求", prompt)
+        self.assertIn("不少于约400字", prompt)
+        self.assertIn("证据要点", prompt)
+
+    def test_evidence_selector_prefers_requested_facet_over_raw_top_score(self) -> None:
+        payload = {
+            "retrieval_strategy": {"intent": "formula_efficacy", "entity_name": "西洋参"},
+            "query_analysis": {"dominant_intent": "formula_efficacy"},
+            "evidence_paths": ["entity://西洋参/*"],
+        }
+        factual_evidence = [
+            {
+                "source_type": "graph",
+                "source": "entity://西洋参/归经",
+                "anchor_entity": "西洋参",
+                "predicate": "归经",
+                "target": "心经",
+                "snippet": "西洋参归心经。",
+                "score": 0.99,
+            },
+            {
+                "source_type": "graph",
+                "source": "entity://西洋参/功效",
+                "anchor_entity": "西洋参",
+                "predicate": "功效",
+                "target": "益气止血",
+                "snippet": "西洋参具有益气止血功效。",
+                "score": 0.42,
+                "source_book": "名老中医之路",
+            },
+        ]
+
+        selected = select_evidence_for_answer(
+            query="西洋参的功效是什么？",
+            payload=payload,
+            mode="deep",
+            factual_evidence=factual_evidence,
+            case_references=[],
+            evidence_paths=["entity://西洋参/*"],
+        )
+
+        self.assertEqual(selected["selected_cards"][0]["facet"], "efficacy")
+        self.assertIn("益气止血", selected["selected_cards"][0]["claim"])
+        self.assertIn("efficacy", selected["covered_facets"])
+        self.assertIn("selector_budget:24", selected["selection_notes"])
+
     def test_graph_path_payload_is_exposed_as_factual_evidence(self) -> None:
         payload = {
             "graph_result": {

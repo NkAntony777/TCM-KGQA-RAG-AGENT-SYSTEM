@@ -12,6 +12,7 @@ from services.qa_service.evidence import (
     _factual_evidence_from_payload,
     _split_factual_evidence,
 )
+from services.qa_service.evidence_selector import select_evidence_for_answer
 from services.qa_service.helpers import _extract_json_object, _route_from_payload, _safe_json_loads
 from services.qa_service.models import AnswerMode, QAServiceSettings, RouteContext
 from services.qa_service.prompts import (
@@ -56,6 +57,7 @@ async def _try_quick_grounded_fallback(
     notes: list[str],
     book_citations: list[str],
     deep_trace: list[dict[str, Any]],
+    selected_evidence: dict[str, Any] | None,
 ) -> str:
     quick_system_prompt = _build_grounded_system_prompt(mode="quick")
     quick_user_prompt = _build_grounded_user_prompt(
@@ -70,6 +72,7 @@ async def _try_quick_grounded_fallback(
         book_citations=book_citations,
         deep_trace=deep_trace,
         evidence_limit=settings.max_quick_prompt_evidence,
+        selected_evidence=selected_evidence,
     )
     return await answer_generator.acomplete(
         system_prompt=quick_system_prompt,
@@ -152,6 +155,7 @@ async def _generate_grounded_answer(
     notes: list[str],
     book_citations: list[str],
     deep_trace: list[dict[str, Any]],
+    selected_evidence: dict[str, Any] | None = None,
 ) -> tuple[str, str, list[str], dict[str, Any]]:
     original_timeout = getattr(answer_generator, "timeout_seconds", None)
     attempt_notes: list[str] = []
@@ -169,6 +173,7 @@ async def _generate_grounded_answer(
         book_citations=book_citations,
         deep_trace=deep_trace,
         evidence_limit=settings.max_quick_prompt_evidence if mode == "quick" else settings.max_deep_prompt_evidence,
+        selected_evidence=selected_evidence,
     )
     diagnostics: dict[str, Any] = {
         "mode": mode,
@@ -240,6 +245,7 @@ async def _generate_grounded_answer(
                     notes=notes,
                     book_citations=book_citations,
                     deep_trace=deep_trace,
+                    selected_evidence=selected_evidence,
                 )
                 if quick_content:
                     diagnostics["fallback_chain"].append(
@@ -309,6 +315,14 @@ async def _build_response(
         book_citations=book_citations,
         limit=settings.max_citations,
     )
+    selected_evidence = select_evidence_for_answer(
+        query=query,
+        payload=payload,
+        mode=mode,
+        factual_evidence=factual,
+        case_references=cases,
+        evidence_paths=evidence_paths if evidence_paths is not None else payload.get("evidence_paths", []) if isinstance(payload.get("evidence_paths", []), list) else [],
+    )
     answer, generation_backend, generation_notes, generation_diagnostics = await _generate_grounded_answer(
         answer_generator=answer_generator,
         settings=settings,
@@ -322,6 +336,7 @@ async def _build_response(
         notes=notes or [],
         book_citations=book_citations,
         deep_trace=deep_trace or [],
+        selected_evidence=selected_evidence,
     )
     answer = _ensure_multiple_choice_answer_format(query, answer)
     selected_factual = factual[: settings.max_factual_evidence]
@@ -351,6 +366,13 @@ async def _build_response(
         "case_references": selected_cases,
         "citations": citations,
         "book_citations": book_citations,
+        "selected_evidence_cards": selected_evidence["selected_cards"],
+        "evidence_selection": {
+            "required_facets": selected_evidence["required_facets"],
+            "covered_facets": selected_evidence["covered_facets"],
+            "missing_facets": selected_evidence["missing_facets"],
+            "selection_notes": selected_evidence["selection_notes"],
+        },
         "planner_steps": planner_steps or [],
         "deep_trace": deep_trace or [],
         "evidence_bundle": {
@@ -363,6 +385,13 @@ async def _build_response(
             },
             "case_references": selected_cases,
             "book_citations": book_citations,
+            "selected_evidence_cards": selected_evidence["selected_cards"],
+            "evidence_selection": {
+                "required_facets": selected_evidence["required_facets"],
+                "covered_facets": selected_evidence["covered_facets"],
+                "missing_facets": selected_evidence["missing_facets"],
+                "selection_notes": selected_evidence["selection_notes"],
+            },
             "coverage": coverage,
             "generation_diagnostics": generation_diagnostics,
             "planner_steps": planner_steps or [],

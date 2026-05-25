@@ -27,6 +27,7 @@ export type ChatStreamEvent = {
 
 export type AssistantMessageLike = {
   content: string;
+  streamDone?: boolean;
   toolCalls: ToolCall[];
   route?: RouteEvent;
   evidence: EvidenceItem[];
@@ -161,7 +162,15 @@ export function applyChatStreamEvent<T extends AssistantMessageLike>(
   if (event === "done" && !message.content) {
     return {
       ...message,
-      content: String(data.content ?? "")
+      content: String(data.content ?? ""),
+      streamDone: true
+    };
+  }
+
+  if (event === "done") {
+    return {
+      ...message,
+      streamDone: true
     };
   }
 

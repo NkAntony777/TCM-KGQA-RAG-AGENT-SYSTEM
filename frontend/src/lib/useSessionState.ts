@@ -114,6 +114,9 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
               return applyChatStreamEvent(message, streamEvent);
             })
           );
+          if (streamEvent.event === "done") {
+            setIsStreaming(false);
+          }
         }
       }, {
         signal: abortController.signal
@@ -126,12 +129,13 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
       setMessages((prev) =>
         prev.map((item) =>
           item.id === currentAssistantId
-            ? { ...item, content: `请求失败：${message}` }
+            ? { ...item, content: `请求失败：${message}`, streamDone: true }
             : item
         )
       );
     } finally {
-      if (streamAbortRef.current === abortController) {
+      const isCurrentStream = streamAbortRef.current === abortController;
+      if (isCurrentStream) {
         streamAbortRef.current = null;
       }
       if (!mountedRef.current) {
@@ -139,8 +143,10 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
       }
       setIsStreaming(false);
       try {
-        await refreshSessions();
-        await refreshSessionDetails(sessionId);
+        if (isCurrentStream) {
+          await refreshSessions();
+          await refreshSessionDetails(sessionId);
+        }
       } catch (error) {
         console.error("Failed to refresh session after chat stream", error);
       }

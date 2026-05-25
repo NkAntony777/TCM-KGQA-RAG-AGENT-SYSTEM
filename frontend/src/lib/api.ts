@@ -49,6 +49,24 @@ export type EvidenceBundle = {
   factual_evidence?: EvidenceItem[];
   case_references?: EvidenceItem[];
   book_citations?: string[];
+  selected_evidence_cards?: Array<{
+    facet?: string;
+    facet_label?: string;
+    claim?: string;
+    source_label?: string;
+    source_path?: string;
+    source_type?: string;
+    excerpt?: string;
+    score?: number | null;
+    why_selected?: string;
+    used_for_answer?: boolean;
+  }>;
+  evidence_selection?: {
+    required_facets?: string[];
+    covered_facets?: string[];
+    missing_facets?: string[];
+    selection_notes?: string[];
+  };
   coverage?: {
     gaps?: string[];
     factual_count?: number;

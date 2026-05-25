@@ -15,6 +15,7 @@ export type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  streamDone: boolean;
   toolCalls: ToolCall[];
   retrievals: RetrievalResult[];
   route?: RouteEvent;
@@ -85,6 +86,7 @@ export function createMessage(
     id: makeId(),
     role,
     content,
+    streamDone: role !== "assistant",
     toolCalls: [],
     retrievals: [],
     evidence: [],
@@ -102,6 +104,7 @@ export function toUiMessages(history: Awaited<ReturnType<typeof getSessionHistor
   for (const message of history) {
     const nextMessage: Message = {
       ...createMessage(message.role, message.content ?? "", message.qa_mode),
+      streamDone: true,
       toolCalls: message.tool_calls ?? [],
       route: message.route,
       evidence: message.evidence ?? [],

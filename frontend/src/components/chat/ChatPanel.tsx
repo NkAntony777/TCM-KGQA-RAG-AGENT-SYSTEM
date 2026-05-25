@@ -45,10 +45,11 @@ export function ChatPanel() {
             </div>
           )}
 
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <ChatMessage
               content={message.content}
               evidence={message.evidence}
+              isActive={isStreaming && index === messages.length - 1 && message.role === "assistant" && !message.streamDone}
               key={message.id}
               citations={message.citations}
               deepTrace={message.deepTrace}
