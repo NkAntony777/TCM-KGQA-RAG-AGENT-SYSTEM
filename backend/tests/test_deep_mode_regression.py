@@ -7,14 +7,7 @@ from unittest.mock import patch
 from services.qa_service.engine import QAService
 from services.qa_service.prompts import _build_grounded_user_prompt
 from tools.tcm_route_tool import TCMRouteSearchTool
-
-
-class FakeAnswerGenerator:
-    def __init__(self, response: str) -> None:
-        self.response = response
-
-    async def acomplete(self, *, system_prompt: str, user_prompt: str) -> str:
-        return self.response
+from tests.fakes import FakeAnswerGenerator
 
 
 def _large_route_payload() -> dict[str, object]:

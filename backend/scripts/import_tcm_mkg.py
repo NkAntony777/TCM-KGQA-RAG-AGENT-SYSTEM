@@ -8,7 +8,8 @@ from typing import Iterable
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE_ROOT = Path(r"D:\TCM-MKG")
+PROJECT_ROOT = BACKEND_DIR.parent.parent
+DEFAULT_SOURCE_ROOT = PROJECT_ROOT / "TCM-MKG"
 DEFAULT_GRAPH_PATH = BACKEND_DIR / "services" / "graph_service" / "data" / "modern_graph_runtime.jsonl"
 DEFAULT_EVIDENCE_PATH = BACKEND_DIR / "services" / "graph_service" / "data" / "modern_graph_runtime.evidence.jsonl"
 SOURCE_BOOK = "TCM-MKG"

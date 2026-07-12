@@ -7,7 +7,8 @@ from pathlib import Path
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE_ROOT = Path(r"D:\herb2.0")
+PROJECT_ROOT = BACKEND_DIR.parent.parent
+DEFAULT_SOURCE_ROOT = PROJECT_ROOT / "herb2.0"
 DEFAULT_OUTPUT = BACKEND_DIR / "services" / "retrieval_service" / "data" / "herb2_modern_corpus.json"
 DEFAULT_MANIFEST = DEFAULT_OUTPUT.with_suffix(".manifest.json")
 

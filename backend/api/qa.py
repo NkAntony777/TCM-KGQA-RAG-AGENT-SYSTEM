@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from services.app_context import generate_title, require_session_manager
 from services.common.models import success
 from services.qa_service.engine import get_qa_service
+from services.qa_service.exceptions import QueryEmptyError
 
 router = APIRouter()
 
@@ -81,7 +82,7 @@ async def answer_question(
                 title = await generate_title(payload.query)
                 session_manager.set_title(payload.session_id, title)
                 data["session_title"] = title
-    except ValueError as exc:
+    except QueryEmptyError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

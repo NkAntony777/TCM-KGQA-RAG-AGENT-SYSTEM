@@ -7,6 +7,7 @@ from services.qa_service.engine import QAService
 from services.qa_service.evidence_selector import select_evidence_for_answer
 from services.qa_service.models import QAServiceSettings
 from services.qa_service.prompts import _build_grounded_system_prompt, _build_grounded_user_prompt
+from tests.fakes import FakeAnswerGenerator, FakeRouteTool
 
 
 def _make_factual_evidence(count: int) -> list[dict[str, object]]:
@@ -137,24 +138,6 @@ class TestGroundedPromptsFullEvidenceMode(unittest.TestCase):
         self.assertIn("药材-0", prompt)
         self.assertIn("药材-7", prompt)
         self.assertIn("医案-0", prompt)
-
-
-class FakeRouteTool:
-    def __init__(self, payload: dict[str, object]) -> None:
-        self.payload = payload
-
-    def _run(self, query: str, top_k: int = 12):
-        return json.dumps(self.payload, ensure_ascii=False)
-
-
-class FakeAnswerGenerator:
-    def __init__(self, response: str) -> None:
-        self.response = response
-        self.calls: list[dict[str, str]] = []
-
-    async def acomplete(self, *, system_prompt: str, user_prompt: str) -> str:
-        self.calls.append({"system_prompt": system_prompt, "user_prompt": user_prompt})
-        return self.response
 
 
 class TestQAServiceFullEvidenceMode(unittest.IsolatedAsyncioTestCase):
