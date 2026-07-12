@@ -234,11 +234,7 @@ def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2, full_ev
     return lines
 
 
-def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int, selected_evidence: dict[str, Any] | None = None, full_evidence_mode: bool = False) -> str:
-    strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
-    analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
-    include_verbatim_evidence = _query_requests_verbatim_evidence(query)
-    answer_policy = str(strategy.get("answer_policy", "")).strip()
+def _format_query_preamble(*, query: str, mode: AnswerMode, strategy: dict[str, Any], analysis: dict[str, Any], answer_policy: str) -> list[str]:
     lines = [
         f"用户问题：{query}",
         f"执行模式：{mode}",
@@ -251,6 +247,11 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
     compare_entities = strategy.get("compare_entities", analysis.get("compare_entities", []))
     if isinstance(compare_entities, list) and compare_entities:
         lines.append("比较对象：" + "、".join(str(item) for item in compare_entities if str(item).strip()))
+    return lines
+
+
+def _format_answer_dimensions_and_choices(*, query: str) -> list[str]:
+    lines: list[str] = []
     requested_dimensions = _requested_answer_dimensions(query)
     if requested_dimensions:
         lines.append("用户要求保留的回答角度：" + "、".join(requested_dimensions))
@@ -258,10 +259,14 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
     choice_options = _extract_multiple_choice_options(query)
     if len(choice_options) >= 2:
         lines.append("这是带选项的选择题。")
-        lines.append("输出要求：先给简短判断，最后单独一行写“最终选项：X”或“最终选项：AB”。")
+        lines.append('输出要求：先给简短判断，最后单独一行写"最终选项：X"或"最终选项：AB"。')
         lines.append("只允许使用题目中已有的选项字母；若多选，按字母升序连续书写，不要写括号或顿号。")
+    return lines
+
+
+def _format_evidence_cards_block(*, selected_evidence: dict[str, Any] | None, full_evidence_mode: bool, selected_cards: list[dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
     lines.append("事实证据摘要：")
-    selected_cards = selected_evidence.get("selected_cards", []) if isinstance(selected_evidence, dict) else []
     if full_evidence_mode and selected_cards:
         required_facets = selected_evidence.get("required_facets", []) if isinstance(selected_evidence, dict) else []
         if required_facets:
@@ -314,6 +319,11 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
             lines.append(" | ".join(part for part in parts if part))
         if missing_facets:
             lines.append("证据缺口：" + "、".join(str(item) for item in missing_facets if str(item).strip()))
+    return lines
+
+
+def _format_legacy_evidence_groups(*, evidence_groups: dict[str, list[dict[str, Any]]], evidence_limit: int, include_verbatim_evidence: bool, full_evidence_mode: bool, selected_cards: list[dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
     structured_items = evidence_groups.get("structured", []) if isinstance(evidence_groups, dict) else []
     documentary_items = evidence_groups.get("documentary", []) if isinstance(evidence_groups, dict) else []
     other_items = evidence_groups.get("other", []) if isinstance(evidence_groups, dict) else []
@@ -375,6 +385,11 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
                 include_snippet=include_verbatim_evidence,
             )
         )
+    return lines
+
+
+def _format_final_instructions(*, factual_evidence: list[dict[str, Any]], case_references: list[dict[str, Any]], book_citations: list[str], deep_trace: list[dict[str, Any]], notes: list[str], citations: list[str], include_verbatim_evidence: bool, answer_policy: str, mode: AnswerMode, full_evidence_mode: bool) -> list[str]:
+    lines: list[str] = []
     if not factual_evidence:
         lines.append("1. 当前没有事实证据。")
     if case_references:
@@ -401,11 +416,48 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("输出要求：先概括图谱关系结论，再补充对应出处或条文支撑；若用户问出处/原文，必须优先交代书名、篇章或方后注。")
     if mode == "deep" and has_evidence:
         lines.append(
-            "深度模式输出要求：不要只给一句结论。请至少包含“结论”“证据要点”“出处/依据”三部分；"
+            "深度模式输出要求：不要只给一句结论。请至少包含【结论】【证据要点】【出处/依据】三部分；"
             "围绕每条关键证据解释它如何支撑结论，尽量覆盖上面的结构化图谱证据、文献原文证据和补充证据；"
             "除非证据确实不足，回答正文不少于约400字。"
         )
-    lines.append("输出自然中文答案，不复述检索流程，末尾可用“依据：...”列 1 到 3 条来源。")
+    lines.append("输出自然中文答案，不复述检索流程，末尾可用【依据：...】列 1 到 3 条来源。")
+    return lines
+
+
+def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int, selected_evidence: dict[str, Any] | None = None, full_evidence_mode: bool = False) -> str:
+    strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
+    analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
+    include_verbatim_evidence = _query_requests_verbatim_evidence(query)
+    answer_policy = str(strategy.get("answer_policy", "")).strip()
+    selected_cards = selected_evidence.get("selected_cards", []) if isinstance(selected_evidence, dict) else []
+
+    lines = []
+    lines.extend(_format_query_preamble(query=query, mode=mode, strategy=strategy, analysis=analysis, answer_policy=answer_policy))
+    lines.extend(_format_answer_dimensions_and_choices(query=query))
+    lines.extend(_format_evidence_cards_block(selected_evidence=selected_evidence, full_evidence_mode=full_evidence_mode, selected_cards=selected_cards))
+    lines.extend(
+        _format_legacy_evidence_groups(
+            evidence_groups=evidence_groups,
+            evidence_limit=evidence_limit,
+            include_verbatim_evidence=include_verbatim_evidence,
+            full_evidence_mode=full_evidence_mode,
+            selected_cards=selected_cards,
+        )
+    )
+    lines.extend(
+        _format_final_instructions(
+            factual_evidence=factual_evidence,
+            case_references=case_references,
+            book_citations=book_citations,
+            deep_trace=deep_trace,
+            notes=notes,
+            citations=citations,
+            include_verbatim_evidence=include_verbatim_evidence,
+            answer_policy=answer_policy,
+            mode=mode,
+            full_evidence_mode=full_evidence_mode,
+        )
+    )
     return "\n".join(lines)
 
 

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import threading
 from typing import Any, AsyncIterator
 
 from services.common.medical_guard import assess_query
 from services.qa_service.evidence import _factual_evidence_from_payload
+from services.qa_service.exceptions import QAServiceError, QueryEmptyError
 from services.qa_service.evidence import _identify_evidence_gaps
 from services.qa_service.helpers import _guard_refused_result
 from services.qa_service.llm_client import GroundedAnswerLLMClient
@@ -12,15 +14,19 @@ from services.qa_service.deep_flow import stream_deep as _stream_deep_flow
 from services.qa_service.models import AnswerMode, QAServiceSettings, RouteContext
 from services.qa_service.planner import _apply_origin_action_policy, _plan_followup_actions
 from services.qa_service.planner_runtime import generate_followup_plan, resolve_followup_actions
-from services.qa_service.runtime_support import (
-    _build_live_evidence_bundle as _runtime_build_live_evidence_bundle,
-    _build_response as _runtime_build_response,
-    _can_parallelize_actions as _runtime_can_parallelize_actions,
+from services.qa_service.route_loader import (
+    _load_route_payload as _runtime_load_route_payload,
+    _prepare_route_context as _runtime_prepare_route_context,
+)
+from services.qa_service.action_executor import (
     _cache_key as _runtime_cache_key,
     _execute_action as _runtime_execute_action,
     _execute_actions_for_round as _runtime_execute_actions_for_round,
-    _load_route_payload as _runtime_load_route_payload,
-    _prepare_route_context as _runtime_prepare_route_context,
+    _can_parallelize_actions as _runtime_can_parallelize_actions,
+)
+from services.qa_service.response_builder import (
+    _build_response as _runtime_build_response,
+    _build_live_evidence_bundle as _runtime_build_live_evidence_bundle,
 )
 from services.qa_service.skill_registry import get_runtime_skills
 from tools.tcm_evidence_tools import EvidenceNavigator
@@ -75,7 +81,7 @@ class QAService:
             if event.get("type") == "result" and isinstance(event.get("result"), dict):
                 final_result = event["result"]
         if final_result is None:
-            raise RuntimeError("qa_result_missing")
+            raise QAServiceError("qa_result_missing")
         return final_result
 
     async def stream_answer(
@@ -88,7 +94,7 @@ class QAService:
     ) -> AsyncIterator[dict[str, Any]]:
         normalized_query = (query or "").strip()
         if not normalized_query:
-            raise ValueError("query_empty")
+            raise QueryEmptyError("query_empty")
 
         resolved_top_k = max(1, int(top_k or self.settings.default_top_k))
         resolved_full_evidence = self.settings.full_evidence_mode if full_evidence_mode is None else full_evidence_mode
@@ -371,10 +377,13 @@ class QAService:
 
 
 _qa_service: QAService | None = None
+_qa_lock = threading.Lock()
 
 
 def get_qa_service() -> QAService:
     global _qa_service
     if _qa_service is None:
-        _qa_service = QAService()
+        with _qa_lock:
+            if _qa_service is None:
+                _qa_service = QAService()
     return _qa_service

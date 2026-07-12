@@ -3,12 +3,23 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
+from services.qa_service._base_flow import (
+    _assign_initial_evidence,
+    _build_action_meta,
+    _process_action_items,
+    _yield_answer_synthesis_step,
+    _yield_evidence_org_step,
+    _yield_initial_evidence,
+    _yield_qa_mode,
+    _yield_retrieval_step,
+    _yield_route_decision_step,
+    _yield_route_event,
+    _yield_route_search,
+)
 from services.qa_service.evidence import (
     _coverage_gaps_from_state,
     _coverage_summary_from_state,
     _init_coverage_state,
-    _merge_evidence_items,
-    _new_unique_evidence,
     _update_coverage_state,
 )
 from services.qa_service.helpers import (
@@ -35,45 +46,36 @@ async def stream_quick(
     generation_backend_override: str | None = None,
     full_evidence_mode: bool = False,
 ) -> AsyncIterator[dict[str, Any]]:
-    yield {"type": "qa_mode", "mode": result_mode}
+    async for event in _yield_qa_mode(result_mode):
+        yield event
 
-    route_decision_step = _planner_step(stage="route_decision", label="分析查询并选择路由", detail=f"query={query[:60]}")
-    planner_steps = [route_decision_step]
-    yield {"type": "planner_step", "step": route_decision_step}
-    await asyncio.sleep(0)
+    planner_steps: list = []
+    async for event in _yield_route_decision_step(query, planner_steps):
+        yield event
 
     route_context = service._prepare_route_context(query=query, top_k=top_k, include_executed_routes=False)
     payload = route_context.payload
     request_cache: dict[str, dict[str, Any]] = {}
-    route_search_step = _planner_step(stage="route_search", label="执行首轮检索", detail=f"route={payload.get('final_route', payload.get('route', 'unknown'))}")
-    planner_steps.append(route_search_step)
-    yield {"type": "planner_step", "step": route_search_step}
-    yield {"type": "tool_start", "tool": "tcm_route_search", "input": _compact_json({"query": query, "top_k": top_k})}
-    yield {"type": "tool_end", "tool": "tcm_route_search", "output": _compact_json(route_context.route_meta), "meta": route_context.route_meta}
 
-    if route_context.route_event:
-        yield {"type": "route", **route_context.route_event}
-    await asyncio.sleep(0)
+    async for event in _yield_route_search(query, top_k, route_context, planner_steps):
+        yield event
 
-    retrieval_step = _planner_step(stage="retrieval", label="执行文件优先检索", detail="图谱 / FFSR / 病例索引 / 补召回")
-    planner_steps.append(retrieval_step)
-    yield {"type": "planner_step", "step": retrieval_step}
-    await asyncio.sleep(0)
+    async for event in _yield_route_event(route_context):
+        yield event
+
+    async for event in _yield_retrieval_step(planner_steps):
+        yield event
 
     tool_trace = [{"tool": "tcm_route_search", "meta": route_context.route_meta}]
     notes = list(notes_prefix or [])
     evidence_paths = list(payload.get("evidence_paths", [])) if isinstance(payload.get("evidence_paths"), list) else []
-    factual_evidence = route_context.factual_evidence
-    case_references = route_context.case_references
-    initial_items = factual_evidence + case_references
-    if initial_items:
-        yield {"type": "evidence", "items": initial_items}
-        await asyncio.sleep(0)
+    factual_evidence, case_references, initial_items = _assign_initial_evidence(route_context)
 
-    evidence_org_step = _planner_step(stage="evidence_organization", label="整理证据与覆盖分析", detail=f"factual={len(factual_evidence)}; cases={len(case_references)}")
-    planner_steps.append(evidence_org_step)
-    yield {"type": "planner_step", "step": evidence_org_step}
-    await asyncio.sleep(0)
+    async for event in _yield_initial_evidence(initial_items):
+        yield event
+
+    async for event in _yield_evidence_org_step(planner_steps, factual_evidence, case_references):
+        yield event
 
     coverage_state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
     _update_coverage_state(
@@ -135,48 +137,25 @@ async def stream_quick(
             action_batch_results = await service._execute_actions_for_round(actions=actions, request_cache=request_cache)
             for action, result in action_batch_results:
                 tool_name = str(action.get("tool", "followup"))
-                action_status = str(result.get("status", "ok") or "ok")
-                meta = {
-                    "status": action_status,
-                    "count": result.get("count", 0),
-                    "reason": action.get("reason", ""),
-                    "path": action.get("path"),
-                    "query": action.get("query"),
-                    "skill": action.get("skill"),
-                    "cache_hit": bool(result.get("cache_hit")),
-                }
+                meta = _build_action_meta(action, result)
                 yield {"type": "tool_end", "tool": tool_name, "output": _compact_json(meta), "meta": meta}
                 tool_trace.append({"tool": tool_name, "meta": meta})
                 items = result.get("items", []) if isinstance(result.get("items"), list) else []
                 if not items:
                     continue
-                new_factual = [item for item in items if str(item.get("evidence_type", "")).strip() != "case_reference"]
-                new_cases = [item for item in items if str(item.get("evidence_type", "")).strip() == "case_reference"]
-                added_factual = _new_unique_evidence(primary=new_factual, existing=factual_evidence) if new_factual else []
-                added_cases = _new_unique_evidence(primary=new_cases, existing=case_references) if new_cases else []
-                if added_factual:
-                    factual_evidence = _merge_evidence_items(primary=new_factual, fallback=factual_evidence)
-                if added_cases:
-                    case_references = _merge_evidence_items(primary=new_cases, fallback=case_references)
-                _update_coverage_state(
-                    coverage_state,
-                    new_factual_evidence=added_factual,
-                    new_case_references=added_cases,
+                factual_evidence, case_references, merged_new_items = _process_action_items(
+                    items, factual_evidence, case_references, coverage_state,
                 )
-                merged_new_items = added_factual + added_cases
                 if merged_new_items:
                     yield {"type": "evidence", "items": merged_new_items}
             remaining_gaps = _coverage_gaps_from_state(coverage_state)
             if remaining_gaps:
                 notes.append(f"quick_followup_remaining_gaps:{','.join(remaining_gaps)}")
 
-    answer_step = _planner_step(stage="answer_synthesis", label="生成最终答案", detail="quick_grounded_answer")
-    planner_steps.append(answer_step)
-    yield {"type": "planner_step", "step": answer_step}
+    async for event in _yield_answer_synthesis_step(planner_steps, detail="quick_grounded_answer"):
+        yield event
     await asyncio.sleep(0)
 
-    # Emit a live evidence bundle before the blocking LLM call so the frontend
-    # can mark retrieval/coverage stages as completed before answer generation.
     live_coverage_summary = _coverage_summary_from_state(coverage_state)
     yield {
         "type": "evidence_bundle",

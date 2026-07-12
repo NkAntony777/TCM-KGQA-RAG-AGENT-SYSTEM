@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import httpx
 
 from config import Settings, get_settings
+from services.qa_service.exceptions import LLMAuthError, LLMGenerationError
 
 
 @dataclass
@@ -15,7 +16,7 @@ class GroundedAnswerLLMClient:
     async def acomplete(self, *, system_prompt: str, user_prompt: str) -> str:
         settings = self.settings or get_settings()
         if not settings.llm_api_key:
-            raise RuntimeError("llm_api_key_missing")
+            raise LLMAuthError("llm_api_key_missing")
 
         url = f"{settings.llm_base_url.rstrip('/')}/chat/completions"
         payload = {
@@ -39,7 +40,7 @@ class GroundedAnswerLLMClient:
 
         choices = body.get("choices", [])
         if not choices:
-            raise RuntimeError("llm_empty_choices")
+            raise LLMGenerationError("llm_empty_choices")
 
         message = choices[0].get("message", {})
         content = message.get("content", "")

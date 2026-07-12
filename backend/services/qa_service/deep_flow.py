@@ -3,18 +3,29 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
+from services.qa_service._base_flow import (
+    _assign_initial_evidence,
+    _build_action_meta,
+    _process_action_items,
+    _yield_answer_synthesis_step,
+    _yield_evidence_org_step,
+    _yield_final_results,
+    _yield_initial_evidence,
+    _yield_qa_mode,
+    _yield_retrieval_step,
+    _yield_route_decision_step,
+    _yield_route_event,
+    _yield_route_search,
+)
 from services.qa_service.evidence import (
     _coverage_gaps_from_state,
     _coverage_summary_from_state,
     _deep_quality_gaps_from_state,
     _init_coverage_state,
-    _merge_evidence_items,
-    _new_unique_evidence,
     _update_coverage_state,
 )
 from services.qa_service.helpers import (
     _compact_json,
-    _finalize_result,
     _planner_step,
     _planner_step_for_action,
     _tool_input_for_action,
@@ -34,13 +45,14 @@ async def stream_deep(
     guard,
     full_evidence_mode: bool = False,
 ) -> AsyncIterator[dict[str, Any]]:
-    yield {"type": "qa_mode", "mode": "deep"}
+    async for event in _yield_qa_mode("deep"):
+        yield event
     await asyncio.sleep(0)
     request_cache: dict[str, dict[str, Any]] = {}
 
-    route_decision_step = _planner_step(stage="route_decision", label="分析查询并选择路由", detail=f"query={query[:60]}")
-    yield {"type": "planner_step", "step": route_decision_step}
-    await asyncio.sleep(0)
+    planner_steps: list[dict[str, str]] = []
+    async for event in _yield_route_decision_step(query, planner_steps):
+        yield event
 
     payload = service._load_route_payload(query=query, top_k=top_k)
     if payload.get("notes") == ["route_output_unparseable"]:
@@ -58,38 +70,26 @@ async def stream_deep(
         return
 
     route_context = service._prepare_route_context(query=query, top_k=top_k, include_executed_routes=True, payload=payload)
-    planner_steps: list[dict[str, str]] = [route_decision_step]
     deep_trace: list[dict[str, Any]] = []
     notes: list[str] = []
     tool_trace: list[dict[str, Any]] = []
 
-    route_step = _planner_step(stage="route_search", label="执行首轮检索", detail=f"route={route_context.route_meta['final_route']}")
-    planner_steps.append(route_step)
-    yield {"type": "planner_step", "step": route_step}
-    yield {"type": "tool_start", "tool": "tcm_route_search", "input": _compact_json({"query": query, "top_k": top_k})}
-    yield {"type": "tool_end", "tool": "tcm_route_search", "output": _compact_json(route_context.route_meta), "meta": route_context.route_meta}
-    tool_trace.append({"tool": "tcm_route_search", "meta": route_context.route_meta})
+    async for event in _yield_route_search(query, top_k, route_context, planner_steps, tool_trace):
+        yield event
 
-    if route_context.route_event:
-        yield {"type": "route", **route_context.route_event}
-    await asyncio.sleep(0)
+    async for event in _yield_route_event(route_context):
+        yield event
 
-    factual_evidence = route_context.factual_evidence
-    case_references = route_context.case_references
-    initial_items = factual_evidence + case_references
-    if initial_items:
-        yield {"type": "evidence", "items": initial_items}
-        await asyncio.sleep(0)
+    factual_evidence, case_references, initial_items = _assign_initial_evidence(route_context)
 
-    retrieval_step = _planner_step(stage="retrieval", label="执行文件优先检索", detail="图谱 / FFSR / 病例索引 / 补召回")
-    planner_steps.append(retrieval_step)
-    yield {"type": "planner_step", "step": retrieval_step}
-    await asyncio.sleep(0)
+    async for event in _yield_initial_evidence(initial_items):
+        yield event
 
-    evidence_org_step = _planner_step(stage="evidence_organization", label="整理证据与覆盖分析", detail=f"factual={len(factual_evidence)}; cases={len(case_references)}")
-    planner_steps.append(evidence_org_step)
-    yield {"type": "planner_step", "step": evidence_org_step}
-    await asyncio.sleep(0)
+    async for event in _yield_retrieval_step(planner_steps):
+        yield event
+
+    async for event in _yield_evidence_org_step(planner_steps, factual_evidence, case_references):
+        yield event
 
     list_step = _planner_step(stage="inspect_paths", label="整理证据路径", detail="derive_from_route_payload")
     planner_steps.append(list_step)
@@ -171,15 +171,7 @@ async def stream_deep(
             coverage_before = _coverage_summary_from_state(coverage_state)
             tool_name = str(action.get("tool", "followup"))
             action_status = str(result.get("status", "ok") or "ok")
-            meta = {
-                "status": action_status,
-                "count": result.get("count", 0),
-                "reason": action.get("reason", ""),
-                "path": action.get("path"),
-                "query": action.get("query"),
-                "skill": action.get("skill"),
-                "cache_hit": bool(result.get("cache_hit")),
-            }
+            meta = _build_action_meta(action, result)
             yield {"type": "tool_end", "tool": tool_name, "output": _compact_json(meta), "meta": meta}
             tool_trace.append({"tool": tool_name, "meta": meta})
 
@@ -213,24 +205,10 @@ async def stream_deep(
                 yield {"type": "new_response"}
                 continue
 
-            new_factual = [item for item in items if str(item.get("evidence_type", "")).strip() != "case_reference"]
-            new_cases = [item for item in items if str(item.get("evidence_type", "")).strip() == "case_reference"]
-            added_factual: list[dict[str, Any]] = []
-            added_cases: list[dict[str, Any]] = []
-            if new_factual:
-                added_factual = _new_unique_evidence(primary=new_factual, existing=factual_evidence)
-                factual_evidence = _merge_evidence_items(primary=new_factual, fallback=factual_evidence)
-                new_items_this_round += len(added_factual)
-            if new_cases:
-                added_cases = _new_unique_evidence(primary=new_cases, existing=case_references)
-                case_references = _merge_evidence_items(primary=new_cases, fallback=case_references)
-                new_items_this_round += len(added_cases)
-            merged_new_items = added_factual + added_cases
-            _update_coverage_state(
-                coverage_state,
-                new_factual_evidence=added_factual,
-                new_case_references=added_cases,
+            factual_evidence, case_references, merged_new_items = _process_action_items(
+                items, factual_evidence, case_references, coverage_state,
             )
+            new_items_this_round += len(merged_new_items)
             if merged_new_items:
                 yield {"type": "evidence", "items": merged_new_items}
             trace_step = _trace_step(
@@ -283,10 +261,8 @@ async def stream_deep(
         planner_steps.append(stop_step)
         yield {"type": "planner_step", "step": stop_step}
 
-    answer_step = _planner_step(stage="answer_synthesis", label="生成最终答案", detail="deep_grounded_answer")
-    planner_steps.append(answer_step)
-    yield {"type": "new_response"}
-    yield {"type": "planner_step", "step": answer_step}
+    async for event in _yield_answer_synthesis_step(planner_steps, detail="deep_grounded_answer", emit_new_response=True):
+        yield event
 
     result = await service._build_response(
         query=query,
@@ -301,14 +277,5 @@ async def stream_deep(
         deep_trace=deep_trace,
         full_evidence_mode=full_evidence_mode,
     )
-    result = _finalize_result(result=result, guard=guard)
-
-    if result.get("notes"):
-        yield {"type": "notes", "items": result["notes"]}
-    if result.get("citations"):
-        yield {"type": "citations", "items": result["citations"]}
-    if result.get("evidence_bundle"):
-        yield {"type": "evidence_bundle", "bundle": result["evidence_bundle"]}
-    yield {"type": "token", "content": result["answer"]}
-    yield {"type": "done", "content": result["answer"]}
-    yield {"type": "result", "result": result}
+    async for event in _yield_final_results(result, guard):
+        yield event
