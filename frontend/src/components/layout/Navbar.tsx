@@ -6,7 +6,8 @@ import dynamic from "next/dynamic";
 import { Database, FileStack, Network, Plus, Sparkles, Wrench, X } from "lucide-react";
 
 import type { GraphVizPayload } from "@/lib/api";
-import { useAppStore } from "@/lib/store";
+import { useSessionContext } from "@/lib/SessionContext";
+import { useLayoutContext } from "@/lib/LayoutContext";
 
 const KnowledgeGraphPanel = dynamic(
   () => import("@/components/chat/KnowledgeGraphPanel").then((module) => module.KnowledgeGraphPanel),
@@ -26,13 +27,12 @@ export function Navbar() {
   const [graphMeta, setGraphMeta] = useState<GraphVizPayload["meta"] | null>(null);
   const {
     createNewSession,
-    ragMode,
-    toggleRagMode,
     compressCurrentSession,
     renameCurrentSession,
     sessions,
     currentSessionId
-  } = useAppStore();
+  } = useSessionContext();
+  const { ragMode, toggleRagMode } = useLayoutContext();
 
   const currentTitle =
     sessions.find((session) => session.id === currentSessionId)?.title ?? "新会话";

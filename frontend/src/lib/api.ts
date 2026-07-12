@@ -1,4 +1,6 @@
+import { z } from "zod";
 import type { ChatStreamEvent, ChatStreamEventName } from "@/lib/chatEvents";
+import { SseEventSchema, ChatResponseSchema } from "./apiSchemas";
 
 export type ToolCall = {
   tool: string;
@@ -240,7 +242,22 @@ function createJsonRequest(init?: RequestInit): RequestInit {
   };
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+function logValidationError(context: string, issues: z.ZodIssue[]) {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[api] Validation failed (${context}):`, issues);
+  }
+}
+
+function validateSchema<T>(schema: z.ZodType<T>, data: unknown, context: string): data is T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    logValidationError(context, result.error.issues);
+    return false;
+  }
+  return true;
+}
+
+async function request<T>(path: string, init?: RequestInit, schema?: z.ZodType<T>): Promise<T> {
   const response = await fetch(`${getApiBase()}${path}`, createJsonRequest(init));
 
   if (!response.ok) {
@@ -248,7 +265,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(text || `Request failed: ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const data = (await response.json()) as T;
+
+  if (schema) {
+    validateSchema(schema, data, `request ${path}`);
+  }
+
+  return data;
 }
 
 function parseSseBlock(block: string): ChatStreamEvent | null {
@@ -269,10 +292,14 @@ function parseSseBlock(block: string): ChatStreamEvent | null {
     return null;
   }
 
-  return {
+  const result = {
     event,
     data: parseSseJson(dataLines.join("\n"), event)
   };
+
+  validateSchema(SseEventSchema, result, "parseSseBlock");
+
+  return result;
 }
 
 function parseSseJson(payload: string, event: ChatStreamEventName): Record<string, unknown> {

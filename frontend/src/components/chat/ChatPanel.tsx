@@ -4,10 +4,12 @@ import { useEffect, useRef } from "react";
 
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { useAppStore } from "@/lib/store";
+import { useSessionContext } from "@/lib/SessionContext";
+import { useLayoutContext } from "@/lib/LayoutContext";
 
 export function ChatPanel() {
-  const { messages, sendMessage, isStreaming, tokenStats, qaMode, setQaMode, fullEvidenceMode, setFullEvidenceMode, skills } = useAppStore();
+  const { messages, sendMessage, isStreaming, tokenStats } = useSessionContext();
+  const { qaMode, setQaMode, fullEvidenceMode, setFullEvidenceMode, skills } = useLayoutContext();
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

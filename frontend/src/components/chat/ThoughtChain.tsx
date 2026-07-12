@@ -3,48 +3,9 @@
 import { Activity, TerminalSquare } from "lucide-react";
 
 import type { DeepTraceStep, EvidenceBundle, PlannerStep, SkillMeta, ToolCall } from "@/lib/api";
-
-const TOOL_SUMMARIES: Record<
-  string,
-  Array<{ key: string; label: string }>
-> = {
-  tcm_route_search: [
-    { key: "query", label: "query" },
-    { key: "top_k", label: "top_k" }
-  ],
-  tcm_hybrid_search: [
-    { key: "query", label: "query" },
-    { key: "top_k", label: "top_k" },
-    { key: "candidate_k", label: "candidate_k" }
-  ],
-  tcm_entity_lookup: [
-    { key: "name", label: "name" },
-    { key: "top_k", label: "top_k" }
-  ],
-  tcm_path_query: [
-    { key: "start", label: "start" },
-    { key: "end", label: "end" },
-    { key: "max_hops", label: "max_hops" }
-  ],
-  tcm_syndrome_chain: [
-    { key: "symptom", label: "symptom" },
-    { key: "top_k", label: "top_k" }
-  ]
-};
-
-function summarizeInput(toolCall: ToolCall) {
-  try {
-    const parsed = JSON.parse(toolCall.input);
-    const fields = TOOL_SUMMARIES[toolCall.tool];
-    if (fields) {
-      return fields.map(({ key, label }) => `${label}: ${parsed[key] ?? "n/a"}`).join(" / ");
-    }
-  } catch {
-    return toolCall.input;
-  }
-
-  return toolCall.input;
-}
+import { CoverageCard } from "@/components/chat/CoverageCard";
+import { NotesCard } from "@/components/chat/NotesCard";
+import { ToolCallCard } from "@/components/chat/ToolCallCard";
 
 function InfoSection({ title, items }: { title: string; items: string[] }) {
   if (!items.length) {
@@ -84,59 +45,6 @@ function SkillDetails({ step, skill }: { step: PlannerStep; skill?: SkillMeta })
         {!!stopRules.length && <div>stop: {stopRules[0]}</div>}
       </div>
     </details>
-  );
-}
-
-function CoverageCard({ bundle }: { bundle?: EvidenceBundle }) {
-  const coverage = bundle?.coverage;
-  if (!bundle || !coverage) {
-    return null;
-  }
-
-  const gaps = Array.isArray(coverage.gaps) ? coverage.gaps.map((item) => String(item)) : [];
-  const selectedCards = bundle.selected_evidence_cards ?? [];
-  const selection = bundle.evidence_selection;
-
-  return (
-    <div className="rounded-2xl bg-white/70 p-3 text-xs">
-      <div className="mb-2 font-medium text-[var(--color-ink-soft)]">Coverage</div>
-      <div className="grid gap-2 md:grid-cols-2">
-        <div className="rounded-2xl bg-[rgba(13,37,48,0.06)] p-3">
-          <div>factual_count: {coverage.factual_count ?? 0}</div>
-          <div>case_count: {coverage.case_count ?? 0}</div>
-          <div>evidence_path_count: {coverage.evidence_path_count ?? 0}</div>
-          <div>sufficient: {coverage.sufficient ? "yes" : "no"}</div>
-        </div>
-        <div className="rounded-2xl bg-[rgba(13,37,48,0.06)] p-3">
-          <div className="mb-1 font-medium text-[var(--color-ink-soft)]">Remaining Gaps</div>
-          <div>{gaps.length ? gaps.join(" / ") : "none"}</div>
-        </div>
-      </div>
-      {!!selectedCards.length && (
-        <div className="mt-2 rounded-2xl bg-[rgba(15,139,141,0.08)] p-3">
-          <div className="mb-2 font-medium text-[var(--color-ink)]">
-            Selected Evidence · {selectedCards.length}
-          </div>
-          {selection?.missing_facets?.length ? (
-            <div className="mb-2 text-[var(--color-ember)]">
-              missing: {selection.missing_facets.join(" / ")}
-            </div>
-          ) : null}
-          <div className="space-y-2">
-            {selectedCards.slice(0, 6).map((card, index) => (
-              <div className="rounded-2xl bg-white/75 p-2" key={`${card.facet}-${card.claim}-${index}`}>
-                <div className="font-medium text-[var(--color-ink)]">
-                  {card.facet_label ?? card.facet ?? "evidence"} · {card.claim ?? ""}
-                </div>
-                <div className="mt-1 text-[var(--color-ink-soft)]">
-                  {card.source_label ?? "unknown"}{card.why_selected ? ` · ${card.why_selected}` : ""}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -253,35 +161,10 @@ export function ThoughtChain({
         )}
         <DeepTraceCard steps={safeDeepTrace} />
         <CoverageCard bundle={evidenceBundle} />
-        <InfoSection title="Notes" items={safeNotes} />
+        <NotesCard items={safeNotes} />
         <InfoSection title="Citations" items={safeCitations} />
         {safeToolCalls.map((toolCall, index) => (
-          <div className="rounded-2xl bg-white/70 p-3" key={`${toolCall.tool}-${index}`}>
-            <div className="mb-2 text-sm font-medium">{toolCall.tool}</div>
-            {toolCall.meta && (
-              <div className="mb-2 rounded-2xl bg-[rgba(13,37,48,0.06)] p-3 text-xs">
-                <div className="mb-1 font-medium text-[var(--color-ink-soft)]">Meta</div>
-                <div>backend: {toolCall.meta.backend ?? "n/a"}</div>
-                <div>trace_id: {toolCall.meta.trace_id ?? "n/a"}</div>
-                {toolCall.meta.status && <div>status: {toolCall.meta.status}</div>}
-                {toolCall.meta.final_route && <div>final_route: {toolCall.meta.final_route}</div>}
-                {toolCall.meta.reason && <div>reason: {toolCall.meta.reason}</div>}
-                {toolCall.meta.path && <div>path: {toolCall.meta.path}</div>}
-                {toolCall.meta.query && <div>query: {toolCall.meta.query}</div>}
-                {typeof toolCall.meta.count === "number" && <div>count: {toolCall.meta.count}</div>}
-                {toolCall.meta.warning && <div>warning: {toolCall.meta.warning}</div>}
-              </div>
-            )}
-            <div className="space-y-2 text-xs">
-              <div className="rounded-2xl bg-[rgba(13,37,48,0.06)] p-3">
-                <div className="mb-1 font-medium text-[var(--color-ink-soft)]">Summary</div>
-                <div className="mono whitespace-pre-wrap">{summarizeInput(toolCall)}</div>
-                <div className="mt-2 text-[11px] text-[var(--color-ink-soft)]">
-                  原始工具输出已隐藏，证据与路由信息请看上方卡片。
-                </div>
-              </div>
-            </div>
-          </div>
+          <ToolCallCard key={`${toolCall.tool}-${index}`} toolCall={toolCall} />
         ))}
       </div>
     </details>

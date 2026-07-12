@@ -5,10 +5,11 @@ import { InspectorPanel } from "@/components/editor/InspectorPanel";
 import { Navbar } from "@/components/layout/Navbar";
 import { ResizeHandle } from "@/components/layout/ResizeHandle";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { AppProvider, useAppStore } from "@/lib/store";
+import { AppProvider } from "@/lib/store";
+import { useLayoutContext } from "@/lib/LayoutContext";
 
 function Workspace() {
-  const { sidebarWidth, inspectorWidth, setSidebarWidth, setInspectorWidth } = useAppStore();
+  const { sidebarWidth, inspectorWidth, setSidebarWidth, setInspectorWidth } = useLayoutContext();
 
   return (
     <main className="min-h-screen p-4 md:p-6">

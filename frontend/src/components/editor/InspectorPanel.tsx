@@ -6,7 +6,7 @@ import { Eye, Pencil, Save } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { useAppStore } from "@/lib/store";
+import { useInspectorContext } from "@/lib/InspectorContext";
 
 export function InspectorPanel() {
   const [previewMode, setPreviewMode] = useState(true);
@@ -18,7 +18,7 @@ export function InspectorPanel() {
     loadInspectorFile,
     updateInspectorContent,
     saveInspector
-  } = useAppStore();
+  } = useInspectorContext();
 
   return (
     <aside className="panel flex h-full flex-col rounded-[30px] p-4">

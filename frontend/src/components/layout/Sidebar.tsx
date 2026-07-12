@@ -2,7 +2,7 @@
 
 import { MessageSquare, Plus, Trash2 } from "lucide-react";
 
-import { useAppStore } from "@/lib/store";
+import { useSessionContext } from "@/lib/SessionContext";
 
 function preview(text: string) {
   return text.length > 72 ? `${text.slice(0, 72)}...` : text;
@@ -16,7 +16,7 @@ export function Sidebar() {
     createNewSession,
     removeSession,
     messages
-  } = useAppStore();
+  } = useSessionContext();
 
   return (
     <aside className="panel flex h-full flex-col rounded-[30px] p-4">
