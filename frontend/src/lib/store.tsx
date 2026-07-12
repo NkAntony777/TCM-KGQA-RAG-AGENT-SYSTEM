@@ -20,6 +20,7 @@ const StoreContext = createContext<AppStore | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [ragMode, setRagModeState] = useState(false);
   const [qaMode, setQaModeState] = useState<"quick" | "deep">("quick");
+  const [fullEvidenceMode, setFullEvidenceModeState] = useState(false);
   const [skills, setSkills] = useState<SkillMeta[]>([]);
   const [sidebarWidth, setSidebarWidth] = useState(308);
   const [inspectorWidth, setInspectorWidth] = useState(360);
@@ -53,7 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     renameCurrentSession,
     removeSession,
     compressCurrentSession
-  } = useSessionState({ qaMode });
+  } = useSessionState({ qaMode, fullEvidenceMode });
 
   async function toggleRagMode() {
     const next = !ragMode;
@@ -89,6 +90,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isStreaming,
     ragMode,
     qaMode,
+    fullEvidenceMode,
+    setFullEvidenceMode: setFullEvidenceModeState,
     skills,
     editableFiles,
     inspectorPath,

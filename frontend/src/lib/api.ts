@@ -378,6 +378,7 @@ export async function streamChat(
     session_id: string;
     mode: "quick" | "deep";
     top_k?: number;
+    full_evidence_mode?: boolean;
   },
   handlers: StreamHandlers,
   options: StreamChatOptions = {}

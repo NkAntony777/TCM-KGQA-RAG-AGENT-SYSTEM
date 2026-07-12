@@ -14,7 +14,7 @@ import {
 import { applyChatStreamEvent } from "@/lib/chatEvents";
 import { createMessage, type Message, type TokenStats, toUiMessages } from "@/lib/storeModels";
 
-export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
+export function useSessionState({ qaMode, fullEvidenceMode }: { qaMode: "quick" | "deep"; fullEvidenceMode: boolean }) {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -98,7 +98,8 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
         message: trimmedValue,
         session_id: sessionId,
         mode: qaMode,
-        top_k: 12
+        top_k: 12,
+        full_evidence_mode: fullEvidenceMode
       }, {
         onEvent: (streamEvent) => {
           if (streamEvent.event === "new_response") {
@@ -151,7 +152,7 @@ export function useSessionState({ qaMode }: { qaMode: "quick" | "deep" }) {
         console.error("Failed to refresh session after chat stream", error);
       }
     }
-  }, [ensureSession, isStreaming, qaMode, refreshSessionDetails, refreshSessions]);
+  }, [ensureSession, isStreaming, qaMode, fullEvidenceMode, refreshSessionDetails, refreshSessions]);
 
   const renameCurrentSession = useCallback(async (title: string) => {
     if (!currentSessionId || !title.trim()) {

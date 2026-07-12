@@ -7,7 +7,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { useAppStore } from "@/lib/store";
 
 export function ChatPanel() {
-  const { messages, sendMessage, isStreaming, tokenStats, qaMode, setQaMode, skills } = useAppStore();
+  const { messages, sendMessage, isStreaming, tokenStats, qaMode, setQaMode, fullEvidenceMode, setFullEvidenceMode, skills } = useAppStore();
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -68,7 +68,14 @@ export function ChatPanel() {
         </div>
       </div>
 
-      <ChatInput disabled={isStreaming} mode={qaMode} onModeChange={setQaMode} onSend={sendMessage} />
+      <ChatInput
+        disabled={isStreaming}
+        mode={qaMode}
+        onModeChange={setQaMode}
+        fullEvidenceMode={fullEvidenceMode}
+        onFullEvidenceModeChange={setFullEvidenceMode}
+        onSend={sendMessage}
+      />
     </section>
   );
 }

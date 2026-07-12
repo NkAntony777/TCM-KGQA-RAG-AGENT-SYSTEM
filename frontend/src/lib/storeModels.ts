@@ -26,6 +26,7 @@ export type Message = {
   notes: string[];
   citations: string[];
   qaMode?: "quick" | "deep";
+  fullEvidenceMode?: boolean;
 };
 
 export type TokenStats = {
@@ -41,6 +42,8 @@ export type AppStore = {
   isStreaming: boolean;
   ragMode: boolean;
   qaMode: "quick" | "deep";
+  fullEvidenceMode: boolean;
+  setFullEvidenceMode: (enabled: boolean) => void;
   skills: SkillMeta[];
   editableFiles: string[];
   inspectorPath: string;

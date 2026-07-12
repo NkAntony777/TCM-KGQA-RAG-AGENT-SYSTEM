@@ -23,6 +23,23 @@ function evidenceSummary(bundle?: EvidenceBundle) {
   return `${factual} 条事实 / ${paths} 条路径 / ${gaps} 个缺口`;
 }
 
+// Maps a backend planner_step.stage to the 0-based timeline step index.
+// This makes the progress bar follow the actual sub-stage instead of guessing
+// from event presence.
+const STAGE_TO_STEP_INDEX: Record<string, number> = {
+  route_decision: 1,
+  route_search: 1,
+  retrieval: 2,
+  gap_check: 2,
+  inspect_paths: 2,
+  quick_followup: 2,
+  planner: 2,
+  evidence_organization: 3,
+  coverage_ok: 3,
+  stop: 3,
+  answer_synthesis: 4,
+};
+
 export function AnswerTraceTimeline({
   route,
   plannerSteps,
@@ -103,11 +120,21 @@ export function AnswerTraceTimeline({
     ];
   }, [deepTrace.length, evidenceBundle, hasAnswerStep, hasEvidenceBundle, hasPlanner, hasRoute, hasDeepTrace, isActive, isDeep, plannerSteps.length, route]);
 
+  // Prefer the backend-reported current stage; fall back to deriving it from
+  // completed-event heuristics.
+  const stageDrivenIndex = useMemo(() => {
+    if (!isActive) return -1;
+    const stage = latestPlannerStep?.stage;
+    if (stage && stage in STAGE_TO_STEP_INDEX) return STAGE_TO_STEP_INDEX[stage];
+    return -1;
+  }, [isActive, latestPlannerStep]);
+
   if (!isActive && !route && !plannerSteps.length && !deepTrace.length && !evidenceBundle) {
     return null;
   }
 
-  const runningIndex = steps.findIndex((step) => step.status === "running");
+  const heuristicRunningIndex = steps.findIndex((step) => step.status === "running");
+  const runningIndex = stageDrivenIndex >= 0 ? stageDrivenIndex : heuristicRunningIndex;
   const doneCount = steps.filter((step) => step.status === "done").length;
   const progress = Math.min(100, Math.max(12, Math.round(((doneCount + (runningIndex >= 0 ? 0.55 : 0)) / steps.length) * 100)));
   const currentStep = runningIndex >= 0 ? steps[runningIndex] : steps[Math.min(doneCount, steps.length - 1)];
@@ -166,7 +193,9 @@ export function AnswerTraceTimeline({
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isDone = step.status === "done";
-          const isRunning = step.status === "running";
+          // Allow the backend-reported stage to override a step's visual state
+          // even if heuristic completion detection already marked it done.
+          const isRunning = step.status === "running" || (isActive && index === runningIndex);
           return (
             <div
               className={`rounded-2xl border p-3 ${
