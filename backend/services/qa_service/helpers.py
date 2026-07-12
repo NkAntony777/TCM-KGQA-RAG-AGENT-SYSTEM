@@ -6,11 +6,11 @@ from typing import Any
 from services.common.medical_guard import append_disclaimer
 from services.qa_service.models import AnswerMode
 
-def _safe_json_loads(text: str) -> Any:
+def _safe_json_loads(text: str, default: Any = None) -> Any:
     try:
         return json.loads(text)
     except Exception:
-        return None
+        return default
 
 
 def _extract_json_object(text: str) -> dict[str, Any] | None:

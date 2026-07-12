@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from services.retrieval_service.case_qa_search_service import CaseQASearchService
-from services.retrieval_service.files_first_search_service import FilesFirstSearchService
 from services.retrieval_service.query_rewrite_service import QueryRewriteService
+from services.retrieval_service.search_runtime import search_hybrid as run_search_hybrid
 from services.retrieval_service.section_read_service import SectionReadService
 
 
@@ -18,7 +18,6 @@ class RetrievalQueryService:
 
     def __init__(self, engine: Any) -> None:
         self.engine = engine
-        self.files_first = FilesFirstSearchService(engine)
         self.case_qa = CaseQASearchService(engine)
         self.sections = SectionReadService(engine)
         self.rewrite = QueryRewriteService(engine)
@@ -33,7 +32,8 @@ class RetrievalQueryService:
         allowed_file_path_prefixes: list[str] | None = None,
         search_mode: str = "files_first",
     ) -> dict[str, Any]:
-        return self.files_first.search_hybrid(
+        return run_search_hybrid(
+            self.engine,
             query,
             top_k=top_k,
             candidate_k=candidate_k,

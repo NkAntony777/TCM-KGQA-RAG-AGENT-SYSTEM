@@ -6,7 +6,7 @@ import json
 import sqlite3
 from typing import Any
 
-from services.retrieval_service import files_first_methods as ffm
+from services.retrieval_service import files_first_query_terms as fft
 
 
 def gather_metadata_candidates(
@@ -48,9 +48,9 @@ def gather_metadata_candidates(
         candidate_groups.append(normalized)
 
     conn.row_factory = sqlite3.Row
-    for book in ffm._db_books_in_query(conn, query=query, focus_entities=focus_entities, limit=max(8, limit // 2)):
+    for book in fft._db_books_in_query(conn, query=query, focus_entities=focus_entities, limit=max(8, limit // 2)):
         push_book(book)
-    if ffm._is_probable_herb_property_query(query=query, focus_entities=focus_entities, flags=flags, books_in_query=books_in_query):
+    if fft._is_probable_herb_property_query(query=query, focus_entities=focus_entities, flags=flags, books_in_query=books_in_query):
         rows = conn.execute(
             """
             SELECT book_name
@@ -118,7 +118,7 @@ def gather_metadata_candidates(
                 children = []
             for item in children[:24]:
                 push_section(str(item))
-        if ffm._is_probable_herb_property_query(query=query, focus_entities=focus_entities, flags=flags, books_in_query=books_in_query):
+        if fft._is_probable_herb_property_query(query=query, focus_entities=focus_entities, flags=flags, books_in_query=books_in_query):
             rows = conn.execute(
                 """
                 SELECT DISTINCT section_key, book_name
@@ -163,7 +163,7 @@ def gather_metadata_candidates(
         book_filter_sql = f" AND book_name IN ({placeholders})"
     for term in direct_terms[:10]:
         normalized = str(term or "").strip()
-        if len(normalized) < 2 or ffm._is_noisy_term(normalized):
+        if len(normalized) < 2 or fft._is_noisy_term(normalized):
             continue
         params: list[Any] = []
         params.extend(book_filter_values)

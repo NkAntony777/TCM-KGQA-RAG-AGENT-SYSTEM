@@ -8,8 +8,10 @@ from typing import Any, Callable, Protocol
 from services.retrieval_service import files_first_fts_queries
 from services.retrieval_service import files_first_metadata
 from services.retrieval_service import files_first_metadata_candidates
-from services.retrieval_service import files_first_methods as ffm
+from services.retrieval_service import files_first_query_builder as ffb
+from services.retrieval_service import files_first_query_terms as fft
 from services.retrieval_service import files_first_ranking
+from services.retrieval_service import files_first_scoring
 from services.retrieval_service import files_first_search_plan
 from services.retrieval_service import files_first_seed_queries
 
@@ -30,11 +32,11 @@ def search(
     top_k: int,
     candidate_k: int,
     leaf_level: int,
-    build_sqlite_in_clause: Callable[..., tuple[str, tuple[Any, ...]]] = ffm._build_sqlite_in_clause,
-    is_noisy_term: Callable[[str], bool] = ffm._is_noisy_term,
-    compact_phrase: Callable[[str], str] = ffm._compact_phrase,
+    build_sqlite_in_clause: Callable[..., tuple[str, tuple[Any, ...]]] = ffb._build_sqlite_in_clause,
+    is_noisy_term: Callable[[str], bool] = fft._is_noisy_term,
+    compact_phrase: Callable[[str], str] = fft._compact_phrase,
     normalize_section_file_path: Callable[[str], str] = files_first_metadata.normalize_section_file_path,
-    field_overlap_multiplier: Callable[..., float] = ffm._field_overlap_multiplier,
+    field_overlap_multiplier: Callable[..., float] = files_first_scoring._field_overlap_multiplier,
 ) -> tuple[list[dict[str, Any]], str]:
     context.ensure_schema()
     if not context.store_path.exists():

@@ -5,7 +5,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Callable
 
-from services.retrieval_service import files_first_metadata
+from services.retrieval_service import files_first_build_rows
 
 FILES_FIRST_SCHEMA_VERSION = 5
 REQUIRED_DOC_COLUMNS = {
@@ -143,61 +143,6 @@ def _initialize_legacy_migration_tables(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS book_outlines_fts USING fts5(book_name UNINDEXED, search_text)")
 
 
-def _legacy_doc_payload(
-    row: dict[str, Any],
-    *,
-    tokenizer: Any,
-    resolve_section_metadata: ResolveSectionMetadataFn,
-) -> tuple[tuple[str, str, str, str, str, str, str], tuple[str, str, str, str, str, str, str, str, str, str]] | None:
-    chunk_id = str(row.get("chunk_id", "")).strip()
-    if not chunk_id:
-        return None
-    text = str(row.get("text", "") or "")
-    filename = str(row.get("filename", "") or "")
-    file_path = str(row.get("file_path", "") or "")
-    page_number = int(row.get("page_number", 0) or 0)
-    book_name = str(row.get("book_name", "")).strip() or files_first_metadata.extract_book_name(
-        text=text,
-        filename=filename,
-        file_path=file_path,
-    )
-    chapter_title = str(row.get("chapter_title", "")).strip() or files_first_metadata.extract_chapter_title(
-        text=text,
-        page_number=page_number,
-        file_path=file_path,
-    )
-    section_key = str(row.get("section_key", "")).strip() or files_first_metadata.build_section_key(
-        book_name=book_name,
-        chapter_title=chapter_title,
-        page_number=page_number,
-        file_path=file_path,
-    )
-    metadata = resolve_section_metadata(
-        section_key=section_key or chunk_id,
-        book_name=book_name,
-        chapter_title=chapter_title,
-        section_text=text,
-    )
-    topic_tags_text = " ".join(metadata["topic_tags"])
-    entity_tags_text = " ".join(metadata["entity_tags"])
-    search_basis = " ".join([book_name, chapter_title, filename, file_path, topic_tags_text, entity_tags_text, metadata["section_summary"], text])
-    return (
-        (book_name, chapter_title, section_key, metadata["section_summary"], topic_tags_text, entity_tags_text, chunk_id),
-        (
-            chunk_id,
-            " ".join(tokenizer.tokenize(search_basis)),
-            book_name,
-            chapter_title,
-            text,
-            filename,
-            file_path,
-            metadata["section_summary"],
-            topic_tags_text,
-            entity_tags_text,
-        ),
-    )
-
-
 def migrate_legacy_schema_in_place(
     path: Path,
     rows: list[dict[str, Any]],
@@ -208,26 +153,23 @@ def migrate_legacy_schema_in_place(
 ) -> None:
     with closing(sqlite3.connect(path)) as conn:
         _initialize_legacy_migration_tables(conn)
+        docs_rows: list[tuple[Any, ...]] = []
         fts_rows: list[tuple[str, str, str, str, str, str, str, str, str, str]] = []
-        update_rows: list[tuple[str, str, str, str, str, str, str]] = []
         for row in rows:
-            payload = _legacy_doc_payload(
+            payload = files_first_build_rows.build_doc_index_rows(
                 row,
                 tokenizer=tokenizer,
                 resolve_section_metadata=resolve_section_metadata,
             )
             if payload is None:
                 continue
-            update_row, fts_row = payload
-            update_rows.append(update_row)
+            docs_row, fts_row = payload
+            docs_rows.append(docs_row)
             fts_rows.append(fts_row)
-        conn.executemany(
-            "UPDATE docs SET book_name=?, chapter_title=?, section_key=?, section_summary=?, topic_tags=?, entity_tags=? WHERE chunk_id=?",
-            update_rows,
-        )
-        conn.executemany(
-            "INSERT INTO docs_fts (chunk_id, search_text, book_name, chapter_title, text, filename, file_path, section_summary, topic_tags, entity_tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            fts_rows,
+        files_first_build_rows.insert_doc_index_rows(
+            conn,
+            docs_rows=docs_rows,
+            fts_rows=fts_rows,
         )
         ensure_post_docs_indexes(conn)
         rebuild_nav_groups(conn)

@@ -1,107 +1,38 @@
+"""Query-term extraction and text normalization for files-first retrieval.
+
+This module owns everything that turns a raw user query into structured
+retrieval signals:
+
+* Query-intent flags and book-detection helpers.
+* Span / clause / subject extractors that pull candidate terms out of
+  Chinese free-form text.
+* Entity-shape predicates and noisy-term filters.
+* Tokenization and token cleanup helpers.
+* The high-level ``_extract_focus_entities`` and ``_prepare_match_terms``
+  pipelines that combine all of the above into ranked retrieval inputs.
+
+It depends only on :mod:`files_first_constants` and the runtime alias
+service.
+"""
+
 from __future__ import annotations
 
-import os
 import re
 import sqlite3
-from typing import Any
 
 from services.qa_service.alias_service import get_runtime_alias_service
-
-BOOK_HINTS = (
-    "黄帝内经",
-    "灵枢",
-    "素问",
-    "伤寒论",
-    "金匮要略",
-    "温病条辨",
-    "医方集解",
-    "医方论",
-    "小儿药证直诀",
-    "本草纲目",
-    "神农本草经",
-    "脾胃论",
-    "临证指南医案",
+from services.retrieval_service.files_first_constants import (
+    BOOK_HINTS,
+    CONCEPT_SUFFIXES,
+    FORMULA_PATTERN,
+    FORMULA_SUFFIXES,
+    FORMULA_VARIANT_PATTERN,
+    HERB_SUFFIXES,
+    INTENT_CUE_TERMS,
+    QUERY_STOP_TERMS,
+    QUERY_STRIP_PATTERNS,
+    _env_flag,
 )
-QUERY_STOP_TERMS = {
-    "什么",
-    "为何",
-    "为什么",
-    "怎么",
-    "如何",
-    "请给",
-    "请从",
-    "请概括",
-    "请解释",
-    "哪本书",
-    "哪部书",
-    "出处",
-    "原文",
-    "片段",
-    "记载",
-    "论述",
-    "条文",
-    "是什么",
-    "一个",
-    "比较",
-    "直接",
-    "引用",
-    "角度",
-    "概括",
-    "四个",
-    "作用",
-    "古籍",
-    "经典",
-    "表述",
-    "记载",
-    "本书",
-}
-QUERY_STRIP_PATTERNS = (
-    "什么叫",
-    "是什么",
-    "为什么",
-    "请给",
-    "请从",
-    "请概括",
-    "请解释",
-    "常参考什么方",
-    "可参考什么方剂",
-    "一个比较适合直接引用的",
-    "比较适合直接引用的",
-    "适合直接引用的",
-    "在方剂中起什么作用",
-    "起什么作用",
-    "适用边界上有什么不同",
-    "在古籍中常见的",
-    "在本草文献中常见的",
-    "在本草文献中的",
-    "四个角度概括",
-    "四个角度",
-    "在古籍中的经典表述",
-    "古籍中的经典表述",
-    "古籍中的",
-    "在古籍中",
-    "古籍记载",
-    "关于",
-    "方后注",
-)
-FORMULA_SUFFIXES = ("汤", "散", "丸", "饮", "膏", "丹", "方", "颗粒", "胶囊")
-HERB_SUFFIXES = ("草", "花", "叶", "根", "子", "仁", "皮", "藤", "术", "芩", "芎", "苓", "黄", "参", "胡")
-CONCEPT_SUFFIXES = ("病", "证", "痹", "痛", "虚", "郁", "热", "寒", "咳", "喘")
-FORMULA_PATTERN = re.compile(r"[\u4e00-\u9fff]{2,16}?(?:汤|散|丸|饮|膏|丹|方|颗粒|胶囊)")
-FORMULA_VARIANT_PATTERN = re.compile(r"^(?:[一二三四五六七八九十两]+味)(?P<tail>[\u4e00-\u9fff]{2,16}?(?:汤|散|丸|饮|膏|丹|方|颗粒|胶囊))$")
-INTENT_CUE_TERMS = {
-    "source_query": ("出处", "出自", "见于", "载于", "原文"),
-    "comparison_query": ("比较", "区别", "异同", "差异"),
-    "property_query": ("功效", "归经", "性味", "主治", "作用", "配伍"),
-    "composition_query": ("组成", "药味", "配伍", "加减"),
-}
-
-
-def _env_flag(name: str, *, default: bool = True) -> bool:
-    value = os.getenv(name)
-    if value is None or not str(value).strip():
-        return default
-    return str(value).strip().lower() not in {"0", "false", "no", "off"}
 
 
 def _query_flags(query: str) -> dict[str, bool]:
@@ -164,7 +95,13 @@ def _db_books_in_query(
     return [*exact_hits[:limit], *partial_hits[: max(0, limit - len(exact_hits))]]
 
 
-def _is_probable_herb_property_query(*, query: str, focus_entities: list[str], flags: dict[str, bool], books_in_query: list[str]) -> bool:
+def _is_probable_herb_property_query(
+    *,
+    query: str,
+    focus_entities: list[str],
+    flags: dict[str, bool],
+    books_in_query: list[str],
+) -> bool:
     if books_in_query:
         return False
     if not flags.get("property_query") and "哪味药" not in str(query or ""):
@@ -420,19 +357,6 @@ def _is_noisy_term(term: str) -> bool:
     return False
 
 
-def _is_front_matter_title(title: str) -> bool:
-    normalized = str(title or "").strip().strip("[]")
-    if not normalized:
-        return False
-    if normalized in {"原序", "序", "凡例", "发凡", "附录", "卷一", "卷二", "卷三", "卷四"}:
-        return True
-    if normalized.startswith("卷"):
-        return True
-    if normalized.endswith(("凡例", "原序", "自序", "总序", "小序")):
-        return True
-    return False
-
-
 def _normalize_formula_match(value: str) -> str:
     normalized = str(value or "").strip().lstrip("和与跟及")
     if "里" in normalized:
@@ -537,152 +461,6 @@ def _tokenized_query_terms(query: str, tokenizer, *, limit: int = 16) -> list[st
         if len(terms) >= limit:
             break
     return terms
-
-
-def _fts_quote(term: str) -> str:
-    return f'"{str(term or "").replace(chr(34), " ").strip()}"'
-
-
-def _join_match_terms(terms: list[str], *, operator: str) -> str:
-    cleaned = [_clean_candidate_term(item) for item in terms]
-    cleaned = [item for item in cleaned if item]
-    if not cleaned:
-        return ""
-    return f" {operator} ".join(_fts_quote(item) for item in cleaned)
-
-
-def _build_match_queries(*, primary_terms: list[str], auxiliary_terms: list[str], fallback_terms: list[str], flags: dict[str, bool]) -> list[str]:
-    queries: list[str] = []
-    primary_or = _join_match_terms(primary_terms[:6], operator="OR")
-    fallback_or = _join_match_terms(fallback_terms[:8], operator="OR")
-    auxiliary_or = _join_match_terms(auxiliary_terms[:4], operator="OR")
-    if len(primary_terms) >= 2 and (flags.get("comparison_query") or flags.get("property_query") or flags.get("composition_query")):
-        exact_and = _join_match_terms(primary_terms[:2], operator="AND")
-        if exact_and:
-            queries.append(exact_and)
-    if len(primary_terms) <= 1 and primary_or and auxiliary_or and (flags.get("source_query") or flags.get("property_query") or flags.get("composition_query")):
-        queries.append(f"({primary_or}) AND ({auxiliary_or})")
-    if primary_or:
-        queries.append(primary_or)
-    fallback_is_auxiliary = bool(fallback_terms) and all(term in auxiliary_terms for term in fallback_terms)
-    if fallback_or and fallback_or not in queries and (not primary_or or not fallback_is_auxiliary):
-        queries.append(fallback_or)
-    deduped: list[str] = []
-    seen: set[str] = set()
-    for item in queries:
-        normalized = str(item or "").strip()
-        if not normalized or normalized in seen:
-            continue
-        seen.add(normalized)
-        deduped.append(normalized)
-    return deduped
-
-
-def _build_sqlite_in_clause(values: list[str], *, alias: str, column: str) -> tuple[str, tuple[Any, ...]]:
-    normalized = [str(item or "").strip() for item in values if str(item or "").strip()]
-    if not normalized:
-        return "", ()
-    placeholders = ",".join("?" for _ in normalized)
-    return f" AND {alias}.{column} IN ({placeholders})", tuple(normalized)
-
-
-def _field_overlap_multiplier(
-    *,
-    row: dict[str, Any],
-    focus_entities: list[str],
-    books_in_query: list[str],
-    query_terms: list[str],
-    flags: dict[str, bool],
-    plan_rank: int,
-) -> float:
-    if not _env_flag("FILES_FIRST_RERANK_BONUS_ENABLED", default=True):
-        return max(1.0, 1.12 - min(max(plan_rank, 0), 4) * 0.04)
-    book_name = str(row.get("book_name", "") or "")
-    chapter_title = str(row.get("chapter_title", "") or "")
-    section_summary = str(row.get("section_summary", "") or "")
-    topic_tags = str(row.get("topic_tags", "") or "")
-    entity_tags = str(row.get("entity_tags", "") or "")
-    snippet = str(row.get("match_snippet", "") or "")
-    text = str(row.get("text", "") or "")
-    direct_clause_hits = int(row.get("_direct_clause_hits", 0) or 0)
-    score = 0.0
-    haystack = " ".join([book_name, chapter_title, section_summary, topic_tags, entity_tags, snippet, text])
-    content_focus = [entity for entity in focus_entities if entity and entity != book_name]
-    front_matter = _is_front_matter_title(chapter_title) or chapter_title == book_name
-
-    for entity in focus_entities:
-        if not entity:
-            continue
-        if entity == chapter_title:
-            score += 5.0
-        elif entity in chapter_title:
-            score += 2.4
-        elif entity in entity_tags:
-            score += 2.1
-        elif entity in book_name:
-            score += 1.8
-        elif entity in section_summary or entity in snippet:
-            score += 1.2
-        elif entity in topic_tags:
-            score += 0.9
-        elif entity in text:
-            score += 0.4
-
-    if books_in_query and any(book in book_name for book in books_in_query):
-        score += 2.5
-    if books_in_query and any(book == book_name for book in books_in_query):
-        score += 3.2
-    if books_in_query and any(book == chapter_title for book in books_in_query):
-        score += 1.8
-
-    if flags.get("comparison_query") and len(focus_entities) >= 2:
-        both_present = sum(1 for entity in focus_entities[:2] if entity and (entity in chapter_title or entity in entity_tags or entity in section_summary or entity in text))
-        if both_present >= 2:
-            score += 2.2
-        elif both_present == 1:
-            score += 0.5
-
-    if any(entity and entity in chapter_title for entity in focus_entities[:3]):
-        if any(marker in chapter_title for marker in ("病脉证治", "证并治", "证治", "方论")):
-            score += 2.2
-        elif chapter_title.endswith(("病", "证", "论")):
-            score += 1.2
-
-    if flags.get("source_query") and any(marker in section_summary or marker in snippet or marker in text for marker in ("出自", "见于", "载于", "原文", "语出", "曰")):
-        score += 1.5
-    if flags.get("source_query") and books_in_query and any(book in haystack for book in books_in_query):
-        score += 2.0
-    if flags.get("source_query") and focus_entities and any(entity in haystack for entity in focus_entities[:2]):
-        score += 1.6
-    if flags.get("property_query") and any(marker in chapter_title or marker in topic_tags or marker in section_summary for marker in ("功效", "归经", "性味", "主治", "作用", "配伍")):
-        score += 1.0
-    if flags.get("property_query") and any(entity and entity == chapter_title for entity in focus_entities):
-        score += 5.0
-    if flags.get("composition_query") and any(marker in chapter_title or marker in topic_tags or marker in section_summary for marker in ("组成", "药味", "配伍", "加减")):
-        score += 1.0
-    if flags.get("composition_query") and any(entity and entity == chapter_title for entity in focus_entities):
-        score += 5.0
-    if flags.get("source_query") and any(entity and entity == chapter_title for entity in focus_entities):
-        score += 5.0
-
-    light_term_hits = sum(1 for term in query_terms[:6] if term and (term in chapter_title or term in section_summary or term in entity_tags))
-    score += min(1.2, light_term_hits * 0.2)
-    if len(focus_entities) >= 2:
-        present = sum(1 for entity in focus_entities[:2] if entity and entity in haystack)
-        if present >= 2:
-            score += 2.0
-    if direct_clause_hits > 0:
-        score += min(4.0, direct_clause_hits * 1.5)
-    if front_matter and content_focus:
-        covered = sum(1 for entity in content_focus[:3] if entity in haystack)
-        if covered == 0:
-            score -= 4.0
-        elif covered == 1:
-            score -= 1.5
-    score += max(0.0, 0.25 * (3 - int(plan_rank or 0)))
-    if str(row.get("file_type", "")) == "SECTION":
-        score += 0.35
-    return 1.0 + min(0.55, score * 0.06)
 
 
 def _split_compare_entities(query: str) -> list[str]:

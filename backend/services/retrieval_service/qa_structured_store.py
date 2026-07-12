@@ -581,7 +581,6 @@ class StructuredQAIndex:
 
     def _build_query_profile(self, query: str) -> QueryProfile:
         normalized = _clean(query)
-        lowered = normalized.lower()
         formula_terms = tuple(dict.fromkeys(FORMULA_PATTERN.findall(normalized)))
 
         segmented = self._segment_text(normalized, include_numeric=True)

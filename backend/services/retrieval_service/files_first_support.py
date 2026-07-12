@@ -8,12 +8,13 @@ from typing import Any, Callable
 
 from services.retrieval_service import files_first_build_state
 from services.retrieval_service import files_first_lifecycle
-from services.retrieval_service import files_first_methods as ffm
 from services.retrieval_service import files_first_metadata
 from services.retrieval_service import files_first_nav_groups
+from services.retrieval_service import files_first_query_terms as fft
 from services.retrieval_service import files_first_rebuild
 from services.retrieval_service import files_first_reader
 from services.retrieval_service import files_first_schema
+from services.retrieval_service import files_first_scoring
 from services.retrieval_service import files_first_search
 from services.retrieval_service import section_response
 from services.retrieval_service.parent_chunk_store import ParentChunkStore
@@ -75,23 +76,23 @@ _build_section_metadata = files_first_metadata.build_section_metadata
 
 # Query planning, candidate generation, and reranking methods are maintained in
 # a dedicated module for easier explanation and safer iteration.
-_query_flags = ffm._query_flags
-_books_in_query = ffm._books_in_query
-_db_books_in_query = ffm._db_books_in_query
-_extract_content_spans = ffm._extract_content_spans
-_leading_subject_terms = ffm._leading_subject_terms
-_strip_query_noise = ffm._strip_query_noise
-_contains_query_scaffolding = ffm._contains_query_scaffolding
-_is_noisy_term = ffm._is_noisy_term
-_is_front_matter_title = ffm._is_front_matter_title
-_normalize_formula_match = ffm._normalize_formula_match
-_collapse_overlapping_terms = ffm._collapse_overlapping_terms
-_sanitize_focus_entities = ffm._sanitize_focus_entities
-_clean_candidate_term = ffm._clean_candidate_term
-_split_compare_entities = ffm._split_compare_entities
-_entity_from_relation_query = ffm._entity_from_relation_query
-_extract_focus_entities = ffm._extract_focus_entities
-_prepare_match_terms = ffm._prepare_match_terms
+_query_flags = fft._query_flags
+_books_in_query = fft._books_in_query
+_db_books_in_query = fft._db_books_in_query
+_extract_content_spans = fft._extract_content_spans
+_leading_subject_terms = fft._leading_subject_terms
+_strip_query_noise = fft._strip_query_noise
+_contains_query_scaffolding = fft._contains_query_scaffolding
+_is_noisy_term = fft._is_noisy_term
+_is_front_matter_title = files_first_scoring._is_front_matter_title
+_normalize_formula_match = fft._normalize_formula_match
+_collapse_overlapping_terms = fft._collapse_overlapping_terms
+_sanitize_focus_entities = fft._sanitize_focus_entities
+_clean_candidate_term = fft._clean_candidate_term
+_split_compare_entities = fft._split_compare_entities
+_entity_from_relation_query = fft._entity_from_relation_query
+_extract_focus_entities = fft._extract_focus_entities
+_prepare_match_terms = fft._prepare_match_terms
 
 
 def normalize_chunk(item: dict[str, Any]) -> dict[str, Any]:

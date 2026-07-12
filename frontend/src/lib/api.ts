@@ -257,7 +257,7 @@ function validateSchema<T>(schema: z.ZodType<T>, data: unknown, context: string)
   return true;
 }
 
-async function request<T>(path: string, init?: RequestInit, schema?: z.ZodType<T>): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit, schema?: z.ZodType<T>): Promise<T> {
   const response = await fetch(`${getApiBase()}${path}`, createJsonRequest(init));
 
   if (!response.ok) {
@@ -274,7 +274,7 @@ async function request<T>(path: string, init?: RequestInit, schema?: z.ZodType<T
   return data;
 }
 
-function parseSseBlock(block: string): ChatStreamEvent | null {
+export function parseSseBlock(block: string): ChatStreamEvent | null {
   const lines = block.replace(/\r\n/g, "\n").split("\n");
   let event: ChatStreamEventName = "token";
   const dataLines: string[] = [];

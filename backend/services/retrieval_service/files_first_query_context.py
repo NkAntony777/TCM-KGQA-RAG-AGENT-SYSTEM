@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.retrieval_service import files_first_methods as ffm
+from services.retrieval_service import files_first_query_terms as fft
 
 
 def merge_query_flags(base_flags: dict[str, bool], query_context: dict[str, Any] | None) -> dict[str, bool]:
@@ -49,9 +49,9 @@ def apply_query_context(
     tokenizer,
     query_context: dict[str, Any] | None,
 ) -> tuple[dict[str, bool], list[str], list[str], str, bool, bool]:
-    base_flags = ffm._query_flags(query)
+    base_flags = fft._query_flags(query)
     flags = merge_query_flags(base_flags, query_context)
-    heuristic_entities = ffm._sanitize_focus_entities(ffm._extract_focus_entities(query, tokenizer))
+    heuristic_entities = fft._sanitize_focus_entities(fft._extract_focus_entities(query, tokenizer))
     llm_entities = [
         str(item).strip()
         for item in (query_context or {}).get("focus_entities", [])
@@ -67,7 +67,7 @@ def apply_query_context(
         seen.add(normalized)
         ordered.append(normalized)
     books_in_query = unique_nonempty_strings(
-        [*[(query_context or {}).get("source_book_hints", [])], ffm._books_in_query(query)]
+        [*[(query_context or {}).get("source_book_hints", [])], fft._books_in_query(query)]
     )
     expanded_query = str((query_context or {}).get("expanded_query", "")).strip()
     weak_anchor = bool((query_context or {}).get("weak_anchor", False))

@@ -6,7 +6,7 @@ from typing import Any
 
 from router.tcm_intent_classifier import analyze_tcm_query
 from services.qa_service.alias_service import get_runtime_alias_service
-from services.retrieval_service.files_first_methods import _query_flags
+from services.retrieval_service.files_first_query_terms import _query_flags
 
 def _maybe_refine_files_first_query(
     self,

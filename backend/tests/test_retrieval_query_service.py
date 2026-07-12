@@ -15,7 +15,7 @@ def test_query_service_search_hybrid_delegates_to_runtime_with_engine() -> None:
     service = RetrievalQueryService(engine)
 
     with patch(
-        "services.retrieval_service.files_first_search_service.run_search_hybrid",
+        "services.retrieval_service.query_service.run_search_hybrid",
         return_value={"retrieval_mode": "files_first", "total": 1},
     ) as runtime:
         result = service.search_hybrid(
@@ -104,21 +104,23 @@ def test_query_service_rewrite_methods_delegate_to_runtime_with_engine() -> None
 def test_query_service_composes_explicit_subservices() -> None:
     engine = FakeEngine()
     service = RetrievalQueryService(engine)
-    service.files_first = Mock()
     service.case_qa = Mock()
     service.sections = Mock()
     service.rewrite = Mock()
-    service.files_first.search_hybrid.return_value = {"mode": "files"}
     service.case_qa.search_case_qa.return_value = {"mode": "case"}
     service.sections.read_section.return_value = {"status": "ok"}
     service.rewrite.rewrite_query.return_value = {"expanded_query": "expanded"}
 
-    assert service.search_hybrid("q", top_k=1, candidate_k=2, enable_rerank=False) == {"mode": "files"}
+    with patch(
+        "services.retrieval_service.query_service.run_search_hybrid",
+        return_value={"mode": "files"},
+    ) as runtime:
+        assert service.search_hybrid("q", top_k=1, candidate_k=2, enable_rerank=False) == {"mode": "files"}
     assert service.search_case_qa("case", top_k=1, candidate_k=2) == {"mode": "case"}
     assert service.read_section("chapter://a/b") == {"status": "ok"}
     assert service.rewrite_query("q") == {"expanded_query": "expanded"}
 
-    service.files_first.search_hybrid.assert_called_once()
+    runtime.assert_called_once()
     service.case_qa.search_case_qa.assert_called_once()
     service.sections.read_section.assert_called_once()
     service.rewrite.rewrite_query.assert_called_once()
