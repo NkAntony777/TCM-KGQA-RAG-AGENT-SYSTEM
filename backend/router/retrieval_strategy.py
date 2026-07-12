@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Literal
 
 from router.compare_entity_refiner import CompareEntityRefiner
 from router.tcm_intent_classifier import GraphQueryKind, QueryAnalysis, RouteName, analyze_tcm_query

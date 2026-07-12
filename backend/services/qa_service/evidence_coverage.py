@@ -578,9 +578,3 @@ def _coverage_summary(*, query: str, payload: dict[str, Any], evidence_paths: li
     state = _init_coverage_state(query=query, payload=payload, evidence_paths=evidence_paths)
     _update_coverage_state(state, new_factual_evidence=factual_evidence, new_case_references=case_references)
     return _coverage_summary_from_state(state)
-    if "composition" in requested_facets and "使用药材" not in predicates:
-        gaps.append("composition")
-    if "efficacy" in requested_facets and not predicates.intersection({"功效", "治法", "归经"}):
-        gaps.append("efficacy")
-    if "indication" in requested_facets and not predicates.intersection({"治疗证候", "治疗症状", "治疗疾病"}):
-        gaps.append("indication")
