@@ -117,8 +117,18 @@ def _ensure_multiple_choice_answer_format(query: str, answer: str) -> str:
         return f"最终选项：{inferred_letters}"
     return f"{normalized_answer}\n\n最终选项：{inferred_letters}"
 
-def _build_grounded_system_prompt(*, mode: AnswerMode) -> str:
+def _build_grounded_system_prompt(*, mode: AnswerMode, full_evidence_mode: bool = False) -> str:
     mode_text = "快速模式" if mode == "quick" else "深度模式"
+    if full_evidence_mode:
+        return (
+            "你是面向用户的中医知识问答助手。"
+            f"当前处于{mode_text}，并启用了全证据模式。"
+            "你将基于后端检索到的完整证据集合回答， prioritize answer quality over brevity."
+            "请充分阅读、交叉比对所有证据，识别一致性与矛盾点；先给出明确结论，再分点引用证据来源。"
+            "涉及出处时必须点出书名、篇章、原文摘录或证据路径；证据不足时要明确说明缺口。"
+            "如果用户要求从若干角度概括或分别说明，必须按这些角度显式分段作答，直接保留对应的小标题或提示词。"
+            "不要输出 JSON、tool 名称或内部流程；不要遗漏关键证据。"
+        )
     return (
         "你是面向用户的中医知识问答助手。"
         f"当前处于{mode_text}。"
@@ -176,12 +186,15 @@ def _grounded_factual_lines(
     items: list[dict[str, Any]],
     limit: int,
     include_snippet: bool,
+    full_evidence_mode: bool = False,
 ) -> list[str]:
     lines: list[str] = []
-    for index, item in enumerate(items[:limit], start=1):
+    effective_limit = len(items) if full_evidence_mode else limit
+    snippet_limit = 10_000 if full_evidence_mode else (120 if include_snippet else 64)
+    for index, item in enumerate(items[:effective_limit], start=1):
         source_type = str(item.get("source_type", "")).strip() or "unknown"
         source_label = _format_source_label(item)
-        claim = _format_claim_text(item, include_snippet=include_snippet, snippet_limit=120 if include_snippet else 64)
+        claim = _format_claim_text(item, include_snippet=include_snippet, snippet_limit=snippet_limit)
         lines.append(f"{index}. [{source_type}] {source_label} | {claim}")
     return lines
 
@@ -192,6 +205,7 @@ def _grounded_group_lines(
     items: list[dict[str, Any]],
     limit: int,
     include_snippet: bool,
+    full_evidence_mode: bool = False,
 ) -> list[str]:
     if not items:
         return [f"{label}：none"]
@@ -201,21 +215,26 @@ def _grounded_group_lines(
             items=items,
             limit=limit,
             include_snippet=include_snippet,
+            full_evidence_mode=full_evidence_mode,
         )
     )
     return lines
 
 
-def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2) -> list[str]:
+def _grounded_case_lines(items: list[dict[str, Any]], *, limit: int = 2, full_evidence_mode: bool = False) -> list[str]:
     lines: list[str] = []
-    for index, item in enumerate(items[:limit], start=1):
+    effective_limit = len(items) if full_evidence_mode else limit
+    for index, item in enumerate(items[:effective_limit], start=1):
         document = str(item.get("document", "")).strip()
         snippet = str(item.get("snippet", "")).strip()
-        lines.append(f"{index}. {document[:60] or 'case'} | {snippet[:80]}")
+        if full_evidence_mode:
+            lines.append(f"{index}. {document or 'case'} | {snippet}")
+        else:
+            lines.append(f"{index}. {document[:60] or 'case'} | {snippet[:80]}")
     return lines
 
 
-def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int, selected_evidence: dict[str, Any] | None = None) -> str:
+def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: AnswerMode, factual_evidence: list[dict[str, Any]], evidence_groups: dict[str, list[dict[str, Any]]], case_references: list[dict[str, Any]], citations: list[str], notes: list[str], book_citations: list[str], deep_trace: list[dict[str, Any]], evidence_limit: int, selected_evidence: dict[str, Any] | None = None, full_evidence_mode: bool = False) -> str:
     strategy = payload.get("retrieval_strategy", {}) if isinstance(payload.get("retrieval_strategy"), dict) else {}
     analysis = payload.get("query_analysis", {}) if isinstance(payload.get("query_analysis"), dict) else {}
     include_verbatim_evidence = _query_requests_verbatim_evidence(query)
@@ -243,7 +262,33 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("只允许使用题目中已有的选项字母；若多选，按字母升序连续书写，不要写括号或顿号。")
     lines.append("事实证据摘要：")
     selected_cards = selected_evidence.get("selected_cards", []) if isinstance(selected_evidence, dict) else []
-    if selected_cards:
+    if full_evidence_mode and selected_cards:
+        required_facets = selected_evidence.get("required_facets", []) if isinstance(selected_evidence, dict) else []
+        if required_facets:
+            lines.append("必须覆盖的证据维度：" + "、".join(str(item) for item in required_facets if str(item).strip()))
+        lines.append(f"完整证据卡（共 {len(selected_cards)} 条）：")
+        for index, card in enumerate(selected_cards, start=1):
+            if not isinstance(card, dict):
+                continue
+            parts = [
+                f"{index}. [{card.get('facet_label', card.get('facet', '证据'))}]",
+                f"claim: {card.get('claim', '')}",
+                f"source: {card.get('source_label', '')}",
+            ]
+            excerpt = str(card.get("excerpt", "") or "").strip()
+            if excerpt:
+                parts.append(f"excerpt: {excerpt}")
+            source_path = str(card.get("source_path", "") or "").strip()
+            if source_path:
+                parts.append(f"path: {source_path}")
+            why_selected = str(card.get("why_selected", "") or "").strip()
+            if why_selected:
+                parts.append(f"why: {why_selected}")
+            lines.append(" | ".join(part for part in parts if part))
+        missing_facets = selected_evidence.get("missing_facets", []) if isinstance(selected_evidence, dict) else []
+        if missing_facets:
+            lines.append("证据缺口：" + "、".join(str(item) for item in missing_facets if str(item).strip()))
+    elif selected_cards:
         required_facets = selected_evidence.get("required_facets", []) if isinstance(selected_evidence, dict) else []
         missing_facets = selected_evidence.get("missing_facets", []) if isinstance(selected_evidence, dict) else []
         if required_facets:
@@ -272,6 +317,37 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
     structured_items = evidence_groups.get("structured", []) if isinstance(evidence_groups, dict) else []
     documentary_items = evidence_groups.get("documentary", []) if isinstance(evidence_groups, dict) else []
     other_items = evidence_groups.get("other", []) if isinstance(evidence_groups, dict) else []
+    if full_evidence_mode and (structured_items or documentary_items or other_items):
+        if structured_items:
+            lines.extend(
+                _grounded_group_lines(
+                    label="结构化图谱证据",
+                    items=structured_items,
+                    limit=min(evidence_limit, 4),
+                    include_snippet=False,
+                    full_evidence_mode=True,
+                )
+            )
+        if documentary_items:
+            lines.extend(
+                _grounded_group_lines(
+                    label="文献原文证据",
+                    items=documentary_items,
+                    limit=min(evidence_limit, 4),
+                    include_snippet=include_verbatim_evidence,
+                    full_evidence_mode=True,
+                )
+            )
+        if other_items:
+            lines.extend(
+                _grounded_group_lines(
+                    label="补充证据",
+                    items=other_items,
+                    limit=max(1, min(evidence_limit, 2)),
+                    include_snippet=include_verbatim_evidence,
+                    full_evidence_mode=True,
+                )
+            )
     if structured_items and not selected_cards:
         lines.extend(
             _grounded_group_lines(
@@ -303,7 +379,7 @@ def _build_grounded_user_prompt(*, query: str, payload: dict[str, Any], mode: An
         lines.append("1. 当前没有事实证据。")
     if case_references:
         lines.append("案例参考：")
-        lines.extend(_grounded_case_lines(case_references))
+        lines.extend(_grounded_case_lines(case_references, full_evidence_mode=full_evidence_mode))
     if book_citations:
         lines.append("权威出处：" + "；".join(book_citations[:4]))
     if deep_trace:

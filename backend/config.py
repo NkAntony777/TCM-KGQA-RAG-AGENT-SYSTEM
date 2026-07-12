@@ -66,6 +66,9 @@ class Settings:
     embedding_base_url: str
     component_char_limit: int = 20_000
     terminal_timeout_seconds: int = 30
+    qa_full_evidence_mode: bool = False
+    qa_max_factual_evidence: int = 6
+    qa_max_case_references: int = 3
 
 
 def _load_env_file() -> Path:
@@ -147,6 +150,25 @@ def _resolve_embedding_base_url(provider: str) -> str:
     )
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = (_first_env(name) or "").strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    if value in ("0", "false", "no", "off"):
+        return False
+    return default
+
+
+def _env_int(name: str, default: int) -> int:
+    value = _first_env(name)
+    if not value:
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     backend_dir = _load_env_file()
@@ -174,6 +196,9 @@ def get_settings() -> Settings:
         embedding_model=_resolve_embedding_model(embedding_provider),
         embedding_api_key=_resolve_embedding_api_key(embedding_provider),
         embedding_base_url=_resolve_embedding_base_url(embedding_provider),
+        qa_full_evidence_mode=_env_bool("QA_FULL_EVIDENCE_MODE", False),
+        qa_max_factual_evidence=_env_int("QA_MAX_FACTUAL_EVIDENCE", 6),
+        qa_max_case_references=_env_int("QA_MAX_CASE_REFERENCES", 3),
     )
 
 

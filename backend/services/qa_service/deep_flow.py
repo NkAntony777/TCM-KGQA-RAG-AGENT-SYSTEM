@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
 from services.qa_service.evidence import (
@@ -31,9 +32,15 @@ async def stream_deep(
     *,
     top_k: int,
     guard,
+    full_evidence_mode: bool = False,
 ) -> AsyncIterator[dict[str, Any]]:
     yield {"type": "qa_mode", "mode": "deep"}
+    await asyncio.sleep(0)
     request_cache: dict[str, dict[str, Any]] = {}
+
+    route_decision_step = _planner_step(stage="route_decision", label="分析查询并选择路由", detail=f"query={query[:60]}")
+    yield {"type": "planner_step", "step": route_decision_step}
+    await asyncio.sleep(0)
 
     payload = service._load_route_payload(query=query, top_k=top_k)
     if payload.get("notes") == ["route_output_unparseable"]:
@@ -45,12 +52,13 @@ async def stream_deep(
             notes_prefix=["deep_mode_fallback_to_quick:route_output_unparseable"],
             status_override="degraded",
             generation_backend_override="quick_fallback",
+            full_evidence_mode=full_evidence_mode,
         ):
             yield event
         return
 
     route_context = service._prepare_route_context(query=query, top_k=top_k, include_executed_routes=True, payload=payload)
-    planner_steps: list[dict[str, str]] = []
+    planner_steps: list[dict[str, str]] = [route_decision_step]
     deep_trace: list[dict[str, Any]] = []
     notes: list[str] = []
     tool_trace: list[dict[str, Any]] = []
@@ -64,12 +72,24 @@ async def stream_deep(
 
     if route_context.route_event:
         yield {"type": "route", **route_context.route_event}
+    await asyncio.sleep(0)
 
     factual_evidence = route_context.factual_evidence
     case_references = route_context.case_references
     initial_items = factual_evidence + case_references
     if initial_items:
         yield {"type": "evidence", "items": initial_items}
+        await asyncio.sleep(0)
+
+    retrieval_step = _planner_step(stage="retrieval", label="执行文件优先检索", detail="图谱 / FFSR / 病例索引 / 补召回")
+    planner_steps.append(retrieval_step)
+    yield {"type": "planner_step", "step": retrieval_step}
+    await asyncio.sleep(0)
+
+    evidence_org_step = _planner_step(stage="evidence_organization", label="整理证据与覆盖分析", detail=f"factual={len(factual_evidence)}; cases={len(case_references)}")
+    planner_steps.append(evidence_org_step)
+    yield {"type": "planner_step", "step": evidence_org_step}
+    await asyncio.sleep(0)
 
     list_step = _planner_step(stage="inspect_paths", label="整理证据路径", detail="derive_from_route_payload")
     planner_steps.append(list_step)
@@ -279,6 +299,7 @@ async def stream_deep(
         evidence_paths=evidence_paths,
         planner_steps=planner_steps,
         deep_trace=deep_trace,
+        full_evidence_mode=full_evidence_mode,
     )
     result = _finalize_result(result=result, guard=guard)
 

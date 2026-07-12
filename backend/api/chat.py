@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, AsyncIterator, Literal
 
@@ -20,6 +21,7 @@ class ChatRequest(BaseModel):
     stream: bool = True
     mode: Literal["quick", "deep"] = Field(default="quick")
     top_k: int = Field(default=12, ge=1, le=20)
+    full_evidence_mode: bool = Field(default=False)
 
 
 def _sse(event: str, data: dict[str, Any]) -> str:
@@ -68,6 +70,7 @@ async def _event_sequence(payload: ChatRequest) -> AsyncIterator[dict[str, Any]]
             payload.message,
             mode=payload.mode,
             top_k=payload.top_k,
+            full_evidence_mode=payload.full_evidence_mode,
         ):
             yield event
         return
@@ -112,6 +115,7 @@ async def chat(payload: ChatRequest):
                     done_data = data
                     continue
                 yield _sse(event["type"], data)
+                await asyncio.sleep(0)
         except Exception as exc:
             yield _sse("error", {"error": str(exc)})
             return
@@ -124,6 +128,7 @@ async def chat(payload: ChatRequest):
         )
         if done_data is not None:
             yield _sse("done", done_data)
+            await asyncio.sleep(0)
         if is_first_user_message:
             title = await generate_title(payload.message)
             session_manager.set_title(payload.session_id, title)

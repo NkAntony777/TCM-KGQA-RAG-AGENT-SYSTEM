@@ -42,6 +42,7 @@ class QAServiceSettings:
     deep_read_top_k: int = 6
     max_trace_evidence_per_step: int = 3
     min_deep_answer_chars: int = 400
+    full_evidence_mode: bool = False
 
 @dataclass(frozen=True)
 class RouteContext:

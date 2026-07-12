@@ -87,7 +87,13 @@ def _claim_text(item: dict[str, Any]) -> str:
     return snippet or "命中相关证据"
 
 
-def _excerpt_text(item: dict[str, Any], *, mode: AnswerMode) -> str:
+def _excerpt_text(item: dict[str, Any], *, mode: AnswerMode, full_evidence_mode: bool = False) -> str:
+    if full_evidence_mode:
+        return _clean_text(
+            item.get("source_text")
+            or item.get("match_snippet")
+            or item.get("snippet"),
+        )
     limit = 180 if mode == "quick" else 260
     return _clean_text(
         item.get("source_text")
@@ -190,6 +196,7 @@ def _card_from_item(
     facet: str,
     mode: AnswerMode,
     reason: str,
+    full_evidence_mode: bool = False,
 ) -> dict[str, Any]:
     source_type = _clean_text(item.get("source_type")) or "unknown"
     return {
@@ -199,7 +206,7 @@ def _card_from_item(
         "source_label": _source_label(item),
         "source_path": _source_path(item),
         "source_type": source_type,
-        "excerpt": _excerpt_text(item, mode=mode),
+        "excerpt": _excerpt_text(item, mode=mode, full_evidence_mode=full_evidence_mode),
         "score": item.get("score"),
         "why_selected": reason,
         "used_for_answer": True,
@@ -222,8 +229,37 @@ def select_evidence_for_answer(
     factual_evidence: list[dict[str, Any]],
     case_references: list[dict[str, Any]],
     evidence_paths: list[str],
+    full_evidence_mode: bool = False,
 ) -> dict[str, Any]:
     required_facets = _requested_facets(query, payload)
+    candidates = list(factual_evidence) + list(case_references)
+
+    if full_evidence_mode:
+        selected: list[dict[str, Any]] = []
+        seen = set()
+        for item in candidates:
+            facet = _facet_for_item(item, query)
+            card = _card_from_item(item, facet=facet, mode=mode, reason="全证据模式：保留全部检索证据", full_evidence_mode=True)
+            key = _identity_for_card(card)
+            if key in seen:
+                continue
+            seen.add(key)
+            selected.append(card)
+        covered_facets = list(dict.fromkeys(_clean_text(card.get("facet")) for card in selected if _clean_text(card.get("facet"))))
+        missing_facets = [facet for facet in required_facets if facet not in covered_facets and facet != "origin"]
+        notes = [
+            "selector_mode:full_evidence",
+            f"selector_candidates:{len(candidates)}",
+            f"selector_selected:{len(selected)}",
+        ]
+        return {
+            "selected_cards": selected,
+            "required_facets": required_facets,
+            "covered_facets": covered_facets,
+            "missing_facets": missing_facets,
+            "selection_notes": notes,
+        }
+
     budget = 10 if mode == "quick" else 24
     per_facet_limit = 3 if mode == "quick" else 5
     query_terms = _query_terms(query, payload)
@@ -243,7 +279,7 @@ def select_evidence_for_answer(
     def add_card(facet: str, item: dict[str, Any], reason: str) -> None:
         if len(selected) >= budget:
             return
-        card = _card_from_item(item, facet=facet, mode=mode, reason=reason)
+        card = _card_from_item(item, facet=facet, mode=mode, reason=reason, full_evidence_mode=False)
         key = _identity_for_card(card)
         if key in seen:
             return

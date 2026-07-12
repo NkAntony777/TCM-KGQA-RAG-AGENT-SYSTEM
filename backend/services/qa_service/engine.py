@@ -46,7 +46,15 @@ class QAService:
         evidence_navigator: EvidenceNavigator | None = None,
     ) -> None:
         self.route_tool = route_tool or TCMRouteSearchTool()
-        self.settings = settings or QAServiceSettings()
+        if settings is None:
+            from config import get_settings
+            app_settings = get_settings()
+            settings = QAServiceSettings(
+                full_evidence_mode=app_settings.qa_full_evidence_mode,
+                max_factual_evidence=app_settings.qa_max_factual_evidence,
+                max_case_references=app_settings.qa_max_case_references,
+            )
+        self.settings = settings
         self.answer_generator = answer_generator or GroundedAnswerLLMClient()
         self.evidence_navigator = evidence_navigator or EvidenceNavigator()
         self.planner_skills = get_runtime_skills(
@@ -60,9 +68,10 @@ class QAService:
         *,
         mode: AnswerMode = "quick",
         top_k: int | None = None,
+        full_evidence_mode: bool | None = None,
     ) -> dict[str, Any]:
         final_result: dict[str, Any] | None = None
-        async for event in self.stream_answer(query, mode=mode, top_k=top_k):
+        async for event in self.stream_answer(query, mode=mode, top_k=top_k, full_evidence_mode=full_evidence_mode):
             if event.get("type") == "result" and isinstance(event.get("result"), dict):
                 final_result = event["result"]
         if final_result is None:
@@ -75,12 +84,14 @@ class QAService:
         *,
         mode: AnswerMode = "quick",
         top_k: int | None = None,
+        full_evidence_mode: bool | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         normalized_query = (query or "").strip()
         if not normalized_query:
             raise ValueError("query_empty")
 
         resolved_top_k = max(1, int(top_k or self.settings.default_top_k))
+        resolved_full_evidence = self.settings.full_evidence_mode if full_evidence_mode is None else full_evidence_mode
         guard = assess_query(normalized_query)
         if guard.should_refuse:
             result = _guard_refused_result(mode=mode, guard=guard)
@@ -92,7 +103,7 @@ class QAService:
 
         if mode == "deep":
             try:
-                async for event in self._stream_deep(normalized_query, top_k=resolved_top_k, guard=guard):
+                async for event in self._stream_deep(normalized_query, top_k=resolved_top_k, guard=guard, full_evidence_mode=resolved_full_evidence):
                     yield event
                 return
             except Exception as exc:
@@ -104,11 +115,12 @@ class QAService:
                     notes_prefix=[f"deep_mode_fallback_to_quick:{exc}"],
                     status_override="degraded",
                     generation_backend_override="quick_fallback",
+                    full_evidence_mode=resolved_full_evidence,
                 ):
                     yield event
                 return
 
-        async for event in self._stream_quick(normalized_query, top_k=resolved_top_k, guard=guard):
+        async for event in self._stream_quick(normalized_query, top_k=resolved_top_k, guard=guard, full_evidence_mode=resolved_full_evidence):
             yield event
 
     async def _stream_quick(
@@ -121,6 +133,7 @@ class QAService:
         notes_prefix: list[str] | None = None,
         status_override: str | None = None,
         generation_backend_override: str | None = None,
+        full_evidence_mode: bool = False,
     ) -> AsyncIterator[dict[str, Any]]:
         async for event in _stream_quick_flow(
             self,
@@ -131,11 +144,12 @@ class QAService:
             notes_prefix=notes_prefix,
             status_override=status_override,
             generation_backend_override=generation_backend_override,
+            full_evidence_mode=full_evidence_mode,
         ):
             yield event
 
-    async def _stream_deep(self, query: str, *, top_k: int, guard) -> AsyncIterator[dict[str, Any]]:
-        async for event in _stream_deep_flow(self, query, top_k=top_k, guard=guard):
+    async def _stream_deep(self, query: str, *, top_k: int, guard, full_evidence_mode: bool = False) -> AsyncIterator[dict[str, Any]]:
+        async for event in _stream_deep_flow(self, query, top_k=top_k, guard=guard, full_evidence_mode=full_evidence_mode):
             yield event
 
     def _load_route_payload(self, *, query: str, top_k: int) -> dict[str, Any]:
@@ -283,6 +297,7 @@ class QAService:
         evidence_paths: list[str] | None = None,
         planner_steps: list[dict[str, str]] | None = None,
         deep_trace: list[dict[str, Any]] | None = None,
+        full_evidence_mode: bool = False,
     ) -> dict[str, Any]:
         return await _runtime_build_response(
             answer_generator=self.answer_generator,
@@ -297,6 +312,7 @@ class QAService:
             evidence_paths=evidence_paths,
             planner_steps=planner_steps,
             deep_trace=deep_trace,
+            full_evidence_mode=full_evidence_mode,
         )
 
     def _build_live_evidence_bundle(

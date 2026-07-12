@@ -156,11 +156,12 @@ async def _generate_grounded_answer(
     book_citations: list[str],
     deep_trace: list[dict[str, Any]],
     selected_evidence: dict[str, Any] | None = None,
+    full_evidence_mode: bool = False,
 ) -> tuple[str, str, list[str], dict[str, Any]]:
     original_timeout = getattr(answer_generator, "timeout_seconds", None)
     attempt_notes: list[str] = []
     last_exc: Exception | None = None
-    system_prompt = _build_grounded_system_prompt(mode=mode)
+    system_prompt = _build_grounded_system_prompt(mode=mode, full_evidence_mode=full_evidence_mode)
     user_prompt = _build_grounded_user_prompt(
         query=query,
         payload=payload,
@@ -174,6 +175,7 @@ async def _generate_grounded_answer(
         deep_trace=deep_trace,
         evidence_limit=settings.max_quick_prompt_evidence if mode == "quick" else settings.max_deep_prompt_evidence,
         selected_evidence=selected_evidence,
+        full_evidence_mode=full_evidence_mode,
     )
     diagnostics: dict[str, Any] = {
         "mode": mode,
@@ -304,6 +306,7 @@ async def _build_response(
     evidence_paths: list[str] | None = None,
     planner_steps: list[dict[str, str]] | None = None,
     deep_trace: list[dict[str, Any]] | None = None,
+    full_evidence_mode: bool = False,
 ) -> dict[str, Any]:
     factual = factual_evidence or _factual_evidence_from_payload(payload)
     cases = case_references or _case_reference_from_payload(payload)
@@ -322,6 +325,7 @@ async def _build_response(
         factual_evidence=factual,
         case_references=cases,
         evidence_paths=evidence_paths if evidence_paths is not None else payload.get("evidence_paths", []) if isinstance(payload.get("evidence_paths", []), list) else [],
+        full_evidence_mode=full_evidence_mode,
     )
     answer, generation_backend, generation_notes, generation_diagnostics = await _generate_grounded_answer(
         answer_generator=answer_generator,
@@ -337,10 +341,11 @@ async def _build_response(
         book_citations=book_citations,
         deep_trace=deep_trace or [],
         selected_evidence=selected_evidence,
+        full_evidence_mode=full_evidence_mode,
     )
     answer = _ensure_multiple_choice_answer_format(query, answer)
-    selected_factual = factual[: settings.max_factual_evidence]
-    selected_cases = cases[: settings.max_case_references]
+    selected_factual = factual if full_evidence_mode else factual[: settings.max_factual_evidence]
+    selected_cases = cases if full_evidence_mode else cases[: settings.max_case_references]
     coverage = _coverage_summary(
         query=query,
         payload=payload,

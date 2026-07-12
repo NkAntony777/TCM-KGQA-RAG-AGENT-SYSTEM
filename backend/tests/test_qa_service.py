@@ -263,7 +263,8 @@ class QAServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["generation_backend"], "grounded_llm")
         self.assertIn("Quick 2.0回答", result["answer"])
         self.assertGreaterEqual(len(result["factual_evidence"]), 1)
-        self.assertEqual(result["planner_steps"][0]["stage"], "route_search")
+        self.assertEqual(result["planner_steps"][0]["stage"], "route_decision")
+        self.assertEqual(result["planner_steps"][1]["stage"], "route_search")
         self.assertIn("熟地黄", answer_generator.calls[0]["user_prompt"])
         self.assertIn("事实证据", answer_generator.calls[0]["user_prompt"])
 
