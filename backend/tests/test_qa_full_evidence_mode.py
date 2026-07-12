@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import unittest
 
 from services.qa_service.engine import QAService
@@ -34,7 +33,7 @@ def _make_case_references(count: int) -> list[dict[str, object]]:
             "source_type": "case_qa",
             "source": f"case-{i}",
             "document": f"医案-{i}",
-            "snippet": f"病例摘要内容，用于测试全证据模式。" + "y" * 200,
+            "snippet": "病例摘要内容，用于测试全证据模式。" + "y" * 200,
         }
         for i in range(count)
     ]

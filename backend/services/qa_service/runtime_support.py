@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 # Re-exports from split modules for backward compatibility.
+# ruff: noqa: F401
 from services.qa_service.action_executor import (
     _cache_key,
     _can_parallelize_actions,
