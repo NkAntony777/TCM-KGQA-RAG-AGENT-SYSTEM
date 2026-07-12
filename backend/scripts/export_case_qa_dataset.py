@@ -9,7 +9,7 @@ from collections import Counter
 from pathlib import Path
 
 
-DEFAULT_DB_PATH = Path(r"E:\tcm_vector_db")
+DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "storage" / "chroma_case_db"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "services" / "retrieval_service" / "data" / "case_qa_export"
 CASE_COLLECTION_PREFIX = "tcm_shard_"
 

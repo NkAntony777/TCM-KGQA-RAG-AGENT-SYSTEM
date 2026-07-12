@@ -50,6 +50,7 @@ backend/storage/triple_benchmark_lab/
 backend/storage/triple_pipeline/
 backend/storage/triple_pipeline_test_books/
 backend/storage/chroma_case_query_mirror/
+backend/storage/chroma_case_db/
 backend/storage/section_summary_ablation/
 backend/.smoke_logs/
 backend/_tmp_logs/
@@ -97,7 +98,11 @@ backend/eval/TCMBench/
 backend/eval/paper/*_latest.json
 backend/eval/paper/*latest*.json
 backend/eval/paper/*_final_official.json
+backend/eval/paper/_tmp_*
+backend/eval/paper/*.tmp.*
+backend/eval/datasets/paper/_tmp_*
 docs/archive_20260420/
+docs/_tmp_*
 backend/eval/datasets/paper/_tmp_traceable_*
 backend/storage/nav_group_cache/
 backend/storage/paper_milvus_import_sessions/
@@ -113,6 +118,8 @@ docs/*.tmp.*
 .vscode/
 .idea/
 .claude/
+.omc/
+projects/
 *.log
 .DS_Store
 Thumbs.db
