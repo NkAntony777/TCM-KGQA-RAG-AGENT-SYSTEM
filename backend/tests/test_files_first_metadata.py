@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from services.retrieval_service import files_first_metadata as metadata
+from services.retrieval_service.files_first.utils import metadata
 from services.retrieval_service import files_first_support
 
 

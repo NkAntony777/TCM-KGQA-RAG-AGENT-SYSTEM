@@ -3,10 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from services.retrieval_service import files_first_constants as ffc
-from services.retrieval_service import files_first_query_builder as ffb
-from services.retrieval_service import files_first_query_context
-from services.retrieval_service import files_first_query_terms as fft
+from ..utils import constants as ffc
+from ..query import builder as ffb, context, terms as fft
 
 
 @dataclass(frozen=True)
@@ -32,7 +30,7 @@ def build_search_plan(
     tokenizer: Any,
     query_context: dict[str, Any] | None,
 ) -> FilesFirstSearchPlan:
-    flags, focus_entities, books_in_query, expanded_query, weak_anchor, need_broad_recall = files_first_query_context.apply_query_context(
+    flags, focus_entities, books_in_query, expanded_query, weak_anchor, need_broad_recall = context.apply_query_context(
         query=query,
         tokenizer=tokenizer,
         query_context=query_context,

@@ -5,7 +5,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Callable
 
-from services.retrieval_service import files_first_build_rows
+from . import rows as build_rows
 
 FILES_FIRST_SCHEMA_VERSION = 5
 REQUIRED_DOC_COLUMNS = {
@@ -156,7 +156,7 @@ def migrate_legacy_schema_in_place(
         docs_rows: list[tuple[Any, ...]] = []
         fts_rows: list[tuple[str, str, str, str, str, str, str, str, str, str]] = []
         for row in rows:
-            payload = files_first_build_rows.build_doc_index_rows(
+            payload = build_rows.build_doc_index_rows(
                 row,
                 tokenizer=tokenizer,
                 resolve_section_metadata=resolve_section_metadata,
@@ -166,7 +166,7 @@ def migrate_legacy_schema_in_place(
             docs_row, fts_row = payload
             docs_rows.append(docs_row)
             fts_rows.append(fts_row)
-        files_first_build_rows.insert_doc_index_rows(
+        build_rows.insert_doc_index_rows(
             conn,
             docs_rows=docs_rows,
             fts_rows=fts_rows,

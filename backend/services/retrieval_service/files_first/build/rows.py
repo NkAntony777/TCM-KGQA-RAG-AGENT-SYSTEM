@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Any, Callable
 
-from services.retrieval_service import files_first_metadata
+from ..utils.metadata import extract_book_name, extract_chapter_title, build_section_key
 
 DocsRow = tuple[Any, ...]
 FtsRow = tuple[str, str, str, str, str, str, str, str, str, str]
@@ -35,17 +35,17 @@ def build_doc_index_rows(
     filename = str(row.get("filename", ""))
     file_path = str(row.get("file_path", ""))
     page_number = int(row.get("page_number", 0) or 0)
-    book_name = str(row.get("book_name", "")).strip() or files_first_metadata.extract_book_name(
+    book_name = str(row.get("book_name", "")).strip() or extract_book_name(
         text=text,
         filename=filename,
         file_path=file_path,
     )
-    chapter_title = str(row.get("chapter_title", "")).strip() or files_first_metadata.extract_chapter_title(
+    chapter_title = str(row.get("chapter_title", "")).strip() or extract_chapter_title(
         text=text,
         page_number=page_number,
         file_path=file_path,
     )
-    section_key = str(row.get("section_key", "")).strip() or files_first_metadata.build_section_key(
+    section_key = str(row.get("section_key", "")).strip() or build_section_key(
         book_name=book_name,
         chapter_title=chapter_title,
         page_number=page_number,

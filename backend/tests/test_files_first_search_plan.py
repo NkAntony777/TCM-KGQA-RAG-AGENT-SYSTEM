@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from services.retrieval_service import files_first_search_plan
+from services.retrieval_service.files_first.search import plan as files_first_search_plan
 
 
 class FakeTokenizer:

@@ -5,15 +5,10 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
-from services.retrieval_service import files_first_fts_queries
-from services.retrieval_service import files_first_metadata
-from services.retrieval_service import files_first_metadata_candidates
-from services.retrieval_service import files_first_query_builder as ffb
-from services.retrieval_service import files_first_query_terms as fft
-from services.retrieval_service import files_first_ranking
-from services.retrieval_service import files_first_scoring
-from services.retrieval_service import files_first_search_plan
-from services.retrieval_service import files_first_seed_queries
+from . import candidates, fts, ranking, scoring, seed
+from . import plan as plan_mod
+from ..utils import metadata
+from ..query import builder as ffb, terms as fft
 
 
 class FilesFirstSearchContext(Protocol):
@@ -35,14 +30,14 @@ def search(
     build_sqlite_in_clause: Callable[..., tuple[str, tuple[Any, ...]]] = ffb._build_sqlite_in_clause,
     is_noisy_term: Callable[[str], bool] = fft._is_noisy_term,
     compact_phrase: Callable[[str], str] = fft._compact_phrase,
-    normalize_section_file_path: Callable[[str], str] = files_first_metadata.normalize_section_file_path,
-    field_overlap_multiplier: Callable[..., float] = files_first_scoring._field_overlap_multiplier,
+    normalize_section_file_path: Callable[[str], str] = metadata.normalize_section_file_path,
+    field_overlap_multiplier: Callable[..., float] = scoring._field_overlap_multiplier,
 ) -> tuple[list[dict[str, Any]], str]:
     context.ensure_schema()
     if not context.store_path.exists():
         return [], "fts_missing"
     effective_top_k = max(int(top_k or 0), 5)
-    plan = files_first_search_plan.build_search_plan(
+    plan = plan_mod.build_search_plan(
         query=query,
         tokenizer=context.tokenizer,
         query_context=query_context,
@@ -51,7 +46,7 @@ def search(
         return [], "fts_query_empty"
     with closing(sqlite3.connect(context.store_path)) as conn:
         conn.row_factory = sqlite3.Row
-        metadata_candidates = files_first_metadata_candidates.gather_metadata_candidates(
+        metadata_candidates = candidates.gather_metadata_candidates(
             conn,
             query=query,
             focus_entities=plan.focus_entities,
@@ -66,12 +61,12 @@ def search(
         direct_seed_map: dict[str, dict[str, Any]] = {}
         unique_sections: set[str] = set()
         if plan.direct_terms:
-            target_books = files_first_search_plan.select_direct_seed_books(
+            target_books = plan_mod.select_direct_seed_books(
                 query=query,
                 plan=plan,
                 candidate_books=candidate_books,
             )
-            direct_seed_map, direct_sections = files_first_seed_queries.run_direct_seed_queries(
+            direct_seed_map, direct_sections = seed.run_direct_seed_queries(
                 conn,
                 direct_terms=plan.direct_terms,
                 leaf_level=leaf_level,
@@ -82,11 +77,11 @@ def search(
             )
             unique_sections.update(direct_sections)
         if plan.descriptive_clauses:
-            clause_target_books = files_first_search_plan.select_clause_seed_books(
+            clause_target_books = plan_mod.select_clause_seed_books(
                 plan=plan,
                 candidate_books=candidate_books,
             )
-            direct_seed_map, clause_sections = files_first_seed_queries.run_clause_seed_queries(
+            direct_seed_map, clause_sections = seed.run_clause_seed_queries(
                 conn,
                 descriptive_clauses=plan.descriptive_clauses,
                 leaf_level=leaf_level,
@@ -98,7 +93,7 @@ def search(
                 compact_phrase=compact_phrase,
             )
             unique_sections.update(clause_sections)
-        section_rows, rows, fts_sections, query_error = files_first_fts_queries.run_match_queries(
+        section_rows, rows, fts_sections, query_error = fts.run_match_queries(
             conn,
             match_queries=plan.match_queries,
             leaf_level=leaf_level,
@@ -114,7 +109,7 @@ def search(
         unique_sections.update(fts_sections)
     if direct_seed_map:
         rows = [*direct_seed_map.values(), *rows]
-    results = files_first_ranking.rank_search_results(
+    results = ranking.rank_search_results(
         section_rows=section_rows,
         rows=rows,
         books_in_query=plan.books_in_query,

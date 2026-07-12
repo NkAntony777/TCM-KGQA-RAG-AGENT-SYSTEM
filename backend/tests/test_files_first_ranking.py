@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.retrieval_service import files_first_ranking
+from services.retrieval_service.files_first.search import ranking as files_first_ranking
 
 
 def _row(

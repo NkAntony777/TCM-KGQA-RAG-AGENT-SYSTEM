@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.retrieval_service import files_first_query_terms as fft
+from . import terms as fft
 
 
 def merge_query_flags(base_flags: dict[str, bool], query_context: dict[str, Any] | None) -> dict[str, bool]:

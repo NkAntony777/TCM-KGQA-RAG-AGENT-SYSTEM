@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from services.retrieval_service import files_first_schema
-from services.retrieval_service import files_first_search
+from services.retrieval_service.files_first.build import schema as files_first_schema
+from services.retrieval_service.files_first.search import pipeline as files_first_search
 from services.retrieval_service.files_first_support import LocalFilesFirstStore
 from tests.test_temp_utils import cleanup_test_dir
 from tests.test_temp_utils import connect_test_sqlite

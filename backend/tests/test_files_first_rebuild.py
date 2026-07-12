@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-from services.retrieval_service import files_first_build_state
-from services.retrieval_service import files_first_rebuild
-from services.retrieval_service import files_first_schema
+from services.retrieval_service.files_first.build import state as files_first_build_state
+from services.retrieval_service.files_first.build import pipeline as files_first_rebuild
+from services.retrieval_service.files_first.build import schema as files_first_schema
 from tests.test_temp_utils import cleanup_test_dir
 from tests.test_temp_utils import make_test_dir
 

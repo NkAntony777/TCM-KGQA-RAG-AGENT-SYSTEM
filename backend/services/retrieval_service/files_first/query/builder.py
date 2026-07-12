@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.retrieval_service.files_first_query_terms import _clean_candidate_term
+from .terms import _clean_candidate_term
 
 
 def _fts_quote(term: str) -> str:

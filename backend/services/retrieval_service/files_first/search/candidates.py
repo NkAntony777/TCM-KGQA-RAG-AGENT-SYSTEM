@@ -6,7 +6,7 @@ import json
 import sqlite3
 from typing import Any
 
-from services.retrieval_service import files_first_query_terms as fft
+from ..query import terms as fft
 
 
 def gather_metadata_candidates(

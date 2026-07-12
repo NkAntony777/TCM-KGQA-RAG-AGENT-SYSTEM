@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.retrieval_service.files_first_constants import _env_flag
+from ..utils.constants import _env_flag
 
 
 def _is_front_matter_title(title: str) -> bool:

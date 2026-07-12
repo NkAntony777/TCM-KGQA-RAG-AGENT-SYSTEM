@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from services.retrieval_service import files_first_build_state as state
+from services.retrieval_service.files_first.build import state
 from tests.test_temp_utils import make_test_dir
 
 

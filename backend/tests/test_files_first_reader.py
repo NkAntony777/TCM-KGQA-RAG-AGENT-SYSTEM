@@ -3,9 +3,9 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from services.retrieval_service import files_first_reader
-from services.retrieval_service import files_first_metadata
-from services.retrieval_service import files_first_schema
+from services.retrieval_service.files_first.search import reader as files_first_reader
+from services.retrieval_service.files_first.utils import metadata as files_first_metadata
+from services.retrieval_service.files_first.build import schema as files_first_schema
 from tests.test_temp_utils import connect_test_sqlite
 from tests.test_temp_utils import make_test_dir
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from services.retrieval_service import files_first_nav_groups
-from services.retrieval_service import files_first_schema
+from services.retrieval_service.files_first.build import nav_groups as files_first_nav_groups
+from services.retrieval_service.files_first.build import schema as files_first_schema
 from tests.test_temp_utils import connect_test_sqlite
 from tests.test_temp_utils import make_test_dir
 

@@ -6,9 +6,9 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Protocol
 
-from services.retrieval_service import files_first_build_rows
-from services.retrieval_service import files_first_build_state
-from services.retrieval_service import files_first_schema
+from . import rows as build_rows
+from . import state as build_state
+from . import schema as build_schema
 
 
 class FilesFirstRebuildContext(Protocol):
@@ -54,8 +54,8 @@ def _reuse_existing_docs(
     show_progress: bool,
     existing_docs: int,
 ) -> dict[str, Any]:
-    state = files_first_build_state.reuse_existing_docs_state(target_path=context.store_path, total_rows=len(rows))
-    files_first_build_state.write_json(state_path, state)
+    state = build_state.reuse_existing_docs_state(target_path=context.store_path, total_rows=len(rows))
+    build_state.write_json(state_path, state)
     with closing(sqlite3.connect(context.store_path)) as conn:
         context._initialize_build_db(conn)
         if show_progress:
@@ -63,17 +63,17 @@ def _reuse_existing_docs(
             context._print_stage_banner(stage="indexes", detail="creating docs/nav_groups helper indexes")
         context._ensure_post_docs_indexes(conn)
         nav_manifest = context._rebuild_nav_groups(conn, show_progress=show_progress)
-        files_first_build_state.mark_nav_groups_running(state_path, state, nav_groups_built=int(nav_manifest.get("nav_groups", 0)))
-        files_first_schema.write_schema_version(conn)
+        build_state.mark_nav_groups_running(state_path, state, nav_groups_built=int(nav_manifest.get("nav_groups", 0)))
+        build_schema.write_schema_version(conn)
         conn.commit()
-    files_first_build_state.mark_completed(
+    build_state.mark_completed(
         state_path,
         state,
         docs_processed=len(rows),
         nav_groups_built=int(nav_manifest.get("nav_groups", 0)),
         reused_existing_docs=True,
     )
-    return files_first_build_state.rebuild_result(
+    return build_state.rebuild_result(
         rows_count=len(rows),
         nav_groups_built=int(nav_manifest.get("nav_groups", 0)),
         store_path=context.store_path,
@@ -95,10 +95,10 @@ def _insert_doc_batches(
     show_progress: bool,
     started_at: float,
 ) -> int:
-    payload_rows: list[files_first_build_rows.DocsRow] = []
-    fts_rows: list[files_first_build_rows.FtsRow] = []
+    payload_rows: list[build_rows.DocsRow] = []
+    fts_rows: list[build_rows.FtsRow] = []
     for index in range(docs_processed, len(rows)):
-        payload = files_first_build_rows.build_doc_index_rows(
+        payload = build_rows.build_doc_index_rows(
             rows[index],
             tokenizer=context.tokenizer,
             resolve_section_metadata=context.resolve_section_metadata,
@@ -109,19 +109,19 @@ def _insert_doc_batches(
         payload_rows.append(docs_row)
         fts_rows.append(fts_row)
         if len(payload_rows) >= batch_size:
-            files_first_build_rows.insert_doc_index_rows(conn, docs_rows=payload_rows, fts_rows=fts_rows)
+            build_rows.insert_doc_index_rows(conn, docs_rows=payload_rows, fts_rows=fts_rows)
             conn.commit()
             docs_processed = index + 1
-            files_first_build_state.mark_docs_progress(state_path, state, docs_processed)
+            build_state.mark_docs_progress(state_path, state, docs_processed)
             if show_progress:
                 context._print_build_progress(stage="docs", done=docs_processed, total=len(rows), started_at=started_at)
             payload_rows = []
             fts_rows = []
     if payload_rows:
-        files_first_build_rows.insert_doc_index_rows(conn, docs_rows=payload_rows, fts_rows=fts_rows)
+        build_rows.insert_doc_index_rows(conn, docs_rows=payload_rows, fts_rows=fts_rows)
         conn.commit()
         docs_processed = len(rows)
-        files_first_build_state.mark_docs_progress(state_path, state, docs_processed)
+        build_state.mark_docs_progress(state_path, state, docs_processed)
         if show_progress:
             context._print_build_progress(stage="docs", done=docs_processed, total=len(rows), started_at=started_at)
     return docs_processed
@@ -159,18 +159,19 @@ def rebuild(
             context._unlink_with_retry(temp_path)
         if state_path.exists():
             context._unlink_with_retry(state_path)
-    state = files_first_build_state.load_state(state_path)
-    resume_ready = files_first_build_state.is_resume_ready(state=state, temp_path=temp_path, total_rows=len(rows))
+    state = build_state.load_state(state_path)
+    resume_ready = build_state.is_resume_ready(state=state, temp_path=temp_path, total_rows=len(rows))
     if not resume_ready and temp_path.exists():
         context._unlink_with_retry(temp_path)
     if not resume_ready:
         with closing(sqlite3.connect(temp_path)) as conn:
             context._initialize_build_db(conn)
-        state = files_first_build_state.new_build_state(temp_path=temp_path, target_path=target_path, total_rows=len(rows))
-        files_first_build_state.write_json(state_path, state)
+        state = build_state.new_build_state(temp_path=temp_path, target_path=target_path, total_rows=len(rows))
+        build_state.write_json(state_path, state)
 
     batch_size = max(64, int(batch_size or 512))
     docs_started_at = time.perf_counter()
+    nav_manifest: dict[str, Any] = {}
     try:
         with closing(sqlite3.connect(temp_path)) as conn:
             context._initialize_build_db(conn)
@@ -191,26 +192,26 @@ def rebuild(
             if show_progress:
                 context._print_stage_banner(stage="indexes", detail="creating docs/nav_groups helper indexes")
             context._ensure_post_docs_indexes(conn)
-            files_first_build_state.mark_nav_groups_running(state_path, state, docs_processed=len(rows))
+            build_state.mark_nav_groups_running(state_path, state, docs_processed=len(rows))
             nav_manifest = context._rebuild_nav_groups(conn, show_progress=show_progress)
-            files_first_build_state.mark_nav_groups_running(state_path, state, nav_groups_built=int(nav_manifest.get("nav_groups", 0)))
-            files_first_schema.write_schema_version(conn)
+            build_state.mark_nav_groups_running(state_path, state, nav_groups_built=int(nav_manifest.get("nav_groups", 0)))
+            build_schema.write_schema_version(conn)
             conn.commit()
     except KeyboardInterrupt:
-        files_first_build_state.mark_interrupted(state_path, state)
+        build_state.mark_interrupted(state_path, state)
         raise
     except Exception as exc:
-        files_first_build_state.mark_failed(state_path, state, exc)
+        build_state.mark_failed(state_path, state, exc)
         raise
     context._replace_file(target_path, temp_path)
-    nav_groups_built = int(nav_manifest.get("nav_groups", 0) if "nav_manifest" in locals() else 0)
-    files_first_build_state.mark_completed(
+    nav_groups_built = int(nav_manifest.get("nav_groups", 0))
+    build_state.mark_completed(
         state_path,
         state,
         docs_processed=len(rows),
         nav_groups_built=nav_groups_built,
     )
-    return files_first_build_state.rebuild_result(
+    return build_state.rebuild_result(
         rows_count=len(rows),
         nav_groups_built=nav_groups_built,
         store_path=context.store_path,

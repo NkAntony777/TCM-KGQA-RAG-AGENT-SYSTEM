@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 
-from services.retrieval_service import files_first_lifecycle as lifecycle
+from services.retrieval_service.files_first.utils import lifecycle
 from tests.test_temp_utils import cleanup_test_dir
 from tests.test_temp_utils import make_test_dir
 

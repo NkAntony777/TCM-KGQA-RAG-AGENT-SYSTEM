@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import sqlite3
 
-from services.retrieval_service import files_first_schema
+from services.retrieval_service.files_first.build import schema as files_first_schema
 from tests.test_temp_utils import cleanup_test_dir
 from tests.test_temp_utils import connect_test_sqlite
 from tests.test_temp_utils import make_test_dir

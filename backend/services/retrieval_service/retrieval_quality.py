@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from router.tcm_intent_classifier import analyze_tcm_query
-from services.retrieval_service.files_first_query_terms import _descriptive_clause_terms
+from services.retrieval_service.files_first.query.terms import _descriptive_clause_terms
 
 def _auto_merge(self, docs: list[dict[str, Any]], top_k: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     meta = {
